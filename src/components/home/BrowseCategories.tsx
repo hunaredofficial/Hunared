@@ -24,20 +24,106 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
 
 // Careers — full spec list (job categories)
 const CAREER_CATEGORIES = [
-  "Administration", "Accounting", "Banking", "Human Resources",
-  "Electrical Technician", "Mechanical Technician", "Instrumentation Technician",
-  "Piping Foreman", "Piping Engineering", "Civil Engineering",
-  "Mechanical Engineering", "Electrical Engineering", "Instrumentation Engineering",
-  "Structural Engineering", "Rigging & Lifting", "Architecture", "Welder",
-  "Electrician", "Quantity Surveying", "Planning & Scheduling", "Project Management",
-  "Site Supervision", "Inspection & QA/QC", "Oil & Gas", "Painter", "Helper",
-  "Scaffolder", "Marketing", "Digital Marketing", "Logistics", "Carpenter",
-  "HVAC Technician", "Driver", "Cleaner", "Housekeeper", "Mason", "Tile Fixer",
-  "Steel Fixer", "Fabricator", "Mechanic", "Forklift Operator", "Crane Operator",
-  "Machine Operator", "Storekeeper", "Cook", "Security Guard", "Office Assistant",
-  "Data Entry", "Transportation", "Hospitality", "Healthcare", "Education", "IT",
-  "Engineering", "Construction", "Manufacturing", "Telecommunications",
-  "Freelance", "Remote Jobs", "Safety & HSE", "Other",
+  "Accounting",
+  "Administration",
+  "Agriculture",
+  "Aviation",
+  "Architectural",
+  "Automotive",
+  "Automation",
+  "Banking",
+  "Business",
+  "Chemical",
+  "Civil",
+  "Coating",
+  "Community Services",
+  "Construction",
+  "Control",
+  "Creative",
+  "Customer Service",
+  "Delivery",
+  "Design",
+  "Digital Marketing",
+  "Domestic Services",
+  "Drafting",
+  "Education",
+  "Electronics",
+  "Emergency Services",
+  "Energy",
+  "Engineering",
+  "Entertainment",
+  "Environmental",
+  "Facilities Management",
+  "Fabrication",
+  "Finance",
+  "Foreman",
+  "Freelance",
+  "Government",
+  "Healthcare",
+  "Helper",
+  "Hospitality",
+  "HVAC",
+  "Human Resources",
+  "Environmental Health & Safety",
+  "Information Technology",
+  "Inspection",
+  "Instrumentation",
+  "Inventory",
+  "Landscaping",
+  "Labor",
+  "Laboratory",
+  "Law & Legal",
+  "Lifting",
+  "Logistics",
+  "Maintenance",
+  "Management",
+  "Manufacturing",
+  "Marine",
+  "Marketing",
+  "Mechanical",
+  "Medical",
+  "Media",
+  "Mining",
+  "NGO",
+  "Networking",
+  "Offshore",
+  "Oil & Gas",
+  "Others",
+  "Painting",
+  "Petroleum",
+  "Personal Care",
+  "Piping",
+  "Planning",
+  "Plumbing",
+  "Printing",
+  "Process",
+  "Procurement",
+  "Production",
+  "Professional Services",
+  "Property",
+  "Publishing",
+  "QA & QC",
+  "Refrigeration",
+  "Real Estate",
+  "Remote Work",
+  "Research Services",
+  "Retail",
+  "Rigging",
+  "Sales",
+  "Security",
+  "Skilled Worker",
+  "Structural",
+  "Supply Chain",
+  "Supervisor",
+  "Telecommunications",
+  "Textile",
+  "Training",
+  "Transportation",
+  "Technician",
+  "Utilities",
+  "Warehouse",
+  "Welding",
+  "Work Permit",
 ];
 
 const LEARNING_CATEGORIES: { label: string; href: string }[] = [
@@ -75,7 +161,7 @@ const SERVICE_CATEGORIES = [
 ];
 
 export function BrowseCategories() {
-  const [tab, setTab] = useState<TabKey>("careers");
+  const [tab, setTab] = useState<TabKey | null>(null);
 
   return (
     <section className="py-16 px-4 sm:px-6" aria-labelledby="browse-categories-heading">
@@ -85,30 +171,36 @@ export function BrowseCategories() {
             Browse by Categories
           </h2>
           <p className="text-muted-foreground mt-2">
-            Explore everything Hunared offers, organized the way you think.
-          </p>
+  Choose a category type below to explore. Nothing is opened until you click.
+</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {TABS.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors",
-                tab === key
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </div>
+<div className="flex flex-wrap justify-center gap-2">
+  {TABS.map(({ key, label, icon: Icon }) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => setTab((prev) => (prev === key ? null : key))}
+      className={cn(
+        "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors",
+        tab === key
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
+  ))}
+</div>
 
+{/* Hint when nothing selected */}
+{tab === null && (
+  <p className="text-center text-sm text-muted-foreground">
+    Click Careers, Learning Hub, Marketplace, Property, or Services to view categories.
+  </p>
+)}
         {/* Careers */}
         {tab === "careers" && (
           <div className="flex flex-wrap justify-center gap-2">

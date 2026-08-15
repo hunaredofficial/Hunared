@@ -60,8 +60,6 @@ const NAV_ITEMS: NavItem[] = [
       { label: "Career Tips", href: "/education?category=career_tips" },
     ],
   },
-  { type: "link", href: "/about", label: "About Us" },
-  { type: "link", href: "/contact", label: "Contact" },
 ];
 
 export function Header() {
