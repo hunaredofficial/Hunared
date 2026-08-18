@@ -9,14 +9,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { fullName, email, message } = body as Record<string, string>;
+  const { fullName, email, message, phone, reason } = body as Record<
+    string,
+    string | undefined
+  >;
 
   if (
-    typeof fullName !== "string" || !fullName.trim() ||
-    typeof email   !== "string" || !email.trim() ||
-    typeof message !== "string" || !message.trim()
+    typeof fullName !== "string" ||
+    !fullName.trim() ||
+    typeof email !== "string" ||
+    !email.trim() ||
+    typeof message !== "string" ||
+    !message.trim()
   ) {
-    return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Name, email, and message are required" },
+      { status: 400 }
+    );
+  }
+
+  if (typeof reason !== "string" || !reason.trim()) {
+    return NextResponse.json(
+      { error: "Contact reason is required" },
+      { status: 400 }
+    );
   }
 
   // Basic email format guard
@@ -27,7 +43,10 @@ export async function POST(request: NextRequest) {
   const { SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_USER || !SMTP_PASS) {
     console.error("[contact] SMTP_USER or SMTP_PASS env vars are not set");
-    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Server configuration error" },
+      { status: 500 }
+    );
   }
 
   const transporter = nodemailer.createTransport({
@@ -36,6 +55,10 @@ export async function POST(request: NextRequest) {
     secure: true,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
+
+  const phoneDisplay =
+    typeof phone === "string" && phone.trim() ? phone.trim() : "—";
+  const reasonDisplay = reason.trim();
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
@@ -55,6 +78,14 @@ export async function POST(request: NextRequest) {
             </td>
           </tr>
           <tr>
+            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Phone</td>
+            <td style="padding: 8px 0; color: #0f172a;">${phoneDisplay}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Reason</td>
+            <td style="padding: 8px 0; color: #0f172a;">${reasonDisplay}</td>
+          </tr>
+          <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Message</td>
             <td style="padding: 8px 0; color: #0f172a; white-space: pre-wrap;">${message.trim()}</td>
           </tr>
@@ -71,7 +102,7 @@ export async function POST(request: NextRequest) {
       from: `"Hunared Contact" <${SMTP_USER}>`,
       to: "hunaredofficial@gmail.com",
       replyTo: `"${fullName.trim()}" <${email.trim()}>`,
-      subject: `New message from ${fullName.trim()}`,
+      subject: `[${reasonDisplay}] Message from ${fullName.trim()}`,
       html,
     });
   } catch (err) {

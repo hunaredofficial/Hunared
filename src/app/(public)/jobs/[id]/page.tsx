@@ -13,6 +13,7 @@ import {
   Calendar,
   Tag,
   Banknote,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,19 @@ export default async function JobDetailPage({
   const { id } = await params;
 
   let job: Job | null = null;
+  let poster: {
+    full_name: string;
+    username: string | null;
+    profession: string | null;
+    location: string | null;
+    city: string | null;
+    country: string | null;
+    avatar_url: string | null;
+    company_website: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null = null;
+
   try {
     const supabase = createAdminClient();
     const { data } = await supabase
@@ -38,11 +52,32 @@ export default async function JobDetailPage({
       .eq("status", "approved")
       .single();
     job = data;
+
+    if (job?.employer_id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(
+          "full_name, username, profession, location, city, country, avatar_url, company_website, email, phone"
+        )
+        .eq("id", job.employer_id)
+        .maybeSingle();
+      poster = profile;
+    }
   } catch {
     // ignore
   }
 
   if (!job) notFound();
+
+  const posterLocation =
+    poster?.city || poster?.country
+      ? [poster.city, poster.country].filter(Boolean).join(", ")
+      : poster?.location || null;
+
+  // Only if employer allowed it when posting the job
+  const allowProfileContact = Boolean(job.show_profile_contact);
+  const showPhone = allowProfileContact && Boolean(poster?.phone?.trim());
+  const showEmail = allowProfileContact && Boolean(poster?.email?.trim());
 
   const postedOn = new Date(job.created_at).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -50,17 +85,17 @@ export default async function JobDetailPage({
     year: "numeric",
   });
 
-  // ✅ UPDATED: Format salary with currency
+  // Format salary with currency
   const formatSalary = () => {
     if (job.salary_type === "After Interview") {
       return "To be discussed";
     }
-    
+
     if (job.salary_rate) {
       const currencySymbol = job.currency || "SAR";
       return `${job.salary_rate} ${currencySymbol} (${job.salary_type ?? ""})`;
     }
-    
+
     return job.salary_type ?? "Not specified";
   };
 
@@ -132,37 +167,55 @@ export default async function JobDetailPage({
               </CardContent>
             </Card>
 
-            {/* Office location map */}
-            {hasMap && (
-              <Card>
-                <CardContent className="pt-6 pb-5">
-                  <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    Office Location
-                  </h2>
-                  {job.office_address && (
-                    <p className="text-sm text-muted-foreground mb-3">{job.office_address}</p>
-                  )}
-                  <div className="rounded-lg overflow-hidden border border-border">
-                    <iframe
-                      title="Office Location"
-                      width="100%"
-                      height="300"
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://maps.google.com/maps?q=${job.office_lat},${job.office_lng}&z=15&output=embed`}
-                      className="block"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {(job.office_address || hasMap) && (
+  <Card>
+    <CardContent className="pt-6 pb-5">
+      <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+        <MapPin className="h-4 w-4 text-muted-foreground" />
+        Office Location
+      </h2>
+
+      {job.office_address && (
+        <div className="mb-3">
+          {/^https?:\/\//i.test(job.office_address) ||
+          job.office_address.includes("maps.google") ||
+          job.office_address.includes("goo.gl") ? (
+            <a
+              href={job.office_address}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline break-all inline-flex items-center gap-1.5"
+            >
+              Open location on Google Maps
+            </a>
+          ) : (
+            <p className="text-sm text-muted-foreground">{job.office_address}</p>
+          )}
+        </div>
+      )}
+
+      {hasMap && (
+        <div className="rounded-lg overflow-hidden border border-border">
+          <iframe
+            title="Office Location"
+            width="100%"
+            height="300"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://maps.google.com/maps?q=${job.office_lat},${job.office_lng}&z=15&output=embed`}
+            className="block"
+          />
+        </div>
+      )}
+    </CardContent>
+  </Card>
+)}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-4">
             {/* Quick details */}
-            <Card> 
+            <Card>
               <CardContent className="pt-5 pb-5 space-y-3">
                 <h3 className="text-sm font-semibold">Quick Details</h3>
                 <Detail icon={<Tag className="h-4 w-4" />} label="Category" value={job.category} />
@@ -171,19 +224,17 @@ export default async function JobDetailPage({
                 )}
                 <Detail icon={<Calendar className="h-4 w-4" />} label="Posted" value={postedOn} />
                 <Detail icon={<Clock className="h-4 w-4" />} label="Duration" value={job.duration} />
-                
-                {/* ✅ UPDATED: Show salary with currency in quick details */}
+
                 <div className="flex items-start gap-2.5">
                   <Banknote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
                     <p className="text-xs text-muted-foreground">Salary</p>
                     <p className="text-sm text-foreground">
-                      {job.salary_type === "After Interview" 
-                        ? "To be discussed" 
-                        : job.salary_rate 
+                      {job.salary_type === "After Interview"
+                        ? "To be discussed"
+                        : job.salary_rate
                           ? `${job.salary_rate} ${job.currency || "SAR"}`
-                          : job.salary_type ?? "Not specified"
-                      }
+                          : job.salary_type ?? "Not specified"}
                     </p>
                     {job.salary_type && job.salary_type !== "After Interview" && job.salary_rate && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -192,12 +243,12 @@ export default async function JobDetailPage({
                     )}
                   </div>
                 </div>
-                
+
                 {job.currency && (
-                  <Detail 
-                    icon={<Banknote className="h-4 w-4" />} 
-                    label="Currency" 
-                    value={job.currency} 
+                  <Detail
+                    icon={<Banknote className="h-4 w-4" />}
+                    label="Currency"
+                    value={job.currency}
                   />
                 )}
                 {job.salary_type && (
@@ -217,7 +268,114 @@ export default async function JobDetailPage({
               </CardContent>
             </Card>
 
-            {/* Company contact */}
+            {/* Posted by — profile info */}
+            <Card>
+              <CardContent className="pt-5 pb-5 space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  Posted by
+                </h3>
+
+                <div className="flex items-center gap-3">
+                  {poster?.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={poster.avatar_url}
+                      alt={poster.full_name}
+                      className="h-11 w-11 rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="h-11 w-11 rounded-full bg-primary/15 text-primary flex items-center justify-center text-sm font-bold">
+                      {(poster?.full_name || job.company_name || "U")
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((w) => w[0])
+                        .join("")
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {poster?.full_name || job.company_name}
+                    </p>
+                    {poster?.profession && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {poster.profession}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {posterLocation && (
+                  <Detail
+                    icon={<MapPin className="h-4 w-4" />}
+                    label="Location"
+                    value={posterLocation}
+                  />
+                )}
+
+                {poster?.company_website && (
+                  <div className="flex items-start gap-2.5">
+                    <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Website</p>
+                      <a
+                        href={
+                          poster.company_website.startsWith("http")
+                            ? poster.company_website
+                            : `https://${poster.company_website}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline break-all"
+                      >
+                        {poster.company_website}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Profile contact (only if allowed) */}
+                {showPhone && (
+                  <div className="flex items-start gap-2.5">
+                    <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <a
+                        href={`tel:${poster!.phone!.replace(/\s+/g, "")}`}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        {poster!.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {showEmail && (
+                  <div className="flex items-start gap-2.5">
+                    <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <a
+                        href={`mailto:${poster!.email}`}
+                        className="text-sm text-primary hover:underline break-all"
+                      >
+                        {poster!.email}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Only show message when they allowed contact but profile has none */}
+                {allowProfileContact && !showPhone && !showEmail && (
+                  <p className="text-xs text-muted-foreground">
+                    Contact details are not available on this profile.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Company contact (always shown if available) */}
             <Card>
               <CardContent className="pt-5 pb-5 space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">

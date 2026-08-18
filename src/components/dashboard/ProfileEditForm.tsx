@@ -23,13 +23,18 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Account type (role)
+  const [role, setRole] = useState<"seeker" | "employer">(
+    initialProfile.role === "employer" ? "employer" : "seeker"
+  );
+
   // Basic info
   const [fullName, setFullName] = useState(initialProfile.full_name ?? "");
   const [username, setUsername] = useState(initialProfile.username ?? "");
   const [phone, setPhone] = useState(initialProfile.phone ?? "");
   const [gender, setGender] = useState(initialProfile.gender ?? "");
 
-  // New fields – email (read-only), country, city
+  // Email (read-only), country, city
   const [email] = useState(initialProfile.email ?? "");
   const [country, setCountry] = useState(initialProfile.country ?? "");
   const [city, setCity] = useState(initialProfile.city ?? "");
@@ -60,12 +65,12 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
   );
   const cvInputRef = useRef<HTMLInputElement>(null);
 
-  const isSeeker = initialProfile.role === "seeker";
+  // Use selected role so sections update live
+  const isSeeker = role === "seeker";
 
-  // Delete CV handler
   function handleDeleteCv() {
     setExistingCvUrl("");
-    setCvFile(null); // also clear any new file
+    setCvFile(null);
   }
 
   async function handleSave() {
@@ -88,9 +93,8 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
       }
 
       // Determine final CV URL
-      let cvUrl = existingCvUrl; // if we deleted, this will be empty string -> null later
+      let cvUrl = existingCvUrl;
       if (cvFile) {
-        // Upload new CV (this replaces existing)
         const fd = new FormData();
         fd.append("cv", cvFile);
         const res = await fetch("/api/profile/upload-cv", {
@@ -106,20 +110,20 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role: initialProfile.role,
+          role, // ← send the selected role
           fullName: fullName.trim(),
           username: username.trim() || null,
           phone: phone.trim() || null,
           gender: gender || null,
-          country: country || null,            // new
-          city: city.trim() || null,           // new
-          profession: isSeeker ? (profession || null) : null,
+          country: country || null,
+          city: city.trim() || null,
+          profession: isSeeker ? profession || null : null,
           avatarUrl,
           avatarPublicId,
-          cvUrl: cvUrl || null,                // empty string -> null
-          companyCr: !isSeeker ? (companyCr.trim() || null) : null,
-          companyWebsite: !isSeeker ? (companyWebsite.trim() || null) : null,
-          companyAddress: !isSeeker ? (companyAddress.trim() || null) : null,
+          cvUrl: cvUrl || null,
+          companyCr: !isSeeker ? companyCr.trim() || null : null,
+          companyWebsite: !isSeeker ? companyWebsite.trim() || null : null,
+          companyAddress: !isSeeker ? companyAddress.trim() || null : null,
         }),
       });
 
@@ -127,7 +131,8 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error ?? "Failed to save profile");
       }
-      toast.success("Profile updated successfully.");
+
+      toast.success("Profile updated. Refreshing…");
       router.refresh();
     } catch (err: unknown) {
       toast.error((err as Error)?.message ?? "Something went wrong.");
@@ -144,6 +149,22 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Keep your information up to date to improve visibility.
+        </p>
+      </div>
+
+      {/* Account type */}
+      <div className="w-full p-5 rounded-xl border border-border bg-card">
+        <label className="text-sm font-medium block mb-1.5">Account type</label>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as "seeker" | "employer")}
+          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option value="seeker">Job Seeker / Personal</option>
+          <option value="employer">Employer</option>
+        </select>
+        <p className="text-xs text-muted-foreground mt-1">
+          You can change this anytime. Seeker = find jobs. Employer = post jobs.
         </p>
       </div>
 
@@ -211,7 +232,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
           Personal Info
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Full Name (required) */}
           <Field label="Full Name" className="col-span-full">
             <Input
               value={fullName}
@@ -220,7 +240,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             />
           </Field>
 
-          {/* Email – read-only */}
           <Field label="Email address" className="col-span-full">
             <Input
               value={email}
@@ -232,7 +251,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             </p>
           </Field>
 
-          {/* Username */}
           <Field label="Username">
             <Input
               value={username}
@@ -241,7 +259,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             />
           </Field>
 
-          {/* Phone */}
           <Field label="Phone">
             <Input
               value={phone}
@@ -250,35 +267,37 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             />
           </Field>
 
-          {/* Gender */}
           <Field label="Gender">
-            <Select
-              value={gender}
-              onValueChange={(v: any) => setGender(v)}
-            >
+            <Select value={gender} onValueChange={(v: string) => setGender(v)}>
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="male" className="cursor-pointer">Male</SelectItem>
-                <SelectItem value="female" className="cursor-pointer">Female</SelectItem>
-                <SelectItem value="prefer_not_to_say" className="cursor-pointer">Prefer not to say</SelectItem>
+                <SelectItem value="male" className="cursor-pointer">
+                  Male
+                </SelectItem>
+                <SelectItem value="female" className="cursor-pointer">
+                  Female
+                </SelectItem>
+                <SelectItem value="prefer_not_to_say" className="cursor-pointer">
+                  Prefer not to say
+                </SelectItem>
               </SelectContent>
             </Select>
           </Field>
 
-          {/* Country */}
           <Field label="Country">
-            <Select
-              value={country}
-              onValueChange={(v: any) => setCountry(v)}
-            >
+            <Select value={country} onValueChange={(v: string) => setCountry(v)}>
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent>
                 {COUNTRIES.map((c) => (
-                  <SelectItem key={c.code} value={c.code} className="cursor-pointer">
+                  <SelectItem
+                    key={c.code}
+                    value={c.code}
+                    className="cursor-pointer"
+                  >
                     {c.name}
                   </SelectItem>
                 ))}
@@ -286,7 +305,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             </Select>
           </Field>
 
-          {/* City */}
           <Field label="City">
             <Input
               value={city}
@@ -304,11 +322,10 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             Professional Info
           </h2>
 
-          {/* Profession */}
           <Field label="Profession">
             <Select
               value={profession}
-              onValueChange={(v: any) => setProfession(v)}
+              onValueChange={(v: string) => setProfession(v)}
             >
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Your profession" />
@@ -323,10 +340,8 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             </Select>
           </Field>
 
-          {/* CV / Resume */}
           <Field label="CV / Resume">
             <div className="space-y-2">
-              {/* Existing CV display + delete button */}
               {existingCvUrl && !cvFile && (
                 <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
                   <span className="text-sm text-muted-foreground truncate max-w-[70%]">
@@ -345,7 +360,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
                 </div>
               )}
 
-              {/* Upload / Replace */}
               <label
                 className={cn(
                   "flex items-center gap-3 h-11 px-3 rounded-lg border border-dashed cursor-pointer transition-colors",
@@ -362,7 +376,7 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
                     const f = e.target.files?.[0];
                     if (f) {
                       setCvFile(f);
-                      setExistingCvUrl(""); // clear existing when new file chosen
+                      setExistingCvUrl("");
                     }
                   }}
                 />
@@ -380,8 +394,8 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
                     onClick={(e) => {
                       e.preventDefault();
                       setCvFile(null);
-                      // if there was an existing CV, restore its visibility
-                      if (initialProfile.cv_url) setExistingCvUrl(initialProfile.cv_url);
+                      if (initialProfile.cv_url)
+                        setExistingCvUrl(initialProfile.cv_url);
                     }}
                     className="ml-auto"
                     aria-label="Remove new CV file"

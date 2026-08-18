@@ -398,7 +398,7 @@ export function HeroSection() {
                 className="w-full h-12 sm:h-13 pl-3.5 pr-9 rounded-xl border border-primary/15 bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">
-                  {!country ? "Select City" : cities.length === 0 ? "Any city" : "All Cities"}
+                  {!country ? "Select country first" : cities.length === 0 ? "Any city" : "All Cities"}
                 </option>
                 {cities.map((c) => (
                   <option key={c} value={c}>

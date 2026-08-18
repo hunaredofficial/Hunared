@@ -6,13 +6,33 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "admin" | "employer" | "seeker";
+export type UserRole = "admin" | "employer" | "seeker" | "personal";
 export type JobStatus = "pending" | "approved" | "rejected" | "draft" | "closed";
 export type EmploymentType = "permanent" | "temporary" | "task_force";
 export type ArticleStatus = "pending" | "approved";
 export type ArticleCategory = "safety_hse" | "engineering" | "career_tips";
 export type ListingStatus = "pending" | "approved" | "rejected";
-export type ListingCategory = "accommodation" | "vehicles" | "electronics" | "services" | "other";
+export type ListingCategory =
+  | "for_sale"
+  | "for_rent"
+  | "services"
+  | "accommodation"
+  | "property"
+  | "vehicles"
+  | "electronics"
+  | "furniture_home"
+  | "wanted"
+  | "free_items"
+  | "lost_found"
+  | "events"
+  | "business_commercial"
+  | "offers_deals"
+  | "announcements"
+  | "donations"
+  | "community"
+  | "education_training"
+  | "wholesale"
+  | "other";
 export type OrderStatus = "pending" | "completed" | "cancelled";
 export type AdType = "adsense" | "custom";
 
@@ -95,86 +115,89 @@ export interface Database {
         Relationships: [];
       };
       jobs: {
-        Row: {
-          id: string;
-          employer_id: string;
-          job_title: string;
-          job_description: string;
-          positions: number | null;
-          location: string;
-          country: string | null;
-          city: string | null;
-          employment_type: EmploymentType;
-          duration: string;
-          salary_rate: string | null;
-          salary_type: string | null;
-          currency: string | null; // ✅ ADD THIS LINE
-          category: string;
-          subcategory: string | null;
-          company_name: string;
-          company_phone: string | null;
-          company_email: string | null;
-          company_address: string | null;
-          office_lat: number | null;
-          office_lng: number | null;
-          office_address: string | null;
-          status: JobStatus;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          employer_id: string;
-          job_title: string;
-          job_description: string;
-          positions?: number | null;
-          location: string;
-          country?: string | null;
-          city?: string | null;
-          employment_type?: EmploymentType;
-          duration: string;
-          salary_rate?: string | null;
-          salary_type?: string | null;
-          currency?: string | null; // ✅ ADD THIS LINE
-          category: string;
-          subcategory?: string | null;
-          company_name: string;
-          company_phone?: string | null;
-          company_email?: string | null;
-          company_address?: string | null;
-          office_lat?: number | null;
-          office_lng?: number | null;
-          office_address?: string | null;
-          status?: JobStatus;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          employer_id?: string;
-          job_title?: string;
-          job_description?: string;
-          positions?: number | null;
-          location?: string;
-          country?: string | null;
-          city?: string | null;
-          employment_type?: EmploymentType;
-          duration?: string;
-          salary_rate?: string | null;
-          salary_type?: string | null;
-          currency?: string | null; // ✅ ADD THIS LINE
-          category?: string;
-          subcategory?: string | null;
-          company_name?: string;
-          company_phone?: string | null;
-          company_email?: string | null;
-          company_address?: string | null;
-          office_lat?: number | null;
-          office_lng?: number | null;
-          office_address?: string | null;
-          status?: JobStatus;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+  Row: {
+    id: string;
+    employer_id: string;
+    job_title: string;
+    job_description: string;
+    positions: number | null;
+    location: string;
+    country: string | null;
+    city: string | null;
+    employment_type: EmploymentType;
+    duration: string;
+    salary_rate: string | null;
+    salary_type: string | null;
+    currency: string | null;
+    category: string;
+    subcategory: string | null;
+    company_name: string;
+    company_phone: string | null;
+    company_email: string | null;
+    company_address: string | null;
+    office_lat: number | null;
+    office_lng: number | null;
+    office_address: string | null;
+    status: JobStatus;
+    created_at: string;
+    show_profile_contact: boolean; // ← added
+  };
+  Insert: {
+    id?: string;
+    employer_id: string;
+    job_title: string;
+    job_description: string;
+    positions?: number | null;
+    location: string;
+    country?: string | null;
+    city?: string | null;
+    employment_type?: EmploymentType;
+    duration: string;
+    salary_rate?: string | null;
+    salary_type?: string | null;
+    currency?: string | null;
+    category: string;
+    subcategory?: string | null;
+    company_name: string;
+    company_phone?: string | null;
+    company_email?: string | null;
+    company_address?: string | null;
+    office_lat?: number | null;
+    office_lng?: number | null;
+    office_address?: string | null;
+    status?: JobStatus;
+    created_at?: string;
+    show_profile_contact?: boolean; // ← added
+  };
+  Update: {
+    id?: string;
+    employer_id?: string;
+    job_title?: string;
+    job_description?: string;
+    positions?: number | null;
+    location?: string;
+    country?: string | null;
+    city?: string | null;
+    employment_type?: EmploymentType;
+    duration?: string;
+    salary_rate?: string | null;
+    salary_type?: string | null;
+    currency?: string | null;
+    category?: string;
+    subcategory?: string | null;
+    company_name?: string;
+    company_phone?: string | null;
+    company_email?: string | null;
+    company_address?: string | null;
+    office_lat?: number | null;
+    office_lng?: number | null;
+    office_address?: string | null;
+    status?: JobStatus;
+    created_at?: string;
+    show_profile_contact?: boolean; // ← added
+  };
+  Relationships: [];
+};
       articles: {
         Row: {
           id: string;

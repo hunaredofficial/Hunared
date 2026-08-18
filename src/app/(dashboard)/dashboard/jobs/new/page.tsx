@@ -46,6 +46,7 @@ interface JobForm {
   companyPhone: string;
   companyEmail: string;
   companyAddress: string;
+  showProfileContact: boolean; // ← added
 }
 
 const CURRENCIES = [
@@ -121,9 +122,11 @@ export default function PostJobPage() {
     companyPhone: "",
     companyEmail: "",
     companyAddress: "",
+    showProfileContact: false, // ← added
   });
 
-  const set = (field: keyof JobForm, value: string) =>
+  // Updated setter to support both string and boolean
+  const set = (field: keyof JobForm, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const salaryAmountRequired =
@@ -190,6 +193,7 @@ export default function PostJobPage() {
           companyPhone: form.companyPhone.trim() || null,
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
+          showProfileContact: form.showProfileContact, // ← added
           // officeLat: officeLocation?.lat ?? null,
           // officeLng: officeLocation?.lng ?? null,
           // officeAddress: officeLocation?.address ?? null,
@@ -428,6 +432,26 @@ export default function PostJobPage() {
 
             <div className="col-span-full text-[10px] text-muted-foreground mt-1">
               At least one contact method (Phone or Email) is required.
+            </div>
+
+            {/* ← NEW CHECKBOX */}
+            <div className="col-span-full flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
+              <input
+                id="showProfileContact"
+                type="checkbox"
+                checked={form.showProfileContact}
+                onChange={(e) => set("showProfileContact", e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-input"
+              />
+              <label htmlFor="showProfileContact" className="text-sm leading-snug cursor-pointer">
+                <span className="font-medium text-foreground">
+                  Show my profile phone &amp; email on this job
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  Uses the same contact details from your signup profile. If unchecked,
+                  only your name appears under “Posted by”.
+                </span>
+              </label>
             </div>
 
             <Field label="Company Address (Optional)" className="col-span-full">

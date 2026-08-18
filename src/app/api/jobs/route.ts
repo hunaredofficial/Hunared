@@ -18,6 +18,7 @@ interface PostJobBody {
   duration: string;
   salaryType: string;
   salaryRate?: string | null;
+  currency?: string | null;          // kept for completeness
   category: string;
   subcategory?: string | null;
   companyName: string;
@@ -27,6 +28,7 @@ interface PostJobBody {
   officeLat?: number | null;
   officeLng?: number | null;
   officeAddress?: string | null;
+  showProfileContact?: boolean;      // ← added
 }
 
 /* ── GET: list approved jobs (public) ─────────────────────── */
@@ -77,24 +79,24 @@ export async function POST(req: Request) {
 
   // Confirm user is an employer
   const { data: profile, error: profileError } = await supabase
-  .from("profiles")
-  .select("role")
-  .eq("id", userId)
-  .single();
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
 
-if (profileError || !profile) {
-  return NextResponse.json(
-    { error: "Profile not found" },
-    { status: 404 }
-  );
-}
+  if (profileError || !profile) {
+    return NextResponse.json(
+      { error: "Profile not found" },
+      { status: 404 }
+    );
+  }
 
-if (!["admin", "employer"].includes(profile.role)) {
-  return NextResponse.json(
-    { error: "Only employers can post jobs." },
-    { status: 403 }
-  );
-}
+  if (!["admin", "employer"].includes(profile.role)) {
+    return NextResponse.json(
+      { error: "Only employers can post jobs." },
+      { status: 403 }
+    );
+  }
 
   let body: PostJobBody;
   try {
@@ -158,6 +160,7 @@ if (!["admin", "employer"].includes(profile.role)) {
       office_lng: body.officeLng ?? null,
       office_address: body.officeAddress ?? null,
       status: jobStatus,
+      show_profile_contact: Boolean(body.showProfileContact), // ← added
     })
     .select("id")
     .single();

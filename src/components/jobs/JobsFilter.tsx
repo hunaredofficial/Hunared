@@ -72,11 +72,11 @@ export function JobsFilter({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="" className="cursor-pointer">All categories</SelectItem>
-          {categories.map((c) => (
-            <SelectItem key={c} value={c} className="cursor-pointer">
-              {c}
-            </SelectItem>
-          ))}
+          {Array.from(new Set(categories)).map((c) => (
+  <SelectItem key={c} value={c} className="cursor-pointer">
+    {c}
+  </SelectItem>
+))}
         </SelectContent>
       </Select>
       <Select

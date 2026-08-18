@@ -86,7 +86,14 @@ export function EditListingForm({ listing }: { listing: Listing }) {
   const [loading, setLoading] = useState(false);
 
   // ✅ Price is optional only for the "services" category
-  const isPriceOptional = category === "services";
+  const isPriceOptional =
+  category === "services" ||
+  category === "free_items" ||
+  category === "wanted" ||
+  category === "lost_found" ||
+  category === "announcements" ||
+  category === "donations" ||
+  category === "community";
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);

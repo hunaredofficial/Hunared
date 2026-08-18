@@ -3,9 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
-  Menu, X, LayoutDashboard, ChevronDown, Search, Plus,
+  Menu,
+  X,
+  LayoutDashboard,
+  ChevronDown,
+  Search,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,42 +29,10 @@ type MegaGroup = {
 type NavItem = SimpleLink | MegaGroup;
 
 const NAV_ITEMS: NavItem[] = [
-  {
-    type: "mega",
-    label: "Jobs",
-    href: "/jobs",
-    items: [
-      { label: "Civil Engineering", href: "/jobs?category=Civil Engineering" },
-      { label: "Electrical Engineering", href: "/jobs?category=Electrical Engineering" },
-      { label: "Mechanical Engineering", href: "/jobs?category=Mechanical Engineering" },
-      { label: "Safety & HSE", href: "/jobs?category=Safety & HSE" },
-      { label: "Transportation", href: "/jobs?category=Transportation" },
-      { label: "All Other Jobs", href: "/jobs?category=Other" },
-    ],
-  },
+  { type: "link", href: "/jobs", label: "Jobs" },
   { type: "link", href: "/candidates", label: "Candidates" },
-  {
-    type: "mega",
-    label: "Marketplace",
-    href: "/market",
-    items: [
-      { label: "Property & Accommodation", href: "/market?category=accommodation" },
-      { label: "Vehicles", href: "/market?category=vehicles" },
-      { label: "Electronics", href: "/market?category=electronics" },
-      { label: "Services", href: "/market?category=services" },
-      { label: "Other Listings", href: "/market?category=other" },
-    ],
-  },
-  {
-    type: "mega",
-    label: "Learning Hub",
-    href: "/education",
-    items: [
-      { label: "Safety & HSE", href: "/education?category=safety_hse" },
-      { label: "Engineering", href: "/education?category=engineering" },
-      { label: "Career Tips", href: "/education?category=career_tips" },
-    ],
-  },
+  { type: "link", href: "/market", label: "Marketplace" },
+  { type: "link", href: "/education", label: "Learning Hub" },
 ];
 
 export function Header() {
@@ -96,7 +69,7 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function handleSearchSubmit(e: React.FormEvent) {
+  function handleSearchSubmit(e: FormEvent) {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -116,32 +89,32 @@ export function Header() {
       <div className={cn("mx-auto px-4 sm:px-6 lg:px-8", scrolled ? "max-w-full" : "max-w-7xl")}>
         <div className="flex h-16 items-center justify-between gap-3">
           {/* Logo */}
-<Link
-  href="/"
-  className="flex items-center gap-2.5 group shrink-0 logo-premium"
-  aria-label="Hunared home"
->
-  {/* Logo Icon */}
-  <Image
-    src="/assets/logos/logo-horizontal.png"
-    alt="Hunared Logo"
-    width={42}
-    height={38}
-    quality={100}
-    priority
-    className="h-10 w-10 object-contain"
-  />
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 group shrink-0 logo-premium"
+            aria-label="Hunared home"
+          >
+            {/* Logo Icon */}
+            <Image
+              src="/assets/logos/logo-horizontal.png"
+              alt="Hunared Logo"
+              width={42}
+              height={38}
+              quality={100}
+              priority
+              className="h-10 w-10 object-contain"
+            />
 
-  {/* Logo Text */}
-  <span
-    className="logo-text relative text-[30px] font-extrabold tracking-tight leading-none select-none"
-    style={{
-      fontFamily: "Inter, Poppins, sans-serif",
-    }}
-  >
-    <span className="logo-text-gradient">Hunared</span>
-  </span>
-</Link>
+            {/* Logo Text */}
+            <span
+              className="logo-text relative text-[30px] font-extrabold tracking-tight leading-none select-none"
+              style={{
+                fontFamily: "Inter, Poppins, sans-serif",
+              }}
+            >
+              <span className="logo-text-gradient">Hunared</span>
+            </span>
+          </Link>
 
           {/* Desktop Nav with Mega Menu */}
           <nav
@@ -185,7 +158,10 @@ export function Header() {
                   >
                     {item.label}
                     <ChevronDown
-                      className={cn("h-3.5 w-3.5 transition-transform duration-200", isOpen && "rotate-180")}
+                      className={cn(
+                        "h-3.5 w-3.5 transition-transform duration-200",
+                        isOpen && "rotate-180"
+                      )}
                     />
                   </button>
 
@@ -239,12 +215,7 @@ export function Header() {
           {/* Right Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Post an Ad (desktop) */}
-            <Button
-              size="sm"
-              variant="outline"
-              className="hidden md:inline-flex"
-              asChild
-            >
+            <Button size="sm" variant="outline" className="hidden md:inline-flex" asChild>
               <Link href="/post">
                 <Plus className="h-4 w-4 mr-1" />
                 Post an Ad
@@ -389,7 +360,7 @@ export function Header() {
               <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link href="/sign-in">Sign In</Link>
               </Button>
-              <Button size="sm" className="flex-1 " asChild>
+              <Button size="sm" className="flex-1" asChild>
                 <Link href="/register">Get Started</Link>
               </Button>
             </Show>
@@ -403,72 +374,73 @@ export function Header() {
             </Show>
           </div>
         </div>
-            </div>
-     <style jsx>{`
-  /* ── Premium Logo Base ─────────────────────────────── */
-  .logo-premium {
-    will-change: transform;
-    transition: transform 300ms ease-out;
-  }
+      </div>
 
-  .logo-premium:hover {
-    transform: scale(1.03);
-  }
+      <style jsx>{`
+        /* ── Premium Logo Base ─────────────────────────────── */
+        .logo-premium {
+          will-change: transform;
+          transition: transform 300ms ease-out;
+        }
 
-  /* ── Text container ────────────────────────────────── */
-  .logo-text {
-    position: relative;
-    display: inline-block;
-  }
+        .logo-premium:hover {
+          transform: scale(1.03);
+        }
 
-  /* ── Animation stays INSIDE the letters ───────────── */
-  .logo-text-gradient {
-    background: linear-gradient(
-      115deg,
-      #2ea8ff 0%,
-      #356dff 22%,
-      #5ef7ff 45%,
-      #2a2f8f 68%,
-      #7fdbff 100%
-    );
-    background-size: 250% 250%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: logoInsideShift 6s ease-in-out infinite;
-    will-change: background-position;
-  }
+        /* ── Text container ────────────────────────────────── */
+        .logo-text {
+          position: relative;
+          display: inline-block;
+        }
 
-  /* Slightly brighter on hover (still inside letters) */
-  .logo-premium:hover .logo-text-gradient {
-    background: linear-gradient(
-      115deg,
-      #4eb8ff 0%,
-      #4a7fff 22%,
-      #7ef9ff 45%,
-      #3a3faf 68%,
-      #9fe5ff 100%
-    );
-    background-size: 250% 250%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    transition: background 300ms ease-out;
-  }
+        /* ── Animation stays INSIDE the letters ───────────── */
+        .logo-text-gradient {
+          background: linear-gradient(
+            115deg,
+            #2ea8ff 0%,
+            #356dff 22%,
+            #5ef7ff 45%,
+            #2a2f8f 68%,
+            #7fdbff 100%
+          );
+          background-size: 250% 250%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: logoInsideShift 6s ease-in-out infinite;
+          will-change: background-position;
+        }
 
-  /* ── Smooth color movement inside the text ────────── */
+        /* Slightly brighter on hover (still inside letters) */
+        .logo-premium:hover .logo-text-gradient {
+          background: linear-gradient(
+            115deg,
+            #4eb8ff 0%,
+            #4a7fff 22%,
+            #7ef9ff 45%,
+            #3a3faf 68%,
+            #9fe5ff 100%
+          );
+          background-size: 250% 250%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          transition: background 300ms ease-out;
+        }
+
+        /* ── Smooth color movement inside the text ────────── */
         @keyframes logoInsideShift {
-        0% {
-          background-position: 0% 50%;
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
         }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-    `}</style>
-  </header>
-);
+      `}</style>
+    </header>
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,15 @@ const SUBCATEGORIES: Record<string, string[]> = {
     "Warehouses",
     "Land",
   ],
+  property: [
+    "Apartment",
+    "Villa",
+    "Land",
+    "Commercial",
+    "Office",
+    "Shop",
+    "Warehouse",
+  ],
   vehicles: ["Cars", "Motorcycles", "Trucks", "Spare Parts", "Tires"],
   electronics: [
     "Mobile Phones",
@@ -55,6 +64,13 @@ const SUBCATEGORIES: Record<string, string[]> = {
     "Tablets",
     "Watches",
     "Printers",
+  ],
+  furniture_home: [
+    "Furniture",
+    "Appliances",
+    "Kitchen",
+    "Decor",
+    "Home Accessories",
   ],
   services: [
     "Electrical",
@@ -73,6 +89,39 @@ const SUBCATEGORIES: Record<string, string[]> = {
     "Transportation",
     "Consulting",
   ],
+  for_sale: ["New", "Used", "Like New"],
+  for_rent: ["Daily", "Weekly", "Monthly", "Yearly"],
+  lost_found: [
+    "Mobile Phones",
+    "Laptops",
+    "Tablets",
+    "Electronics",
+    "Documents",
+    "Passport",
+    "ID / Cards",
+    "Keys",
+    "Wallets",
+    "Bags / Luggage",
+    "Jewelry",
+    "Watches",
+    "Vehicles",
+    "Motorcycles",
+    "Bicycles",
+    "Pets",
+    "Personal Items",
+    "Missing Persons",
+    "Other",
+  ],
+  free_items: ["Furniture", "Electronics", "Clothes", "Other"],
+  wanted: ["Item Wanted", "Service Wanted", "Property Wanted"],
+  events: ["Workshop", "Meetup", "Conference", "Other"],
+  business_commercial: ["Office", "Shop", "Equipment", "Other"],
+  offers_deals: ["Discount", "Bundle", "Clearance"],
+  announcements: ["Public Notice", "Community Notice"],
+  donations: ["Clothes", "Food", "Equipment", "Other"],
+  community: ["Help Request", "Volunteer", "Other"],
+  education_training: ["Course", "Training", "Tutoring", "Certification"],
+  wholesale: ["Bulk Items", "Trade Supply"],
   other: [
     "Furniture",
     "Home Appliances",
@@ -100,47 +149,49 @@ async function uploadImageToCloudinary(
   return { url: data.secure_url, public_id: data.public_id };
 }
 
-export default function NewListingPage() {
+function NewListingForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  
-  // ✅ UPDATED: Default currency to SAR
   const [currency, setCurrency] = useState("SAR");
-  
-  const searchParams = useSearchParams();
   const [category, setCategory] = useState(
     searchParams.get("category") ?? ""
   );
-  const [subcategory, setSubcategory] = useState("");
-  
-  // ✅ UPDATED: Default country to Saudi Arabia (SA)
+  const [subcategory, setSubcategory] = useState(
+    searchParams.get("subcategory") ?? ""
+  );
   const [country, setCountry] = useState("SA");
-  
   const [city, setCity] = useState("");
+  const [mapsUrl, setMapsUrl] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [listingType, setListingType] = useState<ListingType>("standard");
   const [externalLink, setExternalLink] = useState("");
-
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const availableSubcategories = category
-    ? SUBCATEGORIES[category] ?? []
-    : [];
+  const availableSubcategories = category ? SUBCATEGORIES[category] ?? [] : [];
 
-  // ✅ Price is optional only for the "services" category
-  const isPriceOptional = category === "services";
+  const isPriceOptional =
+    category === "services" ||
+    category === "free_items" ||
+    category === "wanted" ||
+    category === "lost_found" ||
+    category === "announcements" ||
+    category === "donations" ||
+    category === "community";
 
-  // Force listing type to "standard" and clear external link for services & property
   useEffect(() => {
-    if (category === "services" || category === "accommodation") {
+    if (
+      category === "services" ||
+      category === "accommodation" ||
+      category === "lost_found"
+    ) {
       setListingType("standard");
       setExternalLink("");
     }
@@ -149,8 +200,10 @@ export default function NewListingPage() {
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
-    const newPreviews = files.map((f) => URL.createObjectURL(f));
-    setImageFiles((prev) => [...prev, ...files]);
+    const remaining = 8 - imageFiles.length;
+    const selected = files.slice(0, remaining);
+    const newPreviews = selected.map((f) => URL.createObjectURL(f));
+    setImageFiles((prev) => [...prev, ...selected]);
     setImagePreviews((prev) => [...prev, ...newPreviews]);
     e.target.value = "";
   }
@@ -177,12 +230,14 @@ export default function NewListingPage() {
       toast.error("Please select a category");
       return;
     }
-    // ✅ Price is required for all categories EXCEPT services
     if (!isPriceOptional && !price.trim()) {
       toast.error("Price is required");
       return;
     }
-    // Contact phone is mandatory
+    if (!city.trim()) {
+      toast.error("City is required");
+      return;
+    }
     if (!contactPhone.trim()) {
       toast.error("Contact phone is required");
       return;
@@ -191,8 +246,6 @@ export default function NewListingPage() {
       toast.error("Please enter an external / affiliate URL");
       return;
     }
-
-    // ✅ NEW: Image mandatory for all listing types
     if (imageFiles.length === 0) {
       toast.error("Please upload at least one image");
       return;
@@ -201,21 +254,19 @@ export default function NewListingPage() {
     setLoading(true);
     try {
       const imageUrls: string[] = [];
-      if (imageFiles.length > 0) {
-        setUploading(true);
-        for (const file of imageFiles) {
-          const uploaded = await uploadImageToCloudinary(file);
-          imageUrls.push(uploaded.url);
-        }
-        setUploading(false);
+      setUploading(true);
+      for (const file of imageFiles) {
+        const uploaded = await uploadImageToCloudinary(file);
+        imageUrls.push(uploaded.url);
       }
+      setUploading(false);
 
-      const countryName = country
-        ? COUNTRIES.find((c) => c.code === country)?.name ?? country
-        : "";
-      const locationString = [city.trim(), countryName]
-        .filter(Boolean)
-        .join(", ");
+      const countryName =
+        COUNTRIES.find((c) => c.code === country)?.name ?? country;
+      const locationString =
+        [city.trim(), countryName, mapsUrl.trim()]
+          .filter(Boolean)
+          .join(" | ") || undefined;
 
       const res = await fetch("/api/market", {
         method: "POST",
@@ -223,21 +274,29 @@ export default function NewListingPage() {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
-          price: price.trim(),
+          price: price.trim() || "",
           currency,
           category,
           subcategory: subcategory || undefined,
           country: country || undefined,
           city: city.trim() || undefined,
-          location: locationString || undefined,
+          location: locationString,
           contact_phone: contactPhone.trim() || undefined,
           image_urls: imageUrls,
           listing_type: listingType,
           external_link: externalLink.trim() || undefined,
         }),
       });
-      const data = await res.json();
+
+      const text = await res.text();
+      let data: { error?: string } = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server error. Please try again.");
+      }
       if (!res.ok) throw new Error(data.error ?? "Failed to create listing");
+
       toast.success("Listing submitted for review!");
       router.push("/dashboard/market");
     } catch (err) {
@@ -263,7 +322,7 @@ export default function NewListingPage() {
             <CardTitle className="text-base">Listing Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Photos – now mandatory */}
+            {/* Photos */}
             <div>
               <label className="text-sm font-medium block mb-1.5">
                 Photos <span className="text-destructive">*</span>{" "}
@@ -319,7 +378,9 @@ export default function NewListingPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={
-                  category === "services"
+                  category === "lost_found"
+                    ? "e.g. Lost iPhone near Riyadh Park"
+                    : category === "services"
                     ? "e.g. Electrical Maintenance in Riyadh"
                     : category === "accommodation"
                     ? "e.g. 2-bedroom apartment in Riyadh"
@@ -331,7 +392,7 @@ export default function NewListingPage() {
             </div>
 
             {/* Category + Subcategory */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium block mb-1.5">
                   Category <span className="text-destructive">*</span>
@@ -388,8 +449,8 @@ export default function NewListingPage() {
               </div>
             </div>
 
-            {/* Country + City - Country now defaults to SA */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Country + City */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium block mb-1.5">
                   Country <span className="text-destructive">*</span>
@@ -411,9 +472,6 @@ export default function NewListingPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Default: Saudi Arabia
-                </p>
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">
@@ -428,8 +486,25 @@ export default function NewListingPage() {
               </div>
             </div>
 
-            {/* Price + Currency - Currency now defaults to SAR, Price optional for services */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Google Maps URL (Optional) */}
+            <div className="col-span-full">
+              <label className="text-sm font-medium block mb-1.5">
+                Location (Optional)
+              </label>
+              <input
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="https://maps.app.goo.gl/... or Google Maps link"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional. Paste a Google Maps link so buyers can open the place
+                on the map.
+              </p>
+            </div>
+
+            {/* Price + Currency */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium block mb-1.5">
                   Price{" "}
@@ -473,41 +548,37 @@ export default function NewListingPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Default: SAR (Saudi Riyal)
-                </p>
               </div>
             </div>
 
-            {/* Listing Type – hidden for services & accommodation */}
-            {category !== "services" && category !== "accommodation" && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Listing Type
-                </label>
-                <Select
-                  value={listingType}
-                  onValueChange={(v) => setListingType(v as ListingType)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">
-                      Standard (Contact to Buy)
-                    </SelectItem>
-                    <SelectItem value="native">
-                      Native Purchase
-                    </SelectItem>
-                    <SelectItem value="affiliate">
-                      Affiliate / External Link
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            {/* Listing Type */}
+            {category !== "services" &&
+              category !== "accommodation" &&
+              category !== "lost_found" && (
+                <div>
+                  <label className="text-sm font-medium block mb-1.5">
+                    Listing Type
+                  </label>
+                  <Select
+                    value={listingType}
+                    onValueChange={(v) => setListingType(v as ListingType)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">
+                        Standard (Contact to Buy)
+                      </SelectItem>
+                      <SelectItem value="native">Native Purchase</SelectItem>
+                      <SelectItem value="affiliate">
+                        Affiliate / External Link
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-            {/* External link – shown only for affiliate type */}
             {listingType === "affiliate" && (
               <div>
                 <label className="text-sm font-medium block mb-1.5">
@@ -524,13 +595,10 @@ export default function NewListingPage() {
                     className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Users will be directed to this URL to purchase or learn more.
-                </p>
               </div>
             )}
 
-            {/* Contact phone – now mandatory */}
+            {/* Contact phone */}
             <div>
               <label className="text-sm font-medium block mb-1.5">
                 Contact Phone <span className="text-destructive">*</span>
@@ -542,9 +610,6 @@ export default function NewListingPage() {
                 type="tel"
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Shown only to signed‑in users. Required for all listings.
-              </p>
             </div>
 
             {/* Description */}
@@ -560,14 +625,10 @@ export default function NewListingPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="min-w-[140px]"
-              >
+              <Button type="submit" disabled={loading} className="min-w-[140px]">
                 {uploading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />{" "}
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Uploading...
                   </>
                 ) : loading ? (
@@ -589,5 +650,19 @@ export default function NewListingPage() {
         </Card>
       </form>
     </div>
+  );
+}
+
+export default function NewListingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-3xl mx-auto px-4 py-8 text-sm text-muted-foreground">
+          Loading form…
+        </div>
+      }
+    >
+      <NewListingForm />
+    </Suspense>
   );
 }

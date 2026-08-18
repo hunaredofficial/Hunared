@@ -87,18 +87,39 @@ export function EditJobForm({ job }: { job: Job }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!form.jobTitle.trim()) { toast.error("Job Title is required."); return; }
-    if (!form.jobDescription.trim()) { toast.error("Job Description is required."); return; }
-    if (!form.location) { toast.error("Location is required."); return; }
-    if (!form.duration) { toast.error("Duration is required."); return; }
-    if (!form.category) { toast.error("Category is required."); return; }
-    if (!form.salaryType) { toast.error("Salary Type is required."); return; }
+    if (!form.jobTitle.trim()) {
+      toast.error("Job Title is required.");
+      return;
+    }
+    if (!form.jobDescription.trim()) {
+      toast.error("Job Description is required.");
+      return;
+    }
+    if (!form.location) {
+      toast.error("Location is required.");
+      return;
+    }
+    if (!form.duration) {
+      toast.error("Duration is required.");
+      return;
+    }
+    if (!form.category) {
+      toast.error("Category is required.");
+      return;
+    }
+    if (!form.salaryType) {
+      toast.error("Salary Type is required.");
+      return;
+    }
     if (salaryAmountRequired && !form.salaryRate.trim()) {
       toast.error("Salary / Rate amount is required for Hourly or Monthly type.");
       return;
     }
-    if (!form.companyName.trim()) { toast.error("Company Name is required."); return; }
-    
+    if (!form.companyName.trim()) {
+      toast.error("Company Name is required.");
+      return;
+    }
+
     // Check that at least one contact method is provided
     if (!form.companyPhone.trim() && !form.companyEmail.trim()) {
       toast.error("Please provide at least one contact method: Phone or Email.");
@@ -132,8 +153,14 @@ export function EditJobForm({ job }: { job: Job }) {
           company_phone: form.companyPhone.trim() || null,
           company_email: form.companyEmail.trim() || null,
           company_address: form.companyAddress.trim() || null,
-          office_lat: officeLocation?.lat ?? null,
-          office_lng: officeLocation?.lng ?? null,
+          office_lat:
+            officeLocation && officeLocation.lat !== 0
+              ? officeLocation.lat
+              : null,
+          office_lng:
+            officeLocation && officeLocation.lng !== 0
+              ? officeLocation.lng
+              : null,
           office_address: officeLocation?.address ?? null,
         }),
       });
@@ -192,14 +219,18 @@ export function EditJobForm({ job }: { job: Job }) {
             <Field label="Category *">
               <Select
                 value={form.category}
-                onValueChange={(v: string | null) => { if (v) set("category", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) set("category", v);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   {JOB_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -216,7 +247,9 @@ export function EditJobForm({ job }: { job: Job }) {
             <Field label="Location *">
               <Select
                 value={form.location}
-                onValueChange={(v: string | null) => { if (v) set("location", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) set("location", v);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
@@ -243,14 +276,18 @@ export function EditJobForm({ job }: { job: Job }) {
             <Field label="Duration *">
               <Select
                 value={form.duration}
-                onValueChange={(v: string | null) => { if (v) set("duration", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) set("duration", v);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
                   {DURATIONS.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -271,7 +308,9 @@ export function EditJobForm({ job }: { job: Job }) {
                 </SelectTrigger>
                 <SelectContent>
                   {SALARY_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -297,7 +336,7 @@ export function EditJobForm({ job }: { job: Job }) {
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
-              <Input 
+              <Input
                 placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
@@ -338,28 +377,21 @@ export function EditJobForm({ job }: { job: Job }) {
 
         {/* Office Location */}
         <Section title="Office Location (Optional)">
-          <p className="text-xs text-muted-foreground -mt-1">
-            Search for an address or click the map to pin the exact office location.
-          </p>
           <OfficeLocationPicker
             value={officeLocation}
             onChange={setOfficeLocation}
+            label="Paste Google Maps URL (Optional)"
           />
-          {officeLocation && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-xs text-destructive hover:text-destructive h-7 px-2 cursor-pointer"
-              onClick={() => setOfficeLocation(null)}
-            >
-              Clear location
-            </Button>
-          )}
         </Section>
 
-        <Button type="submit" className="h-11 w-full sm:w-auto cursor-pointer" disabled={isLoading}>
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+        <Button
+          type="submit"
+          className="h-11 w-full sm:w-auto cursor-pointer"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : null}
           Save Changes
         </Button>
       </form>

@@ -83,7 +83,22 @@ export async function POST(req: Request) {
 
   if (!body.title?.trim()) return NextResponse.json({ error: "Title is required" }, { status: 400 });
   if (!body.description?.trim()) return NextResponse.json({ error: "Description is required" }, { status: 400 });
-  if (!body.price?.trim()) return NextResponse.json({ error: "Price is required" }, { status: 400 });
+  // Price required for all categories except services
+const isPriceOptional = [
+  "services",
+  "free_items",
+  "wanted",
+  "lost_found",
+  "announcements",
+  "donations",
+  "community",
+].includes(body.category ?? "");
+if (!isPriceOptional && !body.price?.trim()) {
+  return NextResponse.json({ error: "Price is required" }, { status: 400 });
+}
+if (!isService && !body.price?.trim()) {
+  return NextResponse.json({ error: "Price is required" }, { status: 400 });
+}
   if (!body.category || !VALID_CATEGORIES.includes(body.category as ListingCategory)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
@@ -107,7 +122,7 @@ export async function POST(req: Request) {
       seller_id: userId,
       title: body.title.trim(),
       description: body.description.trim(),
-      price: body.price.trim(),
+      price: body.price?.trim() || "",
       currency: body.currency ?? "USD",
       category: body.category as ListingCategory,
       subcategory: body.subcategory?.trim() || null,
