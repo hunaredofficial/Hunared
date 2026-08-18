@@ -19,7 +19,11 @@ import { PROFESSIONS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { Profile } from "@/types/database";
 
-export function ProfileEditForm({ initialProfile }: { initialProfile: Profile }) {
+export function ProfileEditForm({
+  initialProfile,
+}: {
+  initialProfile: Profile;
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,10 +44,14 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
   const [city, setCity] = useState(initialProfile.city ?? "");
 
   // Seeker fields
-  const [profession, setProfession] = useState(initialProfile.profession ?? "");
+  const [profession, setProfession] = useState(
+    initialProfile.profession ?? ""
+  );
 
   // Employer fields
-  const [companyCr, setCompanyCr] = useState(initialProfile.company_cr ?? "");
+  const [companyCr, setCompanyCr] = useState(
+    initialProfile.company_cr ?? ""
+  );
   const [companyWebsite, setCompanyWebsite] = useState(
     initialProfile.company_website ?? ""
   );
@@ -56,6 +64,7 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
     initialProfile.avatar_url ?? ""
   );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarRemoved, setAvatarRemoved] = useState(false); // track explicit removal
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // CV
@@ -65,7 +74,6 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
   );
   const cvInputRef = useRef<HTMLInputElement>(null);
 
-  // Use selected role so sections update live
   const isSeeker = role === "seeker";
 
   function handleDeleteCv() {
@@ -78,18 +86,24 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
       toast.error("Full name is required.");
       return;
     }
+
     setIsLoading(true);
     try {
-      let avatarUrl = initialProfile.avatar_url;
-      let avatarPublicId = initialProfile.avatar_public_id;
+      let avatarUrl: string | null = initialProfile.avatar_url;
+      let avatarPublicId: string | null = initialProfile.avatar_public_id;
 
       if (avatarFile) {
+        // New upload
         const { url, publicId } = await uploadToCloudinary(
           avatarFile,
           "hunared/avatars"
         );
         avatarUrl = url;
         avatarPublicId = publicId;
+      } else if (avatarRemoved) {
+        // User cleared the photo
+        avatarUrl = null;
+        avatarPublicId = null;
       }
 
       // Determine final CV URL
@@ -110,7 +124,7 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role, // ← send the selected role
+          role,
           fullName: fullName.trim(),
           username: username.trim() || null,
           phone: phone.trim() || null,
@@ -189,6 +203,7 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
               onClick={() => {
                 setAvatarPreview("");
                 setAvatarFile(null);
+                setAvatarRemoved(true);
               }}
               className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center cursor-pointer"
               aria-label="Remove photo"
@@ -212,6 +227,7 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
               if (!f) return;
               setAvatarFile(f);
               setAvatarPreview(URL.createObjectURL(f));
+              setAvatarRemoved(false);
             }}
           />
           <Button
@@ -267,8 +283,14 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             />
           </Field>
 
+          {/* Gender – prevent empty string value */}
           <Field label="Gender">
-            <Select value={gender} onValueChange={(v: string) => setGender(v)}>
+            <Select
+              value={gender || undefined}
+              onValueChange={(v) => {
+                if (v) setGender(v);
+              }}
+            >
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -286,8 +308,14 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
             </Select>
           </Field>
 
+          {/* Country – prevent empty string value */}
           <Field label="Country">
-            <Select value={country} onValueChange={(v: string) => setCountry(v)}>
+            <Select
+              value={country || undefined}
+              onValueChange={(v) => {
+                if (v) setCountry(v);
+              }}
+            >
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
@@ -324,8 +352,10 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
 
           <Field label="Profession">
             <Select
-              value={profession}
-              onValueChange={(v: string) => setProfession(v)}
+              value={profession || undefined}
+              onValueChange={(v) => {
+                if (v) setProfession(v);
+              }}
             >
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder="Your profession" />
@@ -394,8 +424,9 @@ export function ProfileEditForm({ initialProfile }: { initialProfile: Profile })
                     onClick={(e) => {
                       e.preventDefault();
                       setCvFile(null);
-                      if (initialProfile.cv_url)
+                      if (initialProfile.cv_url) {
                         setExistingCvUrl(initialProfile.cv_url);
+                      }
                     }}
                     className="ml-auto"
                     aria-label="Remove new CV file"
