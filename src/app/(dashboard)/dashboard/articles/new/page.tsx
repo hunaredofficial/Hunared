@@ -241,10 +241,10 @@ export default function NewArticlePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {ARTICLE_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
+  <SelectItem key={c.value} value={c.value}>
+    {c.label}
+  </SelectItem>
+))}
                 </SelectContent>
               </Select>
             </div>
