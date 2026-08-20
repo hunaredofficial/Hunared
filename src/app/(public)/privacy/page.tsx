@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
       <article className="prose prose-slate dark:prose-invert max-w-3xl mx-auto">
         <h1>Privacy Policy</h1>
         <p className="lead">
-          <strong>Last Updated: April 16, 2026</strong>
+          <strong>Last Updated: August 14, 2026</strong>
         </p>
         <p>
           Welcome to Hunared. We are committed to protecting your personal information and
@@ -72,12 +72,6 @@ export default function PrivacyPolicyPage() {
           We implement appropriate technical and organizational security measures to protect your
           personal information. However, please remember that no electronic transmission over the
           internet can be guaranteed to be 100% secure.
-        </p>
-
-        <h2>5. Contact Us</h2>
-        <p>
-          If you have questions or comments about this notice, you may email us at{" "}
-          <a href="mailto:hunaredofficial@gmail.com">hunaredofficial@gmail.com</a>.
         </p>
       </article>
     </main>

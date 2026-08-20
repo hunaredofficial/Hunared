@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { COUNTRIES } from "@/lib/countries";
+import { useGeo } from "@/components/providers/GeoProvider";
 
 export function JobsFilter({
   defaultSearch,
@@ -33,6 +34,8 @@ export function JobsFilter({
   const [country, setCountry] = useState(defaultCountry);
   const [city, setCity] = useState(defaultCity);
 
+  const geo = useGeo();
+
   const apply = useCallback(
     (s: string, c: string, co: string, ci: string) => {
       const params = new URLSearchParams();
@@ -44,6 +47,20 @@ export function JobsFilter({
     },
     [router]
   );
+
+  // Auto-fill once when URL has no country/city
+  useEffect(() => {
+    if (geo.loading) return;
+    if (defaultCountry || defaultCity) return; // user/URL already set
+    if (!geo.countryCode) return;
+
+    setCountry(geo.countryCode);
+    if (geo.city) setCity(geo.city);
+
+    // Apply to URL so results filter
+    apply(search, category, geo.countryCode, geo.city ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.loading, geo.countryCode, geo.city]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
@@ -59,6 +76,7 @@ export function JobsFilter({
           className="pl-9"
         />
       </div>
+
       <Select
         value={category}
         onValueChange={(v: string | null) => {
@@ -71,14 +89,17 @@ export function JobsFilter({
           <SelectValue placeholder="All categories" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="" className="cursor-pointer">All categories</SelectItem>
+          <SelectItem value="" className="cursor-pointer">
+            All categories
+          </SelectItem>
           {Array.from(new Set(categories)).map((c) => (
-  <SelectItem key={c} value={c} className="cursor-pointer">
-    {c}
-  </SelectItem>
-))}
+            <SelectItem key={c} value={c} className="cursor-pointer">
+              {c}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
+
       <Select
         value={country}
         onValueChange={(v: string | null) => {
@@ -87,11 +108,17 @@ export function JobsFilter({
           apply(search, category, val, city);
         }}
       >
-        <SelectTrigger className="sm:w-[170px] cursor-pointer">
-          <SelectValue placeholder="All countries" />
+                <SelectTrigger className="sm:w-[200px] cursor-pointer">
+          <SelectValue placeholder="All countries">
+            {country
+              ? COUNTRIES.find((c) => c.code === country)?.name ?? country
+              : "All countries"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="" className="cursor-pointer">All countries</SelectItem>
+          <SelectItem value="" className="cursor-pointer">
+            All countries
+          </SelectItem>
           {COUNTRIES.map((c) => (
             <SelectItem key={c.code} value={c.code} className="cursor-pointer">
               {c.name}
@@ -99,6 +126,7 @@ export function JobsFilter({
           ))}
         </SelectContent>
       </Select>
+
       <Input
         placeholder="City..."
         value={city}
@@ -108,6 +136,7 @@ export function JobsFilter({
         }}
         className="sm:w-[130px]"
       />
+
       <Button
         variant="outline"
         onClick={() => apply(search, category, country, city)}
@@ -115,6 +144,7 @@ export function JobsFilter({
       >
         Search
       </Button>
+
       {(search || category || country || city) && (
         <Button
           variant="ghost"

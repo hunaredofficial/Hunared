@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { GeoProvider } from "@/components/providers/GeoProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
@@ -23,21 +24,25 @@ export const metadata: Metadata = {
   description:
     "Hunared connects you with jobs, employers, property, marketplace deals, and learning opportunities worldwide. Your complete global workforce and lifestyle platform.",
   keywords: [
-    "jobs", "global jobs", "jobs abroad", "temp work", "property for rent",
-    "marketplace", "courses", "certifications", "scholarships", "Hunared",
+    "jobs",
+    "global jobs",
+    "jobs abroad",
+    "temp work",
+    "property for rent",
+    "marketplace",
+    "courses",
+    "certifications",
+    "scholarships",
+    "Hunared",
   ],
   alternates: {
     canonical: "/",
   },
-  
-  // 👇 ADD THIS SECTION: To ensure favicon is properly recognized
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/favicon.ico", // Or use a dedicated apple icon if you have one
+    apple: "/favicon.ico",
   },
-  
-  // 👇 ADD THIS: Robots for search engines
   robots: {
     index: true,
     follow: true,
@@ -49,8 +54,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  
-  // 👇 UPDATE THIS: Site name for Google
   openGraph: {
     title: "Hunared — Global Jobs, Property, Marketplace & Learning",
     description:
@@ -60,14 +63,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
   },
-  
-  // 👇 UPDATE THIS: Add site name for Twitter
   twitter: {
     card: "summary_large_image",
     title: "Hunared — Global Jobs, Property, Marketplace & Learning",
     description:
       "Find jobs, property, marketplace deals, and learning opportunities worldwide on Hunared.",
-    site: "@hunared", // Optional: Add your Twitter handle
+    site: "@hunared",
   },
 };
 
@@ -85,24 +86,27 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased font-[var(--font-poppins)]">
         <ClerkProvider>
           <ThemeProvider
-  attribute="class"
-  defaultTheme="dark"
-  enableSystem={false}
-  disableTransitionOnChange
->
-            <TooltipProvider>
-              <NextTopLoader
-                color="#3b82f6"
-                height={3}
-                showSpinner={false}
-                easing="ease"
-                speed={200}
-              />
-              {children}
-              <Toaster richColors position="top-right" />
-            </TooltipProvider>
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <GeoProvider>
+              <TooltipProvider>
+                <NextTopLoader
+                  color="#3b82f6"
+                  height={3}
+                  showSpinner={false}
+                  easing="ease"
+                  speed={200}
+                />
+                {children}
+                <Toaster richColors position="top-right" />
+              </TooltipProvider>
+            </GeoProvider>
           </ThemeProvider>
         </ClerkProvider>
+
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <Script
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}

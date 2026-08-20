@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   User,
   Briefcase,
-  Download,
   Lock,
   Phone,
   Globe,
@@ -19,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@clerk/nextjs/server";
 import type { Profile } from "@/types/database";
+import { CvActions } from "@/components/candidates/CvActions";
 
 export async function generateMetadata({
   params,
@@ -41,7 +41,9 @@ export async function generateMetadata({
           : `${data.full_name}'s profile on Hunared`,
       };
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { title: "Candidate Profile" };
 }
 
@@ -71,7 +73,9 @@ export default async function CandidateDetailPage({
       .is("deleted_at", null)
       .single();
     candidate = data;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   if (!candidate) notFound();
 
@@ -88,22 +92,22 @@ export default async function CandidateDetailPage({
   const gradient =
     AVATAR_GRADIENTS[candidate.id.charCodeAt(0) % AVATAR_GRADIENTS.length];
 
-  const joinedDate = new Date(candidate.created_at).toLocaleDateString("en-GB", {
-    month: "long",
-    year: "numeric",
-  });
+  const joinedDate = new Date(candidate.created_at).toLocaleDateString(
+    "en-GB",
+    {
+      month: "long",
+      year: "numeric",
+    }
+  );
 
   return (
     <div className="min-h-screen bg-background">
-
       {/* ── Hero banner ─────────────────────────────────────────── */}
       <div className="relative h-52 sm:h-64 overflow-hidden">
-        {/* mesh gradient */}
         <div
           aria-hidden
           className="absolute inset-0 bg-gradient-to-br from-[#2563eb]/80 via-[#7c3aed]/70 to-[#0ea5e9]/80"
         />
-        {/* noise texture overlay */}
         <div
           aria-hidden
           className="absolute inset-0 opacity-20"
@@ -112,13 +116,17 @@ export default async function CandidateDetailPage({
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")",
           }}
         />
-        {/* decorative blobs */}
-        <div aria-hidden className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div aria-hidden className="absolute bottom-0 left-1/4 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+        <div
+          aria-hidden
+          className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="absolute bottom-0 left-1/4 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+        />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-
         {/* ── Back link ───────────────────────────────────────────── */}
         <div className="pt-4 pb-2">
           <Link
@@ -132,10 +140,8 @@ export default async function CandidateDetailPage({
 
         {/* ── Main grid ───────────────────────────────────────────── */}
         <div className="grid gap-6 lg:grid-cols-3 pb-20">
-
           {/* ── LEFT / MAIN ──────────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-5">
-
             {/* Profile identity card — overlaps hero via negative margin */}
             <div className="relative -mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md p-6 shadow-2xl shadow-primary/10">
@@ -158,7 +164,6 @@ export default async function CandidateDetailPage({
                         </div>
                       )}
                     </div>
-                    {/* online dot */}
                     <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-400 ring-2 ring-background" />
                   </div>
 
@@ -204,21 +209,17 @@ export default async function CandidateDetailPage({
                   {candidate.full_name} is a dedicated expat professional
                   {candidate.profession
                     ? ` specialising in ${candidate.profession}`
-                    : ""
-                  }
+                    : ""}
                   {candidate.location
                     ? `, currently based in ${candidate.location}`
-                    : ""
-                  }.
+                    : ""}
+                  .
                   {candidate.gender
                     ? ` They identify as ${candidate.gender.replace(/_/g, " ")}.`
-                    : ""
-                  }
-                  {" "}
+                    : ""}{" "}
                   {candidate.cv_url
                     ? "A full CV is available for verified members to download."
-                    : "CV not yet uploaded to the platform."
-                  }
+                    : "CV not yet uploaded to the platform."}
                 </p>
               </div>
             </div>
@@ -230,7 +231,9 @@ export default async function CandidateDetailPage({
                   <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                     <Briefcase className="h-4 w-4" />
                   </div>
-                  <h2 className="font-semibold text-foreground">Professional Info</h2>
+                  <h2 className="font-semibold text-foreground">
+                    Professional Info
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {candidate.profession && (
@@ -280,7 +283,9 @@ export default async function CandidateDetailPage({
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
-                    <p className="font-medium text-foreground text-sm">Want the full profile?</p>
+                    <p className="font-medium text-foreground text-sm">
+                      Want the full profile?
+                    </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Sign in to view phone number and download the CV.
                     </p>
@@ -309,7 +314,6 @@ export default async function CandidateDetailPage({
 
           {/* ── RIGHT / SIDEBAR ───────────────────────────────────── */}
           <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-700 delay-100">
-
             {/* CV Download card */}
             <div className="sticky top-24">
               <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-6 shadow-lg hover:border-primary/30 transition-all duration-300">
@@ -317,57 +321,23 @@ export default async function CandidateDetailPage({
                   <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                     <FileText className="h-4 w-4" />
                   </div>
-                  <h3 className="font-semibold text-foreground text-sm">CV / Resume</h3>
+                  <h3 className="font-semibold text-foreground text-sm">
+                    CV / Resume
+                  </h3>
                 </div>
 
-                {candidate.cv_url ? (
-                  userId ? (
-                    <>
-                      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                        A CV has been uploaded. Download it to review qualifications and experience.
-                      </p>
-                      {/* Glowing download button WITH FOOLPROOF LOGIC */}
-                      <div className="relative group">
-                        <div
-                          aria-hidden
-                          className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-[#2563eb] via-[#7c3aed] to-[#0ea5e9] opacity-60 blur group-hover:opacity-90 transition-opacity duration-300"
-                        />
-                        <a
-                          href={candidate.cv_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download
-                          className="relative flex items-center justify-center gap-2 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 transition-opacity"
-                        >
-                          <Download className="h-4 w-4" />
-                          Download CV
-                        </a>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                        A CV is available. Sign in to unlock it.
-                      </p>
-                      <Link
-                        href="/sign-in"
-                        className="flex items-center justify-center gap-2 w-full rounded-xl border border-border bg-muted/50 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-all"
-                      >
-                        <Lock className="h-4 w-4" />
-                        Sign In to Download
-                      </Link>
-                    </>
-                  )
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    No CV has been uploaded by this candidate yet.
-                  </p>
-                )}
+                <CvActions
+                  candidateId={candidate.id}
+                  hasCv={Boolean(candidate.cv_url)}
+                  isSignedIn={Boolean(userId)}
+                />
               </div>
 
               {/* Quick stats card */}
               <div className="mt-5 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-6 hover:border-primary/30 transition-all duration-300">
-                <h3 className="font-semibold text-foreground text-sm mb-4">Quick Details</h3>
+                <h3 className="font-semibold text-foreground text-sm mb-4">
+                  Quick Details
+                </h3>
                 <ul className="space-y-3">
                   {candidate.profession && (
                     <SidebarDetail

@@ -9,6 +9,7 @@ import {
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
+import { MarketFilter } from "@/components/market/MarketFilter";
 
 interface SearchParams {
   category?: string;
@@ -75,68 +76,17 @@ export default async function MarketPage({
             </h1>
           </div>
           <p className="text-muted-foreground max-w-xl">
-            Buy, sell, and find services worldwide - property, vehicles, electronics, services, and more.
+            Buy, sell, and find services worldwide - property, vehicles,
+            electronics, services, and more.
           </p>
 
-          {/* Filters */}
-          <form method="GET" className="mt-6 flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-xs text-muted-foreground mb-1 block">Search</label>
-              <input
-                name="search"
-                defaultValue={search}
-                placeholder="Search listings..."
-                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Category</label>
-              <select
-                name="category"
-                defaultValue={category}
-                className="text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
-              >
-                <option value="">All categories</option>
-                {LISTING_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Country</label>
-              <select
-                name="country"
-                defaultValue={country}
-                className="text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[180px]"
-              >
-                <option value="">All countries</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">City</label>
-              <input
-                name="city"
-                defaultValue={city}
-                placeholder="e.g. Dubai"
-                className="w-32 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-            {/* Preserve subcategory from Browse Categories links across searches */}
-            {subcategory && <input type="hidden" name="subcategory" value={subcategory} />}
-            <Button type="submit" size="lg" style={{ cursor: "pointer" }}>Search</Button>
-            {(search || category || subcategory || country || city) && (
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/market">Clear</Link>
-              </Button>
-            )}
-          </form>
+          <MarketFilter
+            defaultSearch={search}
+            defaultCategory={category}
+            defaultSubcategory={subcategory}
+            defaultCountry={country}
+            defaultCity={city}
+          />
         </div>
       </section>
 
@@ -173,7 +123,16 @@ export default async function MarketPage({
               <div className="flex items-center justify-center gap-2 mt-10">
                 {page > 1 && (
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/market?${buildParams({ category, subcategory, country, city, search, page: page - 1 })}`}>
+                    <Link
+                      href={`/market?${buildParams({
+                        category,
+                        subcategory,
+                        country,
+                        city,
+                        search,
+                        page: page - 1,
+                      })}`}
+                    >
                       Previous
                     </Link>
                   </Button>
@@ -183,7 +142,16 @@ export default async function MarketPage({
                 </span>
                 {page < totalPages && (
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/market?${buildParams({ category, subcategory, country, city, search, page: page + 1 })}`}>
+                    <Link
+                      href={`/market?${buildParams({
+                        category,
+                        subcategory,
+                        country,
+                        city,
+                        search,
+                        page: page + 1,
+                      })}`}
+                    >
                       Next
                     </Link>
                   </Button>
@@ -199,7 +167,8 @@ export default async function MarketPage({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Have something to sell?</h2>
           <p className="text-muted-foreground text-sm mb-5">
-            Sign in to post a listing. All listings are reviewed before publishing.
+            Sign in to post a listing. All listings are reviewed before
+            publishing.
           </p>
           <Button asChild>
             <Link href="/dashboard/market/new">Post a Listing</Link>
@@ -212,13 +181,14 @@ export default async function MarketPage({
 
 function ListingCard({ listing }: { listing: Listing }) {
   const catLabel =
-    LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ?? listing.category;
+    LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
+    listing.category;
   const colorClass =
-    LISTING_CATEGORY_COLORS[listing.category] ?? "bg-muted text-muted-foreground";
+    LISTING_CATEGORY_COLORS[listing.category] ??
+    "bg-muted text-muted-foreground";
 
   return (
     <div className="group flex flex-col rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden hover:ring-primary/40 hover:shadow-md transition-all duration-200">
-      {/* Image — flush to all edges */}
       {listing.image_url ? (
         <div className="aspect-square w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -233,9 +203,10 @@ function ListingCard({ listing }: { listing: Listing }) {
           <ShoppingBag className="h-10 w-10 text-muted-foreground/30" />
         </div>
       )}
-      {/* Text details with padding */}
       <div className="p-4 flex flex-col flex-1">
-        <Badge className={`text-xs border-0 w-fit mb-2 ${colorClass}`}>{catLabel}</Badge>
+        <Badge className={`text-xs border-0 w-fit mb-2 ${colorClass}`}>
+          {catLabel}
+        </Badge>
         <h3 className="font-semibold text-sm leading-snug mb-1 group-hover:text-primary transition-colors line-clamp-2">
           <Link href={`/market/${listing.id}`}>{listing.title}</Link>
         </h3>

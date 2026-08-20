@@ -15,15 +15,14 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LocationPicker } from "@/components/layout/LocationPicker";
 import { Show, UserButton } from "@clerk/nextjs";
-
-/* ── Nav structure: simple links + mega-menu groups ───────────── */
 
 type SimpleLink = { type: "link"; href: string; label: string };
 type MegaGroup = {
   type: "mega";
   label: string;
-  href: string; // "view all" link
+  href: string;
   items: { label: string; href: string }[];
 };
 type NavItem = SimpleLink | MegaGroup;
@@ -51,14 +50,12 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu / mega menu on route change
   useEffect(() => {
     setMobileOpen(false);
     setOpenMega(null);
     setMobileSearchOpen(false);
   }, [pathname]);
 
-  // Close mega menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (megaRef.current && !megaRef.current.contains(e.target as Node)) {
@@ -86,7 +83,12 @@ export function Header() {
           : "top-0 w-full max-w-full bg-background border-b border-border/40 rounded-none shadow-none"
       )}
     >
-      <div className={cn("mx-auto px-4 sm:px-6 lg:px-8", scrolled ? "max-w-full" : "max-w-7xl")}>
+      <div
+        className={cn(
+          "mx-auto px-4 sm:px-6 lg:px-8",
+          scrolled ? "max-w-full" : "max-w-7xl"
+        )}
+      >
         <div className="flex h-16 items-center justify-between gap-3">
           {/* Logo */}
           <Link
@@ -94,7 +96,6 @@ export function Header() {
             className="flex items-center gap-2.5 group shrink-0 logo-premium"
             aria-label="Hunared home"
           >
-            {/* Logo Icon */}
             <Image
               src="/assets/logos/logo-horizontal.png"
               alt="Hunared Logo"
@@ -104,19 +105,15 @@ export function Header() {
               priority
               className="h-10 w-10 object-contain"
             />
-
-            {/* Logo Text */}
             <span
               className="logo-text relative text-[30px] font-extrabold tracking-tight leading-none select-none"
-              style={{
-                fontFamily: "Inter, Poppins, sans-serif",
-              }}
+              style={{ fontFamily: "Inter, Poppins, sans-serif" }}
             >
               <span className="logo-text-gradient">Hunared</span>
             </span>
           </Link>
 
-          {/* Desktop Nav with Mega Menu */}
+          {/* Desktop Nav */}
           <nav
             ref={megaRef}
             className="hidden lg:flex items-center gap-1 relative"
@@ -131,7 +128,9 @@ export function Header() {
                     className={cn(
                       "relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
                       "hover:text-primary hover:bg-primary/8",
-                      pathname === item.href ? "text-primary" : "text-muted-foreground"
+                      pathname === item.href
+                        ? "text-primary"
+                        : "text-muted-foreground"
                     )}
                   >
                     {item.label}
@@ -151,7 +150,9 @@ export function Header() {
                     className={cn(
                       "flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
                       "hover:text-primary hover:bg-primary/8",
-                      pathname.startsWith(item.href) ? "text-primary" : "text-muted-foreground"
+                      pathname.startsWith(item.href)
+                        ? "text-primary"
+                        : "text-muted-foreground"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
@@ -167,7 +168,7 @@ export function Header() {
 
                   {isOpen && (
                     <div
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl border border-border bg-card shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl border border-border bg-card shadow-xl p-2 z-50"
                       role="menu"
                     >
                       {item.items.map((sub) => (
@@ -194,7 +195,7 @@ export function Header() {
             })}
           </nav>
 
-          {/* Sticky Search (desktop) */}
+          {/* Search (desktop) */}
           <form
             onSubmit={handleSearchSubmit}
             className="hidden md:flex items-center flex-1 max-w-xs"
@@ -214,8 +215,17 @@ export function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Post an Ad (desktop) */}
-            <Button size="sm" variant="outline" className="hidden md:inline-flex" asChild>
+            {/* Location — desktop */}
+            <div className="hidden md:block">
+              <LocationPicker />
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="hidden md:inline-flex"
+              asChild
+            >
               <Link href="/post">
                 <Plus className="h-4 w-4 mr-1" />
                 Post an Ad
@@ -231,7 +241,7 @@ export function Header() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-4 py-4 transition-all duration-300 hover:scale-105"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-4 transition-all duration-300 hover:scale-105"
                   asChild
                 >
                   <Link href="/register">Get Started</Link>
@@ -248,7 +258,6 @@ export function Header() {
               </Show>
             </div>
 
-            {/* Mobile search toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -259,7 +268,6 @@ export function Header() {
               <Search className="h-5 w-5" />
             </Button>
 
-            {/* Mobile hamburger */}
             <Button
               variant="ghost"
               size="icon"
@@ -268,12 +276,16 @@ export function Header() {
               aria-label="Toggle mobile menu"
               aria-expanded={mobileOpen}
             >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
 
-        {/* Mobile search bar (collapsible) */}
+        {/* Mobile search */}
         <div
           className={cn(
             "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
@@ -302,7 +314,11 @@ export function Header() {
         )}
       >
         <div className="glass border-t border-border/20 px-4 pt-3 pb-4 space-y-1 overflow-y-auto max-h-[30rem]">
-          {/* Post an Ad (mobile) */}
+          {/* Location — mobile */}
+          <div className="px-3 py-2">
+            <LocationPicker />
+          </div>
+
           <Link
             href="/post"
             className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-lg text-primary bg-primary/8 hover:bg-primary/15 transition-colors"
@@ -377,23 +393,17 @@ export function Header() {
       </div>
 
       <style jsx>{`
-        /* ── Premium Logo Base ─────────────────────────────── */
         .logo-premium {
           will-change: transform;
           transition: transform 300ms ease-out;
         }
-
         .logo-premium:hover {
           transform: scale(1.03);
         }
-
-        /* ── Text container ────────────────────────────────── */
         .logo-text {
           position: relative;
           display: inline-block;
         }
-
-        /* ── Animation stays INSIDE the letters ───────────── */
         .logo-text-gradient {
           background: linear-gradient(
             115deg,
@@ -410,8 +420,6 @@ export function Header() {
           animation: logoInsideShift 6s ease-in-out infinite;
           will-change: background-position;
         }
-
-        /* Slightly brighter on hover (still inside letters) */
         .logo-premium:hover .logo-text-gradient {
           background: linear-gradient(
             115deg,
@@ -427,8 +435,6 @@ export function Header() {
           color: transparent;
           transition: background 300ms ease-out;
         }
-
-        /* ── Smooth color movement inside the text ────────── */
         @keyframes logoInsideShift {
           0% {
             background-position: 0% 50%;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, FormEvent } from "react";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
+import { useGeo } from "@/components/providers/GeoProvider";
 
 const FINDER_CATEGORY = "lost_found";
 
@@ -299,11 +300,20 @@ const CITIES_BY_COUNTRY: Record<string, string[]> = {
 
 export function HunaredFinder() {
   const router = useRouter();
+  const geo = useGeo();
   const [keyword, setKeyword] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [status, setStatus] = useState("");
   const [showCategories, setShowCategories] = useState(false);
+
+  // Auto-fill country/city from geo when user hasn't chosen yet
+  useEffect(() => {
+    if (geo.loading) return;
+    if (country) return; // user already chose
+    if (geo.countryCode) setCountry(geo.countryCode);
+    if (geo.city) setCity(geo.city);
+  }, [geo.loading, geo.countryCode, geo.city, country]);
 
   const cities = useMemo(() => {
     if (!country) return [];
@@ -451,7 +461,9 @@ export function HunaredFinder() {
                 onClick={() => setShowCategories((v) => !v)}
                 className={cn(
                   "inline-flex items-center gap-2 text-sm font-medium transition-colors",
-                  showCategories ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  showCategories
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />

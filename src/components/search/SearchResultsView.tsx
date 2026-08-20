@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Briefcase, User, ShoppingBag, GraduationCap, Search as SearchIcon, MapPin, X,
+  Briefcase,
+  User,
+  ShoppingBag,
+  GraduationCap,
+  Search as SearchIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/countries";
-import { useGeoDetection } from "@/hooks/useGeoDetection";
+import { useGeo } from "@/components/providers/GeoProvider";
 
 type Job = {
   id: string;
@@ -23,6 +27,7 @@ type Job = {
   employment_type?: string;
   created_at: string;
 };
+
 type Candidate = {
   id: string;
   full_name: string;
@@ -71,15 +76,29 @@ type TabKey = "all" | "jobs" | "candidates" | "listings" | "articles";
 
 export function SearchResultsView({ query, country, city, results }: Props) {
   const router = useRouter();
-  const geo = useGeoDetection();
+  const geo = useGeo();
   const [keyword, setKeyword] = useState(query);
   const [cityInput, setCityInput] = useState(city);
   const [tab, setTab] = useState<TabKey>("all");
+
   const totalCount =
     results.jobs.length +
     results.candidates.length +
     results.listings.length +
     results.articles.length;
+
+  // Auto-prefill country/city from geo when URL has none
+  useEffect(() => {
+    if (geo.loading) return;
+    if (country || city) return;
+    if (!geo.countryCode) return;
+
+    const params = new URLSearchParams();
+    if (keyword.trim()) params.set("q", keyword.trim());
+    params.set("country", geo.countryCode);
+    if (geo.city) params.set("city", geo.city);
+    router.replace(`/search?${params.toString()}`);
+  }, [geo.loading, geo.countryCode, geo.city, country, city, keyword, router]);
 
   function updateFilters(
     newKeyword: string,
@@ -103,20 +122,38 @@ export function SearchResultsView({ query, country, city, results }: Props) {
     router.push(`/search?${params.toString()}`);
   }
 
-  const TABS: { key: TabKey; label: string; icon: React.ElementType; count: number }[] = [
+  const TABS: {
+    key: TabKey;
+    label: string;
+    icon: React.ElementType;
+    count: number;
+  }[] = [
     { key: "all", label: "All", icon: SearchIcon, count: totalCount },
     { key: "jobs", label: "Jobs", icon: Briefcase, count: results.jobs.length },
-    { key: "candidates", label: "Candidates", icon: User, count: results.candidates.length },
-    { key: "listings", label: "Marketplace", icon: ShoppingBag, count: results.listings.length },
-    { key: "articles", label: "Learning Hub", icon: GraduationCap, count: results.articles.length },
+    {
+      key: "candidates",
+      label: "Candidates",
+      icon: User,
+      count: results.candidates.length,
+    },
+    {
+      key: "listings",
+      label: "Marketplace",
+      icon: ShoppingBag,
+      count: results.listings.length,
+    },
+    {
+      key: "articles",
+      label: "Learning Hub",
+      icon: GraduationCap,
+      count: results.articles.length,
+    },
   ];
 
   return (
     <div className="space-y-8">
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <h1 className="text-3xl font-bold mb-2">
-          Universal Search
-        </h1>
+        <h1 className="text-3xl font-bold mb-2">Universal Search</h1>
 
         <p className="text-muted-foreground mb-6">
           Search across Jobs, Candidates, Marketplace and Learning Hub.
@@ -142,10 +179,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
             onChange={(e) => updateFilters(keyword, e.target.value, cityInput)}
             className="h-11 rounded-lg border border-input bg-background text-foreground px-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            <option
-              value=""
-              className="bg-background text-foreground"
-            >
+            <option value="" className="bg-background text-foreground">
               All Countries
             </option>
 
@@ -167,7 +201,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
             placeholder="City"
             className="h-11 rounded-lg border border-input px-4"
           />
-          
+
           <button
             type="submit"
             className="h-11 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90"
@@ -176,7 +210,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
           </button>
         </form>
       </div>
-      
+
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-border pb-2">
         {TABS.map(({ key, label, icon: Icon, count }) => (
@@ -222,38 +256,41 @@ export function SearchResultsView({ query, country, city, results }: Props) {
       )}
 
       {/* Candidates */}
-      {(tab === "all" || tab === "candidates") && results.candidates.length > 0 && (
-        <Section title="Candidates" icon={User}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {results.candidates.map((c) => (
-              <Link
-                key={c.id}
-                href={`/candidates/${c.id}`}
-                className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
-              >
-                {c.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={c.avatar_url}
-                    alt={c.full_name}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                    <User className="h-5 w-5 text-muted-foreground" />
+      {(tab === "all" || tab === "candidates") &&
+        results.candidates.length > 0 && (
+          <Section title="Candidates" icon={User}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {results.candidates.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/candidates/${c.id}`}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                >
+                  {c.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={c.avatar_url}
+                      alt={c.full_name}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {c.full_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.profession} &bull; {c.location}
+                    </p>
                   </div>
-                )}
-                <div>
-                  <p className="font-semibold text-foreground">{c.full_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {c.profession} &bull; {c.location}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Section>
-      )}
+                </Link>
+              ))}
+            </div>
+          </Section>
+        )}
 
       {/* Marketplace */}
       {(tab === "all" || tab === "listings") && results.listings.length > 0 && (
@@ -266,7 +303,9 @@ export function SearchResultsView({ query, country, city, results }: Props) {
                 className="block p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
               >
                 <p className="font-semibold text-foreground">{l.title}</p>
-                <p className="text-sm text-muted-foreground mt-0.5">{l.location}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {l.location}
+                </p>
                 <p className="text-sm font-medium text-primary mt-1">
                   {l.currency} {l.price}
                 </p>
@@ -287,7 +326,9 @@ export function SearchResultsView({ query, country, city, results }: Props) {
                 className="block p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
               >
                 <p className="font-semibold text-foreground">{a.title}</p>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{a.content}</p>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                  {a.content}
+                </p>
               </Link>
             ))}
           </div>
@@ -296,7 +337,10 @@ export function SearchResultsView({ query, country, city, results }: Props) {
 
       {query && totalCount === 0 && (
         <div className="text-center py-16 text-muted-foreground">
-          <p>No results found for &ldquo;{query}&rdquo;. Try a different keyword.</p>
+          <p>
+            No results found for &ldquo;{query}&rdquo;. Try a different
+            keyword.
+          </p>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, ChevronDown } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
-import { useGeoDetection } from "@/hooks/useGeoDetection";
+import { useGeo } from "@/components/providers/GeoProvider";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -288,7 +288,7 @@ const CITIES_BY_COUNTRY: Record<string, string[]> = {
 
 export function HeroSection() {
   const router = useRouter();
-  const geo = useGeoDetection();
+  const geo = useGeo();
 
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
@@ -298,9 +298,14 @@ export function HeroSection() {
 
   useEffect(() => {
     setMounted(true);
-    if (geo.countryCode && !country) setCountry(geo.countryCode);
-    if (geo.city && !city) setCity(geo.city);
-  }, [geo.countryCode, geo.city]);
+  }, []);
+
+  // Auto-fill country/city from geo when user hasn't chosen yet
+  useEffect(() => {
+    if (geo.loading) return;
+    if (!country && geo.countryCode) setCountry(geo.countryCode);
+    if (!city && geo.city) setCity(geo.city);
+  }, [geo.loading, geo.countryCode, geo.city, country, city]);
 
   const cities = country ? CITIES_BY_COUNTRY[country] ?? [] : [];
 
@@ -398,7 +403,11 @@ export function HeroSection() {
                 className="w-full h-12 sm:h-13 pl-3.5 pr-9 rounded-xl border border-primary/15 bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">
-                  {!country ? "Select country first" : cities.length === 0 ? "Any city" : "All Cities"}
+                  {!country
+                    ? "Select country first"
+                    : cities.length === 0
+                      ? "Any city"
+                      : "All Cities"}
                 </option>
                 {cities.map((c) => (
                   <option key={c} value={c}>

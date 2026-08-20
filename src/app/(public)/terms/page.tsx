@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
       <article className="prose prose-slate dark:prose-invert max-w-3xl mx-auto">
         <h1>Terms of Service</h1>
         <p className="lead">
-          <strong>Last Updated: April 16, 2026</strong>
+          <strong>Last Updated: August 14, 2026</strong>
         </p>
         <p>
           By accessing and using Hunared, you agree to comply with and be bound by the
@@ -69,12 +69,6 @@ export default function TermsOfServicePage() {
         <p>
           We reserve the right to modify or replace these Terms at any time. We will provide notice
           of any significant changes on our website.
-        </p>
-
-        <h2>6. Contact Us</h2>
-        <p>
-          For any questions regarding these Terms, please contact us at{" "}
-          <a href="mailto:hunaredofficial@gmail.com">hunaredofficial@gmail.com</a>.
         </p>
       </article>
     </main>
