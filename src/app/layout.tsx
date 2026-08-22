@@ -39,9 +39,13 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [
+      { url: "/assets/logos/hunared-mark-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/assets/logos/hunared-mark-64.png", sizes: "64x64", type: "image/png" },
+      { url: "/assets/logos/hunared-mark.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/assets/logos/hunared-mark-32.png",
+    apple: [{ url: "/assets/logos/hunared-mark-192.png", sizes: "192x192", type: "image/png" }],
   },
   robots: {
     index: true,

@@ -1,121 +1,185 @@
-// src/app/(dashboard)/dashboard/saved/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bookmark, MapPin, Loader2, Trash2, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Bookmark, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { formatMoney } from "@/lib/currencies";
+import { SaveButton } from "@/components/shared/SaveButton";
 
-type SavedJob = {
-  id: string;
-  job_id: string;
-  created_at: string;
-  jobs: {
-    id: string;
-    job_title: string;
-    company_name: string;
-    location: string | null;
-    category: string;
-    salary_rate: string | null;
-    status: string;
-  } | null;
-};
+type Tab = "all" | "job" | "listing";
 
-export default function SavedJobsPage() {
-  const [saved, setSaved] = useState<SavedJob[]>([]);
+export default function SavedPage() {
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("all");
 
-  useEffect(() => {
-    fetch("/api/saved-jobs")
-      .then((r) => r.json())
-      .then((d) => setSaved(d.saved ?? []))
-      .catch(() => toast.error("Could not load saved jobs"))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function remove(jobId: string) {
-    const prev = saved;
-    setSaved((s) => s.filter((x) => x.job_id !== jobId));
-    const res = await fetch("/api/saved-jobs", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobId }),
-    });
-    if (!res.ok) {
-      setSaved(prev); // revert on failure
-      toast.error("Could not remove job");
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/saved");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setItems(data.items ?? []);
+    } catch {
+      toast.error("Could not load saved items");
+    } finally {
+      setLoading(false);
     }
   }
 
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (tab === "all") return items;
+    return items.filter((i) => i.type === tab);
+  }, [items, tab]);
+
+  async function removeAll() {
+    if (!confirm("Are you sure you want to remove all saved items?")) return;
+    const res = await fetch("/api/saved", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ removeAll: true }),
+    });
+    if (!res.ok) {
+      toast.error("Could not clear saved items");
+      return;
+    }
+    setItems([]);
+    toast.success("All saved items removed.");
+  }
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Bookmark className="h-6 w-6 text-primary" /> Saved Jobs
+          <Bookmark className="h-6 w-6 text-primary" />
+          My Saved {items.length > 0 && `(${items.length})`}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Jobs you&apos;ve bookmarked to apply to later.
-        </p>
+        {items.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={removeAll}
+            className="gap-1.5"
+          >
+            <Trash2 className="h-4 w-4" />
+            Remove All
+          </Button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {(
+          [
+            ["all", "All"],
+            ["job", "Jobs"],
+            ["listing", "Marketplace"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`px-3 py-1.5 rounded-full text-sm border ${
+              tab === key
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border text-muted-foreground"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : saved.length === 0 ? (
-        <div className="text-center py-20 border border-dashed border-border rounded-2xl">
-          <Bookmark className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground">No saved jobs yet.</p>
-          <Button variant="outline" className="mt-4" asChild>
-            <Link href="/jobs">Browse Jobs</Link>
-          </Button>
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-card p-10 text-center space-y-3">
+          <p className="font-medium">You have not saved anything yet.</p>
+          <p className="text-sm text-muted-foreground">
+            Save jobs and listings you like, then open them here later.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 pt-2">
+            <Button asChild>
+              <Link href="/jobs">Browse Jobs</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/market">Browse Marketplace</Link>
+            </Button>
+          </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          {saved.map((item) =>
-            item.jobs ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {filtered.map((item) =>
+            item.type === "job" ? (
               <div
-                key={item.id}
-                className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/40 transition-colors"
+                key={"job-" + item.job.id}
+                className="rounded-2xl border border-border bg-card p-4 space-y-2"
               >
-                <div className="flex-1 min-w-0">
-                  <Link
-                    href={`/jobs/${item.jobs.id}`}
-                    className="font-semibold text-foreground hover:text-primary transition-colors"
-                  >
-                    {item.jobs.job_title}
-                  </Link>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {item.jobs.company_name}
-                    {item.jobs.location && (
-                      <span className="inline-flex items-center gap-1 ml-2">
-                        <MapPin className="h-3 w-3" /> {item.jobs.location}
-                      </span>
-                    )}
-                  </p>
-                  {item.jobs.status !== "approved" && (
-                    <p className="text-xs text-amber-600 mt-0.5">
-                      This job is no longer active.
-                    </p>
+                <p className="text-xs text-muted-foreground">JOB</p>
+                <h2 className="font-semibold">{item.job.job_title}</h2>
+                {item.unavailable && (
+                  <p className="text-xs text-destructive">Unavailable</p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  {item.job.company_name}
+                </p>
+                <p className="text-sm">{item.job.location}</p>
+                <p className="text-sm text-primary font-medium">
+                  {item.job.salary_type === "After Interview"
+                    ? "To be discussed"
+                    : formatMoney(item.job.salary_rate, item.job.currency)}
+                </p>
+                <div className="flex gap-2 pt-2">
+                  {!item.unavailable && (
+                    <Button size="sm" asChild>
+                      <Link href={"/jobs/" + item.job.id}>View Job</Link>
+                    </Button>
                   )}
+                  <SaveButton
+                    itemType="job"
+                    itemId={item.job.id}
+                    initialSaved
+                  />
                 </div>
-                <Button size="sm" variant="ghost" className="gap-1 shrink-0" asChild>
-                  <Link href={`/jobs/${item.jobs.id}`}>
-                    View <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0 cursor-pointer"
-                  onClick={() => remove(item.job_id)}
-                  aria-label="Remove saved job"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
-            ) : null
+            ) : (
+              <div
+                key={"listing-" + item.listing.id}
+                className="rounded-2xl border border-border bg-card p-4 space-y-2"
+              >
+                <p className="text-xs text-muted-foreground">MARKETPLACE</p>
+                <h2 className="font-semibold">{item.listing.title}</h2>
+                {item.unavailable && (
+                  <p className="text-xs text-destructive">Unavailable</p>
+                )}
+                <p className="text-sm text-primary font-medium">
+                  {formatMoney(item.listing.price, item.listing.currency)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {item.listing.location}
+                </p>
+                <div className="flex gap-2 pt-2">
+                  {!item.unavailable && (
+                    <Button size="sm" asChild>
+                      <Link href={"/market/" + item.listing.id}>
+                        View Listing
+                      </Link>
+                    </Button>
+                  )}
+                  <SaveButton
+                    itemType="listing"
+                    itemId={item.listing.id}
+                    initialSaved
+                  />
+                </div>
+              </div>
+            )
           )}
         </div>
       )}

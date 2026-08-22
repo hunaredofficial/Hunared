@@ -1,3 +1,6 @@
+import { Mail, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { COUNTRIES } from "@/lib/countries";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase";
 import { normalizeCvUrl } from "@/lib/cloudinary";
@@ -178,6 +181,23 @@ export default async function CandidateDetailPage({
                           {candidate.profession}
                         </Badge>
                       )}
+                      {candidate.skill_level && (
+                        <Badge variant="outline" className="text-xs">
+                          {candidate.skill_level}
+                        </Badge>
+                      )}
+                      {(candidate.city || candidate.country) && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {[
+                            candidate.city,
+                            COUNTRIES.find((c) => c.code === candidate.country)
+                              ?.name,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </span>
+                      )}
                       {candidate.location && (
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-3.5 w-3.5" />
@@ -241,6 +261,13 @@ export default async function CandidateDetailPage({
                       icon={<Briefcase className="h-4 w-4" />}
                       label="Profession"
                       value={candidate.profession}
+                    />
+                  )}
+                  {candidate.skill_level && (
+                    <InfoTile
+                      icon={<Briefcase className="h-4 w-4" />}
+                      label="Skill Level"
+                      value={candidate.skill_level}
                     />
                   )}
                   {candidate.location && (
@@ -331,6 +358,52 @@ export default async function CandidateDetailPage({
                   hasCv={Boolean(candidate.cv_url)}
                   isSignedIn={Boolean(userId)}
                 />
+
+                {/* Send Offer – only when logged in */}
+                {userId && (candidate.email || candidate.phone) && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Send job offer
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {candidate.email && (
+                        <Button size="sm" className="gap-1.5" asChild>
+                          <a
+                            href={`mailto:${candidate.email}?subject=${encodeURIComponent(
+                              `Job Offer – ${candidate.full_name}`
+                            )}&body=${encodeURIComponent(
+                              `Hello ${candidate.full_name},\n\nI would like to discuss a job opportunity with you on Hunared.\n\nBest regards`
+                            )}`}
+                          >
+                            <Mail className="h-4 w-4" />
+                            Offer by Email
+                          </a>
+                        </Button>
+                      )}
+                      {candidate.phone && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          asChild
+                        >
+                          <a
+                            href={`https://wa.me/${candidate.phone
+                              .replace(/[^\d+]/g, "")
+                              .replace(/^\+/, "")}?text=${encodeURIComponent(
+                              `Hello ${candidate.full_name}, I would like to discuss a job opportunity with you on Hunared.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Offer on WhatsApp
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Quick stats card */}
@@ -344,6 +417,13 @@ export default async function CandidateDetailPage({
                       icon={<Briefcase className="h-4 w-4" />}
                       label="Role"
                       value={candidate.profession}
+                    />
+                  )}
+                  {candidate.skill_level && (
+                    <SidebarDetail
+                      icon={<Briefcase className="h-4 w-4" />}
+                      label="Skill Level"
+                      value={candidate.skill_level}
                     />
                   )}
                   {candidate.location && (

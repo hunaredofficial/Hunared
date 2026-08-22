@@ -1,3 +1,5 @@
+import { ShareButton } from "@/components/shared/ShareButton";
+import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +11,7 @@ import {
   Building2,
   Phone,
   Mail,
+  MessageCircle,
   ArrowLeft,
   Calendar,
   Tag,
@@ -20,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS } from "@/lib/constants";
+import { formatMoney } from "@/lib/currencies";
 import type { Job } from "@/types/database";
 
 export default async function JobDetailPage({
@@ -74,7 +78,6 @@ export default async function JobDetailPage({
       ? [poster.city, poster.country].filter(Boolean).join(", ")
       : poster?.location || null;
 
-  // Only if employer allowed it when posting the job
   const allowProfileContact = Boolean(job.show_profile_contact);
   const showPhone = allowProfileContact && Boolean(poster?.phone?.trim());
   const showEmail = allowProfileContact && Boolean(poster?.email?.trim());
@@ -85,21 +88,14 @@ export default async function JobDetailPage({
     year: "numeric",
   });
 
-  // Format salary with currency
-  const formatSalary = () => {
-    if (job.salary_type === "After Interview") {
-      return "To be discussed";
-    }
-
-    if (job.salary_rate) {
-      const currencySymbol = job.currency || "SAR";
-      return `${job.salary_rate} ${currencySymbol} (${job.salary_type ?? ""})`;
-    }
-
-    return job.salary_type ?? "Not specified";
-  };
-
-  const salaryLabel = formatSalary();
+  const salaryLabel =
+    job.salary_type === "After Interview"
+      ? "To be discussed"
+      : job.salary_rate
+        ? `${formatMoney(job.salary_rate, job.currency)}${
+            job.salary_type ? ` (${job.salary_type})` : ""
+          }`
+        : job.salary_type ?? "Not specified";
 
   const hasMap = job.office_lat != null && job.office_lng != null;
 
@@ -121,25 +117,53 @@ export default async function JobDetailPage({
             {/* Header card */}
             <Card>
               <CardContent className="pt-6 pb-5">
-                {job.category && (
-                  <Badge
-                    className={cn(
-                      "text-xs mb-3",
-                      CATEGORY_COLORS[job.category] ?? CATEGORY_COLORS["Other"]
-                    )}
-                  >
-                    {job.category}
-                  </Badge>
-                )}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  {job.category ? (
+                    <Badge
+                      className={cn(
+                        "text-xs",
+                        CATEGORY_COLORS[job.category] ??
+                          CATEGORY_COLORS["Other"]
+                      )}
+                    >
+                      {job.category}
+                    </Badge>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <ShareButton
+                      url={`/jobs/${job.id}`}
+                      title={job.job_title}
+                      size="sm"
+                    />
+                    <SaveButton itemType="job" itemId={job.id} />
+                  </div>
+                </div>
+
                 <h1 className="text-2xl font-bold text-foreground mb-1">
                   {job.job_title}
                 </h1>
-                <p className="text-muted-foreground font-medium">{job.company_name}</p>
+                <p className="text-muted-foreground font-medium">
+                  {job.company_name}
+                </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-                  <Stat icon={<MapPin className="h-4 w-4" />} label="Location" value={job.location} />
-                  <Stat icon={<DollarSign className="h-4 w-4" />} label="Salary" value={salaryLabel} />
-                  <Stat icon={<Clock className="h-4 w-4" />} label="Duration" value={job.duration} />
+                  <Stat
+                    icon={<MapPin className="h-4 w-4" />}
+                    label="Location"
+                    value={job.location}
+                  />
+                  <Stat
+                    icon={<DollarSign className="h-4 w-4" />}
+                    label="Salary"
+                    value={salaryLabel}
+                  />
+                  <Stat
+                    icon={<Clock className="h-4 w-4" />}
+                    label="Duration"
+                    value={job.duration}
+                  />
                   {job.positions != null ? (
                     <Stat
                       icon={<Users className="h-4 w-4" />}
@@ -168,48 +192,50 @@ export default async function JobDetailPage({
             </Card>
 
             {(job.office_address || hasMap) && (
-  <Card>
-    <CardContent className="pt-6 pb-5">
-      <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
-        <MapPin className="h-4 w-4 text-muted-foreground" />
-        Office Location
-      </h2>
+              <Card>
+                <CardContent className="pt-6 pb-5">
+                  <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    Office Location
+                  </h2>
 
-      {job.office_address && (
-        <div className="mb-3">
-          {/^https?:\/\//i.test(job.office_address) ||
-          job.office_address.includes("maps.google") ||
-          job.office_address.includes("goo.gl") ? (
-            <a
-              href={job.office_address}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline break-all inline-flex items-center gap-1.5"
-            >
-              Open location on Google Maps
-            </a>
-          ) : (
-            <p className="text-sm text-muted-foreground">{job.office_address}</p>
-          )}
-        </div>
-      )}
+                  {job.office_address && (
+                    <div className="mb-3">
+                      {/^https?:\/\//i.test(job.office_address) ||
+                      job.office_address.includes("maps.google") ||
+                      job.office_address.includes("goo.gl") ? (
+                        <a
+                          href={job.office_address}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline break-all inline-flex items-center gap-1.5"
+                        >
+                          Open location on Google Maps
+                        </a>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {job.office_address}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-      {hasMap && (
-        <div className="rounded-lg overflow-hidden border border-border">
-          <iframe
-            title="Office Location"
-            width="100%"
-            height="300"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            src={`https://maps.google.com/maps?q=${job.office_lat},${job.office_lng}&z=15&output=embed`}
-            className="block"
-          />
-        </div>
-      )}
-    </CardContent>
-  </Card>
-)}
+                  {hasMap && (
+                    <div className="rounded-lg overflow-hidden border border-border">
+                      <iframe
+                        title="Office Location"
+                        width="100%"
+                        height="300"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://maps.google.com/maps?q=${job.office_lat},${job.office_lng}&z=15&output=embed`}
+                        className="block"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -218,12 +244,28 @@ export default async function JobDetailPage({
             <Card>
               <CardContent className="pt-5 pb-5 space-y-3">
                 <h3 className="text-sm font-semibold">Quick Details</h3>
-                <Detail icon={<Tag className="h-4 w-4" />} label="Category" value={job.category} />
+                <Detail
+                  icon={<Tag className="h-4 w-4" />}
+                  label="Category"
+                  value={job.category}
+                />
                 {job.subcategory && (
-                  <Detail icon={<Tag className="h-4 w-4" />} label="Subcategory" value={job.subcategory} />
+                  <Detail
+                    icon={<Tag className="h-4 w-4" />}
+                    label="Subcategory"
+                    value={job.subcategory}
+                  />
                 )}
-                <Detail icon={<Calendar className="h-4 w-4" />} label="Posted" value={postedOn} />
-                <Detail icon={<Clock className="h-4 w-4" />} label="Duration" value={job.duration} />
+                <Detail
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Posted"
+                  value={postedOn}
+                />
+                <Detail
+                  icon={<Clock className="h-4 w-4" />}
+                  label="Duration"
+                  value={job.duration}
+                />
 
                 <div className="flex items-start gap-2.5">
                   <Banknote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -233,14 +275,16 @@ export default async function JobDetailPage({
                       {job.salary_type === "After Interview"
                         ? "To be discussed"
                         : job.salary_rate
-                          ? `${job.salary_rate} ${job.currency || "SAR"}`
+                          ? formatMoney(job.salary_rate, job.currency)
                           : job.salary_type ?? "Not specified"}
                     </p>
-                    {job.salary_type && job.salary_type !== "After Interview" && job.salary_rate && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Type: {job.salary_type}
-                      </p>
-                    )}
+                    {job.salary_type &&
+                      job.salary_type !== "After Interview" &&
+                      job.salary_rate && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Type: {job.salary_type}
+                        </p>
+                      )}
                   </div>
                 </div>
 
@@ -268,7 +312,55 @@ export default async function JobDetailPage({
               </CardContent>
             </Card>
 
-            {/* Posted by — profile info */}
+            {/* Apply options */}
+            <Card>
+              <CardContent className="pt-5 pb-5 space-y-3">
+                <h2 className="font-semibold text-foreground">
+                  Apply for this job
+                </h2>
+
+                {job.company_email || job.company_phone ? (
+                  <div className="flex flex-wrap gap-2">
+                    {job.company_email && (
+                      <Button className="gap-1.5" asChild>
+                        <a
+                          href={`mailto:${job.company_email}?subject=${encodeURIComponent(
+                            `Application – ${job.job_title}`
+                          )}&body=${encodeURIComponent(
+                            `Hello,\n\nI would like to apply for the position "${job.job_title}" on Hunared.\n\nBest regards`
+                          )}`}
+                        >
+                          <Mail className="h-4 w-4" />
+                          Apply by Email
+                        </a>
+                      </Button>
+                    )}
+                    {job.company_phone && (
+                      <Button variant="outline" className="gap-1.5" asChild>
+                        <a
+                          href={`https://wa.me/${job.company_phone
+                            .replace(/[^\d+]/g, "")
+                            .replace(/^\+/, "")}?text=${encodeURIComponent(
+                            `Hello, I would like to apply for the position "${job.job_title}" on Hunared.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          Apply on WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Application contact not provided by the employer.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Posted by */}
             <Card>
               <CardContent className="pt-5 pb-5 space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -335,7 +427,6 @@ export default async function JobDetailPage({
                   </div>
                 )}
 
-                {/* Profile contact (only if allowed) */}
                 {showPhone && (
                   <div className="flex items-start gap-2.5">
                     <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -366,7 +457,6 @@ export default async function JobDetailPage({
                   </div>
                 )}
 
-                {/* Only show message when they allowed contact but profile has none */}
                 {allowProfileContact && !showPhone && !showEmail && (
                   <p className="text-xs text-muted-foreground">
                     Contact details are not available on this profile.
@@ -375,16 +465,24 @@ export default async function JobDetailPage({
               </CardContent>
             </Card>
 
-            {/* Company contact (always shown if available) */}
+            {/* Company contact */}
             <Card>
               <CardContent className="pt-5 pb-5 space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   Company Contact
                 </h3>
-                <Detail icon={<Building2 className="h-4 w-4" />} label="Company" value={job.company_name} />
+                <Detail
+                  icon={<Building2 className="h-4 w-4" />}
+                  label="Company"
+                  value={job.company_name}
+                />
                 {job.company_address && (
-                  <Detail icon={<MapPin className="h-4 w-4" />} label="Address" value={job.company_address} />
+                  <Detail
+                    icon={<MapPin className="h-4 w-4" />}
+                    label="Address"
+                    value={job.company_address}
+                  />
                 )}
                 {job.company_phone && (
                   <div className="flex items-start gap-2.5">
@@ -415,15 +513,16 @@ export default async function JobDetailPage({
                   </div>
                 )}
 
-                {!job.company_phone && !job.company_email && !job.company_address && (
-                  <p className="text-xs text-muted-foreground">
-                    Contact details not provided.
-                  </p>
-                )}
+                {!job.company_phone &&
+                  !job.company_email &&
+                  !job.company_address && (
+                    <p className="text-xs text-muted-foreground">
+                      Contact details not provided.
+                    </p>
+                  )}
               </CardContent>
             </Card>
 
-            {/* Browse more */}
             <Button className="w-full" variant="outline" asChild>
               <Link href="/jobs">Browse More Jobs</Link>
             </Button>

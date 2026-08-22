@@ -1,3 +1,4 @@
+import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import Link from "next/link";
 import { MapPin, Clock, DollarSign, Users, ArrowRight } from "lucide-react";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS, JOB_CATEGORIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
+import { formatMoney } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 
@@ -17,6 +19,80 @@ interface SearchParams {
   city?: string;
   employmentType?: string;
   page?: string;
+  sort?: string;
+  payout?: string;
+  duration?: string;
+  posted?: string;
+  dateOrder?: string;
+  experience?: string;
+}
+
+/** Numeric salary/rate for sorting. Text / missing → null (sorted last). */
+function parseRateValue(rate: string | null | undefined): number | null {
+  if (rate == null || rate === "") return null;
+  const raw = String(rate).trim().toLowerCase();
+  if (
+    !raw ||
+    raw.includes("negotiable") ||
+    raw.includes("discuss") ||
+    raw === "n/a" ||
+    raw === "-"
+  ) {
+    return null;
+  }
+  const num = Number(raw.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(num) ? num : null;
+}
+
+/** Map duration filter value → matching duration strings / employment types */
+function matchesDurationFilter(
+  job: { duration?: string | null; employment_type?: string | null },
+  filter: string
+): boolean {
+  if (!filter) return true;
+  const dur = (job.duration ?? "").toLowerCase();
+  const emp = (job.employment_type ?? "").toLowerCase();
+
+  if (filter === "temporary") {
+    return emp === "temporary" || emp === "task_force";
+  }
+  if (filter === "short_term") {
+    // 1–6 Month style durations
+    return (
+      /^\d+\s*month/.test(dur) ||
+      dur.includes("3 month") ||
+      dur.includes("6 month")
+    );
+  }
+  if (filter === "long_term") {
+    return dur.includes("long term") || dur.includes("1 year");
+  }
+  if (filter === "permanent") {
+    return emp === "permanent" || dur === "permanent";
+  }
+  if (filter === "shutdown") {
+    return dur.includes("shutdown");
+  }
+  return true;
+}
+
+function postedCutoff(posted: string): Date | null {
+  if (!posted) return null;
+  const now = new Date();
+  if (posted === "today") {
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  const hours: Record<string, number> = {
+    "24h": 24,
+    "3d": 24 * 3,
+    "7d": 24 * 7,
+    "15d": 24 * 15,
+  };
+  const h = hours[posted];
+  if (!h) return null;
+  return new Date(now.getTime() - h * 60 * 60 * 1000);
 }
 
 export default async function JobsPage({
@@ -30,14 +106,28 @@ export default async function JobsPage({
   const country = sp.country ?? "";
   const city = sp.city ?? "";
   const employmentType = sp.employmentType ?? "";
+  const sort = sp.sort ?? "";
+  const payout = sp.payout ?? "";
+  const durationFilter = sp.duration ?? "";
+  const posted = sp.posted ?? "";
+  const dateOrder = sp.dateOrder ?? "";
+  const experience = sp.experience ?? "";
   const page = Math.max(1, parseInt(sp.page ?? "1", 10));
   const limit = 12;
   const from = (page - 1) * limit;
 
+  const needsInMemory =
+    sort === "comp_asc" ||
+    sort === "comp_desc" ||
+    sort === "rate_asc" ||
+    sort === "rate_desc" ||
+    !!durationFilter ||
+    !!posted ||
+    !!experience ||
+    dateOrder === "oldest";
+
   let jobs: Partial<Job>[] = [];
   let total = 0;
-  // Full spec category list for the filter dropdown — always complete,
-  // not limited to categories that already have posted jobs.
   const categories: string[] = [...JOB_CATEGORIES];
 
   try {
@@ -46,30 +136,126 @@ export default async function JobsPage({
     let query = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, country, city, employment_type, salary_rate, duration, category, positions, created_at",
+        "id, job_title, company_name, location, country, city, employment_type, salary_rate, salary_type, currency, duration, category, positions, created_at",
         { count: "exact" }
       )
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .range(from, from + limit - 1);
+      .eq("status", "approved");
 
     if (category) query = query.eq("category", category);
     if (country) query = query.eq("country", country);
     if (city) query = query.ilike("city", `%${city}%`);
-    if (employmentType === "permanent" || employmentType === "temporary" || employmentType === "task_force") {
+    if (
+      employmentType === "permanent" ||
+      employmentType === "temporary" ||
+      employmentType === "task_force"
+    ) {
       query = query.eq("employment_type", employmentType);
     }
     if (search) query = query.ilike("job_title", `%${search}%`);
 
-    const { data, count } = await query;
-    jobs = data ?? [];
-    total = count ?? 0;
+    // Payout / salary_type (Hourly, Monthly, After Interview = Negotiable)
+    if (payout === "Hourly" || payout === "Monthly" || payout === "After Interview") {
+      query = query.eq("salary_type", payout);
+    }
+
+    // Date posted cutoff (created_at)
+    const cutoff = postedCutoff(posted);
+    if (cutoff) {
+      query = query.gte("created_at", cutoff.toISOString());
+    }
+
+    if (needsInMemory) {
+      query = query.order("created_at", { ascending: false }).limit(500);
+      const { data, count } = await query;
+      let rows = data ?? [];
+
+      // Duration filter (maps to duration + employment_type)
+      if (durationFilter) {
+        rows = rows.filter((j) => matchesDurationFilter(j, durationFilter));
+      }
+
+      // Experience level — jobs table has no dedicated column yet;
+      // soft-match on duration/employment heuristics when possible
+      if (experience) {
+        rows = rows.filter((j) => {
+          const emp = (j.employment_type ?? "").toLowerCase();
+          const dur = (j.duration ?? "").toLowerCase();
+          if (experience === "beginner") {
+            return emp === "temporary" || emp === "task_force" || /^\d+\s*month/.test(dur);
+          }
+          if (experience === "intermediate") {
+            return dur.includes("6 month") || dur.includes("1 year");
+          }
+          if (experience === "advanced" || experience === "expert" || experience === "master") {
+            return emp === "permanent" || dur.includes("long term") || dur === "permanent";
+          }
+          return true;
+        });
+      }
+
+      // Compensation sort (numeric)
+      if (sort === "comp_asc" || sort === "rate_asc") {
+        rows = [...rows].sort((a, b) => {
+          const ra = parseRateValue(a.salary_rate);
+          const rb = parseRateValue(b.salary_rate);
+          if (ra == null && rb == null) return 0;
+          if (ra == null) return 1;
+          if (rb == null) return -1;
+          return ra - rb;
+        });
+      } else if (sort === "comp_desc" || sort === "rate_desc") {
+        rows = [...rows].sort((a, b) => {
+          const ra = parseRateValue(a.salary_rate);
+          const rb = parseRateValue(b.salary_rate);
+          if (ra == null && rb == null) return 0;
+          if (ra == null) return 1;
+          if (rb == null) return -1;
+          return rb - ra;
+        });
+      } else if (dateOrder === "oldest") {
+        rows = [...rows].sort(
+          (a, b) =>
+            new Date(a.created_at ?? 0).getTime() -
+            new Date(b.created_at ?? 0).getTime()
+        );
+      } else if (dateOrder === "newest") {
+        rows = [...rows].sort(
+          (a, b) =>
+            new Date(b.created_at ?? 0).getTime() -
+            new Date(a.created_at ?? 0).getTime()
+        );
+      }
+
+      total = rows.length;
+      jobs = rows.slice(from, from + limit);
+    } else {
+      // DB-side order
+      const ascending = dateOrder === "oldest";
+      query = query
+        .order("created_at", { ascending })
+        .range(from, from + limit - 1);
+      const { data, count } = await query;
+      jobs = data ?? [];
+      total = count ?? 0;
+    }
   } catch {
     // DB not configured — show empty state
   }
 
   const totalPages = Math.ceil(total / limit);
-  const hasFilters = !!(search || category || country || city || employmentType);
+  const hasFilters = !!(
+    search ||
+    category ||
+    country ||
+    city ||
+    employmentType ||
+    sort ||
+    payout ||
+    durationFilter ||
+    posted ||
+    dateOrder ||
+    experience
+  );
   const activeCountry = COUNTRIES.find((c) => c.code === country);
 
   return (
@@ -90,6 +276,12 @@ export default async function JobsPage({
             defaultCategory={category}
             defaultCountry={country}
             defaultCity={city}
+            defaultSort={sort}
+            defaultPayout={payout}
+            defaultDuration={durationFilter}
+            defaultPosted={posted}
+            defaultDateOrder={dateOrder}
+            defaultExperience={experience}
             categories={categories}
           />
         </div>
@@ -131,7 +323,20 @@ export default async function JobsPage({
                 {page > 1 && (
                   <Button variant="outline" size="sm" asChild>
                     <Link
-                      href={`/jobs?${buildParams({ search, category, country, city, employmentType, page: page - 1 })}`}
+                      href={`/jobs?${buildParams({
+                        search,
+                        category,
+                        country,
+                        city,
+                        employmentType,
+                        sort,
+                        payout,
+                        duration: durationFilter,
+                        posted,
+                        dateOrder,
+                        experience,
+                        page: page - 1,
+                      })}`}
                     >
                       Previous
                     </Link>
@@ -143,7 +348,20 @@ export default async function JobsPage({
                 {page < totalPages && (
                   <Button variant="outline" size="sm" asChild>
                     <Link
-                      href={`/jobs?${buildParams({ search, category, country, city, employmentType, page: page + 1 })}`}
+                      href={`/jobs?${buildParams({
+                        search,
+                        category,
+                        country,
+                        city,
+                        employmentType,
+                        sort,
+                        payout,
+                        duration: durationFilter,
+                        posted,
+                        dateOrder,
+                        experience,
+                        page: page + 1,
+                      })}`}
                     >
                       Next
                     </Link>
@@ -166,6 +384,11 @@ function JobCard({ job }: { job: Partial<Job> }) {
       })
     : "";
 
+  const salaryLabel =
+    job.salary_type === "After Interview"
+      ? "To be discussed"
+      : formatMoney(job.salary_rate, job.currency);
+
   return (
     <Card className="group hover:border-primary/40 hover:shadow-md transition-all duration-200">
       <CardContent className="pt-5 pb-4 flex flex-col h-full">
@@ -186,11 +409,13 @@ function JobCard({ job }: { job: Partial<Job> }) {
             </Badge>
           )}
         </div>
+
         <Link href={`/jobs/${job.id}`} className="group/title">
           <h3 className="font-semibold text-foreground group-hover/title:text-primary transition-colors leading-snug mb-1">
             {job.job_title}
           </h3>
         </Link>
+
         <p className="text-sm text-muted-foreground mb-3">{job.company_name}</p>
 
         <div className="space-y-1.5 text-xs text-muted-foreground flex-1">
@@ -200,10 +425,10 @@ function JobCard({ job }: { job: Partial<Job> }) {
               {job.location}
             </div>
           )}
-          {job.salary_rate && (
+          {(job.salary_rate || job.salary_type === "After Interview") && (
             <div className="flex items-center gap-1.5">
               <DollarSign className="h-3.5 w-3.5 shrink-0" />
-              {job.salary_rate}
+              {salaryLabel}
             </div>
           )}
           {job.duration && (
@@ -220,18 +445,23 @@ function JobCard({ job }: { job: Partial<Job> }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border gap-2">
           <span className="text-xs text-muted-foreground">{createdAt}</span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1 text-xs hover:text-primary"
-            asChild
-          >
-            <Link href={`/jobs/${job.id}`}>
-              View <ArrowRight className="h-3 w-3" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {job.id && (
+              <SaveButton itemType="job" itemId={job.id} size="sm" />
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 text-xs hover:text-primary"
+              asChild
+            >
+              <Link href={`/jobs/${job.id}`}>
+                View <ArrowRight className="h-3 w-3" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -244,6 +474,12 @@ function buildParams(p: {
   country: string;
   city: string;
   employmentType: string;
+  sort?: string;
+  payout?: string;
+  duration?: string;
+  posted?: string;
+  dateOrder?: string;
+  experience?: string;
   page: number;
 }) {
   const params = new URLSearchParams();
@@ -252,6 +488,12 @@ function buildParams(p: {
   if (p.country) params.set("country", p.country);
   if (p.city) params.set("city", p.city);
   if (p.employmentType) params.set("employmentType", p.employmentType);
+  if (p.sort) params.set("sort", p.sort);
+  if (p.payout) params.set("payout", p.payout);
+  if (p.duration) params.set("duration", p.duration);
+  if (p.posted) params.set("posted", p.posted);
+  if (p.dateOrder) params.set("dateOrder", p.dateOrder);
+  if (p.experience) params.set("experience", p.experience);
   if (p.page > 1) params.set("page", p.page.toString());
   return params.toString();
 }

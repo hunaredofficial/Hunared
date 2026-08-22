@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { useSignUp } from "@clerk/nextjs";
 import {
   Briefcase,
@@ -560,29 +561,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg">
         {/* Logo – centered */}
         <div className="flex flex-col items-center justify-center text-center mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5 group"
-            aria-label="Hunared home"
-          >
-            <Image
-              src="/assets/logos/logo-horizontal.png"
-              alt="Hunared Logo"
-              width={42}
-              height={38}
-              quality={100}
-              priority
-              className="h-10 w-10 object-contain"
-            />
-            <span
-              className="text-[30px] font-extrabold tracking-tight leading-none select-none"
-              style={{ fontFamily: "Inter, Poppins, sans-serif" }}
-            >
-              <span className="bg-gradient-to-r from-[#0F7DD7] via-[#243A8F] to-[#4B178F] bg-[length:200%_100%] bg-clip-text text-transparent animate-shimmer">
-                Hunared
-              </span>
-            </span>
-          </Link>
+          <HunaredLogo size="lg" href="/" />
         </div>
 
         {/* ── STEP: Goal ── */}

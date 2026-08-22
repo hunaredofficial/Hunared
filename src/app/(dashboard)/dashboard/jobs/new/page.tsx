@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-// import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,16 +17,13 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
-// import type { OfficeLocation } from "@/components/jobs/OfficeLocationPicker";
+import {
+  CURRENCIES,
+  currencyForCountry,
+  currencyOptionLabel,
+} from "@/lib/currencies";
+import { useGeo } from "@/components/providers/GeoProvider";
 import Link from "next/link";
-
-// const OfficeLocationPicker = dynamic(
-//   () =>
-//     import("@/components/jobs/OfficeLocationPicker").then(
-//       (m) => m.OfficeLocationPicker
-//     ),
-//   { ssr: false }
-// );
 
 interface JobForm {
   jobTitle: string;
@@ -46,70 +42,20 @@ interface JobForm {
   companyPhone: string;
   companyEmail: string;
   companyAddress: string;
-  showProfileContact: boolean; // ← added
+  showProfileContact: boolean;
 }
-
-const CURRENCIES = [
-  "SAR",
-  "PKR",
-  "QAR",
-  "AED",
-  "KWD",
-  "BHD",
-  "USD",
-  "EUR",
-  "ARS",
-  "AUD",
-  "BDT",
-  "BRL",
-  "CAD",
-  "CHF",
-  "CLP",
-  "CNY",
-  "COP",
-  "CZK",
-  "DKK",
-  "EGP",
-  "ETB",
-  "GBP",
-  "HKD",
-  "HUF",
-  "IDR",
-  "INR",
-  "JPY",
-  "KES",
-  "KRW",
-  "LKR",
-  "MAD",
-  "MXN",
-  "MYR",
-  "NGN",
-  "NOK",
-  "NPR",
-  "NZD",
-  "OMR",
-  "PHP",
-  "PLN",
-  "RUB",
-  "SEK",
-  "SGD",
-  "THB",
-  "TRY",
-  "TWD",
-  "VND",
-  "ZAR",
-];
 
 export default function PostJobPage() {
   const router = useRouter();
+  const geo = useGeo();
   const [isLoading, setIsLoading] = useState(false);
-  // const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(null);
+  const [currencyTouched, setCurrencyTouched] = useState(false);
 
   const [form, setForm] = useState<JobForm>({
     jobTitle: "",
     jobDescription: "",
     positions: "",
-    country: "SA", // default to Saudi Arabia
+    country: "SA",
     city: "",
     employmentType: "permanent",
     duration: "",
@@ -122,10 +68,17 @@ export default function PostJobPage() {
     companyPhone: "",
     companyEmail: "",
     companyAddress: "",
-    showProfileContact: false, // ← added
+    showProfileContact: false,
   });
 
-  // Updated setter to support both string and boolean
+  // Auto-set currency from geo until the user manually changes it
+  useEffect(() => {
+    if (currencyTouched) return;
+    if (geo.loading) return;
+    if (!geo.countryCode) return;
+    set("currency", currencyForCountry(geo.countryCode));
+  }, [geo.loading, geo.countryCode, currencyTouched]);
+
   const set = (field: keyof JobForm, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -134,26 +87,50 @@ export default function PostJobPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
-    if (!form.jobTitle.trim()) { toast.error("Job Title is required."); return; }
-    if (!form.jobDescription.trim()) { toast.error("Job Description is required."); return; }
-    if (!form.country) { toast.error("Country is required."); return; }
-    if (!form.duration) { toast.error("Duration is required."); return; }
-    if (!form.category) { toast.error("Category is required."); return; }
-    if (!form.salaryType) { toast.error("Salary Type is required."); return; }
+
+    if (!form.jobTitle.trim()) {
+      toast.error("Job Title is required.");
+      return;
+    }
+    if (!form.jobDescription.trim()) {
+      toast.error("Job Description is required.");
+      return;
+    }
+    if (!form.country) {
+      toast.error("Country is required.");
+      return;
+    }
+    if (!form.duration) {
+      toast.error("Duration is required.");
+      return;
+    }
+    if (!form.category) {
+      toast.error("Category is required.");
+      return;
+    }
+    if (!form.salaryType) {
+      toast.error("Salary Type is required.");
+      return;
+    }
     if (!form.currency) {
       toast.error("Currency is required.");
       return;
     }
     if (salaryAmountRequired && !form.salaryRate.trim()) {
-      toast.error("Salary / Rate amount is required for Hourly or Monthly type.");
+      toast.error(
+        "Salary / Rate amount is required for Hourly or Monthly type."
+      );
       return;
     }
-    if (!form.companyName.trim()) { toast.error("Company Name is required."); return; }
-    
-    // Check that at least one contact method is provided
+    if (!form.companyName.trim()) {
+      toast.error("Company Name is required.");
+      return;
+    }
+
     if (!form.companyPhone.trim() && !form.companyEmail.trim()) {
-      toast.error("Please provide at least one contact method: Phone or Email.");
+      toast.error(
+        "Please provide at least one contact method: Phone or Email."
+      );
       return;
     }
 
@@ -193,10 +170,7 @@ export default function PostJobPage() {
           companyPhone: form.companyPhone.trim() || null,
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
-          showProfileContact: form.showProfileContact, // ← added
-          // officeLat: officeLocation?.lat ?? null,
-          // officeLng: officeLocation?.lng ?? null,
-          // officeAddress: officeLocation?.address ?? null,
+          showProfileContact: form.showProfileContact,
         }),
       });
 
@@ -256,14 +230,18 @@ export default function PostJobPage() {
             <Field label="Category *">
               <Select
                 value={form.category}
-                onValueChange={(v: string | null) => { if (v) set("category", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) set("category", v);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   {JOB_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -280,14 +258,24 @@ export default function PostJobPage() {
             <Field label="Country *">
               <Select
                 value={form.country}
-                onValueChange={(v: string | null) => { if (v) set("country", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) {
+                    set("country", v);
+                    // Keep currency in sync with country until user overrides currency
+                    if (!currencyTouched) {
+                      set("currency", currencyForCountry(v));
+                    }
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -304,7 +292,9 @@ export default function PostJobPage() {
             <Field label="Employment Type *">
               <Select
                 value={form.employmentType}
-                onValueChange={(v: string | null) => { if (v) set("employmentType", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) set("employmentType", v);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -330,14 +320,18 @@ export default function PostJobPage() {
             <Field label="Duration *">
               <Select
                 value={form.duration}
-                onValueChange={(v: string | null) => { if (v) set("duration", v); }}
+                onValueChange={(v: string | null) => {
+                  if (v) set("duration", v);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
                   {DURATIONS.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -358,7 +352,9 @@ export default function PostJobPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {SALARY_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -367,18 +363,19 @@ export default function PostJobPage() {
             <Field label="Currency *">
               <Select
                 value={form.currency}
-                onValueChange={(v) => {
-                  if (v) set("currency", v);
+                onValueChange={(v: string | null) => {
+                  if (!v) return;
+                  setCurrencyTouched(true);
+                  set("currency", v);
                 }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-
                 <SelectContent>
-                  {CURRENCIES.map((currency) => (
-                    <SelectItem key={currency} value={currency}>
-                      {currency}
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {currencyOptionLabel(c)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -390,8 +387,8 @@ export default function PostJobPage() {
                 <Input
                   placeholder={
                     form.salaryType === "Hourly"
-                      ? "e.g. $25 - $35/hr"
-                      : "e.g. $6,000 - $9,000/mo"
+                      ? "e.g. 25 - 35"
+                      : "e.g. 6000 - 9000"
                   }
                   value={form.salaryRate}
                   onChange={(e) => set("salaryRate", e.target.value)}
@@ -405,14 +402,17 @@ export default function PostJobPage() {
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
-              <Input 
+              <Input
                 placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
             </Field>
 
-            <Field label="Company Phone" className="col-span-full sm:col-span-1">
+            <Field
+              label="Company Phone"
+              className="col-span-full sm:col-span-1"
+            >
               <Input
                 type="tel"
                 placeholder="+966 1x xxx xxxx"
@@ -421,7 +421,10 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Company Email" className="col-span-full sm:col-span-1">
+            <Field
+              label="Company Email"
+              className="col-span-full sm:col-span-1"
+            >
               <Input
                 type="email"
                 placeholder="hr@company.com"
@@ -434,7 +437,6 @@ export default function PostJobPage() {
               At least one contact method (Phone or Email) is required.
             </div>
 
-            {/* ← NEW CHECKBOX */}
             <div className="col-span-full flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
               <input
                 id="showProfileContact"
@@ -443,13 +445,16 @@ export default function PostJobPage() {
                 onChange={(e) => set("showProfileContact", e.target.checked)}
                 className="mt-1 h-4 w-4 rounded border-input"
               />
-              <label htmlFor="showProfileContact" className="text-sm leading-snug cursor-pointer">
+              <label
+                htmlFor="showProfileContact"
+                className="text-sm leading-snug cursor-pointer"
+              >
                 <span className="font-medium text-foreground">
                   Show my profile phone &amp; email on this job
                 </span>
                 <span className="block text-xs text-muted-foreground mt-0.5">
-                  Uses the same contact details from your signup profile. If unchecked,
-                  only your name appears under “Posted by”.
+                  Uses the same contact details from your signup profile. If
+                  unchecked, only your name appears under “Posted by”.
                 </span>
               </label>
             </div>
@@ -464,30 +469,14 @@ export default function PostJobPage() {
           </div>
         </Section>
 
-        {/* Office Location / Map */}
-        {/* <Section title="Office Location (Optional)">
-          <p className="text-xs text-muted-foreground -mt-1">
-            Search for an address or click the map to pin the exact office location.
-          </p>
-          <OfficeLocationPicker
-            value={officeLocation}
-            onChange={setOfficeLocation}
-          />
-          {officeLocation && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-xs text-destructive hover:text-destructive h-7 px-2 cursor-pointer"
-              onClick={() => setOfficeLocation(null)}
-            >
-              Clear location
-            </Button>
-          )}
-        </Section> */}
-
-        <Button type="submit" className="h-11 w-full sm:w-auto cursor-pointer" disabled={isLoading}>
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+        <Button
+          type="submit"
+          className="h-11 w-full sm:w-auto cursor-pointer"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : null}
           Submit for Review
         </Button>
       </form>

@@ -1,3 +1,5 @@
+import { ShareButton } from "@/components/shared/ShareButton";
+import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -8,6 +10,7 @@ import {
   CalendarDays,
   ExternalLink,
   User,
+  MessageCircle,
 } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,7 @@ import { LISTING_CATEGORIES, LISTING_CATEGORY_COLORS } from "@/lib/constants";
 import type { Listing, Profile } from "@/types/database";
 import { ListingGallery } from "@/components/market/ListingGallery";
 import { NativePurchaseSection } from "@/components/market/NativePurchaseSection";
+import { formatRelativePosted, formatPostedExact } from "@/lib/relativeDate";
 
 export default async function ListingDetailPage({
   params,
@@ -94,8 +98,26 @@ export default async function ListingDetailPage({
           <div className="space-y-5">
             {/* Title + price */}
             <div>
-              <Badge className={`text-xs border-0 mb-2 ${colorClass}`}>{catLabel}</Badge>
-              <h1 className="text-2xl font-bold leading-tight">{listing.title}</h1>
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <Badge className={`text-xs border-0 ${colorClass}`}>
+                  {catLabel}
+                </Badge>
+                <div className="flex items-center gap-2">
+                  <ShareButton
+                    url={`/market/${listing.id}`}
+                    title={listing.title}
+                    size="sm"
+                  />
+                  <SaveButton
+                    itemType="listing"
+                    itemId={listing.id}
+                    size="sm"
+                  />
+                </div>
+              </div>
+              <h1 className="text-2xl font-bold leading-tight">
+                {listing.title}
+              </h1>
               <p className="text-3xl font-bold text-primary mt-3">
                 {listing.currency} {listing.price}
               </p>
@@ -104,33 +126,33 @@ export default async function ListingDetailPage({
             {/* Meta */}
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
               {listing.location && (
-  <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
-    <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-    {listing.location.split(" | ").map((part, i) => {
-      const isLink = /^https?:\/\//i.test(part) || part.includes("maps.");
-      return isLink ? (
-        <a
-          key={i}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline break-all"
-        >
-          Open on Google Maps
-        </a>
-      ) : (
-        <span key={i}>{part}</span>
-      );
-    })}
-  </div>
-)}
-              <span className="flex items-center gap-1.5">
+                <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  {listing.location.split(" | ").map((part, i) => {
+                    const isLink =
+                      /^https?:\/\//i.test(part) || part.includes("maps.");
+                    return isLink ? (
+                      <a
+                        key={i}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline break-all"
+                      >
+                        Open on Google Maps
+                      </a>
+                    ) : (
+                      <span key={i}>{part}</span>
+                    );
+                  })}
+                </div>
+              )}
+              <span className="flex items-center gap-1.5" title={formatPostedExact(listing.created_at)}>
                 <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                {new Date(listing.created_at).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                Posted: {formatRelativePosted(listing.created_at).replace(/^Posted\s+/i, "")}
+                <span className="text-muted-foreground/70">
+                  ({formatPostedExact(listing.created_at)})
+                </span>
               </span>
             </div>
 
@@ -142,9 +164,13 @@ export default async function ListingDetailPage({
                 <User className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium">{seller?.full_name ?? "Hunared community member"}</p>
+                <p className="text-sm font-medium">
+                  {seller?.full_name ?? "Hunared community member"}
+                </p>
                 {seller?.location && (
-                  <p className="text-xs text-muted-foreground">{seller.location}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {seller.location}
+                  </p>
                 )}
               </div>
             </div>
@@ -155,8 +181,13 @@ export default async function ListingDetailPage({
             <div className="space-y-2.5">
               {isAffiliate && listing.external_link ? (
                 <Button className="w-full gap-2 py-6" asChild>
-                  <a href={listing.external_link} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4 " /> Buy / View on External Site
+                  <a
+                    href={listing.external_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4 " /> Buy / View on External
+                    Site
                   </a>
                 </Button>
               ) : isNative ? (
@@ -166,9 +197,9 @@ export default async function ListingDetailPage({
                 />
               ) : null}
 
-              {/* Contact phone — now clickable (tel: link) */}
+              {/* Contact info — visible to everyone when seller published it */}
               {listing.contact_phone ? (
-                userId ? (
+                <div className="space-y-2">
                   <a
                     href={`tel:${listing.contact_phone.replace(/[^+\d]/g, "")}`}
                     className="flex items-center gap-2 text-sm bg-muted/50 hover:bg-muted rounded-lg px-4 py-3 transition-colors"
@@ -178,13 +209,17 @@ export default async function ListingDetailPage({
                       {listing.contact_phone}
                     </span>
                   </a>
-                ) : (
-                  <Button variant="outline" className="w-full gap-2" asChild>
-                    <Link href="/sign-in">
-                      <Phone className="h-4 w-4" /> Sign in to see contact
-                    </Link>
-                  </Button>
-                )
+                  {/* WhatsApp — only when a usable phone number exists */}
+                  <a
+                    href={`https://wa.me/${listing.contact_phone.replace(/[^\d]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-lg px-4 py-3 transition-colors"
+                  >
+                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    <span className="font-medium">Contact on WhatsApp</span>
+                  </a>
+                </div>
               ) : null}
 
               {/* For standard listings with no phone, show a contact prompt */}

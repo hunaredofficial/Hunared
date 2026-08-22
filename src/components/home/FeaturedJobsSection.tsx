@@ -1,3 +1,4 @@
+import { SaveButton } from "@/components/shared/SaveButton";
 "use server";
 
 import Link from "next/link";
@@ -172,17 +173,20 @@ export async function FeaturedJobsSection() {
                     </span>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-300 py-5"
-                    asChild
-                  >
-                    <Link href={`/jobs/${job.id}`}>
-                      View Details
-                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+  <SaveButton itemType="job" itemId={job.id} size="sm" />
+  <Button
+    variant="outline"
+    size="sm"
+    className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-300"
+    asChild
+  >
+    <Link href={`/jobs/${job.id}`}>
+      View Details
+      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+    </Link>
+  </Button>
+</div>
                 </CardContent>
               </Card>
             ))}

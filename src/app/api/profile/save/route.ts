@@ -21,6 +21,7 @@ interface SaveProfileBody {
   companyCr?: string | null;
   companyWebsite?: string | null;
   companyAddress?: string | null;
+  availableForHire?: boolean;
 }
 
 export async function POST(req: Request) {
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
 
   let body: SaveProfileBody;
   try {
-    body = await req.json() as SaveProfileBody;
+    body = (await req.json()) as SaveProfileBody;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -81,15 +82,25 @@ export async function POST(req: Request) {
     company_cr: body.companyCr ?? null,
     company_website: body.companyWebsite ?? null,
     company_address: body.companyAddress ?? null,
+    available_for_hire:
+      typeof body.availableForHire === "boolean"
+        ? body.availableForHire
+        : true,
   });
 
   if (error) {
     console.error("[profile/save] Supabase error:", error);
 
     // Detect duplicate email (PostgreSQL unique violation code 23505)
-    if (error.code === "23505" && error.message.includes("profiles_email_key")) {
+    if (
+      error.code === "23505" &&
+      error.message.includes("profiles_email_key")
+    ) {
       return NextResponse.json(
-        { error: "This email is already registered. Please sign in instead." },
+        {
+          error:
+            "This email is already registered. Please sign in instead.",
+        },
         { status: 409 }
       );
     }

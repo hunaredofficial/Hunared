@@ -150,6 +150,7 @@ export async function POST(req: Request) {
       duration: body.duration,
       salary_type: body.salaryType,
       salary_rate: body.salaryRate?.trim() ?? null,
+      currency: body.currency ?? "SAR",
       category: body.category,
       subcategory: body.subcategory ?? null,
       company_name: body.companyName.trim(),

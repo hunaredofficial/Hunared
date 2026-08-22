@@ -42,10 +42,14 @@ export function ProfileEditForm({
   const [email] = useState(initialProfile.email ?? "");
   const [country, setCountry] = useState(initialProfile.country ?? "");
   const [city, setCity] = useState(initialProfile.city ?? "");
+  const [skillLevel, setSkillLevel] = useState(initialProfile.skill_level ?? "");
 
   // Seeker fields
   const [profession, setProfession] = useState(
     initialProfile.profession ?? ""
+  );
+  const [availableForHire, setAvailableForHire] = useState(
+    initialProfile.available_for_hire !== false
   );
 
   // Employer fields
@@ -64,7 +68,7 @@ export function ProfileEditForm({
     initialProfile.avatar_url ?? ""
   );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarRemoved, setAvatarRemoved] = useState(false); // track explicit removal
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // CV
@@ -93,7 +97,6 @@ export function ProfileEditForm({
       let avatarPublicId: string | null = initialProfile.avatar_public_id;
 
       if (avatarFile) {
-        // New upload
         const { url, publicId } = await uploadToCloudinary(
           avatarFile,
           "hunared/avatars"
@@ -101,12 +104,10 @@ export function ProfileEditForm({
         avatarUrl = url;
         avatarPublicId = publicId;
       } else if (avatarRemoved) {
-        // User cleared the photo
         avatarUrl = null;
         avatarPublicId = null;
       }
 
-      // Determine final CV URL
       let cvUrl = existingCvUrl;
       if (cvFile) {
         const fd = new FormData();
@@ -132,6 +133,8 @@ export function ProfileEditForm({
           country: country || null,
           city: city.trim() || null,
           profession: isSeeker ? profession || null : null,
+          skill_level: isSeeker ? skillLevel || null : null, // ← added
+          availableForHire: isSeeker ? availableForHire : undefined,
           avatarUrl,
           avatarPublicId,
           cvUrl: cvUrl || null,
@@ -283,7 +286,6 @@ export function ProfileEditForm({
             />
           </Field>
 
-          {/* Gender – prevent empty string value */}
           <Field label="Gender">
             <Select
               value={gender || undefined}
@@ -308,7 +310,6 @@ export function ProfileEditForm({
             </Select>
           </Field>
 
-          {/* Country – prevent empty string value */}
           <Field label="Country">
             <Select
               value={country || undefined}
@@ -370,6 +371,69 @@ export function ProfileEditForm({
             </Select>
           </Field>
 
+          {/* Skill Level – added */}
+          <Field label="Skill Level">
+            <Select
+              value={skillLevel || undefined}
+              onValueChange={(v) => setSkillLevel(v)}
+            >
+              <SelectTrigger className="cursor-pointer">
+                <SelectValue placeholder="Select your level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Beginner" className="cursor-pointer">
+                  Beginner
+                </SelectItem>
+                <SelectItem value="Intermediate" className="cursor-pointer">
+                  Intermediate
+                </SelectItem>
+                <SelectItem value="Advanced" className="cursor-pointer">
+                  Advanced
+                </SelectItem>
+                <SelectItem value="Expert" className="cursor-pointer">
+                  Expert
+                </SelectItem>
+                <SelectItem value="Master" className="cursor-pointer">
+                  Master
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {/* Job hiring status */}
+          <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+            <p className="text-sm font-medium">Job hiring status</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="radio"
+                  name="availableForHire"
+                  checked={availableForHire === true}
+                  onChange={() => setAvailableForHire(true)}
+                  className="h-4 w-4"
+                />
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                  Available for hire
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="radio"
+                  name="availableForHire"
+                  checked={availableForHire === false}
+                  onChange={() => setAvailableForHire(false)}
+                  className="h-4 w-4"
+                />
+                <span className="text-muted-foreground font-medium">
+                  Unavailable
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Employers see this on your public candidate profile.
+            </p>
+          </div>
+
           <Field label="CV / Resume">
             <div className="space-y-2">
               {existingCvUrl && !cvFile && (
@@ -415,8 +479,8 @@ export function ProfileEditForm({
                   {cvFile
                     ? cvFile.name
                     : existingCvUrl
-                    ? "Click to replace current CV"
-                    : "Upload CV (PDF, max 10MB)"}
+                      ? "Click to replace current CV"
+                      : "Upload CV (PDF, max 10MB)"}
                 </span>
                 {cvFile && (
                   <button

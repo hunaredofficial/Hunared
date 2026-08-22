@@ -24,7 +24,7 @@ export function OrganizationSchema() {
         "@type": "Organization",
         name: "Hunared",
         url: SITE_URL,
-        logo: `${SITE_URL}/assets/logos/logo-horizontal.png`,
+        logo: `${SITE_URL}/assets/logos/hunared-mark.png`,
         sameAs: [
           "https://facebook.com/hunared",
           "https://linkedin.com/company/hunared",

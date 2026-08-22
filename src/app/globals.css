@@ -202,3 +202,78 @@
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+/* ── Hunared global wordmark: world colors in motion ───────── */
+.hunared-wordmark {
+  will-change: transform;
+  transition: transform 300ms ease-out;
+}
+
+.group:hover .hunared-wordmark,
+a:hover .hunared-wordmark {
+  transform: scale(1.03);
+}
+
+.hunared-wordmark-text {
+  display: inline-block;
+  /* Broad world-inspired palette (many nations / regions — continuous blend) */
+  background-image: linear-gradient(
+    115deg,
+    #ce1126 0%,
+    #002868 8%,
+    #ffffff 14%,
+    #007a3d 22%,
+    #000000 28%,
+    #ffc72c 36%,
+    #012169 44%,
+    #c8102e 52%,
+    #ff9933 60%,
+    #138808 68%,
+    #00a1de 76%,
+    #d21034 84%,
+    #00247d 92%,
+    #ce1126 100%
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hunaredWorldFlow 18s ease-in-out infinite;
+  will-change: background-position;
+}
+
+/* Soft fabric-like wave on the text surface */
+.hunared-wordmark-text::after {
+  content: none; /* keep letters crisp; motion is in the gradient */
+}
+
+@keyframes hunaredWorldFlow {
+  0% {
+    background-position: 0% 40%;
+  }
+  25% {
+    background-position: 50% 60%;
+  }
+  50% {
+    background-position: 100% 40%;
+  }
+  75% {
+    background-position: 50% 20%;
+  }
+  100% {
+    background-position: 0% 40%;
+  }
+}
+
+/* Slightly calmer on small screens for performance + readability */
+@media (max-width: 640px) {
+  .hunared-wordmark-text {
+    animation-duration: 22s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hunared-wordmark-text {
+    animation: none;
+    background-position: 30% 50%;
+  }
+}

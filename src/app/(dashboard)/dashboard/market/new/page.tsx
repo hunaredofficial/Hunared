@@ -1,5 +1,8 @@
 "use client";
 
+import { useGeo } from "@/components/providers/GeoProvider";
+import { CURRENCIES, currencyForCountry, currencyOptionLabel } from "@/lib/currencies";
+
 import { useState, useRef, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -157,7 +160,9 @@ function NewListingForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const geo = useGeo();
   const [currency, setCurrency] = useState("SAR");
+  const [currencyTouched, setCurrencyTouched] = useState(false);
   const [category, setCategory] = useState(
     searchParams.get("category") ?? ""
   );
@@ -176,6 +181,17 @@ function NewListingForm() {
   const [loading, setLoading] = useState(false);
 
   const availableSubcategories = category ? SUBCATEGORIES[category] ?? [] : [];
+
+  // Auto-set country + currency from geo until user overrides
+  useEffect(() => {
+    if (geo.loading) return;
+    if (!geo.countryCode) return;
+    setCountry((prev) => (prev === "SA" || !prev ? geo.countryCode! : prev));
+    if (!currencyTouched) {
+      setCurrency(currencyForCountry(geo.countryCode));
+    }
+  }, [geo.loading, geo.countryCode, currencyTouched]);
+
 
   const isPriceOptional =
     category === "services" ||
@@ -458,7 +474,12 @@ function NewListingForm() {
                 <Select
                   value={country}
                   onValueChange={(v: string | null) => {
-                    if (v) setCountry(v);
+                    if (v) {
+                      setCountry(v);
+                      if (!currencyTouched) {
+                        setCurrency(currencyForCountry(v));
+                      }
+                    }
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -534,16 +555,19 @@ function NewListingForm() {
                 <Select
                   value={currency}
                   onValueChange={(v: string | null) => {
-                    if (v) setCurrency(v);
+                    if (v) {
+                      setCurrency(v);
+                      setCurrencyTouched(true);
+                    }
                   }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LISTING_CURRENCIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {currencyOptionLabel(c)}
                       </SelectItem>
                     ))}
                   </SelectContent>

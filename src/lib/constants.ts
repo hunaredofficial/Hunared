@@ -1,3 +1,5 @@
+import { CURRENCIES } from "@/lib/currencies";
+
 export const JOB_CATEGORIES = [
   "Accounting",
   "Administration",
@@ -8,7 +10,7 @@ export const JOB_CATEGORIES = [
   "Automation",
   "Banking",
   "Business",
-  "Chemicl",
+  "Chemical",
   "Civil",
   "Coating",
   "Community Services",
@@ -123,7 +125,7 @@ export const SALARY_TYPES = ["Hourly", "Monthly", "After Interview"] as const;
 export type SalaryType = (typeof SALARY_TYPES)[number];
 
 export const PROFESSIONS = [
- "Accountant",
+  "Accountant",
   "Accounting Officer",
   "Actuary",
   "Admin Assistant",
@@ -429,7 +431,7 @@ export const PROFESSIONS = [
   "Welding Supervisor",
   "Wind Turbine Technician",
   "WordPress Developer",
-  "Yard Supervisor"
+  "Yard Supervisor",
 ] as const;
 
 // Colors for the most common categories; anything not listed
@@ -455,8 +457,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
     "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
   Construction:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  IT:
-    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  IT: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
   Accounting:
     "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   "Human Resources":
@@ -477,8 +478,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
     "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
   Engineering:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  Other:
-    "bg-muted text-muted-foreground",
+  Other: "bg-muted text-muted-foreground",
 };
 
 export const ARTICLE_CATEGORIES = [
@@ -526,13 +526,12 @@ export const LISTING_CATEGORIES = [
 
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number]["value"];
 
-export const LISTING_CURRENCIES = [
-  "SAR", "PKR", "QAR", "AED", "KWD", "BHD", "USD", "EUR", "ARS", "AUD",
-  "BDT", "BRL", "CAD", "CHF", "CLP", "CNY", "COP", "CZK", "DKK", "EGP",
-  "ETB", "GBP", "HKD", "HUF", "IDR", "INR", "JPY", "KES", "KRW", "LKR",
-  "MAD", "MXN", "MYR", "NGN", "NOK", "NPR", "NZD", "OMR", "PHP", "PLN",
-  "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "VND", "ZAR"
-] as const; 
+/**
+ * Shared currency codes for Jobs + Marketplace.
+ * Prefer importing CURRENCIES from @/lib/currencies and mapping .code
+ * in new forms. This export stays for backward compatibility.
+ */
+export const LISTING_CURRENCIES = CURRENCIES.map((c) => c.code);
 
 export const LISTING_CATEGORY_COLORS: Record<string, string> = {
   for_sale:
@@ -573,6 +572,5 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
   wholesale:
     "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
-  other:
-    "bg-muted text-muted-foreground",
+  other: "bg-muted text-muted-foreground",
 };

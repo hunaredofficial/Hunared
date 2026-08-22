@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -16,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LocationPicker } from "@/components/layout/LocationPicker";
+import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton } from "@clerk/nextjs";
 
 type SimpleLink = { type: "link"; href: string; label: string };
@@ -90,28 +90,8 @@ export function Header() {
         )}
       >
         <div className="flex h-16 items-center justify-between gap-3">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 group shrink-0 logo-premium"
-            aria-label="Hunared home"
-          >
-            <Image
-              src="/assets/logos/logo-horizontal.png"
-              alt="Hunared Logo"
-              width={42}
-              height={38}
-              quality={100}
-              priority
-              className="h-10 w-10 object-contain"
-            />
-            <span
-              className="logo-text relative text-[30px] font-extrabold tracking-tight leading-none select-none"
-              style={{ fontFamily: "Inter, Poppins, sans-serif" }}
-            >
-              <span className="logo-text-gradient">Hunared</span>
-            </span>
-          </Link>
+          {/* Logo – no wrapping Link to avoid nested <a> */}
+          <HunaredLogo size="lg" />
 
           {/* Desktop Nav */}
           <nav
@@ -391,62 +371,6 @@ export function Header() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .logo-premium {
-          will-change: transform;
-          transition: transform 300ms ease-out;
-        }
-        .logo-premium:hover {
-          transform: scale(1.03);
-        }
-        .logo-text {
-          position: relative;
-          display: inline-block;
-        }
-        .logo-text-gradient {
-          background: linear-gradient(
-            115deg,
-            #2ea8ff 0%,
-            #356dff 22%,
-            #5ef7ff 45%,
-            #2a2f8f 68%,
-            #7fdbff 100%
-          );
-          background-size: 250% 250%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          animation: logoInsideShift 6s ease-in-out infinite;
-          will-change: background-position;
-        }
-        .logo-premium:hover .logo-text-gradient {
-          background: linear-gradient(
-            115deg,
-            #4eb8ff 0%,
-            #4a7fff 22%,
-            #7ef9ff 45%,
-            #3a3faf 68%,
-            #9fe5ff 100%
-          );
-          background-size: 250% 250%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          transition: background 300ms ease-out;
-        }
-        @keyframes logoInsideShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-      `}</style>
     </header>
   );
 }
