@@ -34,6 +34,12 @@ export type ListingCategory =
   | "wholesale"
   | "other";
 export type OrderStatus = "pending" | "completed" | "cancelled";
+export type NotificationType =
+  | "job_match"
+  | "listing_match"
+  | "order"
+  | "system"
+  | "application";
 export type AdType = "adsense" | "custom";
 
 export interface SiteSettings {
@@ -402,6 +408,178 @@ export interface Database {
         };
         Relationships: [];
       };
+      saved_jobs: {
+        Row: {
+          id: string;
+          user_id: string;
+          job_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          job_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          job_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      saved_items: {
+        Row: {
+          id: string;
+          user_id: string;
+          item_type: "job" | "listing";
+          item_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          item_type: "job" | "listing";
+          item_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          item_type?: "job" | "listing";
+          item_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      job_category_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          category: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          category: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          category?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      marketplace_category_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          category: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          category: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          category?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: NotificationType;
+          title: string;
+          body: string | null;
+          entity_type: "job" | "listing" | "order" | "article" | null;
+          entity_id: string | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: NotificationType;
+          title: string;
+          body?: string | null;
+          entity_type?: "job" | "listing" | "order" | "article" | null;
+          entity_id?: string | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: NotificationType;
+          title?: string;
+          body?: string | null;
+          entity_type?: "job" | "listing" | "order" | "article" | null;
+          entity_id?: string | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      job_shares: {
+        Row: {
+          id: string;
+          job_id: string;
+          user_id: string | null;
+          channel: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          job_id: string;
+          user_id?: string | null;
+          channel?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          job_id?: string;
+          user_id?: string | null;
+          channel?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      listing_shares: {
+        Row: {
+          id: string;
+          listing_id: string;
+          user_id: string | null;
+          channel: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          user_id?: string | null;
+          channel?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          listing_id?: string;
+          user_id?: string | null;
+          channel?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
     };
     Views: {
       [_ in never]: never;
@@ -416,6 +594,7 @@ export interface Database {
       article_category: ArticleCategory;
       listing_status: ListingStatus;
       listing_category: ListingCategory;
+      notification_type: NotificationType;
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -428,6 +607,14 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Job = Database["public"]["Tables"]["jobs"]["Row"];
 export type Article = Database["public"]["Tables"]["articles"]["Row"];
 export type Listing = Database["public"]["Tables"]["marketplace_listings"]["Row"];
+
+export type SavedJob = Database["public"]["Tables"]["saved_jobs"]["Row"];
+export type SavedItem = Database["public"]["Tables"]["saved_items"]["Row"];
+export type JobCategorySubscription =
+  Database["public"]["Tables"]["job_category_subscriptions"]["Row"];
+export type MarketplaceCategorySubscription =
+  Database["public"]["Tables"]["marketplace_category_subscriptions"]["Row"];
+export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type ListingWithSeller = Listing & {
   profiles: { full_name: string; username: string | null } | null;
 };
