@@ -12,7 +12,7 @@ export async function GET() {
 
   const supabase = createAdminClient();
   const { data: rows, error } = await supabase
-    .from("saved_items")
+    .from("saved_items" as any)
     .select("id, item_type, item_id, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
   }
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("saved_items").upsert(
+  const { error } = await supabase.from("saved_items" as any).upsert(
     {
       user_id: userId,
       item_type: itemType,
@@ -141,7 +141,7 @@ export async function DELETE(req: Request) {
 
   if (removeAll) {
     const { error } = await supabase
-      .from("saved_items")
+      .from("saved_items" as any)
       .delete()
       .eq("user_id", userId);
     if (error) {
@@ -155,7 +155,7 @@ export async function DELETE(req: Request) {
   }
 
   const { error } = await supabase
-    .from("saved_items")
+    .from("saved_items" as any)
     .delete()
     .eq("user_id", userId)
     .eq("item_type", itemType)
