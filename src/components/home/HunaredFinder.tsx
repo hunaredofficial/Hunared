@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
+import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import { useGeo } from "@/components/providers/GeoProvider";
 
 const FINDER_CATEGORY = "lost_found";
@@ -312,8 +314,8 @@ export function HunaredFinder() {
     if (geo.loading) return;
     if (country) return; // user already chose
     if (geo.countryCode) setCountry(geo.countryCode);
-    if (geo.city) setCity(geo.city);
-  }, [geo.loading, geo.countryCode, geo.city, country]);
+    // city stays empty = All Cities
+  }, [geo.loading, geo.countryCode, country]);
 
   const cities = useMemo(() => {
     if (!country) return [];
@@ -371,21 +373,26 @@ export function HunaredFinder() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Search lost or found items..."
-                className="w-full h-14 pl-12 pr-4 rounded-2xl border border-primary/15 bg-background/70 text-base focus:outline-none focus:ring-2 focus:ring-primary/35"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl border border-primary/15 bg-background/70 text-base focus:outline-none focus:ring-2 focus:ring-primary/35"
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <VoiceSearchButton
+                  onResult={(t) => setKeyword(t)}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <select
+                <select data-color-scheme="dark"
                   value={country}
                   onChange={(e) => handleCountryChange(e.target.value)}
-                  className="w-full h-12 pl-9 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                  className="[color-scheme:dark] w-full h-12 pl-9 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
                 >
-                  <option value="">All Countries</option>
+                  <option className="bg-background text-foreground" value="">All Countries</option>
                   {COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>
+                    <option className="bg-background text-foreground" key={c.code} value={c.code}>
                       {c.name}
                     </option>
                   ))}
@@ -393,33 +400,23 @@ export function HunaredFinder() {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
 
-              <div className="relative">
-                <select
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  disabled={!country}
-                  className="w-full h-12 pl-3 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer disabled:opacity-50"
-                >
-                  <option value="">
-                    {country ? "All Cities" : "Select country first"}
-                  </option>
-                  {cities.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
+              <CityCombobox
+                id="finder-city"
+                country={country}
+                value={city}
+                onChange={setCity}
+                size="lg"
+                variant="hero"
+              />
 
               <div className="relative">
-                <select
+                <select data-color-scheme="dark"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-12 pl-3 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                  className="[color-scheme:dark] w-full h-12 pl-3 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s.value || "all"} value={s.value}>
+                    <option className="bg-background text-foreground" key={s.value || "all"} value={s.value}>
                       {s.label}
                     </option>
                   ))}

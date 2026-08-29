@@ -88,7 +88,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased font-[var(--font-poppins)]">
-        <ClerkProvider>
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/register"
+          signInFallbackRedirectUrl="/dashboard"
+          signUpFallbackRedirectUrl="/register?mode=complete"
+          afterSignOutUrl="/"
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

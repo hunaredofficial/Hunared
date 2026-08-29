@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 type Size = "sm" | "md" | "lg" | "xl";
 
-/** Icon pixel size — tuned so mark balances the wordmark */
 const ICON_PX: Record<Size, number> = {
   sm: 30,
   md: 36,
@@ -20,12 +19,11 @@ const WORDMARK_CLASS: Record<Size, string> = {
   xl: "text-3xl sm:text-4xl",
 };
 
-/** Brand mark path — must exist under /public */
 const MARK_SRC = "/assets/logos/hunared-mark.png";
 
 /**
- * Premium Hunared brand mark + animated wordmark.
- * Header / Footer / Dashboard / Register — single source of truth.
+ * Premium Hunared brand mark + white/gold metallic wordmark.
+ * Header / Footer / Dashboard / Auth — single source of truth.
  */
 export function HunaredLogo({
   href = "/",
@@ -37,9 +35,7 @@ export function HunaredLogo({
   href?: string;
   size?: Size;
   className?: string;
-  /** false = plain span (e.g. inside another link) */
   asLink?: boolean;
-  /** false = icon only */
   showWordmark?: boolean;
 }) {
   const px = ICON_PX[size];
@@ -53,31 +49,33 @@ export function HunaredLogo({
     >
       <span
         className={cn(
-          "relative shrink-0 transition-transform duration-300 ease-out",
-          "group-hover/logo:scale-105"
+          "relative shrink-0 transition-transform duration-500 ease-out",
+          "group-hover/logo:scale-[1.06]"
         )}
         style={{ width: px, height: px }}
       >
-        {/* Soft gold glow behind the mark */}
+        {/* Ambient gold glow */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-[-18%] rounded-[28%] opacity-70 blur-[10px] transition-opacity duration-300 group-hover/logo:opacity-100"
+          className="pointer-events-none absolute inset-[-22%] rounded-[30%] opacity-60 blur-[12px] transition-all duration-500 group-hover/logo:opacity-100 group-hover/logo:blur-[14px]"
           style={{
             background:
-              "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.55) 0%, rgba(212,175,55,0.15) 45%, transparent 70%)",
+              "radial-gradient(circle at 50% 42%, rgba(232,197,71,0.65) 0%, rgba(212,175,55,0.2) 42%, transparent 68%)",
           }}
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={MARK_SRC}
-          alt="Hunared"
+          alt=""
           width={px}
           height={px}
           className={cn(
             "relative z-[1] h-full w-full object-cover",
             "rounded-[22%]",
-            "shadow-[0_2px_12px_rgba(0,0,0,0.35),0_0_0_1px_rgba(212,175,55,0.25)]",
-            "ring-1 ring-amber-400/20"
+            "shadow-[0_2px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(212,175,55,0.35)]",
+            "ring-1 ring-amber-400/25",
+            "transition-shadow duration-500",
+            "group-hover/logo:shadow-[0_4px_20px_rgba(212,175,55,0.35),0_0_0_1px_rgba(232,197,71,0.45)]"
           )}
           style={{ width: px, height: px }}
           decoding="async"
@@ -87,10 +85,11 @@ export function HunaredLogo({
       {showWordmark && (
         <span
           className={cn(
-            "hunared-wordmark relative inline-block font-extrabold tracking-tight leading-none select-none",
-            "transition-transform duration-300 ease-out group-hover/logo:translate-x-0.5",
+            "hunared-wordmark relative inline-block leading-none select-none",
+            "transition-transform duration-500 ease-out group-hover/logo:translate-x-[2px]",
             WORDMARK_CLASS[size]
           )}
+          aria-hidden={false}
         >
           <span className="hunared-wordmark-text">Hunared</span>
         </span>

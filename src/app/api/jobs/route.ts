@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
+import { computeExpiresAt } from "@/lib/expiration";
 import type { EmploymentType } from "@/types/database";
 
 const EMPLOYMENT_TYPES = ["permanent", "temporary", "task_force"] as const;
@@ -18,8 +19,9 @@ interface PostJobBody {
   duration: string;
   salaryType: string;
   salaryRate?: string | null;
-  currency?: string | null;          // kept for completeness
+  currency?: string | null;
   category: string;
+  categories?: string[] | null;
   subcategory?: string | null;
   companyName: string;
   companyPhone: string;
@@ -28,7 +30,9 @@ interface PostJobBody {
   officeLat?: number | null;
   officeLng?: number | null;
   officeAddress?: string | null;
-  showProfileContact?: boolean;      // ← added
+  showProfileContact?: boolean;
+  expiration?: string | null;
+  expiresAt?: string | null;
 }
 
 /* ── GET: list approved jobs (public) ─────────────────────── */
@@ -48,17 +52,24 @@ export async function GET(req: Request) {
   const from = (page - 1) * limit;
 
   const supabase = createAdminClient();
+  const nowIso = new Date().toISOString();
   let query = supabase
     .from("jobs")
     .select(
-      "id, job_title, company_name, location, country, city, employment_type, salary_rate, duration, category, positions, status, created_at",
+      "id, job_title, company_name, location, country, city, employment_type, salary_rate, duration, category, categories, positions, status, expires_at, created_at",
       { count: "exact" }
     )
     .eq("status", "approved")
+    .is("closed_at", null)
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order("created_at", { ascending: false })
     .range(from, from + limit - 1);
 
-  if (category) query = query.eq("category", category);
+  if (category) {
+    query = query.or(
+      `category.eq.${category},categories.cs.{"${category}"}`
+    );
+  }
   if (country) query = query.eq("country", country);
   if (city) query = query.ilike("city", `%${city}%`);
   if (employmentType) query = query.eq("employment_type", employmentType);
@@ -125,9 +136,39 @@ export async function POST(req: Request) {
   }
 
   if (!DURATIONS.includes(body.duration as (typeof DURATIONS)[number])) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
-  if (!JOB_CATEGORIES.includes(body.category as (typeof JOB_CATEGORIES)[number])) return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   if (!SALARY_TYPES.includes(body.salaryType as (typeof SALARY_TYPES)[number])) return NextResponse.json({ error: "Invalid salary type" }, { status: 400 });
   if (body.positions != null && (typeof body.positions !== "number" || body.positions < 1)) return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
+
+  const rawCats = Array.isArray(body.categories)
+    ? body.categories
+    : body.category
+      ? [body.category]
+      : [];
+  const categories = [
+    ...new Set(
+      rawCats
+        .map((c) => String(c).trim())
+        .filter((c) => (JOB_CATEGORIES as readonly string[]).includes(c))
+    ),
+  ];
+  if (categories.length === 0) {
+    return NextResponse.json(
+      { error: "At least one valid job category is required" },
+      { status: 400 }
+    );
+  }
+  const primaryCategory = categories[0];
+
+  let expiresAt: string | null = null;
+  if (body.expiresAt) {
+    const t = new Date(body.expiresAt).getTime();
+    if (Number.isNaN(t) || t <= Date.now()) {
+      return NextResponse.json({ error: "Invalid expiration date" }, { status: 400 });
+    }
+    expiresAt = new Date(t).toISOString();
+  } else if (body.expiration) {
+    expiresAt = computeExpiresAt(body.expiration);
+  }
 
   // Check auto-approve setting
   const { data: settings } = await supabase
@@ -151,7 +192,8 @@ export async function POST(req: Request) {
       salary_type: body.salaryType,
       salary_rate: body.salaryRate?.trim() ?? null,
       currency: body.currency ?? "SAR",
-      category: body.category,
+      category: primaryCategory,
+      categories,
       subcategory: body.subcategory ?? null,
       company_name: body.companyName.trim(),
       company_phone: body.companyPhone.trim(),
@@ -161,7 +203,8 @@ export async function POST(req: Request) {
       office_lng: body.officeLng ?? null,
       office_address: body.officeAddress ?? null,
       status: jobStatus,
-      show_profile_contact: Boolean(body.showProfileContact), // ← added
+      expires_at: expiresAt,
+      show_profile_contact: Boolean(body.showProfileContact),
     })
     .select("id")
     .single();

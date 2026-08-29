@@ -21,6 +21,8 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import { LISTING_CATEGORIES } from "@/lib/constants";
 import { useGeo } from "@/components/providers/GeoProvider";
+import { CityCombobox } from "@/components/shared/CityCombobox";
+import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
 
 /** Subcategories by category — mirrors publish form (real data only). */
@@ -289,22 +291,20 @@ export function MarketFilter({
     setSheetOpen(false);
   }
 
-  // Auto location when URL has no country/city
+  // Auto country only; city stays All Cities
   useEffect(() => {
     if (geo.loading) return;
     if (defaultCountry || defaultCity) return;
     if (!geo.countryCode) return;
 
     setCountry(geo.countryCode);
-    if (geo.city) setCity(geo.city);
-
     const params = buildParams({
       country: geo.countryCode,
-      city: geo.city ?? "",
+      city: "",
     });
     router.replace(`/market?${params.toString()}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.loading, geo.countryCode, geo.city]);
+  }, [geo.loading, geo.countryCode]);
 
   // Reset subcategory when category changes away from current
   useEffect(() => {
@@ -353,8 +353,17 @@ export function MarketFilter({
                 if (e.key === "Enter") applyQuick();
               }}
               placeholder="Search listings..."
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full pl-9 pr-10 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+              <VoiceSearchButton
+                size="sm"
+                onResult={(t) => {
+                  setSearch(t);
+                  applyQuick({ search: t });
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -362,7 +371,7 @@ export function MarketFilter({
           <label className="text-xs text-muted-foreground mb-1 block">
             Category
           </label>
-          <select
+          <select data-color-scheme="dark"
             value={category}
             onChange={(e) => {
               const v = e.target.value;
@@ -370,11 +379,11 @@ export function MarketFilter({
               setSubcategory("");
               applyQuick({ category: v, subcategory: "" });
             }}
-            className="text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[180px]"
+            className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[180px]"
           >
-            <option value="">All categories</option>
+            <option className="bg-background text-foreground" value="">All categories</option>
             {LISTING_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
+              <option className="bg-background text-foreground" key={c.value} value={c.value}>
                 {c.label}
               </option>
             ))}
@@ -385,18 +394,19 @@ export function MarketFilter({
           <label className="text-xs text-muted-foreground mb-1 block">
             Country
           </label>
-          <select
+          <select data-color-scheme="dark"
             value={country}
             onChange={(e) => {
               const v = e.target.value;
               setCountry(v);
-              applyQuick({ country: v });
+              setCity("");
+              applyQuick({ country: v, city: "" });
             }}
-            className="text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[200px]"
+            className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[200px]"
           >
-            <option value="">All countries</option>
+            <option className="bg-background text-foreground" value="">All countries</option>
             {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
+              <option className="bg-background text-foreground" key={c.code} value={c.code}>
                 {c.name}
               </option>
             ))}
@@ -405,14 +415,14 @@ export function MarketFilter({
 
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">City</label>
-          <input
+          <CityCombobox
+            id="market-city"
+            country={country}
             value={city}
-            onChange={(e) => setCity(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") applyQuick();
-            }}
-            placeholder="e.g. Dubai"
-            className="w-32 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={setCity}
+            className="w-40"
+            size="sm"
+            variant="select"
           />
         </div>
 

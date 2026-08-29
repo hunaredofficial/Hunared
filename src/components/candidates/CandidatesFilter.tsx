@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { PROFESSIONS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
+import { getCitiesForCountry } from "@/lib/cities";
+import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import { useGeo } from "@/components/providers/GeoProvider";
 
 const SKILL_LEVELS = [
@@ -84,25 +87,23 @@ export function CandidatesFilter({
     [router]
   );
 
-  // Auto-fill country + city once when URL has no country/city
+  // Auto-fill country only; city stays All Cities
   useEffect(() => {
     if (geo.loading) return;
-    if (defaultCountry || defaultCity) return; // user or URL already set
+    if (defaultCountry || defaultCity) return;
     if (!geo.countryCode) return;
 
     setCountry(geo.countryCode);
-    if (geo.city) setCity(geo.city);
-
     apply({
       search,
       profession,
       country: geo.countryCode,
-      city: geo.city ?? "",
+      city: "",
       level,
       available,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.loading, geo.countryCode, geo.city]);
+  }, [geo.loading, geo.countryCode]);
 
   const runApply = () =>
     apply({ search, profession, country, city, level, available });
@@ -153,8 +154,24 @@ export function CandidatesFilter({
             onKeyDown={(e) => {
               if (e.key === "Enter") runApply();
             }}
-            className="pl-9"
+            className="pl-9 pr-10"
           />
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <VoiceSearchButton
+              size="sm"
+              onResult={(t) => {
+                setSearch(t);
+                apply({
+                  search: t,
+                  profession,
+                  country,
+                  city,
+                  level,
+                  available,
+                });
+              }}
+            />
+          </div>
         </div>
 
         {/* Profession */}
@@ -175,7 +192,7 @@ export function CandidatesFilter({
           <SelectTrigger className="sm:w-[180px] cursor-pointer">
             <SelectValue>{professionLabel}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background text-foreground border-border">
             <SelectItem value="all">All professions</SelectItem>
             {PROFESSIONS.map((p) => (
               <SelectItem key={p} value={p}>
@@ -190,11 +207,12 @@ export function CandidatesFilter({
           value={country}
           onValueChange={(v) => {
             setCountry(v);
+            setCity("");
             apply({
               search,
               profession,
               country: v,
-              city,
+              city: "",
               level,
               available,
             });
@@ -203,8 +221,8 @@ export function CandidatesFilter({
           <SelectTrigger className="sm:w-[180px] cursor-pointer">
             <SelectValue>{countryLabel}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
-            <div className="p-2 sticky top-0 bg-popover z-10">
+          <SelectContent className="bg-background text-foreground border-border">
+            <div className="p-2 sticky top-0 bg-background z-10">
               <Input
                 placeholder="Search country..."
                 value={countrySearch}
@@ -221,16 +239,17 @@ export function CandidatesFilter({
           </SelectContent>
         </Select>
 
-        {/* City */}
-        <Input
-          placeholder="City"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") runApply();
-          }}
-          className="sm:w-[140px]"
-        />
+        {/* City — type any name or pick from list */}
+        <div className="sm:w-[160px]">
+          <CityCombobox
+            id="candidates-city"
+            country={country === "all" ? "" : country}
+            value={city}
+            onChange={setCity}
+            size="sm"
+            variant="select"
+          />
+        </div>
 
         {/* Skill Level */}
         <Select
@@ -250,7 +269,7 @@ export function CandidatesFilter({
           <SelectTrigger className="sm:w-[150px] cursor-pointer">
             <SelectValue>{levelLabel}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background text-foreground border-border">
             <SelectItem value="all">All levels</SelectItem>
             {SKILL_LEVELS.map((l) => (
               <SelectItem key={l} value={l}>
@@ -278,7 +297,7 @@ export function CandidatesFilter({
           <SelectTrigger className="sm:w-[170px] cursor-pointer">
             <SelectValue>{availableLabel}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background text-foreground border-border">
             <SelectItem value="all">All availability</SelectItem>
             <SelectItem value="yes">Available for hire</SelectItem>
             <SelectItem value="no">Unavailable</SelectItem>

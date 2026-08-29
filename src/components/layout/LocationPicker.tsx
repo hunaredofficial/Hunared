@@ -81,17 +81,17 @@ export function LocationPicker({ className }: { className?: string }) {
 
             <div>
               <label className="text-xs text-muted-foreground">Country</label>
-              <select
+              <select data-color-scheme="dark"
                 value={country}
                 onChange={(e) => {
                   setCountry(e.target.value);
                   setCity("");
                 }}
-                className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
               >
-                <option value="">Select country</option>
+                <option className="bg-background text-foreground" value="">Select country</option>
                 {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
+                  <option className="bg-background text-foreground" key={c.code} value={c.code}>
                     {c.name}
                   </option>
                 ))}
@@ -104,22 +104,22 @@ export function LocationPicker({ className }: { className?: string }) {
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 placeholder="e.g. Eastern Province"
-                className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
               />
             </div>
 
             <div>
               <label className="text-xs text-muted-foreground">City</label>
               {cities.length > 1 ? (
-                <select
+                <select data-color-scheme="dark"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   disabled={!country}
-                  className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
+                  className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
                 >
-                  <option value="">All cities</option>
+                  <option className="bg-background text-foreground" value="">All cities</option>
                   {cities.map((name) => (
-                    <option key={name} value={name}>
+                    <option className="bg-background text-foreground" key={name} value={name}>
                       {name}
                     </option>
                   ))}
@@ -129,7 +129,7 @@ export function LocationPicker({ className }: { className?: string }) {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="City name"
-                  className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
                 />
               )}
             </div>

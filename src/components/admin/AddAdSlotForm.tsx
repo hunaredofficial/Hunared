@@ -30,7 +30,7 @@ const SUGGESTED_SLOTS = [
 export function AddAdSlotForm() {
   const [open, setOpen] = useState(false);
   const [slotName, setSlotName] = useState("");
-  const [adType, setAdType] = useState<AdType>("adsense");
+  const [adType, setAdType] = useState<AdType>("custom");
   const [isPending, startTransition] = useTransition();
 
   function handleAdd() {
@@ -39,22 +39,29 @@ export function AddAdSlotForm() {
       toast.error("Slot name is required.");
       return;
     }
+    if (!/^[a-z0-9_]+$/.test(name)) {
+      toast.error("Use lowercase letters, numbers, and underscores only.");
+      return;
+    }
+
     startTransition(async () => {
-      try {
-        await upsertAdPlacement({
-          slot_name: name,
-          is_active: false,
-          ad_type: adType,
-          custom_image_url: "",
-          custom_redirect_url: "",
-          adsense_slot_id: "",
-        });
-        toast.success(`Slot "${name}" created.`);
-        setSlotName("");
-        setOpen(false);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to create slot");
+      const result = await upsertAdPlacement({
+        slot_name: name,
+        is_active: false,
+        ad_type: adType,
+        custom_image_url: "",
+        custom_redirect_url: "",
+        adsense_slot_id: "",
+      });
+
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+
+      toast.success(`Slot "${name}" created.`);
+      setSlotName("");
+      setOpen(false);
     });
   }
 
@@ -80,11 +87,12 @@ export function AddAdSlotForm() {
         <div className="space-y-1.5">
           <Label className="text-xs">Slot Name</Label>
           <Input
-            className="h-8 text-xs"
-            placeholder="e.g. header, job_sidebar"
+            className="h-8 text-xs font-mono"
+            placeholder="e.g. header or job_sidebar"
             list="slot-suggestions"
             value={slotName}
             onChange={(e) => setSlotName(e.target.value)}
+            autoComplete="off"
           />
           <datalist id="slot-suggestions">
             {SUGGESTED_SLOTS.map((s) => (
@@ -92,18 +100,27 @@ export function AddAdSlotForm() {
             ))}
           </datalist>
           <p className="text-[10px] text-muted-foreground">
-            Use lowercase with underscores. Must match the slotName prop in your code.
+            Lowercase with underscores. Must be unique and match the slotName used in code.
           </p>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Ad Type</Label>
-          <Select value={adType} onValueChange={(v) => setAdType(v as AdType)}>
+          <Select
+            value={adType}
+            onValueChange={(v) => {
+              if (v === "adsense" || v === "custom") setAdType(v);
+            }}
+          >
             <SelectTrigger className="h-8 text-xs cursor-pointer">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem className="cursor-pointer text-xs" value="adsense">Google AdSense</SelectItem>
-              <SelectItem className="cursor-pointer text-xs" value="custom">Custom Banner</SelectItem>
+              <SelectItem className="cursor-pointer text-xs" value="adsense">
+                Google AdSense
+              </SelectItem>
+              <SelectItem className="cursor-pointer text-xs" value="custom">
+                Custom Banner
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -113,6 +130,7 @@ export function AddAdSlotForm() {
             variant="ghost"
             className="h-7 text-xs cursor-pointer"
             onClick={() => setOpen(false)}
+            disabled={isPending}
           >
             Cancel
           </Button>

@@ -27,6 +27,8 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { COUNTRIES } from "@/lib/countries";
 import { useGeo } from "@/components/providers/GeoProvider";
+import { CityCombobox } from "@/components/shared/CityCombobox";
+import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
 
 export type CompSort = "" | "comp_asc" | "comp_desc";
@@ -41,11 +43,11 @@ const PAYOUT_OPTIONS = [
 
 const DURATION_OPTIONS = [
   { value: "", label: "Any Duration" },
-  { value: "shutdown", label: "Shutdown" },
   { value: "temporary", label: "Temporary" },
   { value: "short_term", label: "Short Term" },
   { value: "long_term", label: "Long Term" },
   { value: "permanent", label: "Permanent" },
+  { value: "shutdown", label: "Shutdown" },
 ] as const;
 
 const DATE_POSTED_OPTIONS = [
@@ -55,7 +57,6 @@ const DATE_POSTED_OPTIONS = [
   { value: "3d", label: "Last 3 Days" },
   { value: "7d", label: "Last 7 Days" },
   { value: "15d", label: "Last 15 Days" },
-  { value: "30d", label: "Last 30 Days" },
 ] as const;
 
 const EXPERIENCE_OPTIONS = [
@@ -258,19 +259,18 @@ export function JobsFilter({
     setSheetOpen(false);
   };
 
-  // Auto-fill location once when URL has no country/city
+  // Auto-fill country only; city stays All Cities
   useEffect(() => {
     if (geo.loading) return;
     if (defaultCountry || defaultCity) return;
     if (!geo.countryCode) return;
     setCountry(geo.countryCode);
-    if (geo.city) setCity(geo.city);
     applyQuick({
       country: geo.countryCode,
-      city: geo.city ?? "",
+      city: "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.loading, geo.countryCode, geo.city]);
+  }, [geo.loading, geo.countryCode]);
 
   const activeAdvancedCount = useMemo(() => {
     let n = 0;
@@ -303,8 +303,17 @@ export function JobsFilter({
             onKeyDown={(e) => {
               if (e.key === "Enter") applyQuick();
             }}
-            className="pl-9"
+            className="pl-9 pr-10"
           />
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <VoiceSearchButton
+              size="sm"
+              onResult={(t) => {
+                setSearch(t);
+                applyQuick({ search: t });
+              }}
+            />
+          </div>
         </div>
 
         <Select
@@ -318,7 +327,7 @@ export function JobsFilter({
           <SelectTrigger className="sm:w-[180px] cursor-pointer">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background text-foreground border-border">
             <SelectItem value="" className="cursor-pointer">
               All categories
             </SelectItem>
@@ -335,7 +344,8 @@ export function JobsFilter({
           onValueChange={(v: string | null) => {
             const val = v ?? "";
             setCountry(val);
-            applyQuick({ country: val });
+            setCity("");
+            applyQuick({ country: val, city: "" });
           }}
         >
           <SelectTrigger className="sm:w-[200px] cursor-pointer">
@@ -345,7 +355,7 @@ export function JobsFilter({
                 : "All countries"}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background text-foreground border-border">
             <SelectItem value="" className="cursor-pointer">
               All countries
             </SelectItem>
@@ -357,14 +367,14 @@ export function JobsFilter({
           </SelectContent>
         </Select>
 
-        <Input
-          placeholder="City..."
+        <CityCombobox
+          id="jobs-city"
+          country={country}
           value={city}
-          onChange={(e) => setCity(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") applyQuick();
-          }}
-          className="sm:w-[130px]"
+          onChange={setCity}
+          className="sm:w-[160px]"
+          size="sm"
+          variant="select"
         />
 
         {/* Advanced Filters — replaces simple Rate dropdown */}
@@ -418,7 +428,7 @@ export function JobsFilter({
               </Section>
 
               <Section
-                title="Payout Frequency"
+                title="Payout / Pay Frequency"
                 open={!!openSections.payout}
                 onToggle={() => toggleSection("payout")}
               >

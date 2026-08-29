@@ -178,10 +178,10 @@ export function ContactContent() {
                   value={form.reason}
                   onChange={handleChange}
                   required
-                  className="w-full h-11 pl-3 pr-9 rounded-lg border border-input bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                  data-color-scheme="dark" className="[color-scheme:dark] w-full h-11 pl-3 pr-9 rounded-lg border border-input bg-background text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
                 >
                   {CONTACT_REASONS.map((r) => (
-                    <option key={r.value || "empty"} value={r.value}>
+                    <option className="bg-background text-foreground" key={r.value || "empty"} value={r.value}>
                       {r.label}
                     </option>
                   ))}

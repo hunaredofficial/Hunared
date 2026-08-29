@@ -15,7 +15,9 @@ import {
 import { toast } from "sonner";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
-import { PROFESSIONS } from "@/lib/constants";
+import { PROFESSIONS, JOB_CATEGORIES } from "@/lib/constants";
+import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { buildUsernameSuggestions } from "@/lib/usernameSuggest";
 import { COUNTRIES } from "@/lib/countries";
 import type { Profile } from "@/types/database";
 
@@ -47,6 +49,13 @@ export function ProfileEditForm({
   // Seeker fields
   const [profession, setProfession] = useState(
     initialProfile.profession ?? ""
+  );
+  const [jobInterests, setJobInterests] = useState<string[]>(
+    Array.isArray(initialProfile.job_interests) && initialProfile.job_interests.length
+      ? initialProfile.job_interests
+      : initialProfile.profession
+        ? [initialProfile.profession]
+        : []
   );
   const [availableForHire, setAvailableForHire] = useState(
     initialProfile.available_for_hire !== false
@@ -91,7 +100,17 @@ export function ProfileEditForm({
       return;
     }
 
-    setIsLoading(true);
+    
+    if (!username.trim()) {
+      toast.error("Username / handle is required.");
+      return;
+    }
+    const handle = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (handle.length < 3) {
+      toast.error("Username must be at least 3 characters (letters, numbers, underscore).");
+      return;
+    }
+setIsLoading(true);
     try {
       let avatarUrl: string | null = initialProfile.avatar_url;
       let avatarPublicId: string | null = initialProfile.avatar_public_id;
@@ -127,13 +146,14 @@ export function ProfileEditForm({
         body: JSON.stringify({
           role,
           fullName: fullName.trim(),
-          username: username.trim() || null,
+          username: username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "") || null,
+          jobInterests: isSeeker ? jobInterests : null,
           phone: phone.trim() || null,
           gender: gender || null,
           country: country || null,
           city: city.trim() || null,
           profession: isSeeker ? profession || null : null,
-          skill_level: isSeeker ? skillLevel || null : null, // ← added
+          skillLevel: isSeeker ? skillLevel || null : null, // ← added
           availableForHire: isSeeker ? availableForHire : undefined,
           avatarUrl,
           avatarPublicId,
@@ -172,13 +192,13 @@ export function ProfileEditForm({
       {/* Account type */}
       <div className="w-full p-5 rounded-xl border border-border bg-card">
         <label className="text-sm font-medium block mb-1.5">Account type</label>
-        <select
+        <select data-color-scheme="dark"
           value={role}
           onChange={(e) => setRole(e.target.value as "seeker" | "employer")}
           className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
         >
-          <option value="seeker">Job Seeker / Personal</option>
-          <option value="employer">Employer</option>
+          <option className="bg-background text-foreground" value="seeker">Job Seeker / Personal</option>
+          <option className="bg-background text-foreground" value="employer">Employer</option>
         </select>
         <p className="text-xs text-muted-foreground mt-1">
           You can change this anytime. Seeker = find jobs. Employer = post jobs.
@@ -270,12 +290,33 @@ export function ProfileEditForm({
             </p>
           </Field>
 
-          <Field label="Username">
+          <Field label="Username / Handle *">
             <Input
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) =>
+                setUsername(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+                )
+              }
               placeholder="ahmed_hse"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Unique handle. Letters, numbers, underscore. Min 3 characters.
+            </p>
+            {fullName.trim().length >= 2 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {buildUsernameSuggestions(fullName).slice(0, 5).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="text-xs rounded-full border px-2 py-0.5 hover:bg-accent"
+                    onClick={() => setUsername(s)}
+                  >
+                    @{s}
+                  </button>
+                ))}
+              </div>
+            )}
           </Field>
 
           <Field label="Phone">
@@ -351,24 +392,21 @@ export function ProfileEditForm({
             Professional Info
           </h2>
 
-          <Field label="Profession">
-            <Select
-              value={profession || undefined}
-              onValueChange={(v) => {
-                if (v) setProfession(v);
+          <Field label="Professions / Job Categories">
+            <MultiSelectChips
+              options={JOB_CATEGORIES}
+              value={jobInterests}
+              onChange={(next) => {
+                setJobInterests(next);
+                setProfession(next[0] ?? "");
               }}
-            >
-              <SelectTrigger className="cursor-pointer">
-                <SelectValue placeholder="Your profession" />
-              </SelectTrigger>
-              <SelectContent>
-                {PROFESSIONS.map((p) => (
-                  <SelectItem key={p} value={p} className="cursor-pointer">
-                    {p}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Select one or more professions"
+              searchPlaceholder="Search professions…"
+              label="Professions"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              You can select multiple roles. Job matching uses all of them.
+            </p>
           </Field>
 
           {/* Skill Level – added */}

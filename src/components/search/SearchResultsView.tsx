@@ -174,20 +174,19 @@ export function SearchResultsView({ query, country, city, results }: Props) {
             className="h-11 rounded-lg border border-input px-4"
           />
 
-          <select
+          <select data-color-scheme="dark"
             value={country}
             onChange={(e) => updateFilters(keyword, e.target.value, cityInput)}
-            className="h-11 rounded-lg border border-input bg-background text-foreground px-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="[color-scheme:dark] h-11 rounded-lg border border-input bg-background text-foreground px-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            <option value="" className="bg-background text-foreground">
+            <option className="bg-background text-foreground" value="">
               All Countries
             </option>
 
             {COUNTRIES.map((c) => (
               <option
-                key={c.code}
+                className="bg-background text-foreground" key={c.code}
                 value={c.code}
-                className="bg-background text-foreground"
               >
                 {c.name}
               </option>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,21 @@ import {
 } from "@/lib/currencies";
 import { useGeo } from "@/components/providers/GeoProvider";
 import Link from "next/link";
+import {
+  parseJobText,
+  hasSuggestions,
+  inferEmploymentType,
+  type SmartJobParseResult,
+} from "@/lib/smartJobParser";
+import {
+  SmartJobFillPanel,
+  type SmartFillFieldKey,
+} from "@/components/jobs/SmartJobFill";
+import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import {
+  EXPIRATION_OPTIONS,
+  type ExpirationOptionValue,
+} from "@/lib/expiration";
 
 interface JobForm {
   jobTitle: string;
@@ -37,12 +52,14 @@ interface JobForm {
   salaryRate: string;
   currency: string;
   category: string;
+  categories: string[];
   subcategory: string;
   companyName: string;
   companyPhone: string;
   companyEmail: string;
   companyAddress: string;
   showProfileContact: boolean;
+  expiration: ExpirationOptionValue;
 }
 
 export default function PostJobPage() {
@@ -50,6 +67,16 @@ export default function PostJobPage() {
   const geo = useGeo();
   const [isLoading, setIsLoading] = useState(false);
   const [currencyTouched, setCurrencyTouched] = useState(false);
+  /** Fields the user edited manually — parser must not overwrite these */
+  const [touched, setTouched] = useState<Partial<Record<keyof JobForm, boolean>>>({});
+  const [smartStatus, setSmartStatus] = useState<"idle" | "analyzing" | "found" | "empty">("idle");
+  const [smartResult, setSmartResult] = useState<SmartJobParseResult | null>(null);
+  const [smartDismissed, setSmartDismissed] = useState(false);
+  const parseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const parseGen = useRef(0);
+
+  const markTouched = (field: keyof JobForm) =>
+    setTouched((prev) => ({ ...prev, [field]: true }));
 
   const [form, setForm] = useState<JobForm>({
     jobTitle: "",
@@ -63,13 +90,35 @@ export default function PostJobPage() {
     salaryRate: "",
     currency: "SAR",
     category: "",
+    categories: [],
     subcategory: "",
     companyName: "",
     companyPhone: "",
     companyEmail: "",
     companyAddress: "",
     showProfileContact: false,
+    expiration: "never",
   });
+
+  // Auto country/city from geo (user can always override)
+  useEffect(() => {
+    if (geo.loading || geo.isManual) return;
+    if (geo.countryCode && !touched.country) {
+      setForm((prev) => ({ ...prev, country: geo.countryCode! }));
+    }
+    if (geo.city && !touched.city) {
+      setForm((prev) => ({ ...prev, city: geo.city! }));
+    }
+  }, [geo.loading, geo.countryCode, geo.city, geo.isManual, touched.country, touched.city]);
+
+  // Suggest Temporary when duration implies fixed term (do not overwrite manual)
+  useEffect(() => {
+    if (touched.employmentType || !form.duration) return;
+    const inferred = inferEmploymentType(form.duration, form.jobDescription);
+    if (inferred?.value) {
+      setForm((prev) => ({ ...prev, employmentType: inferred.value }));
+    }
+  }, [form.duration, form.jobDescription, touched.employmentType]);
 
   // Auto-set currency from geo until the user manually changes it
   useEffect(() => {
@@ -79,8 +128,138 @@ export default function PostJobPage() {
     set("currency", currencyForCountry(geo.countryCode));
   }, [geo.loading, geo.countryCode, currencyTouched]);
 
-  const set = (field: keyof JobForm, value: string | boolean) =>
+  const set = (field: keyof JobForm, value: string | boolean, fromUser = false) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (fromUser) markTouched(field);
+  };
+
+  const runSmartParse = useCallback((title: string, description: string) => {
+    parseGen.current += 1;
+    const gen = parseGen.current;
+    setSmartStatus("analyzing");
+    setSmartDismissed(false);
+
+    // Allow UI to paint "analyzing" briefly
+    window.setTimeout(() => {
+      if (gen !== parseGen.current) return;
+      const result = parseJobText(title, description);
+      if (gen !== parseGen.current) return;
+      setSmartResult(result);
+      setSmartStatus(hasSuggestions(result) ? "found" : "empty");
+    }, 120);
+  }, []);
+
+  const scheduleSmartParse = useCallback(
+    (title: string, description: string) => {
+      if (parseTimer.current) clearTimeout(parseTimer.current);
+      if (title.trim().length < 4 && description.trim().length < 20) {
+        setSmartStatus("idle");
+        setSmartResult(null);
+        return;
+      }
+      parseTimer.current = setTimeout(() => {
+        runSmartParse(title, description);
+      }, 700);
+    },
+    [runSmartParse]
+  );
+
+  const applySmartField = useCallback(
+    (key: SmartFillFieldKey, result: SmartJobParseResult) => {
+      const field = result[key];
+      if (!field) return;
+      if (key === "country") {
+        setForm((prev) => ({
+          ...prev,
+          country: field.value as string,
+          currency: touched.currency
+            ? prev.currency
+            : (result.currency?.value ?? prev.currency),
+        }));
+        markTouched("country");
+        return;
+      }
+      if (key === "currency") {
+        set("currency", field.value as string, true);
+        setCurrencyTouched(true);
+        return;
+      }
+      if (key === "categories") {
+        const cats = field.value as string[];
+        setForm((prev) => ({
+          ...prev,
+          categories: cats,
+          category: cats[0] ?? prev.category,
+        }));
+        markTouched("category");
+        return;
+      }
+      if (key === "category") {
+        const cat = field.value as string;
+        setForm((prev) => {
+          const cats = prev.categories.includes(cat)
+            ? prev.categories
+            : [...prev.categories, cat];
+          return { ...prev, category: cat, categories: cats };
+        });
+        markTouched("category");
+        return;
+      }
+      set(key as keyof JobForm, field.value as string, true);
+    },
+    [touched.currency]
+  );
+
+  const applyAllSmart = useCallback(() => {
+    if (!smartResult) return;
+    const keys: SmartFillFieldKey[] = [
+      "jobTitle",
+      "category",
+      "categories",
+      "country",
+      "city",
+      "currency",
+      "salaryRate",
+      "salaryType",
+      "duration",
+      "employmentType",
+      "companyEmail",
+      "companyPhone",
+    ];
+    setForm((prev) => {
+      const next = { ...prev };
+      for (const key of keys) {
+        const field = smartResult[key];
+        if (!field) continue;
+        if (touched[key as keyof JobForm]) continue;
+        if (key === "currency") {
+          next.currency = field.value as string;
+          continue;
+        }
+        if (key === "categories") {
+          const cats = field.value as string[];
+          next.categories = cats;
+          next.category = cats[0] ?? next.category;
+          continue;
+        }
+        if (key === "category") {
+          const cat = field.value as string;
+          next.category = cat;
+          if (!next.categories.includes(cat)) {
+            next.categories = [...next.categories, cat];
+          }
+          continue;
+        }
+        (next as Record<string, unknown>)[key] = field.value;
+      }
+      return next;
+    });
+    if (smartResult.currency && !touched.currency) {
+      setCurrencyTouched(true);
+    }
+    setSmartDismissed(true);
+  }, [smartResult, touched]);
+
 
   const salaryAmountRequired =
     form.salaryType === "Hourly" || form.salaryType === "Monthly";
@@ -104,8 +283,14 @@ export default function PostJobPage() {
       toast.error("Duration is required.");
       return;
     }
-    if (!form.category) {
-      toast.error("Category is required.");
+    const cats =
+      form.categories.length > 0
+        ? form.categories
+        : form.category
+          ? [form.category]
+          : [];
+    if (cats.length === 0) {
+      toast.error("Select at least one job category.");
       return;
     }
     if (!form.salaryType) {
@@ -164,13 +349,15 @@ export default function PostJobPage() {
           salaryType: form.salaryType,
           salaryRate: salaryAmountRequired ? form.salaryRate.trim() : null,
           currency: form.currency,
-          category: form.category,
+          category: cats[0],
+          categories: cats,
           subcategory: form.subcategory.trim() || null,
           companyName: form.companyName.trim(),
           companyPhone: form.companyPhone.trim() || null,
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
           showProfileContact: form.showProfileContact,
+          expiration: form.expiration,
         }),
       });
 
@@ -213,7 +400,11 @@ export default function PostJobPage() {
             <Input
               placeholder="e.g. Senior HSE Engineer"
               value={form.jobTitle}
-              onChange={(e) => set("jobTitle", e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                set("jobTitle", v, true);
+                scheduleSmartParse(v, form.jobDescription);
+              }}
             />
           </Field>
 
@@ -221,30 +412,51 @@ export default function PostJobPage() {
             <Textarea
               placeholder="Describe the role, responsibilities, requirements..."
               value={form.jobDescription}
-              onChange={(e) => set("jobDescription", e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                set("jobDescription", v, true);
+                scheduleSmartParse(form.jobTitle, v);
+              }}
               className="min-h-32 resize-y"
             />
           </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Category *">
-              <Select
-                value={form.category}
-                onValueChange={(v: string | null) => {
-                  if (v) set("category", v);
+          <SmartJobFillPanel
+            status={smartStatus}
+            result={smartResult}
+            dismissed={smartDismissed}
+            onApplyAll={applyAllSmart}
+            onApplyOne={(key) => {
+              if (smartResult) applySmartField(key, smartResult);
+            }}
+            onDismiss={() => setSmartDismissed(true)}
+            onRefresh={() => {
+              setSmartDismissed(false);
+              runSmartParse(form.jobTitle, form.jobDescription);
+            }}
+          />
+
+          <div className="space-y-4">
+            <Field label="Job Categories *">
+              <MultiSelectChips
+                options={JOB_CATEGORIES}
+                value={form.categories}
+                onChange={(next) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    categories: next,
+                    category: next[0] ?? "",
+                  }));
+                  markTouched("categories" as keyof JobForm);
+                  markTouched("category");
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {JOB_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select one or more categories"
+                searchPlaceholder="Search categories…"
+                label="Job categories"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Jobs appear in search for every selected category.
+              </p>
             </Field>
 
             <Field label="Subcategory">
@@ -254,13 +466,16 @@ export default function PostJobPage() {
                 onChange={(e) => set("subcategory", e.target.value)}
               />
             </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <Field label="Country *">
               <Select
                 value={form.country}
                 onValueChange={(v: string | null) => {
                   if (v) {
-                    set("country", v);
+                    set("country", v, true);
                     // Keep currency in sync with country until user overrides currency
                     if (!currencyTouched) {
                       set("currency", currencyForCountry(v));
@@ -293,7 +508,7 @@ export default function PostJobPage() {
               <Select
                 value={form.employmentType}
                 onValueChange={(v: string | null) => {
-                  if (v) set("employmentType", v);
+                  if (v) set("employmentType", v, true);
                 }}
               >
                 <SelectTrigger>
@@ -302,6 +517,7 @@ export default function PostJobPage() {
                 <SelectContent>
                   <SelectItem value="permanent">Permanent</SelectItem>
                   <SelectItem value="temporary">Temporary</SelectItem>
+                  <SelectItem value="task_force">Task Force</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -321,7 +537,7 @@ export default function PostJobPage() {
               <Select
                 value={form.duration}
                 onValueChange={(v: string | null) => {
-                  if (v) set("duration", v);
+                  if (v) set("duration", v, true);
                 }}
               >
                 <SelectTrigger>
@@ -335,6 +551,34 @@ export default function PostJobPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </Field>
+
+            <Field label="Close Listing Automatically">
+              <Select
+                value={form.expiration}
+                onValueChange={(v: string | null) => {
+                  if (v)
+                    set(
+                      "expiration",
+                      v as ExpirationOptionValue,
+                      true
+                    );
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Never / Keep Open" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional. Leave as Never to keep the post open until you close it.
+              </p>
             </Field>
 
             <Field label="Salary Type *">

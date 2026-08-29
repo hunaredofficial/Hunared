@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
   LayoutDashboard,
   ChevronDown,
-  Search,
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,18 +29,16 @@ type NavItem = SimpleLink | MegaGroup;
 const NAV_ITEMS: NavItem[] = [
   { type: "link", href: "/jobs", label: "Jobs" },
   { type: "link", href: "/candidates", label: "Candidates" },
+  { type: "link", href: "/companies", label: "Companies" },
   { type: "link", href: "/market", label: "Marketplace" },
-  { type: "link", href: "/education", label: "Learning Hub" },
+  { type: "link", href: "/program", label: "Program" },
 ];
 
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const megaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,7 +50,6 @@ export function Header() {
   useEffect(() => {
     setMobileOpen(false);
     setOpenMega(null);
-    setMobileSearchOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -66,12 +62,6 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function handleSearchSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    setMobileSearchOpen(false);
-  }
 
   return (
     <header
@@ -79,19 +69,19 @@ export function Header() {
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
         "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
         scrolled
-          ? "top-4 w-[90%] max-w-7xl bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 border border-border/50 shadow-lg rounded-2xl"
+          ? "top-4 w-[min(90%,72rem)] max-w-7xl bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 border border-border/50 shadow-lg rounded-2xl"
           : "top-0 w-full max-w-full bg-background border-b border-border/40 rounded-none shadow-none"
       )}
     >
       <div
         className={cn(
-          "mx-auto px-4 sm:px-6 lg:px-8",
-          scrolled ? "max-w-full" : "max-w-7xl"
+          "mx-auto w-full px-3 sm:px-5 lg:px-6",
+          scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
         )}
       >
-        <div className="flex h-16 items-center justify-between gap-3">
+        <div className="flex h-16 items-center justify-between gap-2 min-w-0">
           {/* Logo – no wrapping Link to avoid nested <a> */}
-          <HunaredLogo size="lg" />
+          <div className="shrink-0 min-w-0"><HunaredLogo size={scrolled ? "md" : "lg"} /></div>
 
           {/* Desktop Nav */}
           <nav
@@ -175,26 +165,8 @@ export function Header() {
             })}
           </nav>
 
-          {/* Search (desktop) */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="hidden md:flex items-center flex-1 max-w-xs"
-          >
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search jobs, property, services..."
-                aria-label="Search Hunared"
-                className="w-full h-9 pl-9 pr-3 rounded-full border border-input bg-muted/40 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
-              />
-            </div>
-          </form>
-
           {/* Right Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Location — desktop */}
             <div className="hidden md:block">
               <LocationPicker />
@@ -221,7 +193,7 @@ export function Header() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-4 transition-all duration-300 hover:scale-105"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-3 sm:px-4 shrink-0"
                   asChild
                 >
                   <Link href="/register">Get Started</Link>
@@ -241,16 +213,6 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden w-9 h-9"
-              onClick={() => setMobileSearchOpen((prev) => !prev)}
-              aria-label="Toggle search"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
               className="lg:hidden w-9 h-9"
               onClick={() => setMobileOpen((prev) => !prev)}
               aria-label="Toggle mobile menu"
@@ -263,26 +225,6 @@ export function Header() {
               )}
             </Button>
           </div>
-        </div>
-
-        {/* Mobile search */}
-        <div
-          className={cn(
-            "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
-            mobileSearchOpen ? "max-h-16 opacity-100 pb-3" : "max-h-0 opacity-0"
-          )}
-        >
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search jobs, property, services..."
-              aria-label="Search Hunared"
-              className="w-full h-10 pl-9 pr-3 rounded-full border border-input bg-muted/40 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
-            />
-          </form>
         </div>
       </div>
 

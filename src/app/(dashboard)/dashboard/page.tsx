@@ -48,7 +48,7 @@ export default async function DashboardPage() {
     .eq("id", userId)
     .single();
 
-  if (!profile) redirect("/register");
+  if (!profile) redirect("/register?mode=complete");
 
   if (profile.role === "employer") {
     // Fetch true counts using head requests, then fetch the recent 5 jobs for display

@@ -8,8 +8,8 @@ const FOOTER_LINKS = {
   Portal: [
     { href: "/jobs", label: "Browse Jobs" },
     { href: "/candidates", label: "Find Candidates" },
+    { href: "/companies", label: "Companies" },
     { href: "/market", label: "Marketplace" },
-    { href: "/about", label: "About Us" },
   ],
   Resources: [
     { href: "/education", label: "Education Hub" },
@@ -18,6 +18,7 @@ const FOOTER_LINKS = {
     { href: "/education/career-tips", label: "Career Tips" },
   ],
   Company: [
+    { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact Us" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },

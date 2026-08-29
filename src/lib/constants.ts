@@ -20,12 +20,13 @@ export const JOB_CATEGORIES = [
   "Creative",
   "Customer Service",
   "Delivery",
-  "Design",
+  "Designing",
   "Digital Marketing",
   "Domestic Services",
   "Drafting",
   "Driving",
   "Education",
+  "Electrical",
   "Electronics",
   "Emergency Services",
   "Energy",
@@ -44,6 +45,7 @@ export const JOB_CATEGORIES = [
   "HVAC",
   "Human Resources",
   "Environmental Health & Safety",
+  "Industry",
   "Information Technology",
   "Inspection",
   "Instrumentation",
@@ -57,6 +59,7 @@ export const JOB_CATEGORIES = [
   "Maintenance",
   "Management",
   "Manufacturing",
+  "Marine",
   "Marketing",
   "Mechanical",
   "Medical",
@@ -119,9 +122,10 @@ export const DURATIONS = [
   "Shutdown",
   "Long Term",
   "Permanent",
+  "UnSpecified",
 ] as const;
 
-export const SALARY_TYPES = ["Hourly", "Monthly", "After Interview"] as const;
+export const SALARY_TYPES = ["Hourly", "Monthly", "Negotiable"] as const;
 export type SalaryType = (typeof SALARY_TYPES)[number];
 
 export const PROFESSIONS = [
@@ -434,9 +438,221 @@ export const PROFESSIONS = [
   "Yard Supervisor",
 ] as const;
 
-// Colors for the most common categories; anything not listed
-// should fall back to the "Other" style in consuming components.
+export type JobCategory = (typeof JOB_CATEGORIES)[number];
+
+// Colors for categories; anything not listed falls back to "Others"
 export const CATEGORY_COLORS: Record<string, string> = {
+  Accounting:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  Administration:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  Agriculture:
+    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
+  Aviation:
+    "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  Architectural:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Automotive:
+    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300",
+  Automation:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+  Banking:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  Business:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Chemical:
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  Civil:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  Coating:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  "Community Services":
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  Construction:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  Control:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  Coordination:
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  Creative:
+    "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300",
+  "Customer Service":
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  Delivery:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  Designing:
+    "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300",
+  "Digital Marketing":
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  "Domestic Services":
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  Drafting:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  Driving:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Education:
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  Electrical:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
+  Electronics:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+  "Emergency Services":
+    "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  Energy:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  Engineering:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  Entertainment:
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  Environmental:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  "Facilities Management":
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Fabrication:
+    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300",
+  Finance:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  Foreman:
+    "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  Freelance:
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  Government:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  Healthcare:
+    "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  Helper:
+    "bg-muted text-muted-foreground",
+  Hospitality:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  HVAC:
+    "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  "Human Resources":
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  "Environmental Health & Safety":
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  Industry:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  "Information Technology":
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  Inspection:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  Instrumentation:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  "Inventory Management":
+    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
+  Landscaping:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  Labor:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Laboratory:
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  "Law & Legal":
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  Lifting:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  Logistics:
+    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
+  Maintenance:
+    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300",
+  Management:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Manufacturing:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Marketing:
+    "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300",
+  Mechanical:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+  Medical:
+    "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  Media:
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  Mining:
+    "bg-stone-100 text-stone-800 dark:bg-stone-800/60 dark:text-stone-300",
+  NGO:
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  Networking:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  Office:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  Offshore:
+    "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  "Oil & Gas":
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Others: "bg-muted text-muted-foreground",
+  Painting:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  Petroleum:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  "Personal Care":
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  Piping:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  Planning:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Plumbing:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  Printing:
+    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300",
+  Process:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  Procurement:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  Production:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  "Professional Services":
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Property:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Publishing:
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  "Quality Assurance":
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  "Quality Control":
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  Refrigeration:
+    "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  "Real Estate":
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  "Remote Work":
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+  "Research Services":
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  Retail:
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  Rigging:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  Sales:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  Security:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+  "Skilled Worker":
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  Structural:
+    "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  "Supply Chain":
+    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
+  Supervisor:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Telecommunications:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  Textile:
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  Training:
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  Transportation:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Technician:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+  Utilities:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
+  Warehouse:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
+  Welding:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  "Work Permit":
+    "bg-muted text-muted-foreground",
+
+  // Legacy aliases (old jobs may still use these names)
   "Safety & HSE":
     "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
   "Civil Engineering":
@@ -453,32 +669,12 @@ export const CATEGORY_COLORS: Record<string, string> = {
     "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
   "Project Management":
     "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-  "Oil & Gas":
-    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
-  Construction:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   IT: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  Accounting:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  "Human Resources":
-    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
-  Marketing:
-    "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300",
-  "Digital Marketing":
-    "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-  Logistics:
-    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
-  Transportation:
-    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
-  Healthcare:
-    "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-  Education:
-    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-  Hospitality:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  Engineering:
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   Other: "bg-muted text-muted-foreground",
+  Design:
+    "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300",
+  Industrial:
+    "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
 };
 
 export const ARTICLE_CATEGORIES = [
@@ -509,7 +705,7 @@ export const LISTING_CATEGORIES = [
   { value: "property", label: "Property" },
   { value: "vehicles", label: "Vehicles" },
   { value: "electronics", label: "Electronics" },
-  { value: "furniture_home", label: "Furniture & Home" },
+  { value: "home_furniture", label: "Home & Furniture" },
   { value: "wanted", label: "Wanted" },
   { value: "free_items", label: "Free Items" },
   { value: "lost_found", label: "Lost & Found" },

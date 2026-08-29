@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+/**
+ * Hunared Registration / Onboarding
+ *
+ * Single authoritative flow:
+ *   LOADING → GOAL → ACCOUNT (Clerk SignUp) → SESSION_CONFIRMED → PROFILE → DONE
+ *
+ * Goal is persisted in:
+ *   1. URL ?goal=
+ *   2. sessionStorage + localStorage (fallback)
+ *   3. Clerk unsafeMetadata after session exists
+ *
+ * Never treat "email exists" as "currently signed in".
+ * Never redirect to dashboard until profile upsert succeeds.
+ */
+
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { HunaredLogo } from "@/components/brand/HunaredLogo";
-import { useSignUp } from "@clerk/nextjs";
+import { useRouter, useSearchParams } from "next/navigation";
+import { SignUp, useAuth, useClerk, useUser } from "@clerk/nextjs";
 import {
-  Briefcase,
-  User,
-  ArrowRight,
   ArrowLeft,
-  Eye,
-  EyeOff,
+  ArrowRight,
+  Building2,
+  CheckCircle2,
   Loader2,
+  User,
+  UserRound,
   Upload,
   X,
-  Check,
 } from "lucide-react";
+import { toast } from "sonner";
+import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,590 +42,604 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { uploadToCloudinary } from "@/lib/cloudinary";
 import { COUNTRIES } from "@/lib/countries";
+import { getCitiesForCountry } from "@/lib/cities";
 import { JOB_CATEGORIES } from "@/lib/constants";
-import { toast } from "sonner";
-import Image from "next/image";
+import { INDUSTRIES } from "@/lib/companyConstants";
+import { buildUsernameSuggestions } from "@/lib/usernameSuggest";
+import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { recommendServicesForIndustries, allServices } from "@/lib/industryServiceRecommendations";
+import { useGeoOptional } from "@/components/providers/GeoProvider";
+import { uploadToCloudinary } from "@/lib/cloudinary";
+import { cn } from "@/lib/utils";
 
-type GoalType = "seeker" | "employer" | "personal" | null;
-type Step = "goal" | "account" | "profile" | "verify";
+const SKILL_LEVELS = ["Beginner", "Intermediate", "Advanced", "Expert", "Master"] as const;
+const ALL_SERVICES = allServices();
 
-interface FormData {
-  email: string;
-  password: string;
-  fullName: string;
-  username: string;
-  phone: string;
-  gender: string;
-  location: string;
-  country: string;
-  city: string;
-  profession: string;
-  jobInterests: string[];
-  avatarFile: File | null;
-  avatarPreview: string;
-  cvFile: File | null;
-  companyCr: string;
-  companyWebsite: string;
-  companyAddress: string;
-  code: string;
+type Goal = "seeker" | "employer" | "personal";
+type Step = "goal" | "account" | "profile" | "done";
+
+const GOAL_KEY = "hunared_goal";
+const VALID_GOALS: Goal[] = ["seeker", "employer", "personal"];
+
+function isGoal(v: unknown): v is Goal {
+  return typeof v === "string" && VALID_GOALS.includes(v as Goal);
 }
 
-export const PROFESSIONS = [
-  "Accountant",
-  "Accounting Officer",
-  "Actuary",
-  "Admin Assistant",
-  "Administrator",
-  "Advertising Specialist",
-  "Agricultural Engineer",
-  "Agricultural Technician",
-  "Air Conditioning Technician",
-  "Aircraft Engineer",
-  "Aircraft Technician",
-  "Airport Ground Staff",
-  "Architect",
-  "Architectural Engineer",
-  "Architectural Technician",
-  "Automation Engineer",
-  "Automation Technician",
-  "Bank Officer",
-  "Bank Teller",
-  "Biomedical Engineer",
-  "Biomedical Technician",
-  "Boiler Technician",
-  "Bookkeeper",
-  "Business Analyst",
-  "Business Developer",
-  "Business Development Manager",
-  "Carpenter",
-  "Cashier",
-  "CCTV Technician",
-  "Chemical Engineer",
-  "Chemical Technician",
-  "Chiller Technician",
-  "Chief Accountant",
-  "Chief Engineer",
-  "Chief Executive Officer",
-  "Chief Financial Officer",
-  "Chef",
-  "Claims Officer",
-  "Clerk",
-  "Commissioning Engineer",
-  "Commissioning Technician",
-  "Communications Officer",
-  "Computer Technician",
-  "Construction Manager",
-  "Construction Supervisor",
-  "Consultant",
-  "Control Engineer",
-  "Control Room Operator",
-  "Control Technician",
-  "Coordinator",
-  "Cost Controller",
-  "Crane Operator",
-  "Crane Technician",
-  "Customer Service",
-  "Customer Service Representative",
-  "Data Analyst",
-  "Data Entry Operator",
-  "Database Administrator",
-  "Delivery Driver",
-  "Design Engineer",
-  "Designer",
-  "Digital Marketing Specialist",
-  "Document Controller",
-  "Draftsman",
-  "Driver",
-  "E&I Engineer",
-  "E&I Foreman",
-  "E&I Inspector",
-  "E&I Supervisor",
-  "E&I Technician",
-  "Electrical Engineer",
-  "Electrical Foreman",
-  "Electrical Inspector",
-  "Electrical QC Inspector",
-  "Electrical Supervisor",
-  "Electrical Technician",
-  "Electrician",
-  "Electronics Engineer",
-  "Electronics Technician",
-  "Equipment Engineer",
-  "Equipment Operator",
-  "Equipment Supervisor",
-  "Equipment Technician",
-  "Estimator",
-  "Executive Assistant",
-  "Fabricator",
-  "Facilities Manager",
-  "Facilities Technician",
-  "Field Engineer",
-  "Field Operator",
-  "Field Technician",
-  "Finance Manager",
-  "Finance Officer",
-  "Financial Analyst",
-  "Fire Alarm Technician",
-  "Fire Fighter",
-  "Fire Fighting Technician",
-  "Fire Inspector",
-  "Fire Watch",
-  "Fire Watchman",
-  "Fitter",
-  "Fleet Manager",
-  "Forklift Operator",
-  "Foreman",
-  "Freelancer",
-  "GIS Technician",
-  "Graphic Designer",
-  "Groundskeeper",
-  "Health & Safety Engineer",
-  "Heavy Equipment Operator",
-  "Heavy Equipment Technician",
-  "Helper",
-  "Housekeeping Staff",
-  "HR Manager",
-  "HR Officer",
-  "HR Specialist",
-  "HSE Engineer",
-  "HSE Manager",
-  "HSE Officer",
-  "HVAC Engineer",
-  "HVAC Foreman",
-  "HVAC Supervisor",
-  "HVAC Technician",
-  "Industrial Electrician",
-  "Industrial Engineer",
-  "Industrial Technician",
-  "Information Security Analyst",
-  "Instrumentation Engineer",
-  "Instrumentation Foreman",
-  "Instrumentation Supervisor",
-  "Instrumentation Technician",
-  "Inspector",
-  "Interior Designer",
-  "Inventory Controller",
-  "IT Administrator",
-  "IT Engineer",
-  "IT Manager",
-  "IT Specialist",
-  "IT Support Technician",
-  "Laboratory Technician",
-  "Lab Technician",
-  "Land Surveyor",
-  "Legal Advisor",
-  "Legal Officer",
-  "Lifting Engineer",
-  "Lifting Supervisor",
-  "Lineman",
-  "Logistics Coordinator",
-  "Logistics Manager",
-  "Logistics Officer",
-  "Machine Operator",
-  "Maintenance Engineer",
-  "Maintenance Manager",
-  "Maintenance Supervisor",
-  "Maintenance Technician",
-  "Mason",
-  "Material Controller",
-  "Material Coordinator",
-  "Material Inspector",
-  "Mechanical Engineer",
-  "Mechanical Fitter",
-  "Mechanical Foreman",
-  "Mechanical Inspector",
-  "Mechanical QC Inspector",
-  "Mechanical Supervisor",
-  "Mechanical Technician",
-  "Medical Assistant",
-  "Medical Laboratory Technician",
-  "Medical Officer",
-  "Millwright Technician",
-  "Mobile Crane Operator",
-  "Multi Welder",
-  "Network Administrator",
-  "Network Engineer",
-  "Network Technician",
-  "NDT Inspector",
-  "Nurse",
-  "Office Assistant",
-  "Office Manager",
-  "Officer",
-  "Operations Manager",
-  "Operations Supervisor",
-  "Operator",
-  "Other",
-  "Painter",
-  "Painting Foreman",
-  "Painting Inspector",
-  "Painting Supervisor",
-  "Panel Technician",
-  "Payroll Officer",
-  "Permit Receiver",
-  "Petroleum Engineer",
-  "Pharmacist",
-  "Pipe Fabricator",
-  "Pipe Fitter",
-  "Piping Engineer",
-  "Piping Foreman",
-  "Piping Inspector",
-  "Piping QC Inspector",
-  "Piping Supervisor",
-  "Piping Technician",
-  "Planned Maintenance Engineer",
-  "Planner",
-  "Planner / Scheduler",
-  "Planning Coordinator",
-  "Planning Engineer",
-  "Planning Manager",
-  "Plant Operator",
-  "Plumber",
-  "Procurement Officer",
-  "Procurement Specialist",
-  "Production Engineer",
-  "Production Manager",
-  "Production Operator",
-  "Project Coordinator",
-  "Project Engineer",
-  "Project Manager",
-  "Project Planner",
-  "Property Manager",
-  "Public Relations Officer",
-  "QA/QC Coordinator",
-  "QA/QC Engineer",
-  "QA/QC Inspector",
-  "QA/QC Manager",
-  "QA/QC Supervisor",
-  "Quality Engineer",
-  "Quality Inspector",
-  "Quality Manager",
-  "Quantity Surveyor",
-  "Receptionist",
-  "Recruiter",
-  "Recruitment Officer",
-  "Rigger",
-  "Rigger I",
-  "Rigger II",
-  "Rigger III",
-  "Rigging Foreman",
-  "Rigging Supervisor",
-  "Rotating Equipment Engineer",
-  "Rotating Equipment Technician",
-  "Safety Engineer",
-  "Safety Inspector",
-  "Safety Officer",
-  "Safety Supervisor",
-  "Sales Engineer",
-  "Sales Executive",
-  "Sales Manager",
-  "Sales Representative",
-  "Sand Blaster",
-  "Scaffolder",
-  "Scaffolding Foreman",
-  "Scaffolding Supervisor",
-  "Security Guard",
-  "Service Engineer",
-  "Service Technician",
-  "Site Engineer",
-  "Site Manager",
-  "Site Supervisor",
-  "Software Developer",
-  "Software Engineer",
-  "Solar Technician",
-  "Stand By Man",
-  "Static Equipment Engineer",
-  "Static Equipment Technician",
-  "Steel Fixer",
-  "Steel Structure Fitter",
-  "Steel Structure Foreman",
-  "Storekeeper",
-  "Store Manager",
-  "Store Supervisor",
-  "Structural Engineer",
-  "Structural Fitter",
-  "Structural Inspector",
-  "Structural Supervisor",
-  "Structural Welder",
-  "Surveyor",
-  "System Administrator",
-  "Teacher",
-  "Technical Clerk",
-  "Technical Coordinator",
-  "Technical Engineer",
-  "Technical Manager",
-  "Technician",
-  "Telecom Engineer",
-  "Telecom Technician",
-  "Telecommunications Engineer",
-  "Timekeeper",
-  "Tool & Die Maker",
-  "Transformer Technician",
-  "Transport Coordinator",
-  "Transport Manager",
-  "Truck Driver",
-  "Utility Operator",
-  "Warehouse Assistant",
-  "Warehouse Coordinator",
-  "Warehouse Manager",
-  "Warehouse Supervisor",
-  "Warehouse Worker",
-  "Welder",
-  "Welding Engineer",
-  "Welding Foreman",
-  "Welding Inspector",
-  "Welding QC Inspector",
-  "Welding Supervisor",
-  "Wind Turbine Technician",
-  "WordPress Developer",
-  "Yard Supervisor",
-];
+function saveGoalLocal(g: Goal) {
+  try {
+    sessionStorage.setItem(GOAL_KEY, g);
+    localStorage.setItem(GOAL_KEY, g);
+  } catch {
+    /* private mode etc. */
+  }
+}
 
-export default function RegisterPage() {
+function loadGoalLocal(): Goal | null {
+  try {
+    const s =
+      sessionStorage.getItem(GOAL_KEY) || localStorage.getItem(GOAL_KEY);
+    return isGoal(s) ? s : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearGoalLocal() {
+  try {
+    sessionStorage.removeItem(GOAL_KEY);
+    localStorage.removeItem(GOAL_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function RegisterInner() {
   const router = useRouter();
-  const { signUp } = useSignUp();
+  const searchParams = useSearchParams();
+  const { isLoaded: authLoaded, isSignedIn, getToken, userId } = useAuth();
+  const { user, isLoaded: userLoaded } = useUser();
+  const { session } = useClerk();
 
-  const [goal, setGoal] = useState<GoalType>(null);
-  const [step, setStep] = useState<Step>("goal");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const urlGoal = searchParams.get("goal");
+  const mode = searchParams.get("mode"); // "complete" after verification
 
-  const [form, setForm] = useState<FormData>({
-    email: "",
-    password: "",
-    fullName: "",
-    username: "",
-    phone: "",
-    gender: "",
-    location: "",
-    country: "",
-    city: "",
-    profession: "",
-    jobInterests: [],
-    avatarFile: null,
-    avatarPreview: "",
-    cvFile: null,
-    companyCr: "",
-    companyWebsite: "",
-    companyAddress: "",
-    code: "",
+  const initialGoal = useMemo((): Goal | null => {
+    if (isGoal(urlGoal)) return urlGoal;
+    return loadGoalLocal();
+  }, [urlGoal]);
+
+  const [goal, setGoal] = useState<Goal | null>(initialGoal);
+  const [step, setStep] = useState<Step>(() => {
+    if (mode === "complete") return "profile";
+    return "goal";
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [sessionAttempts, setSessionAttempts] = useState(0);
+  const submittingRef = useRef(false);
 
-  const set = (field: keyof FormData, value: string | File | null | string[]) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameTouched, setUsernameTouched] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "ok" | "taken" | "invalid">("idle");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [locationTouched, setLocationTouched] = useState(false);
+  // Seeker
+  const [jobInterests, setJobInterests] = useState<string[]>([]);
+  const [skillLevel, setSkillLevel] = useState("");
+  const [availableForHire, setAvailableForHire] = useState<boolean | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  // Employer
+  const [companyCr, setCompanyCr] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [services, setServices] = useState<string[]>([]);
+  const [mapLocation, setMapLocation] = useState("");
+  const geo = useGeoOptional();
 
-  const toggleJobInterest = (category: string) => {
-    setForm((prev) => {
-      const exists = prev.jobInterests.includes(category);
-      return {
-        ...prev,
-        jobInterests: exists
-          ? prev.jobInterests.filter((c) => c !== category)
-          : [...prev.jobInterests, category],
-      };
-    });
+  const authReady = authLoaded && userLoaded;
+  const sessionConfirmed = authReady && isSignedIn && !!userId && !!user;
+
+  // Resolve goal from Clerk metadata if local storage lost it (e.g. new tab after verify)
+  useEffect(() => {
+    if (!sessionConfirmed || goal) return;
+    const metaGoal = user?.unsafeMetadata?.hunared_goal;
+    if (isGoal(metaGoal)) {
+      setGoal(metaGoal);
+      saveGoalLocal(metaGoal);
+    } else {
+      const local = loadGoalLocal();
+      if (local) setGoal(local);
+    }
+  }, [sessionConfirmed, user, goal]);
+
+  // Prefill name from Clerk
+  useEffect(() => {
+    if (!sessionConfirmed || !user) return;
+    if (!fullName && user.fullName) setFullName(user.fullName);
+  }, [sessionConfirmed, user, fullName]);
+
+  // After verification / when signed in → land on profile step
+  useEffect(() => {
+    if (!authReady) return;
+
+    if (sessionConfirmed) {
+      // Already has session → complete profile (never show SignUp again)
+      if (step === "account" || mode === "complete" || step === "profile") {
+        setStep("profile");
+      }
+      return;
+    }
+
+    // Waiting for session after email verification redirect
+    if ((mode === "complete" || step === "profile") && sessionAttempts < 12) {
+      const t = setTimeout(async () => {
+        try {
+          await session?.reload?.();
+        } catch {
+          /* ignore */
+        }
+        setSessionAttempts((n) => n + 1);
+      }, 400);
+      return () => clearTimeout(t);
+    }
+  }, [
+    authReady,
+    sessionConfirmed,
+    mode,
+    step,
+    sessionAttempts,
+    session,
+  ]);
+
+  // Persist goal into Clerk unsafeMetadata once we have a session
+  useEffect(() => {
+    if (!sessionConfirmed || !user || !goal) return;
+    const current = user.unsafeMetadata?.hunared_goal;
+    if (current === goal) return;
+    user
+      .update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
+          hunared_goal: goal,
+        },
+      })
+      .catch(() => {
+        /* non-fatal */
+      });
+  }, [sessionConfirmed, user, goal]);
+  // Auto country/city from geo — COMPANY only (seeker selects manually)
+  useEffect(() => {
+    if (goal === "seeker") return; // Job seekers pick country/city themselves
+    if (!geo || geo.loading || geo.error || locationTouched) return;
+    if (geo.countryCode) {
+      setCountry((prev) => prev || geo.countryCode!);
+    }
+    if (geo.city) {
+      setCity((prev) => prev || geo.city!);
+    }
+  }, [goal, geo?.loading, geo?.countryCode, geo?.city, geo?.error, locationTouched]);
+
+  // Username suggestions from name (do not overwrite manual edit)
+  useEffect(() => {
+    if (usernameTouched || !fullName.trim()) return;
+    const suggestions = buildUsernameSuggestions(fullName);
+    if (suggestions[0]) setUsername(suggestions[0]);
+  }, [fullName, usernameTouched]);
+
+  // Live username availability
+  useEffect(() => {
+    const u = username.trim().toLowerCase();
+    if (u.length < 3) {
+      setUsernameStatus(u.length === 0 ? "idle" : "invalid");
+      return;
+    }
+    if (!/^[a-z][a-z0-9_]{2,29}$/.test(u)) {
+      setUsernameStatus("invalid");
+      return;
+    }
+    setUsernameStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/profile/check-username?u=${encodeURIComponent(u)}`);
+        const data = (await res.json()) as { available?: boolean };
+        setUsernameStatus(data.available ? "ok" : "taken");
+      } catch {
+        setUsernameStatus("idle");
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [username]);
+
+  const recommendedServices = useMemo(
+    () => recommendServicesForIndustries(industries),
+    [industries]
+  );
+
+  const cityOptions = useMemo(
+    () => getCitiesForCountry(country || null),
+    [country]
+  );
+
+
+  const selectGoal = (g: Goal) => {
+    setGoal(g);
+    saveGoalLocal(g);
+    setError("");
   };
 
-  async function handleCreateAccount() {
-    if (!goal) return;
-    setIsLoading(true);
-    try {
-      const { error: createErr } = await signUp.create({
-        emailAddress: form.email,
-        password: form.password,
-        unsafeMetadata: { role: goal },
-      });
-      if (createErr) {
-        toast.error(
-          createErr.longMessage ?? createErr.message ?? "Account creation failed."
-        );
-        return;
-      }
-      const { error: emailErr } = await signUp.verifications.sendEmailCode();
-      if (emailErr) {
-        toast.error(
-          emailErr.longMessage ??
-            emailErr.message ??
-            "Could not send verification code."
-        );
-        return;
-      }
-      setStep("verify");
-    } catch (err: unknown) {
-      toast.error((err as Error)?.message ?? "Account creation failed.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const saveProfile = useCallback(async () => {
+    if (submittingRef.current) return;
+    setError("");
 
-  async function handleVerify() {
-    setIsLoading(true);
-    try {
-      const { error: verifyErr } = await signUp.verifications.verifyEmailCode({
-        code: form.code,
-      });
-      if (verifyErr) {
-        toast.error(
-          verifyErr.longMessage ?? verifyErr.message ?? "Verification failed."
-        );
+    const activeGoal =
+      goal ||
+      loadGoalLocal() ||
+      (isGoal(user?.unsafeMetadata?.hunared_goal)
+        ? (user?.unsafeMetadata?.hunared_goal as Goal)
+        : null);
+
+    if (!activeGoal) {
+      setError("Please select an account type.");
+      setStep("goal");
+      return;
+    }
+    if (!fullName.trim()) {
+      setError(
+        activeGoal === "employer"
+          ? "Company name is required."
+          : "Full name is required."
+      );
+      return;
+    }
+    const handle = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (!handle || handle.length < 3) {
+      setError("Username is required (min 3 characters).");
+      return;
+    }
+    if (usernameStatus === "taken") {
+      setError("Username is already taken. Choose another.");
+      return;
+    }
+    // Phone optional for seeker; if provided, must look valid
+    if (phone.trim() && phone.replace(/\D/g, "").length < 7) {
+      setError("Please enter a valid phone number or leave it empty.");
+      return;
+    }
+    if (!country) {
+      setError("Country is required.");
+      return;
+    }
+    // City optional (seeker & company)
+    if (activeGoal === "seeker") {
+      if (jobInterests.length === 0) {
+        setError("Select at least one profession category.");
         return;
       }
-      if (signUp.status === "complete") {
-        const { error: finalizeErr } = await signUp.finalize();
-        if (finalizeErr) {
-          toast.error(
-            finalizeErr.longMessage ??
-              finalizeErr.message ??
-              "Sign-up could not be finalized."
+      if (!skillLevel) {
+        setError("Skill level is required.");
+        return;
+      }
+      if (availableForHire === null) {
+        setError("Please select your availability.");
+        return;
+      }
+      // Profile image optional
+    }
+    if (activeGoal === "employer") {
+      if (!phone.trim() || phone.replace(/\D/g, "").length < 7) {
+        setError("Company phone is required.");
+        return;
+      }
+      if (industries.length === 0) {
+        setError("Select at least one industry.");
+        return;
+      }
+      if (services.length === 0) {
+        setError("Select at least one service.");
+        return;
+      }
+    }
+
+    if (!sessionConfirmed || !userId) {
+      setError(
+        "Your session is still loading. Please wait a moment and try again."
+      );
+      try {
+        await session?.reload?.();
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
+    submittingRef.current = true;
+    setLoading(true);
+
+    try {
+      const role =
+        activeGoal === "employer"
+          ? "employer"
+          : activeGoal === "seeker"
+            ? "seeker"
+            : "personal";
+
+      let avatarUrl: string | null = null;
+      let avatarPublicId: string | null = null;
+      if (avatarFile) {
+        try {
+          const up = await uploadToCloudinary(avatarFile, "avatars");
+          avatarUrl = up.url;
+          avatarPublicId = up.publicId;
+        } catch {
+          setError("Failed to upload profile image. Try another file.");
+          submittingRef.current = false;
+          setLoading(false);
+          return;
+        }
+      }
+
+      const payload: Record<string, unknown> = {
+        role,
+        fullName: fullName.trim(),
+        username: handle,
+        phone: phone.trim(),
+        country,
+        city: city.trim(),
+        location: [
+          city.trim(),
+          COUNTRIES.find((c) => c.code === country)?.name || "",
+        ]
+          .filter(Boolean)
+          .join(", "),
+        avatarUrl,
+        avatarPublicId,
+        companyCr: activeGoal === "employer" ? companyCr || null : null,
+        companyWebsite:
+          activeGoal === "employer" ? companyWebsite || null : null,
+        companyAddress:
+          activeGoal === "employer" ? companyAddress || null : null,
+      };
+
+      if (activeGoal === "seeker") {
+        payload.jobInterests = jobInterests;
+        payload.profession = jobInterests[0] ?? null;
+        payload.skillLevel = skillLevel;
+        payload.availableForHire = availableForHire === true;
+      }
+      if (activeGoal === "employer") {
+        payload.industries = industries;
+        payload.services = services;
+        payload.mapLocation = mapLocation.trim() || null;
+        payload.companyAddress = companyAddress.trim() || mapLocation.trim() || null;
+      }
+
+      let lastError = "Could not save profile";
+
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        const token = await getToken({ template: undefined }).catch(() => null);
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const res = await fetch("/api/profile/save", {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          // Mark onboarding complete in Clerk metadata
+          try {
+            await user?.update({
+              unsafeMetadata: {
+                ...user.unsafeMetadata,
+                hunared_goal: activeGoal,
+                onboarding_complete: true,
+              },
+            });
+          } catch {
+            /* non-fatal */
+          }
+          clearGoalLocal();
+          toast.success("Welcome to Hunared!");
+          setStep("done");
+          window.location.replace(
+            activeGoal === "employer" ? "/dashboard/jobs/new" : "/dashboard"
           );
           return;
         }
-        setStep("profile");
+
+        const data = await res.json().catch(() => ({}));
+        lastError = data.error || `Error ${res.status}`;
+
+        if ((res.status === 401 || res.status === 403) && attempt < 5) {
+          await session?.reload?.().catch(() => null);
+          await new Promise((r) => setTimeout(r, 600 * attempt));
+          continue;
+        }
+        break;
       }
-    } catch (err: unknown) {
-      toast.error((err as Error)?.message ?? "Verification failed.");
+
+      setError(lastError);
+      toast.error(lastError);
+    } catch (e) {
+      console.error("[register] saveProfile", e);
+      setError("Network error while saving profile. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+      submittingRef.current = false;
     }
+  }, [
+    goal,
+    fullName,
+    username,
+    usernameStatus,
+    phone,
+    country,
+    city,
+    jobInterests,
+    skillLevel,
+    availableForHire,
+    avatarFile,
+    avatarPreview,
+    companyCr,
+    companyWebsite,
+    companyAddress,
+    industries,
+    services,
+    sessionConfirmed,
+    userId,
+    getToken,
+    session,
+    user,
+  ]);
+
+  const goalCards: {
+    id: Goal;
+    title: string;
+    desc: string;
+    icon: typeof User;
+  }[] = [
+    {
+      id: "personal",
+      title: "Personal",
+      desc: "Browse jobs, market & learning",
+      icon: UserRound,
+    },
+    {
+      id: "seeker",
+      title: "Job Seeker",
+      desc: "Find your next opportunity",
+      icon: User,
+    },
+    {
+      id: "employer",
+      title: "Company",
+      desc: "Post jobs & hire talent",
+      icon: Building2,
+    },
+  ];
+
+  const waitingSession =
+    (mode === "complete" || step === "profile") &&
+    authReady &&
+    !sessionConfirmed &&
+    sessionAttempts < 12;
+
+  // ── Loading gate ────────────────────────────────────────────
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
   }
 
-  async function handleSaveProfile() {
-    setIsLoading(true);
-    try {
-      let avatarUrl: string | null = null;
-      let avatarPublicId: string | null = null;
-      let cvStoragePath: string | null = null;
-
-      if (form.avatarFile) {
-        const { url, publicId } = await uploadToCloudinary(
-          form.avatarFile,
-          "hunared/avatars"
-        );
-        avatarUrl = url;
-        avatarPublicId = publicId;
-      }
-
-      if (form.cvFile && goal === "seeker") {
-        const { url } = await uploadToCloudinary(form.cvFile, "hunared/cvs", {
-          preset: process.env.NEXT_PUBLIC_CLOUDINARY_DOCS_PRESET,
-          resourceType: "auto",
-        });
-        cvStoragePath = url;
-      }
-
-      // Map personal → personal (or change to "seeker" if your DB only supports seeker/employer)
-      const roleToSave = goal === "personal" ? "personal" : goal;
-
-      const res = await fetch("/api/profile/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          role: roleToSave,
-          fullName: form.fullName,
-          username: form.username,
-          phone: form.phone,
-          gender: form.gender,
-          location: [
-            form.city.trim(),
-            COUNTRIES.find((c) => c.code === form.country)?.name ?? "",
-          ]
-            .filter(Boolean)
-            .join(", "),
-          country: form.country || null,
-          city: form.city.trim() || null,
-          profession: goal === "seeker" ? form.profession : null,
-          jobInterests: goal === "seeker" ? form.jobInterests : null,
-          avatarUrl,
-          avatarPublicId,
-          cvUrl: cvStoragePath,
-          companyCr: goal === "employer" ? form.companyCr : null,
-          companyWebsite: goal === "employer" ? form.companyWebsite : null,
-          companyAddress: goal === "employer" ? form.companyAddress : null,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error ?? "Profile save failed");
-      }
-
-      toast.success("Profile created! Welcome to Hunared.");
-      if (goal === "seeker") router.push("/candidates");
-      else if (goal === "employer") router.push("/jobs");
-      else router.push("/dashboard");
-    } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Something went wrong.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  // Already signed in + opened /register without mode=complete → guide to profile or dashboard
+  // (handled by step state below)
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
-      {/* Background blobs */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-      >
-        <div className="absolute -top-40 -right-20 h-[500px] w-[500px] rounded-full bg-[var(--brand-from)] opacity-[0.07] blur-3xl" />
-        <div className="absolute bottom-0 -left-20 h-[400px] w-[400px] rounded-full bg-[var(--brand-via)] opacity-[0.06] blur-3xl" />
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-12 overflow-hidden bg-background">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[520px] w-[520px] rounded-full bg-[var(--brand-from)] opacity-[0.12] blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-[360px] w-[360px] rounded-full bg-[var(--brand-via)] opacity-[0.08] blur-3xl" />
       </div>
 
-      <div className="w-full max-w-lg">
-        {/* Logo – centered */}
-        <div className="flex flex-col items-center justify-center text-center mb-8">
+      <div className="w-full max-w-lg space-y-6">
+        <div className="flex justify-center">
           <HunaredLogo size="lg" href="/" />
         </div>
 
-        {/* ── STEP: Goal ── */}
-        {step === "goal" && (
-          <div className="space-y-6 text-center">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
+        {/* Session establishing after email verification */}
+        {waitingSession && (
+          <div className="rounded-2xl border border-border bg-card/80 p-8 text-center space-y-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+            <h2 className="text-lg font-semibold">Confirming your session…</h2>
+            <p className="text-sm text-muted-foreground">
+              Email verified. Setting up your secure session. This usually takes
+              a second.
+            </p>
+          </div>
+        )}
+
+        {/* GOAL */}
+        {!waitingSession && step === "goal" && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold gradient-text">
                 What&apos;s your goal?
               </h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Choose how you want to use Hunared
+              <p className="mt-1 text-sm text-muted-foreground">
+                {sessionConfirmed
+                  ? "Choose your account type to finish setup"
+                  : "Tell us how you’ll use Hunared"}
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <GoalCard
-                icon={<User className="h-7 w-7" />}
-                title="Personal"
-                description="Browse jobs, marketplace & learning"
-                selected={goal === "personal"}
-                onClick={() => setGoal("personal")}
-              />
-              <GoalCard
-                icon={<User className="h-7 w-7" />}
-                title="Job Seeker"
-                description="Find your next opportunity abroad"
-                selected={goal === "seeker"}
-                onClick={() => setGoal("seeker")}
-              />
-              <GoalCard
-                icon={<Briefcase className="h-7 w-7" />}
-                title="Employer"
-                description="Post jobs & find top talent"
-                selected={goal === "employer"}
-                onClick={() => setGoal("employer")}
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {goalCards.map((g) => {
+                const Icon = g.icon;
+                const selected = goal === g.id;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => selectGoal(g.id)}
+                    className={cn(
+                      "rounded-2xl border p-4 text-left transition-all",
+                      selected
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/25"
+                        : "border-border bg-card/60 hover:border-primary/40"
+                    )}
+                  >
+                    <Icon className="h-6 w-6 text-primary mb-2" />
+                    <div className="font-semibold text-sm">{g.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {g.desc}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+
+            {error && (
+              <p className="text-sm text-destructive text-center">{error}</p>
+            )}
+
             <Button
-              size="lg"
-              className="w-full h-11"
+              className="w-full h-11 rounded-xl"
               disabled={!goal}
-              onClick={() => setStep("account")}
+              onClick={() => {
+                if (!goal) {
+                  setError("Please select an option.");
+                  return;
+                }
+                saveGoalLocal(goal);
+                if (sessionConfirmed) {
+                  setStep("profile");
+                } else {
+                  setStep("account");
+                }
+              }}
             >
-              Continue <ArrowRight className="ml-2 h-4 w-4" />
+              Continue
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <p className="text-sm text-muted-foreground">
+
+            <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link
                 href="/sign-in"
-                className="text-primary hover:underline font-medium"
+                className="text-primary font-medium hover:underline"
               >
                 Sign in
               </Link>
@@ -618,653 +647,568 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* ── STEP: Account ── */}
-        {step === "account" && (
-          <FormCard
-            title="Create your account"
-            subtitle={`Registering as a ${
-              goal === "seeker"
-                ? "Job Seeker"
-                : goal === "employer"
-                ? "Employer"
-                : "Personal user"
-            }`}
-            onBack={() => setStep("goal")}
-          >
-            <div className="space-y-4">
-              <Field label="Email address">
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={form.email}
-                  onChange={(e) => set("email", e.target.value)}
-                  required
-                />
-              </Field>
-              <Field label="Password">
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Min. 8 characters"
-                    value={form.password}
-                    onChange={(e) => set("password", e.target.value)}
-                    className="pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </Field>
-              <div id="clerk-captcha" />
-              <Button
-                className="w-full h-11"
-                disabled={!form.email || !form.password || isLoading}
-                onClick={handleCreateAccount}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Create Account
-              </Button>
-
-              {/* Google note */}
-              <p className="text-sm text-muted-foreground text-center">
-                Prefer Google?{" "}
-                <Link
-                  href="/sign-in"
-                  className="text-primary hover:underline"
-                >
-                  Sign in with Google
-                </Link>
-                , then set your role in Dashboard → Profile.
+        {/* ACCOUNT — Clerk SignUp (only when not signed in) */}
+        {!waitingSession && step === "account" && !sessionConfirmed && (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setStep("goal")}
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold gradient-text">
+                Create your account
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {goal === "employer"
+                  ? "Register your company"
+                  : goal === "seeker"
+                    ? "Start your job search"
+                    : "Join Hunared"}
               </p>
             </div>
-          </FormCard>
-        )}
 
-        {/* ── STEP: Verify ── */}
-        {step === "verify" && (
-          <FormCard
-            title="Check your email"
-            subtitle={`We sent a 6-digit code to ${form.email}`}
-            onBack={() => setStep("account")}
-          >
-            <div className="space-y-4">
-              <Field label="Verification code">
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
-                  className="text-center text-xl tracking-[0.4em] font-mono h-14"
-                  value={form.code}
-                  onChange={(e) =>
-                    set("code", e.target.value.replace(/\D/g, ""))
-                  }
-                />
-              </Field>
-              <Button
-                className="w-full h-11"
-                disabled={form.code.length !== 6 || isLoading}
-                onClick={handleVerify}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Verify & Continue
-              </Button>
+            <div className="flex justify-center">
+              <SignUp
+                routing="hash"
+                signInUrl="/sign-in"
+                forceRedirectUrl={`/register?mode=complete${goal ? `&goal=${goal}` : ""}`}
+                fallbackRedirectUrl={`/register?mode=complete${goal ? `&goal=${goal}` : ""}`}
+                appearance={{
+                  variables: {
+                    colorPrimary: "#3b82f6",
+                    colorBackground: "transparent",
+                    colorInputBackground: "hsl(var(--background))",
+                    colorInputText: "hsl(var(--foreground))",
+                    colorText: "hsl(var(--foreground))",
+                    colorTextSecondary: "hsl(var(--muted-foreground))",
+                    borderRadius: "0.75rem",
+                  },
+                  elements: {
+                    rootBox: "w-full mx-auto",
+                    card: "w-full shadow-none border border-border rounded-2xl bg-card/80 backdrop-blur-sm",
+                    headerTitle: "hidden",
+                    headerSubtitle: "hidden",
+                    socialButtonsBlockButton:
+                      "border border-border bg-background hover:bg-muted text-foreground",
+                    formButtonPrimary:
+                      "bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl font-medium",
+                    formFieldInput:
+                      "h-11 rounded-xl border-border bg-background text-foreground",
+                    footerActionLink: "text-primary hover:underline",
+                  },
+                }}
+              />
             </div>
-          </FormCard>
+          </div>
         )}
 
-        {/* ── STEP: Profile – SEEKER ── */}
-        {step === "profile" && goal === "seeker" && (
-          <FormCard
-            title="Complete your profile"
-            subtitle="This information will appear on your public candidate card"
-          >
-            <div className="space-y-4">
-              {/* Avatar upload */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="relative h-20 w-20">
-                  {form.avatarPreview ? (
-                    <img
-                      src={form.avatarPreview}
-                      alt="Avatar preview"
-                      className="h-20 w-20 rounded-full object-cover border-2 border-primary/30"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
-                      <User className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  {form.avatarPreview && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        set("avatarFile", null);
-                        set("avatarPreview", "");
-                      }}
-                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center"
-                      aria-label="Remove photo"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
+        {/* If somehow on account step but already signed in */}
+        {!waitingSession && step === "account" && sessionConfirmed && (
+          <div className="rounded-2xl border border-border bg-card/80 p-6 text-center space-y-4">
+            <CheckCircle2 className="h-10 w-10 text-primary mx-auto" />
+            <h2 className="text-lg font-semibold">You&apos;re signed in</h2>
+            <p className="text-sm text-muted-foreground">
+              Complete your profile to finish registration.
+            </p>
+            <Button
+              className="w-full h-11 rounded-xl"
+              onClick={() => setStep("profile")}
+            >
+              Continue to profile
+            </Button>
+          </div>
+        )}
+
+        {/* PROFILE / ONBOARDING FORM */}
+        {!waitingSession && step === "profile" && sessionConfirmed && (
+          <div className="space-y-5">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold gradient-text">
+                {goal === "employer"
+                  ? "Company details"
+                  : "Complete your profile"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Almost done — tell us a bit about{" "}
+                {goal === "employer" ? "your company" : "yourself"}
+              </p>
+            </div>
+
+            {!goal && (
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-center">
+                Account type missing.{" "}
+                <button
+                  type="button"
+                  className="text-primary font-medium underline"
+                  onClick={() => setStep("goal")}
+                >
+                  Choose one
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-4 rounded-2xl border border-border bg-card/60 p-5">
+              {/* Profile image — top of form for both seeker & company */}
+              {(goal === "seeker" || goal === "employer") && (
+                <div className="space-y-2">
+                  <Label>
+                    {goal === "employer" ? "Company logo / profile image" : "Profile image"}
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    {avatarPreview ? (
+                      <div
+                        className={
+                          goal === "employer"
+                            ? "relative h-16 w-16 overflow-hidden rounded-xl border"
+                            : "relative h-16 w-16 overflow-hidden rounded-full border"
+                        }
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={avatarPreview}
+                          alt="Preview"
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-white"
+                          onClick={() => {
+                            setAvatarFile(null);
+                            setAvatarPreview("");
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        className={
+                          goal === "employer"
+                            ? "flex h-16 w-16 items-center justify-center rounded-xl border border-dashed bg-muted/30"
+                            : "flex h-16 w-16 items-center justify-center rounded-full border border-dashed bg-muted/30"
+                        }
+                      >
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer">
+                      <span className="inline-flex h-10 items-center rounded-xl border px-3 text-sm hover:bg-muted/50">
+                        {goal === "employer"
+                          ? avatarPreview
+                            ? "Change image"
+                            : "Upload image"
+                          : avatarPreview
+                            ? "Change photo"
+                            : "Upload photo"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          if (f.size > 5 * 1024 * 1024) {
+                            toast.error("Image must be under 5MB");
+                            return;
+                          }
+                          setAvatarFile(f);
+                          setAvatarPreview(URL.createObjectURL(f));
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {goal === "employer"
+                      ? "Optional · JPG, PNG or WebP · max 5MB"
+                      : "JPG, PNG or WebP · max 5MB"}
+                  </p>
                 </div>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="sr-only"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      set("avatarFile", f);
-                      set("avatarPreview", URL.createObjectURL(f));
-                    }}
-                  />
-                  <span className="text-xs text-primary hover:underline flex items-center gap-1.5">
-                    <Upload className="h-3.5 w-3.5" /> Upload Photo
-                  </span>
-                </label>
+              )}
+
+              {/* Name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">
+                  {goal === "employer" ? "Company name *" : "Full name *"}
+                </Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder={
+                    goal === "employer" ? "Acme Engineering LLC" : "Your full name"
+                  }
+                  className="h-11 rounded-xl"
+                />
               </div>
 
-              <Field label="Email address">
+              {/* Username */}
+              <div className="space-y-2">
+                <Label htmlFor="username">Username / Handle *</Label>
                 <Input
-                  value={signUp?.emailAddress ?? form.email}
-                  readOnly
-                  className="bg-muted/50 cursor-not-allowed"
+                  id="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsernameTouched(true);
+                    setUsername(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+                    );
+                  }}
+                  placeholder="your_handle"
+                  className="h-11 rounded-xl"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your verified login email
+                <p className="text-xs text-muted-foreground">
+                  {usernameStatus === "checking" && "Checking availability…"}
+                  {usernameStatus === "ok" && (
+                    <span className="text-emerald-600">Username is available</span>
+                  )}
+                  {usernameStatus === "taken" && (
+                    <span className="text-destructive">Username is taken</span>
+                  )}
+                  {usernameStatus === "invalid" && username.length > 0 && (
+                    <span className="text-destructive">
+                      Use letters, numbers, underscore (min 3, start with a letter)
+                    </span>
+                  )}
+                  {usernameStatus === "idle" &&
+                    "Unique handle. Letters, numbers, underscore."}
                 </p>
-              </Field>
+                {fullName.trim().length >= 2 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {buildUsernameSuggestions(fullName)
+                      .slice(0, 5)
+                      .map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          className="text-xs rounded-full border px-2 py-0.5 hover:bg-accent"
+                          onClick={() => {
+                            setUsernameTouched(true);
+                            setUsername(s);
+                          }}
+                        >
+                          @{s}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Full Name" className="col-span-2">
-                  <Input
-                    placeholder="Ahmed Al-Rashidi"
-                    value={form.fullName}
-                    onChange={(e) => set("fullName", e.target.value)}
-                    required
-                  />
-                </Field>
-                <Field label="Username">
-                  <Input
-                    placeholder="ahmed_hse"
-                    value={form.username}
-                    onChange={(e) => set("username", e.target.value)}
-                  />
-                </Field>
-                <Field label="Phone">
-                  <Input
-                    placeholder="+966 5x xxx xxxx"
-                    value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                  />
-                </Field>
-                <Field label="Gender">
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">
+                  {goal === "employer" ? "Company phone *" : "Phone number"}
+                </Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+966 5X XXX XXXX"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+
+              {/* Country / City */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Country *</Label>
                   <Select
-                    onValueChange={(v: string | null) => {
-                      if (v) set("gender", v);
+                    value={country}
+                    onValueChange={(v) => {
+                      if (v) {
+                        setLocationTouched(true);
+                        setCountry(v);
+                        setCity("");
+                      }
                     }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="Select country" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="prefer_not_to_say">
-                        Prefer not to say
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Country">
-                  <Select
-                    onValueChange={(v: string | null) => {
-                      if (v) set("country", v);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Country" />
-                    </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-64">
                       {COUNTRIES.map((c) => (
                         <SelectItem key={c.code} value={c.code}>
-                          {c.name}
+                          {c.flag} {c.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </Field>
-                <Field label="City">
-                  <Input
-                    placeholder="e.g. Dubai"
-                    value={form.city}
-                    onChange={(e) => set("city", e.target.value)}
-                  />
-                </Field>
-                <Field label="Profession" className="col-span-2">
-                  <Select
-                    onValueChange={(v: string | null) => {
-                      if (v) set("profession", v);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Your profession" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROFESSIONS.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {p}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
+                  {goal !== "seeker" && geo?.countryCode && !locationTouched && (
+                    <p className="text-xs text-muted-foreground">
+                      Detected location — you can change it.
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>City</Label>
+                  {cityOptions.length > 0 ? (
+                    <Select
+                      value={city}
+                      onValueChange={(v) => {
+                        if (v) {
+                          setLocationTouched(true);
+                          setCity(v);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Select city" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        {cityOptions.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={city}
+                      onChange={(e) => {
+                        setLocationTouched(true);
+                        setCity(e.target.value);
+                      }}
+                      placeholder="Your city"
+                      className="h-11 rounded-xl"
+                    />
+                  )}
+                </div>
               </div>
 
-              {/* Job Interests */}
-              <Field label="Job Interests (select all that apply)">
-                <div className="max-h-48 overflow-y-auto border border-border rounded-lg p-3 grid grid-cols-2 gap-2 text-sm">
-                  {JOB_CATEGORIES.map((cat) => {
-                    const selected = form.jobInterests.includes(cat);
-                    return (
+              {/* ── SEEKER FIELDS ── */}
+              {goal === "seeker" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Profession categories *</Label>
+                    <MultiSelectChips
+                      options={JOB_CATEGORIES}
+                      value={jobInterests}
+                      onChange={setJobInterests}
+                      placeholder="Select one or more professions"
+                      searchPlaceholder="Search professions…"
+                      label="Professions"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Experience / Skill level *</Label>
+                    <Select value={skillLevel} onValueChange={(v) => v && setSkillLevel(v)}>
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Select level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SKILL_LEVELS.map((l) => (
+                          <SelectItem key={l} value={l}>
+                            {l}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Availability *</Label>
+                    <div className="grid grid-cols-2 gap-2">
                       <button
-                        key={cat}
                         type="button"
-                        onClick={() => toggleJobInterest(cat)}
+                        onClick={() => setAvailableForHire(true)}
                         className={cn(
-                          "flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors",
-                          selected
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "hover:bg-muted text-muted-foreground"
+                          "h-11 rounded-xl border text-sm font-medium transition",
+                          availableForHire === true
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:bg-muted/50"
                         )}
                       >
-                        <div
-                          className={cn(
-                            "h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-colors",
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground/40"
-                          )}
-                        >
-                          {selected && <Check className="h-3 w-3" />}
-                        </div>
-                        <span className="truncate">{cat}</span>
+                        Available for Hire
                       </button>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  We’ll match you with jobs in these categories
-                </p>
-              </Field>
+                      <button
+                        type="button"
+                        onClick={() => setAvailableForHire(false)}
+                        className={cn(
+                          "h-11 rounded-xl border text-sm font-medium transition",
+                          availableForHire === false
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:bg-muted/50"
+                        )}
+                      >
+                        Unavailable
+                      </button>
+                    </div>
+                  </div>
 
-              {/* CV Upload */}
-              <Field label="CV / Resume (PDF only)">
-                <label
-                  className={cn(
-                    "flex items-center gap-3 h-11 px-3 rounded-lg border border-dashed cursor-pointer transition-colors",
-                    "border-border hover:border-primary/50 hover:bg-primary/5",
-                    form.cvFile && "border-primary/40 bg-primary/5"
+                </>
+              )}
+
+              {/* ── EMPLOYER / COMPANY FIELDS ── */}
+              {goal === "employer" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Industry *</Label>
+                    <MultiSelectChips
+                      options={INDUSTRIES}
+                      value={industries}
+                      onChange={setIndustries}
+                      placeholder="Select industry"
+                      searchPlaceholder="Search industries…"
+                      label="Industries"
+                    />
+                  </div>
+
+                  {recommendedServices.length > 0 && (
+                    <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
+                      <Label className="text-primary">Recommended services</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Based on your industry. Tap to add — nothing is forced.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                        {recommendedServices.slice(0, 24).map((s) => {
+                          const on = services.includes(s);
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => {
+                                setServices((prev) =>
+                                  on
+                                    ? prev.filter((x) => x !== s)
+                                    : [...prev, s]
+                                );
+                              }}
+                              className={cn(
+                                "text-xs rounded-full border px-2 py-0.5 transition",
+                                on
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border hover:bg-accent"
+                              )}
+                            >
+                              {on ? "✓ " : ""}
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
-                >
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    className="sr-only"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) set("cvFile", f);
-                    }}
-                  />
-                  <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm text-muted-foreground truncate">
-                    {form.cvFile
-                      ? form.cvFile.name
-                      : "Click to upload your CV (PDF, max 10MB)"}
-                  </span>
-                  {form.cvFile && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        set("cvFile", null);
-                      }}
-                      className="ml-auto shrink-0"
-                      aria-label="Remove CV"
-                    >
-                      <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                    </button>
-                  )}
-                </label>
-              </Field>
 
-              <Button
-                className="w-full h-11 mt-2"
-                disabled={!form.fullName || isLoading}
-                onClick={handleSaveProfile}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Complete Registration
+                  <div className="space-y-2">
+                    <Label>Services *</Label>
+                    <MultiSelectChips
+                      options={ALL_SERVICES}
+                      value={services}
+                      onChange={setServices}
+                      placeholder="Select services you offer"
+                      searchPlaceholder="Search services…"
+                      label="Services"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="mapLocation">Map location link</Label>
+                    <Input
+                      id="mapLocation"
+                      value={mapLocation}
+                      onChange={(e) => setMapLocation(e.target.value)}
+                      placeholder="https://maps.google.com/... or Google Maps share link"
+                      className="h-11 rounded-xl"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Optional. Paste a Google Maps (or similar) link to your office.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="companyWebsite">Website (optional)</Label>
+                    <Input
+                      id="companyWebsite"
+                      value={companyWebsite}
+                      onChange={(e) => setCompanyWebsite(e.target.value)}
+                      placeholder="https://"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyCr">CR / License (optional)</Label>
+                    <Input
+                      id="companyCr"
+                      value={companyCr}
+                      onChange={(e) => setCompanyCr(e.target.value)}
+                      placeholder="Commercial registration"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyAddress">Address (optional)</Label>
+                    <Input
+                      id="companyAddress"
+                      value={companyAddress}
+                      onChange={(e) => setCompanyAddress(e.target.value)}
+                      placeholder="Business address"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {error && (
+              <p className="text-sm text-destructive text-center">{error}</p>
+            )}
+
+            <Button
+              className="w-full h-11 rounded-xl"
+              disabled={loading}
+              onClick={saveProfile}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  Complete registration
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Profile step but session never arrived */}
+        {!waitingSession &&
+          step === "profile" &&
+          !sessionConfirmed &&
+          sessionAttempts >= 12 && (
+            <div className="rounded-2xl border border-border bg-card/80 p-6 text-center space-y-4">
+              <h2 className="text-lg font-semibold">Session not ready</h2>
+              <p className="text-sm text-muted-foreground">
+                We couldn&apos;t confirm your login session after email
+                verification. Please sign in to continue.
+              </p>
+              <Button asChild className="w-full h-11 rounded-xl">
+                <Link href="/sign-in">Go to sign in</Link>
               </Button>
             </div>
-          </FormCard>
-        )}
-
-        {/* ── STEP: Profile – EMPLOYER ── */}
-        {step === "profile" && goal === "employer" && (
-          <FormCard
-            title="Company details"
-            subtitle="Tell us about the company you're hiring for"
-          >
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Full Name" className="col-span-2">
-                  <Input
-                    placeholder="John Smith"
-                    value={form.fullName}
-                    onChange={(e) => set("fullName", e.target.value)}
-                    required
-                  />
-                </Field>
-                <Field label="Username">
-                  <Input
-                    placeholder="johnsmith"
-                    value={form.username}
-                    onChange={(e) => set("username", e.target.value)}
-                  />
-                </Field>
-                <Field label="Phone">
-                  <Input
-                    placeholder="+966 1x xxx xxxx"
-                    value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                  />
-                </Field>
-                <Field label="Gender">
-                  <Select
-                    onValueChange={(v: string | null) => {
-                      if (v) set("gender", v);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="prefer_not_to_say">
-                        Prefer not to say
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Country">
-                  <Select
-                    onValueChange={(v: string | null) => {
-                      if (v) set("country", v);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((c) => (
-                        <SelectItem key={c.code} value={c.code}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="City">
-                  <Input
-                    placeholder="e.g. Dubai"
-                    value={form.city}
-                    onChange={(e) => set("city", e.target.value)}
-                  />
-                </Field>
-                <Field label="Company CR Number" className="col-span-2">
-                  <Input
-                    placeholder="e.g. 1010123456"
-                    value={form.companyCr}
-                    onChange={(e) => set("companyCr", e.target.value)}
-                  />
-                </Field>
-                <Field label="Company Website" className="col-span-2">
-                  <Input
-                    placeholder="https://company.com"
-                    type="url"
-                    value={form.companyWebsite}
-                    onChange={(e) => set("companyWebsite", e.target.value)}
-                  />
-                </Field>
-                <Field label="Company Address" className="col-span-2">
-                  <Input
-                    placeholder="Street, City, Country"
-                    value={form.companyAddress}
-                    onChange={(e) => set("companyAddress", e.target.value)}
-                  />
-                </Field>
-              </div>
-              <Button
-                className="w-full h-11 mt-2"
-                disabled={!form.fullName || isLoading}
-                onClick={handleSaveProfile}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Complete Registration
-              </Button>
-            </div>
-          </FormCard>
-        )}
-
-        {/* ── STEP: Profile – PERSONAL ── */}
-        {step === "profile" && goal === "personal" && (
-          <FormCard
-            title="Your profile"
-            subtitle="A few details to get started on Hunared"
-          >
-            <div className="space-y-4">
-              <Field label="Full Name">
-                <Input
-                  placeholder="Your full name"
-                  value={form.fullName}
-                  onChange={(e) => set("fullName", e.target.value)}
-                  required
-                />
-              </Field>
-              <Field label="Username">
-                <Input
-                  placeholder="username"
-                  value={form.username}
-                  onChange={(e) => set("username", e.target.value)}
-                />
-              </Field>
-              <Field label="Phone">
-                <Input
-                  placeholder="+966 ..."
-                  value={form.phone}
-                  onChange={(e) => set("phone", e.target.value)}
-                />
-              </Field>
-              <Field label="Country">
-                <Select
-                  onValueChange={(v: string | null) => {
-                    if (v) set("country", v);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="City">
-                <Input
-                  placeholder="e.g. Dubai"
-                  value={form.city}
-                  onChange={(e) => set("city", e.target.value)}
-                />
-              </Field>
-
-              <Button
-                className="w-full h-11 mt-2"
-                disabled={!form.fullName || isLoading}
-                onClick={handleSaveProfile}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Complete Registration
-              </Button>
-            </div>
-          </FormCard>
-        )}
-      </div>
-
-      {/* Animated shimmer keyframes */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            background-position: 200% 0;
-          }
-          100% {
-            background-position: -200% 0;
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 5s linear infinite;
-        }
-      `}</style>
-    </div>
-  );
-}
-
-/* ── Sub-components ─────────────────────────────────────────── */
-
-function GoalCard({
-  icon,
-  title,
-  description,
-  selected,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex flex-col items-center gap-3 rounded-2xl border-2 p-6 text-center transition-all duration-200",
-        selected
-          ? "border-primary bg-primary/8 shadow-sm"
-          : "border-border hover:border-primary/40 hover:bg-muted/50"
-      )}
-    >
-      <div
-        className={cn(
-          "flex h-14 w-14 items-center justify-center rounded-xl transition-colors duration-200",
-          selected
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground"
-        )}
-      >
-        {icon}
-      </div>
-      <div>
-        <p
-          className={cn(
-            "font-semibold",
-            selected ? "text-primary" : "text-foreground"
           )}
-        >
-          {title}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
-    </button>
-  );
-}
-
-function FormCard({
-  title,
-  subtitle,
-  onBack,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  onBack?: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
-      <div className="space-y-1">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-2 transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back
-          </button>
-        )}
-        <h2 className="text-xl font-bold text-foreground">{title}</h2>
-        {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-        )}
-      </div>
-      {children}
     </div>
   );
 }
 
-function Field({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
+export default function RegisterPage() {
   return (
-    <div className={cn("space-y-1.5", className)}>
-      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {label}
-      </Label>
-      {children}
-    </div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+          Loading…
+        </div>
+      }
+    >
+      <RegisterInner />
+    </Suspense>
   );
 }

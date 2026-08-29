@@ -142,6 +142,7 @@ export interface Database {
           salary_type: string | null;
           currency: string | null;
           category: string;
+          categories: string[] | null;
           subcategory: string | null;
           company_name: string;
           company_phone: string | null;
@@ -151,6 +152,9 @@ export interface Database {
           office_lng: number | null;
           office_address: string | null;
           status: JobStatus;
+          expires_at: string | null;
+          closed_at: string | null;
+          close_reason: string | null;
           created_at: string;
           show_profile_contact: boolean;
         };
@@ -169,6 +173,7 @@ export interface Database {
           salary_type?: string | null;
           currency?: string | null;
           category: string;
+          categories?: string[] | null;
           subcategory?: string | null;
           company_name: string;
           company_phone?: string | null;
@@ -178,6 +183,9 @@ export interface Database {
           office_lng?: number | null;
           office_address?: string | null;
           status?: JobStatus;
+          expires_at?: string | null;
+          closed_at?: string | null;
+          close_reason?: string | null;
           created_at?: string;
           show_profile_contact?: boolean;
         };
@@ -196,6 +204,7 @@ export interface Database {
           salary_type?: string | null;
           currency?: string | null;
           category?: string;
+          categories?: string[] | null;
           subcategory?: string | null;
           company_name?: string;
           company_phone?: string | null;
@@ -205,6 +214,9 @@ export interface Database {
           office_lng?: number | null;
           office_address?: string | null;
           status?: JobStatus;
+          expires_at?: string | null;
+          closed_at?: string | null;
+          close_reason?: string | null;
           created_at?: string;
           show_profile_contact?: boolean;
         };
@@ -263,6 +275,9 @@ export interface Database {
           listing_type: string;
           external_link: string | null;
           status: ListingStatus;
+          expires_at: string | null;
+          closed_at: string | null;
+          close_reason: string | null;
           created_at: string;
         };
         Insert: {
@@ -284,6 +299,9 @@ export interface Database {
           listing_type?: string;
           external_link?: string | null;
           status?: ListingStatus;
+          expires_at?: string | null;
+          closed_at?: string | null;
+          close_reason?: string | null;
           created_at?: string;
         };
         Update: {
@@ -305,6 +323,9 @@ export interface Database {
           listing_type?: string;
           external_link?: string | null;
           status?: ListingStatus;
+          expires_at?: string | null;
+          closed_at?: string | null;
+          close_reason?: string | null;
           created_at?: string;
         };
         Relationships: [];

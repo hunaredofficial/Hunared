@@ -34,32 +34,32 @@ export function AdSlotEditor({ placement }: Props) {
 
   function handleSave() {
     startSave(async () => {
-      try {
-        await upsertAdPlacement({
-          id: placement.id,
-          slot_name: placement.slot_name,
-          is_active: isActive,
-          ad_type: adType,
-          custom_image_url: imageUrl,
-          custom_redirect_url: redirectUrl,
-          adsense_slot_id: adsenseSlotId,
-        });
-        toast.success("Ad slot saved.");
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to save");
+      const result = await upsertAdPlacement({
+        id: placement.id,
+        slot_name: placement.slot_name,
+        is_active: isActive,
+        ad_type: adType,
+        custom_image_url: imageUrl,
+        custom_redirect_url: redirectUrl,
+        adsense_slot_id: adsenseSlotId,
+      });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+      toast.success("Ad slot saved.");
     });
   }
 
   function handleDelete() {
     if (!confirm(`Delete slot "${placement.slot_name}"? This cannot be undone.`)) return;
     startDelete(async () => {
-      try {
-        await deleteAdPlacement(placement.id);
-        toast.success("Ad slot deleted.");
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to delete");
+      const result = await deleteAdPlacement(placement.id);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+      toast.success("Ad slot deleted.");
     });
   }
 

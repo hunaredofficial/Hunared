@@ -16,9 +16,11 @@ export default async function DashboardLayout({
     .from("profiles")
     .select("id, role, full_name")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
-  if (!profile) redirect("/register");
+  if (!profile) {
+    redirect("/register?mode=complete");
+  }
 
   return (
     <DashboardShell role={profile.role} fullName={profile.full_name}>
