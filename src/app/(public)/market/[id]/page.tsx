@@ -160,9 +160,18 @@ export default async function ListingDetailPage({
 
             {/* Seller */}
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                <User className="h-4 w-4 text-muted-foreground" />
-              </div>
+              {seller?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={seller.avatar_url}
+                  alt={seller.full_name ?? "Seller"}
+                  className="h-9 w-9 rounded-full object-cover border border-border shrink-0"
+                />
+              ) : (
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </div>
+              )}
               <div>
                 <p className="text-sm font-medium">
                   {seller?.full_name ?? "Hunared community member"}

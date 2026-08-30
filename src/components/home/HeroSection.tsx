@@ -30,14 +30,22 @@ const POPULAR_CHIPS = [
   "Marketplace",
   "Services",
   "Electrical",
+  "Instrumentation",
   "Mechanical",
+  "Engineering",
   "Civil",
   "Oil & Gas",
-  "Engineering",
+  "For Sale",
+  "Lost & Found",
+  "Vehicle",
+  "Electronics",
+  "For Rent",
+  "Welding",
   "Helper",
+  "Offers & Deals",
   "Bed Spaces",
   "Report Lost Item",
-  "IT",
+  "Information Technology",
 ];
 
 export function HeroSection() {
@@ -118,7 +126,7 @@ export function HeroSection() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search jobs, accommodations, services, property, courses, ..."
+              placeholder="Search jobs, accommodations, services, property, courses ..."
               className="w-full h-16 sm:h-[4.25rem] pl-14 pr-14 rounded-2xl border border-primary/15 bg-background/70 text-foreground text-base sm:text-lg placeholder:text-muted-foreground/65 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/35 transition"
               autoComplete="off"
             />

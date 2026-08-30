@@ -288,13 +288,6 @@ export default async function JobDetailPage({
                   </div>
                 </div>
 
-                {job.currency && (
-                  <Detail
-                    icon={<Banknote className="h-4 w-4" />}
-                    label="Currency"
-                    value={job.currency}
-                  />
-                )}
                 {job.salary_type && (
                   <Detail
                     icon={<Banknote className="h-4 w-4" />}
