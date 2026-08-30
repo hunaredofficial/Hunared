@@ -59,10 +59,11 @@ export async function upsertAdPlacement(formData: {
     };
   }
 
+  const adType: AdType = formData.ad_type === "custom" ? "custom" : "adsense";
   const payload = {
     slot_name: slotName,
     is_active: !!formData.is_active,
-    ad_type: formData.ad_type === "custom" ? "custom" : "adsense",
+    ad_type: adType,
     custom_image_url: (formData.custom_image_url ?? "").trim() || null,
     custom_redirect_url: (formData.custom_redirect_url ?? "").trim() || null,
     adsense_slot_id: (formData.adsense_slot_id ?? "").trim() || null,
