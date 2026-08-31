@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { MapPin, ChevronDown, RotateCcw } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { useGeoDetection } from "@/hooks/useGeoDetection";
 import { cn } from "@/lib/utils";
 
-/** Optional city lists for common countries — extend as needed */
+/** City lists for common countries — extend as needed */
 const CITIES_BY_COUNTRY: Record<string, string[]> = {
   SA: ["Riyadh", "Jeddah", "Dammam", "Khobar", "Makkah", "Madinah", "Jubail", "Yanbu", "Abha", "Other"],
   AE: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Al Ain", "Other"],
@@ -18,14 +18,22 @@ const CITIES_BY_COUNTRY: Record<string, string[]> = {
   IN: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Other"],
   EG: ["Cairo", "Alexandria", "Giza", "Other"],
   JO: ["Amman", "Irbid", "Zarqa", "Other"],
+  US: ["New York", "Los Angeles", "Chicago", "Houston", "Other"],
+  GB: ["London", "Manchester", "Birmingham", "Other"],
 };
 
 export function LocationPicker({ className }: { className?: string }) {
   const geo = useGeoDetection();
   const [open, setOpen] = useState(false);
-  const [country, setCountry] = useState(geo.countryCode ?? "");
-  const [city, setCity] = useState(geo.city ?? "");
-  const [region, setRegion] = useState(geo.region ?? "");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+
+  // Sync form fields when opening or when geo updates
+  useEffect(() => {
+    if (!open) return;
+    setCountry(geo.countryCode ?? "");
+    setCity(geo.city ?? "");
+  }, [open, geo.countryCode, geo.city]);
 
   const cities = useMemo(
     () => (country ? CITIES_BY_COUNTRY[country] ?? ["Other"] : []),
@@ -38,27 +46,21 @@ export function LocationPicker({ className }: { className?: string }) {
     geo.setManualLocation({
       countryCode: country,
       countryName: c?.name ?? country,
-      region: region || undefined,
       city: city || undefined,
     });
     setOpen(false);
   }
 
+  // Header shows COUNTRY only (not city)
   const label = geo.loading
     ? "Detecting…"
-    : [geo.city, geo.countryName || geo.countryCode].filter(Boolean).join(", ") ||
-      "Set location";
+    : geo.countryName || geo.countryCode || "Set location";
 
   return (
     <div className={cn("relative", className)}>
       <button
         type="button"
-        onClick={() => {
-          setCountry(geo.countryCode ?? "");
-          setCity(geo.city ?? "");
-          setRegion(geo.region ?? "");
-          setOpen((v) => !v);
-        }}
+        onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors max-w-[180px] sm:max-w-[240px]"
         title="Your location"
       >
@@ -79,9 +81,11 @@ export function LocationPicker({ className }: { className?: string }) {
               Your location
             </p>
 
+            {/* Country only */}
             <div>
               <label className="text-xs text-muted-foreground">Country</label>
-              <select data-color-scheme="dark"
+              <select
+                data-color-scheme="dark"
                 value={country}
                 onChange={(e) => {
                   setCountry(e.target.value);
@@ -89,49 +93,44 @@ export function LocationPicker({ className }: { className?: string }) {
                 }}
                 className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
               >
-                <option className="bg-background text-foreground" value="">Select country</option>
+                <option className="bg-background text-foreground" value="">
+                  Select country
+                </option>
                 {COUNTRIES.map((c) => (
-                  <option className="bg-background text-foreground" key={c.code} value={c.code}>
+                  <option
+                    className="bg-background text-foreground"
+                    key={c.code}
+                    value={c.code}
+                  >
                     {c.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <label className="text-xs text-muted-foreground">Region / State</label>
-              <input
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="e.g. Eastern Province"
-                className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-              />
-            </div>
-
+            {/* City dropdown — All Cities by default */}
             <div>
               <label className="text-xs text-muted-foreground">City</label>
-              {cities.length > 1 ? (
-                <select data-color-scheme="dark"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  disabled={!country}
-                  className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
-                >
-                  <option className="bg-background text-foreground" value="">All cities</option>
-                  {cities.map((name) => (
-                    <option className="bg-background text-foreground" key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="City name"
-                  className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-                />
-              )}
+              <select
+                data-color-scheme="dark"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                disabled={!country}
+                className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm disabled:opacity-50"
+              >
+                <option className="bg-background text-foreground" value="">
+                  All cities
+                </option>
+                {cities.map((name) => (
+                  <option
+                    className="bg-background text-foreground"
+                    key={name}
+                    value={name}
+                  >
+                    {name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex gap-2 pt-1">
@@ -150,7 +149,7 @@ export function LocationPicker({ className }: { className?: string }) {
                   setOpen(false);
                 }}
                 className="h-9 px-3 rounded-lg border border-border text-sm inline-flex items-center gap-1 hover:bg-muted"
-                title="Use detected location"
+                title="Detect country automatically"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Auto
@@ -164,7 +163,7 @@ export function LocationPicker({ className }: { className?: string }) {
             )}
             {!geo.isManual && !geo.loading && geo.countryCode && (
               <p className="text-[10px] text-muted-foreground">
-                Auto-detected from your network
+                Country auto-detected from your network
               </p>
             )}
           </div>

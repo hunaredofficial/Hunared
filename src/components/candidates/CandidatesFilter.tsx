@@ -17,7 +17,6 @@ import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { CityCombobox } from "@/components/shared/CityCombobox";
-import { useGeo } from "@/components/providers/GeoProvider";
 
 const SKILL_LEVELS = [
   "Beginner",
@@ -50,8 +49,6 @@ export function CandidatesFilter({
   const [level, setLevel] = useState(defaultLevel || "all");
   const [available, setAvailable] = useState(defaultAvailable || "all");
   const [countrySearch, setCountrySearch] = useState("");
-
-  const geo = useGeo();
 
   const filteredCountries = useMemo(() => {
     const q = countrySearch.trim().toLowerCase();
@@ -86,24 +83,6 @@ export function CandidatesFilter({
     },
     [router]
   );
-
-  // Auto-fill country only; city stays All Cities
-  useEffect(() => {
-    if (geo.loading) return;
-    if (defaultCountry || defaultCity) return;
-    if (!geo.countryCode) return;
-
-    setCountry(geo.countryCode);
-    apply({
-      search,
-      profession,
-      country: geo.countryCode,
-      city: "",
-      level,
-      available,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.loading, geo.countryCode]);
 
   const runApply = () =>
     apply({ search, profession, country, city, level, available });

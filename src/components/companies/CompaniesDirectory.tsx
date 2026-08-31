@@ -33,7 +33,6 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { CityCombobox } from "@/components/shared/CityCombobox";
-import { useGeo } from "@/components/providers/GeoProvider";
 
 interface CompanyRecord {
   id: string;
@@ -585,20 +584,9 @@ export function CompaniesDirectory() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [page, setPage] = useState(1);
-  const [geoApplied, setGeoApplied] = useState(false);
   const pageSize = 12;
-  const geo = useGeo();
 
   useEffect(() => setMounted(true), []);
-
-  // Auto-detect country only (same as Jobs / Marketplace). City stays optional.
-  useEffect(() => {
-    if (geo.loading || geoApplied) return;
-    if (!geo.countryCode) return;
-    setCountry(geo.countryCode);
-    setCity("");
-    setGeoApplied(true);
-  }, [geo.loading, geo.countryCode, geoApplied]);
 
   const applySearch = useCallback(() => {
     setAppliedSearch(search.trim());
