@@ -33,6 +33,76 @@ function emptyGeo(partial?: Partial<GeoLocation>): GeoLocation {
   };
 }
 
+/** Try multiple free IP geo APIs (production-safe fallbacks) */
+async function lookupIpGeo(): Promise<{
+  countryCode: string | null;
+  countryName: string | null;
+  region: string | null;
+  city: string | null;
+}> {
+  // 1) ipwho.is — reliable free, no key
+  try {
+    const res = await fetch("https://ipwho.is/", {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.success !== false && data?.country_code) {
+        return {
+          countryCode: data.country_code ?? null,
+          countryName: data.country ?? null,
+          region: data.region ?? data.region_code ?? null,
+          city: data.city ?? null,
+        };
+      }
+    }
+  } catch {
+    /* try next */
+  }
+
+  // 2) geojs.io — free, no key
+  try {
+    const res = await fetch("https://get.geojs.io/v1/ip/geo.json", {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.country_code) {
+        return {
+          countryCode: data.country_code ?? null,
+          countryName: data.country ?? null,
+          region: data.region ?? null,
+          city: data.city ?? null,
+        };
+      }
+    }
+  } catch {
+    /* try next */
+  }
+
+  // 3) ipapi.co — free tier (may rate-limit on production)
+  try {
+    const res = await fetch("https://ipapi.co/json/", {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.country_code && !data?.error) {
+        return {
+          countryCode: data.country_code ?? null,
+          countryName: data.country_name ?? null,
+          region: data.region ?? data.region_code ?? null,
+          city: data.city ?? null,
+        };
+      }
+    }
+  } catch {
+    /* give up */
+  }
+
+  throw new Error("All geo providers failed");
+}
+
 export function useGeoDetection() {
   const [geo, setGeo] = useState<GeoLocation>(emptyGeo());
 
@@ -67,31 +137,23 @@ export function useGeoDetection() {
     []
   );
 
-  /** Clear manual choice and re-detect from IP */
-  const clearManualLocation = useCallback(() => {
-    try {
-      localStorage.removeItem(MANUAL_KEY);
-    } catch {
-      /* ignore */
-    }
-    setGeo(emptyGeo({ loading: true }));
-    // trigger re-detect by reloading logic below via state
-    void detectFromIp(true);
-  }, []);
-
   async function detectFromIp(force = false) {
     try {
       if (!force) {
         const manual = localStorage.getItem(MANUAL_KEY);
         if (manual) {
-          const parsed = JSON.parse(manual) as GeoLocation & { timestamp: number };
+          const parsed = JSON.parse(manual) as GeoLocation & {
+            timestamp: number;
+          };
           setGeo({ ...parsed, loading: false, isManual: true });
           return;
         }
 
         const cached = localStorage.getItem(DETECTED_KEY);
         if (cached) {
-          const parsed = JSON.parse(cached) as GeoLocation & { timestamp: number };
+          const parsed = JSON.parse(cached) as GeoLocation & {
+            timestamp: number;
+          };
           if (Date.now() - parsed.timestamp < CACHE_TTL_MS) {
             setGeo({ ...parsed, loading: false, isManual: false });
             return;
@@ -103,17 +165,14 @@ export function useGeoDetection() {
     }
 
     try {
-      const res = await fetch("https://ipapi.co/json/");
-      if (!res.ok) throw new Error("Geo lookup failed");
-      const data = await res.json();
-
+      const data = await lookupIpGeo();
       const result: GeoLocation = {
-        countryCode: data.country_code ?? null,
-        countryName: data.country_name ?? null,
-        region: data.region ?? data.region_code ?? null,
-        city: data.city ?? null,
-        currency: data.country_code
-          ? getCurrencyForCountry(data.country_code)
+        countryCode: data.countryCode,
+        countryName: data.countryName,
+        region: data.region,
+        city: data.city,
+        currency: data.countryCode
+          ? getCurrencyForCountry(data.countryCode)
           : null,
         loading: false,
         error: false,
@@ -133,6 +192,18 @@ export function useGeoDetection() {
       setGeo((prev) => ({ ...prev, loading: false, error: true }));
     }
   }
+
+  /** Clear manual choice and re-detect from IP */
+  const clearManualLocation = useCallback(() => {
+    try {
+      localStorage.removeItem(MANUAL_KEY);
+      localStorage.removeItem(DETECTED_KEY);
+    } catch {
+      /* ignore */
+    }
+    setGeo(emptyGeo({ loading: true }));
+    void detectFromIp(true);
+  }, []);
 
   useEffect(() => {
     void detectFromIp(false);
