@@ -56,6 +56,7 @@ const CATEGORY_KEYWORDS: { category: string; terms: string[]; weight: number }[]
     { category: "Civil", terms: ["civil engineer", "civil works", "structural engineer"], weight: 3 },
     { category: "Piping", terms: ["piping", "pipefitter", "pipe fitter"], weight: 3 },
     { category: "Scaffolding", terms: ["scaffolder", "scaffolding", "scaffold"], weight: 3 },
+    { category: "Testing", terms: ["tester", "test engineer", "quality assurance"], weight: 3 },
     { category: "HVAC", terms: ["hvac", "air conditioning", "refrigeration"], weight: 3 },
     { category: "Oil & Gas", terms: ["oil & gas", "oil and gas", "aramco", "offshore oil", "upstream", "downstream"], weight: 2 },
     { category: "Accounting", terms: ["accountant", "accounting", "bookkeeper", "auditor"], weight: 3 },

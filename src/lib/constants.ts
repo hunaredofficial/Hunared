@@ -93,12 +93,15 @@ export const JOB_CATEGORIES = [
   "Retail",
   "Rigging",
   "Sales",
+  "Scaffolding",
   "Security",
   "Skilled Worker",
   "Structural",
   "Supply Chain",
   "Supervisor",
+  "Technical Services",
   "Telecommunications",
+  "Testing",
   "Textile",
   "Training",
   "Transportation",
@@ -623,6 +626,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
     "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
   Sales:
     "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  Scaffolding:
+  "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
   Security:
     "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
   "Skilled Worker":
@@ -635,6 +640,8 @@ export const CATEGORY_COLORS: Record<string, string> = {
     "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
   Telecommunications:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  Testing:
+  "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
   Textile:
     "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
   Training:

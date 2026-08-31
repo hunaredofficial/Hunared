@@ -40,6 +40,11 @@ create table if not exists profiles (
   company_cr        text,
   company_website   text,
   company_address   text,
+  job_interests     text[] default '{}',
+  country           text,
+  city              text,
+  available_for_hire boolean default true,
+  skill_level       text,
   deleted_at        timestamptz,      -- soft-delete timestamp (null = active)
   created_at        timestamptz not null default now()
 );

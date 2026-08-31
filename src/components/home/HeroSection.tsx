@@ -33,13 +33,13 @@ const POPULAR_CHIPS = [
   "For Sale",
   "Announcements",
   "Property",
+  "Education & Training",
+  "For Rent",
   "Electronics",
   "Vehicle",
   "Home & Furniture",
-  "For Rent",
   "Community",
   "Offers & Deals",
-  "Education & Training",
 ];
 
 export function HeroSection() {
