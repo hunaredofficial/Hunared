@@ -10,11 +10,11 @@ import { createAdminClient } from "@/lib/supabase";
 async function resolveCompanyId(slug: string) {
   const supabase = createAdminClient();
   const { data } = await supabase
-    .from("companies")
+    .from("companies" as any)
     .select("id, rating_avg, reviews_count")
     .eq("slug", slug)
     .maybeSingle();
-  return data;
+  return data as { id: string; rating_avg: number | null; reviews_count: number } | null;
 }
 
 export async function GET(
@@ -30,7 +30,7 @@ export async function GET(
 
     const supabase = createAdminClient();
     const { data, error } = await supabase
-      .from("company_reviews")
+      .from("company_reviews" as any)
       .select(
         "id, rating, title, body, helpful_count, created_at, reviewer_id, profiles:reviewer_id(full_name, avatar_url)"
       )
@@ -125,7 +125,7 @@ export async function POST(
 
     // Upsert — one review per user per company
     const { data: review, error } = await supabase
-      .from("company_reviews")
+      .from("company_reviews" as any)
       .upsert(
         {
           company_id: company.id,
@@ -149,19 +149,19 @@ export async function POST(
 
     // Recompute aggregate rating
     const { data: aggs } = await supabase
-      .from("company_reviews")
+      .from("company_reviews" as any)
       .select("rating")
       .eq("company_id", company.id);
 
-    const ratings = (aggs ?? []).map((r) => r.rating as number);
+    const ratings = (aggs ?? []).map((r: any) => r.rating as number);
     const count = ratings.length;
     const avg =
       count > 0
-        ? Math.round((ratings.reduce((a, b) => a + b, 0) / count) * 100) / 100
+        ? Math.round((ratings.reduce((a: number, b: number) => a + b, 0) / count) * 100) / 100
         : 0;
 
     await supabase
-      .from("companies")
+      .from("companies" as any)
       .update({ rating_avg: avg, reviews_count: count })
       .eq("id", company.id);
 
