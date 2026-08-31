@@ -41,6 +41,12 @@ export type NotificationType =
   | "system"
   | "application";
 export type AdType = "adsense" | "custom";
+export type CompanyStatus = "active" | "temporarily_closed" | "closed" | "pending";
+export type CompanyVerificationStatus =
+  | "unverified"
+  | "pending"
+  | "verified"
+  | "rejected";
 
 export interface SiteSettings {
   id: number;
@@ -602,6 +608,221 @@ export interface Database {
       };
 
     };
+
+      companies: {
+        Row: {
+          id: string;
+          owner_id: string;
+          slug: string;
+          name: string;
+          legal_name: string | null;
+          display_name: string | null;
+          logo_url: string | null;
+          logo_public_id: string | null;
+          cover_url: string | null;
+          cover_public_id: string | null;
+          short_description: string | null;
+          about: string | null;
+          mission: string | null;
+          vision: string | null;
+          values_text: string | null;
+          company_type: string | null;
+          industry: string[] | null;
+          sub_industry: string | null;
+          services: string[] | null;
+          products: string[] | null;
+          business_size: string | null;
+          employee_count: number | null;
+          employee_range: string | null;
+          founded_year: number | null;
+          status: CompanyStatus;
+          verification_status: CompanyVerificationStatus;
+          is_featured: boolean;
+          is_premium: boolean;
+          is_hiring: boolean;
+          headquarters_country: string | null;
+          headquarters_country_code: string | null;
+          headquarters_city: string | null;
+          headquarters_address: string | null;
+          postal_code: string | null;
+          locations: Json | null;
+          countries_served: string[] | null;
+          languages: string[] | null;
+          website: string | null;
+          email: string | null;
+          phone: string | null;
+          whatsapp: string | null;
+          social_links: Json | null;
+          certifications: string[] | null;
+          rating_avg: number | null;
+          reviews_count: number;
+          followers_count: number;
+          jobs_count: number;
+          services_count: number;
+          profile_completion: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          slug: string;
+          name: string;
+          legal_name?: string | null;
+          display_name?: string | null;
+          logo_url?: string | null;
+          logo_public_id?: string | null;
+          cover_url?: string | null;
+          cover_public_id?: string | null;
+          short_description?: string | null;
+          about?: string | null;
+          mission?: string | null;
+          vision?: string | null;
+          values_text?: string | null;
+          company_type?: string | null;
+          industry?: string[] | null;
+          sub_industry?: string | null;
+          services?: string[] | null;
+          products?: string[] | null;
+          business_size?: string | null;
+          employee_count?: number | null;
+          employee_range?: string | null;
+          founded_year?: number | null;
+          status?: CompanyStatus;
+          verification_status?: CompanyVerificationStatus;
+          is_featured?: boolean;
+          is_premium?: boolean;
+          is_hiring?: boolean;
+          headquarters_country?: string | null;
+          headquarters_country_code?: string | null;
+          headquarters_city?: string | null;
+          headquarters_address?: string | null;
+          postal_code?: string | null;
+          locations?: Json | null;
+          countries_served?: string[] | null;
+          languages?: string[] | null;
+          website?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          whatsapp?: string | null;
+          social_links?: Json | null;
+          certifications?: string[] | null;
+          rating_avg?: number | null;
+          reviews_count?: number;
+          followers_count?: number;
+          jobs_count?: number;
+          services_count?: number;
+          profile_completion?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          slug?: string;
+          name?: string;
+          legal_name?: string | null;
+          display_name?: string | null;
+          logo_url?: string | null;
+          logo_public_id?: string | null;
+          cover_url?: string | null;
+          cover_public_id?: string | null;
+          short_description?: string | null;
+          about?: string | null;
+          mission?: string | null;
+          vision?: string | null;
+          values_text?: string | null;
+          company_type?: string | null;
+          industry?: string[] | null;
+          sub_industry?: string | null;
+          services?: string[] | null;
+          products?: string[] | null;
+          business_size?: string | null;
+          employee_count?: number | null;
+          employee_range?: string | null;
+          founded_year?: number | null;
+          status?: CompanyStatus;
+          verification_status?: CompanyVerificationStatus;
+          is_featured?: boolean;
+          is_premium?: boolean;
+          is_hiring?: boolean;
+          headquarters_country?: string | null;
+          headquarters_country_code?: string | null;
+          headquarters_city?: string | null;
+          headquarters_address?: string | null;
+          postal_code?: string | null;
+          locations?: Json | null;
+          countries_served?: string[] | null;
+          languages?: string[] | null;
+          website?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          whatsapp?: string | null;
+          social_links?: Json | null;
+          certifications?: string[] | null;
+          rating_avg?: number | null;
+          reviews_count?: number;
+          followers_count?: number;
+          jobs_count?: number;
+          services_count?: number;
+          profile_completion?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      company_reviews: {
+        Row: {
+          id: string;
+          company_id: string;
+          reviewer_id: string;
+          rating: number;
+          title: string | null;
+          body: string | null;
+          helpful_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          reviewer_id: string;
+          rating: number;
+          title?: string | null;
+          body?: string | null;
+          helpful_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          reviewer_id?: string;
+          rating?: number;
+          title?: string | null;
+          body?: string | null;
+          helpful_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      company_follows: {
+        Row: {
+          user_id: string;
+          company_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          company_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          company_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
     Views: {
       [_ in never]: never;
     };
@@ -616,6 +837,8 @@ export interface Database {
       listing_status: ListingStatus;
       listing_category: ListingCategory;
       notification_type: NotificationType;
+      company_status: CompanyStatus;
+      company_verification_status: CompanyVerificationStatus;
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -645,3 +868,7 @@ export type OrderWithListing = Order & {
   profiles: { full_name: string; email: string } | null;
 };
 export type AdPlacement = Database["public"]["Tables"]["ad_placements"]["Row"];
+
+export type Company = Database["public"]["Tables"]["companies"]["Row"];
+export type CompanyReview = Database["public"]["Tables"]["company_reviews"]["Row"];
+export type CompanyFollow = Database["public"]["Tables"]["company_follows"]["Row"];
