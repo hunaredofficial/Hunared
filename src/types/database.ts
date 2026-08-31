@@ -606,9 +606,6 @@ export interface Database {
         };
         Relationships: [];
       };
-
-    };
-
       companies: {
         Row: {
           id: string;
@@ -822,6 +819,7 @@ export interface Database {
         };
         Relationships: [];
       };
+    };
 
     Views: {
       [_ in never]: never;
