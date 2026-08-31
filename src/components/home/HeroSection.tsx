@@ -29,12 +29,17 @@ const POPULAR_CHIPS = [
   "Accommodation",
   "Marketplace",
   "Services",
-  "For Sale",
   "Lost & Found",
+  "For Sale",
+  "Announcements",
+  "Property",
+  "Electronics",
   "Vehicle",
+  "Home & Furniture",
   "For Rent",
+  "Community",
   "Offers & Deals",
-  "Report Lost Item",
+  "Education & Training",
 ];
 
 export function HeroSection() {

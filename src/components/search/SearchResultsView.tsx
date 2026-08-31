@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/countries";
 import { useGeo } from "@/components/providers/GeoProvider";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 
 type Job = {
   id: string;
@@ -78,8 +79,15 @@ export function SearchResultsView({ query, country, city, results }: Props) {
   const router = useRouter();
   const geo = useGeo();
   const [keyword, setKeyword] = useState(query);
+  const [selectedCountry, setSelectedCountry] = useState(country);
   const [cityInput, setCityInput] = useState(city);
   const [tab, setTab] = useState<TabKey>("all");
+
+  useEffect(() => {
+    setKeyword(query);
+    setSelectedCountry(country);
+    setCityInput(city);
+  }, [query, country, city]);
 
   const totalCount =
     results.jobs.length +
@@ -87,18 +95,17 @@ export function SearchResultsView({ query, country, city, results }: Props) {
     results.listings.length +
     results.articles.length;
 
-  // Auto-prefill country/city from geo when URL has none
+  // Auto-prefill COUNTRY only when URL has none (city stays empty = All Cities)
   useEffect(() => {
     if (geo.loading) return;
-    if (country || city) return;
+    if (country) return;
     if (!geo.countryCode) return;
 
     const params = new URLSearchParams();
     if (keyword.trim()) params.set("q", keyword.trim());
     params.set("country", geo.countryCode);
-    if (geo.city) params.set("city", geo.city);
     router.replace(`/search?${params.toString()}`);
-  }, [geo.loading, geo.countryCode, geo.city, country, city, keyword, router]);
+  }, [geo.loading, geo.countryCode, country, keyword, router]);
 
   function updateFilters(
     newKeyword: string,
@@ -106,19 +113,9 @@ export function SearchResultsView({ query, country, city, results }: Props) {
     newCity: string
   ) {
     const params = new URLSearchParams();
-
-    if (newKeyword.trim()) {
-      params.set("q", newKeyword.trim());
-    }
-
-    if (newCountry) {
-      params.set("country", newCountry);
-    }
-
-    if (newCity.trim()) {
-      params.set("city", newCity.trim());
-    }
-
+    if (newKeyword.trim()) params.set("q", newKeyword.trim());
+    if (newCountry) params.set("country", newCountry);
+    if (newCity.trim()) params.set("city", newCity.trim());
     router.push(`/search?${params.toString()}`);
   }
 
@@ -151,74 +148,84 @@ export function SearchResultsView({ query, country, city, results }: Props) {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <h1 className="text-3xl font-bold mb-2">Universal Search</h1>
-
-        <p className="text-muted-foreground mb-6">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="rounded-xl sm:rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
+          Universal Search
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
           Search across Jobs, Candidates, Marketplace and Learning Hub.
         </p>
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            updateFilters(keyword, country, cityInput);
+            updateFilters(keyword, selectedCountry, cityInput);
           }}
-          className="grid gap-4 md:grid-cols-4"
+          className="flex flex-col gap-3"
         >
           <input
             type="text"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Search..."
-            className="h-11 rounded-lg border border-input px-4"
+            className="w-full h-11 rounded-lg border border-input bg-background px-4 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
 
-          <select data-color-scheme="dark"
-            value={country}
-            onChange={(e) => updateFilters(keyword, e.target.value, cityInput)}
-            className="[color-scheme:dark] h-11 rounded-lg border border-input bg-background text-foreground px-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
-          >
-            <option className="bg-background text-foreground" value="">
-              All Countries
-            </option>
-
-            {COUNTRIES.map((c) => (
-              <option
-                className="bg-background text-foreground" key={c.code}
-                value={c.code}
-              >
-                {c.name}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <select
+              data-color-scheme="dark"
+              value={selectedCountry}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSelectedCountry(v);
+                setCityInput("");
+              }}
+              className="[color-scheme:dark] w-full h-11 rounded-lg border border-input bg-background text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <option className="bg-background text-foreground" value="">
+                All Countries
               </option>
-            ))}
-          </select>
+              {COUNTRIES.map((c) => (
+                <option
+                  className="bg-background text-foreground"
+                  key={c.code}
+                  value={c.code}
+                >
+                  {c.name}
+                </option>
+              ))}
+            </select>
 
-          <input
-            type="text"
-            value={cityInput}
-            onChange={(e) => setCityInput(e.target.value)}
-            placeholder="City"
-            className="h-11 rounded-lg border border-input px-4"
-          />
+            <CityCombobox
+              id="search-city"
+              country={selectedCountry}
+              value={cityInput}
+              onChange={setCityInput}
+              size="md"
+              className="w-full"
+              inputClassName="h-11 rounded-lg"
+            />
+          </div>
 
           <button
             type="submit"
-            className="h-11 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90"
+            className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90"
           >
             Search
           </button>
         </form>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-border pb-2">
+      {/* Tabs — scrollable on mobile */}
+      <div className="flex gap-2 border-b border-border pb-2 overflow-x-auto no-scrollbar -mx-1 px-1">
         {TABS.map(({ key, label, icon: Icon, count }) => (
           <button
             key={key}
             type="button"
             onClick={() => setTab(key)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors",
+              "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors shrink-0",
               tab === key
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-primary/8 hover:text-primary"
@@ -231,10 +238,9 @@ export function SearchResultsView({ query, country, city, results }: Props) {
         ))}
       </div>
 
-      {/* Jobs */}
       {(tab === "all" || tab === "jobs") && results.jobs.length > 0 && (
         <Section title="Jobs" icon={Briefcase}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {results.jobs.map((job) => (
               <Link
                 key={job.id}
@@ -254,11 +260,10 @@ export function SearchResultsView({ query, country, city, results }: Props) {
         </Section>
       )}
 
-      {/* Candidates */}
       {(tab === "all" || tab === "candidates") &&
         results.candidates.length > 0 && (
           <Section title="Candidates" icon={User}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {results.candidates.map((c) => (
                 <Link
                   key={c.id}
@@ -291,10 +296,9 @@ export function SearchResultsView({ query, country, city, results }: Props) {
           </Section>
         )}
 
-      {/* Marketplace */}
       {(tab === "all" || tab === "listings") && results.listings.length > 0 && (
         <Section title="Marketplace" icon={ShoppingBag}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {results.listings.map((l) => (
               <Link
                 key={l.id}
@@ -314,10 +318,9 @@ export function SearchResultsView({ query, country, city, results }: Props) {
         </Section>
       )}
 
-      {/* Learning Hub */}
       {(tab === "all" || tab === "articles") && results.articles.length > 0 && (
         <Section title="Learning Hub" icon={GraduationCap}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {results.articles.map((a) => (
               <Link
                 key={a.id}

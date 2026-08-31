@@ -3,24 +3,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { MapPin, ChevronDown, RotateCcw } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
+import { getCitiesForCountry } from "@/lib/cities";
 import { useGeoDetection } from "@/hooks/useGeoDetection";
 import { cn } from "@/lib/utils";
-
-/** City lists for common countries — extend as needed */
-const CITIES_BY_COUNTRY: Record<string, string[]> = {
-  SA: ["Riyadh", "Jeddah", "Dammam", "Khobar", "Makkah", "Madinah", "Jubail", "Yanbu", "Abha", "Other"],
-  AE: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Al Ain", "Other"],
-  QA: ["Doha", "Al Rayyan", "Al Wakrah", "Other"],
-  KW: ["Kuwait City", "Hawalli", "Salmiya", "Other"],
-  BH: ["Manama", "Riffa", "Muharraq", "Other"],
-  OM: ["Muscat", "Salalah", "Sohar", "Other"],
-  PK: ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Other"],
-  IN: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Other"],
-  EG: ["Cairo", "Alexandria", "Giza", "Other"],
-  JO: ["Amman", "Irbid", "Zarqa", "Other"],
-  US: ["New York", "Los Angeles", "Chicago", "Houston", "Other"],
-  GB: ["London", "Manchester", "Birmingham", "Other"],
-};
 
 export function LocationPicker({ className }: { className?: string }) {
   const geo = useGeoDetection();
@@ -28,15 +13,15 @@ export function LocationPicker({ className }: { className?: string }) {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
 
-  // Sync form fields when opening or when geo updates
   useEffect(() => {
     if (!open) return;
     setCountry(geo.countryCode ?? "");
-    setCity(geo.city ?? "");
-  }, [open, geo.countryCode, geo.city]);
+    // City is manual — do not force detected city into the form
+    setCity(geo.isManual ? geo.city ?? "" : "");
+  }, [open, geo.countryCode, geo.city, geo.isManual]);
 
   const cities = useMemo(
-    () => (country ? CITIES_BY_COUNTRY[country] ?? ["Other"] : []),
+    () => getCitiesForCountry(country),
     [country]
   );
 
@@ -51,7 +36,7 @@ export function LocationPicker({ className }: { className?: string }) {
     setOpen(false);
   }
 
-  // Header shows COUNTRY only (not city)
+  // Header: show COUNTRY only
   const label = geo.loading
     ? "Detecting…"
     : geo.countryName || geo.countryCode || "Set location";
@@ -81,7 +66,6 @@ export function LocationPicker({ className }: { className?: string }) {
               Your location
             </p>
 
-            {/* Country only */}
             <div>
               <label className="text-xs text-muted-foreground">Country</label>
               <select
@@ -108,7 +92,6 @@ export function LocationPicker({ className }: { className?: string }) {
               </select>
             </div>
 
-            {/* City dropdown — All Cities by default */}
             <div>
               <label className="text-xs text-muted-foreground">City</label>
               <select
