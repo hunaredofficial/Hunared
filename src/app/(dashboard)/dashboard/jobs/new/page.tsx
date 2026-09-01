@@ -58,7 +58,6 @@ interface JobForm {
   companyPhone: string;
   companyEmail: string;
   companyAddress: string;
-  mapLocation: string;
   showProfileContact: boolean;
   expiration: ExpirationOptionValue;
 }
@@ -97,7 +96,6 @@ export default function PostJobPage() {
     companyPhone: "",
     companyEmail: "",
     companyAddress: "",
-    mapLocation: "",
     showProfileContact: false,
     expiration: "never",
   });
@@ -256,6 +254,21 @@ export default function PostJobPage() {
       }
       return next;
     });
+    if (smartResult.positions && !touched.positions) {
+      setForm((prev) => ({ ...prev, positions: String(smartResult.positions!.value) }));
+    }
+    if (smartResult.companyName && !touched.companyName) {
+      setForm((prev) => ({ ...prev, companyName: String(smartResult.companyName!.value) }));
+    }
+    if (smartResult.companyAddress && !touched.companyAddress) {
+      setForm((prev) => ({ ...prev, companyAddress: String(smartResult.companyAddress!.value) }));
+    }
+    if (smartResult.mapLocation && !touched.mapLocation) {
+      setForm((prev) => ({ ...prev, mapLocation: String(smartResult.mapLocation!.value) }));
+    }
+    if (smartResult.jobDescription && !touched.jobDescription) {
+      setForm((prev) => ({ ...prev, jobDescription: String(smartResult.jobDescription!.value) }));
+    }
     if (smartResult.currency && !touched.currency) {
       setCurrencyTouched(true);
     }
@@ -358,7 +371,6 @@ export default function PostJobPage() {
           companyPhone: form.companyPhone.trim() || null,
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
-          mapLocation: form.mapLocation.trim() || null,
           showProfileContact: form.showProfileContact,
           expiration: form.expiration,
         }),
@@ -712,17 +724,6 @@ export default function PostJobPage() {
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
-            </Field>
-
-            <Field label="Map location link (Optional)" className="col-span-full">
-              <Input
-                placeholder="https://maps.google.com/... or Google Maps share link"
-                value={form.mapLocation}
-                onChange={(e) => set("mapLocation", e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Optional. Paste a Google Maps (or similar) link to the work location.
-              </p>
             </Field>
           </div>
         </Section>

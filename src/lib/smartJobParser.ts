@@ -666,6 +666,21 @@ function labelGet(
   return undefined;
 }
 
+
+function detectPositions(text: string): ParsedField<string> | undefined {
+  const m = text.match(
+    /(?:number of positions|positions|vacancies|openings|no\. of posts|headcount)\s*[:\-]?\s*(\d{1,3})/i
+  );
+  if (m) {
+    return { value: m[1], confidence: "high", label: m[1] };
+  }
+  const m2 = text.match(/\b(\d{1,3})\s*(?:positions|vacancies|openings|posts)\b/i);
+  if (m2) {
+    return { value: m2[1], confidence: "medium", label: m2[1] };
+  }
+  return undefined;
+}
+
 export function parseJobText(
   jobTitle: string,
   description: string
@@ -894,6 +909,25 @@ export function parseJobText(
       confidence: "high",
       label: labeledTitle,
     };
+  } else if (!jobTitle.trim() || jobTitle.trim().length < 4) {
+    // First substantial line as title fallback
+    const line = combined
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .find(
+        (s) =>
+          s.length >= 6 &&
+          s.length <= 90 &&
+          !/^job\s*(title|description|categories)/i.test(s) &&
+          !/:\s*$/.test(s)
+      );
+    if (line && !/^https?:/i.test(line)) {
+      suggestedTitle = {
+        value: line.replace(/^[-*•]\s*/, "").slice(0, 90),
+        confidence: "medium",
+        label: line.slice(0, 90),
+      };
+    }
   }
 
   const keywords = extractKeywords(text, category?.value);
@@ -926,6 +960,9 @@ export function parseJobText(
   }
   if (labeledPositions) {
     result.positions = { value: labeledPositions, confidence: "high", label: labeledPositions };
+  } else {
+    const pos = detectPositions(text);
+    if (pos) result.positions = pos;
   }
   if (labeledDesc) {
     result.jobDescription = { value: labeledDesc, confidence: "high", label: labeledDesc };

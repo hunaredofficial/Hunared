@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES } from "@/lib/constants";
+import { INDUSTRIES } from "@/lib/companyConstants";
+import { COMPANY_SERVICES } from "@/lib/companyServices";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { buildUsernameSuggestions } from "@/lib/usernameSuggest";
 import { COUNTRIES } from "@/lib/countries";
@@ -49,19 +51,19 @@ const ROLE_CARDS: {
   {
     id: "personal",
     title: "Personal",
-    description: "Marketplace, articles & community — not listed as a job candidate",
+    description: "Marketplace & community. You can also post jobs.",
     icon: UserCircle2,
   },
   {
     id: "seeker",
     title: "Job Seeker",
-    description: "Find jobs, appear in Candidates, upload CV & set availability",
+    description: "Find jobs, appear in Candidates, CV & availability.",
     icon: Briefcase,
   },
   {
     id: "employer",
     title: "Company",
-    description: "Post jobs, company profile, hire candidates",
+    description: "Company profile, industries, services, hire talent.",
     icon: Building2,
   },
 ];
@@ -112,6 +114,13 @@ export function ProfileEditForm({
   const [companyAddress, setCompanyAddress] = useState(
     initialProfile.company_address ?? ""
   );
+  const [mapLocation, setMapLocation] = useState(
+    (initialProfile as { map_location?: string | null }).map_location ?? ""
+  );
+
+  // Company industries / services (from related company row may not be on profile — start empty or from any known fields)
+  const [industries, setIndustries] = useState<string[]>([]);
+  const [services, setServices] = useState<string[]>([]);
 
   const [avatarPreview, setAvatarPreview] = useState(
     initialProfile.avatar_url ?? ""
@@ -128,10 +137,10 @@ export function ProfileEditForm({
 
   const isSeeker = role === "seeker";
   const isEmployer = role === "employer";
-  const isPersonal = role === "personal";
 
-  const usernameSuggestions = buildUsernameSuggestions(
-    fullName || initialProfile.full_name || "user"
+  const usernameSuggestions = useMemo(
+    () => buildUsernameSuggestions(fullName || initialProfile.full_name || "user"),
+    [fullName, initialProfile.full_name]
   );
 
   async function handleSave() {
@@ -159,6 +168,14 @@ export function ProfileEditForm({
     }
     if (isSeeker && !skillLevel) {
       toast.error("Skill level is required for Job Seeker.");
+      return;
+    }
+    if (isEmployer && industries.length === 0) {
+      toast.error("Select at least one industry.");
+      return;
+    }
+    if (isEmployer && services.length === 0) {
+      toast.error("Select at least one service.");
       return;
     }
 
@@ -213,13 +230,22 @@ export function ProfileEditForm({
           companyCr: isEmployer ? companyCr.trim() || null : null,
           companyWebsite: isEmployer ? companyWebsite.trim() || null : null,
           companyAddress: isEmployer ? companyAddress.trim() || null : null,
+          mapLocation: isEmployer ? mapLocation.trim() || null : null,
+          industries: isEmployer ? industries : [],
+          services: isEmployer ? services : [],
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
 
-      toast.success("Profile saved");
+      toast.success(
+        isEmployer
+          ? "Company profile saved. You no longer appear in Candidates."
+          : isSeeker
+            ? "Seeker profile saved. You can appear in Candidates."
+            : "Profile saved"
+      );
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save profile");
@@ -230,12 +256,12 @@ export function ProfileEditForm({
 
   return (
     <div className="w-full max-w-3xl space-y-6">
-      {/* Account type — 3 separate cards */}
+      {/* Account type */}
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
         <div>
           <h2 className="text-base font-semibold">Account type</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Choose one. You can change this later.
+            Switch anytime. Job Seeker appears in Candidates; Company does not.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -355,9 +381,6 @@ export function ProfileEditForm({
           </Field>
           <Field label="Email">
             <Input value={email} disabled className="opacity-70" />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Login email cannot be changed here.
-            </p>
           </Field>
           <Field label="Username / handle *" className="md:col-span-2">
             <Input
@@ -447,11 +470,11 @@ export function ProfileEditForm({
         </div>
       </section>
 
-      {/* Job Seeker fields */}
+      {/* Job Seeker */}
       {isSeeker && (
         <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Job seeker details
+            Job seeker — professions
           </h2>
           <Field label="Professions / job categories *">
             <MultiSelectChips
@@ -521,7 +544,11 @@ export function ProfileEditForm({
                 onClick={() => cvInputRef.current?.click()}
               >
                 <Upload className="h-3.5 w-3.5 mr-1.5" />
-                {cvFile ? cvFile.name : existingCvUrl ? "Replace CV" : "Upload CV"}
+                {cvFile
+                  ? cvFile.name
+                  : existingCvUrl
+                    ? "Replace CV"
+                    : "Upload CV"}
               </Button>
               {(cvFile || existingCvUrl) && (
                 <Button
@@ -541,12 +568,28 @@ export function ProfileEditForm({
         </section>
       )}
 
-      {/* Company fields */}
+      {/* Company */}
       {isEmployer && (
         <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Company info
           </h2>
+          <Field label="Industries *">
+            <MultiSelectChips
+              options={[...INDUSTRIES]}
+              value={industries}
+              onChange={setIndustries}
+              placeholder="Select industries"
+            />
+          </Field>
+          <Field label="Services *">
+            <MultiSelectChips
+              options={[...COMPANY_SERVICES]}
+              value={services}
+              onChange={setServices}
+              placeholder="Select services"
+            />
+          </Field>
           <Field label="CR / License">
             <Input
               value={companyCr}
@@ -569,15 +612,17 @@ export function ProfileEditForm({
               placeholder="Business address"
             />
           </Field>
+          <Field label="Office map location link (optional)">
+            <Input
+              value={mapLocation}
+              onChange={(e) => setMapLocation(e.target.value)}
+              placeholder="https://maps.google.com/... share link"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Optional. Google Maps (or similar) link to your office.
+            </p>
+          </Field>
         </section>
-      )}
-
-      {isPersonal && (
-        <p className="text-sm text-muted-foreground px-1">
-          Personal accounts use the marketplace and community features. Switch
-          to <strong>Job Seeker</strong> to appear in Candidates and apply for
-          jobs, or <strong>Company</strong> to post jobs.
-        </p>
       )}
 
       <Button

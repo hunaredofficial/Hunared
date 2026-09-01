@@ -81,7 +81,7 @@ export function Header() {
       >
         <div className="flex h-16 items-center justify-between gap-2 min-w-0">
           {/* Logo – no wrapping Link to avoid nested <a> */}
-          <div className="shrink-0 min-w-0"><HunaredLogo size={scrolled ? "md" : "lg"} /></div>
+          <div className="shrink-0 min-w-0 flex items-center self-center"><HunaredLogo size={scrolled ? "sm" : "md"} /></div>
 
           {/* Desktop Nav */}
           <nav
