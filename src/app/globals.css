@@ -205,102 +205,122 @@
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-/* ── Hunared wordmark: refined gold metallic (balanced, not over-flared) ── */
+/* ── Hunared wordmark: pure white with soft shine animation ── */
 .hunared-wordmark {
   position: relative;
   will-change: transform;
-  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .group\/logo:hover .hunared-wordmark,
 .group:hover .hunared-wordmark,
 a:hover .hunared-wordmark {
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
 .hunared-wordmark-text {
   position: relative;
   display: inline-block;
   font-weight: 800;
-  letter-spacing: -0.028em;
+  letter-spacing: -0.03em;
+  /* White-only animated sheen (no gold) */
   background-image: linear-gradient(
     105deg,
-    #a67c00 0%,
-    #c9a227 14%,
-    #e8c547 28%,
-    #fff4c8 42%,
+    #9ca3af 0%,
+    #e5e7eb 12%,
+    #ffffff 28%,
+    #f8fafc 42%,
     #ffffff 50%,
-    #f0d060 62%,
-    #d4af37 78%,
-    #b8860b 100%
+    #e2e8f0 62%,
+    #cbd5e1 78%,
+    #f1f5f9 100%
   );
-  background-size: 220% 100%;
+  background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  animation: hunaredMetallicShine 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: hunaredWhiteShine 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   filter:
-    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4))
-    drop-shadow(0 0 8px rgba(212, 175, 55, 0.28));
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 10px rgba(255, 255, 255, 0.22));
   will-change: background-position, filter;
 }
 
 .group\/logo:hover .hunared-wordmark-text,
 a:hover .hunared-wordmark-text {
   filter:
-    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45))
-    drop-shadow(0 0 12px rgba(232, 197, 71, 0.42));
-  animation-duration: 3.2s;
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 16px rgba(255, 255, 255, 0.38));
+  animation-duration: 2.6s;
 }
 
-@keyframes hunaredMetallicShine {
+@keyframes hunaredWhiteShine {
   0% {
-    background-position: 110% 50%;
+    background-position: 120% 50%;
   }
   100% {
-    background-position: -110% 50%;
+    background-position: -120% 50%;
   }
 }
 
+/* Light mode: keep wordmark readable (soft dark-to-white sheen on light bg) */
 :root:not(.dark) .hunared-wordmark-text {
-  filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.65))
-    drop-shadow(0 0 6px rgba(184, 134, 11, 0.22));
   background-image: linear-gradient(
     105deg,
-    #8b6914 0%,
-    #b8860b 18%,
-    #d4af37 36%,
-    #f5e6a8 50%,
-    #ffffff 58%,
-    #e8c547 74%,
-    #b8860b 100%
+    #374151 0%,
+    #6b7280 18%,
+    #111827 36%,
+    #1f2937 50%,
+    #4b5563 68%,
+    #111827 100%
   );
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 4px rgba(0, 0, 0, 0.08));
+}
+
+.dark .hunared-wordmark-text,
+:root.dark .hunared-wordmark-text {
+  background-image: linear-gradient(
+    105deg,
+    #9ca3af 0%,
+    #e5e7eb 12%,
+    #ffffff 28%,
+    #f8fafc 42%,
+    #ffffff 50%,
+    #e2e8f0 62%,
+    #cbd5e1 78%,
+    #f1f5f9 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 10px rgba(255, 255, 255, 0.22));
 }
 
 @media (max-width: 640px) {
   .hunared-wordmark-text {
-    animation-duration: 6.5s;
-    filter:
-      drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35))
-      drop-shadow(0 0 6px rgba(212, 175, 55, 0.22));
+    animation-duration: 5.5s;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hunared-wordmark-text {
     animation: none;
-    background-image: linear-gradient(
-      90deg,
-      #e8c547 0%,
-      #ffffff 45%,
-      #d4af37 100%
-    );
-    background-size: 100% 100%;
-    background-position: center;
+    background-image: none;
+    background-size: auto;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: #ffffff;
+    -webkit-text-fill-color: #ffffff;
+  }
+  :root:not(.dark) .hunared-wordmark-text {
+    color: #111827;
+    -webkit-text-fill-color: #111827;
   }
 }
+
+
 
 /* ─── Native select / datalist option colors (site-wide) ───
    Keep country/city dropdown panels consistent across hero,
