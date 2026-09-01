@@ -27,6 +27,8 @@ interface PostJobBody {
   companyPhone: string;
   companyEmail?: string | null;
   companyAddress?: string | null;
+  mapLocation?: string | null;
+  officeAddress?: string | null;
   officeLat?: number | null;
   officeLng?: number | null;
   officeAddress?: string | null;
@@ -201,7 +203,7 @@ export async function POST(req: Request) {
       company_address: body.companyAddress ?? null,
       office_lat: body.officeLat ?? null,
       office_lng: body.officeLng ?? null,
-      office_address: body.officeAddress ?? null,
+      office_address: body.mapLocation ?? body.officeAddress ?? null,
       status: jobStatus,
       expires_at: expiresAt,
       show_profile_contact: Boolean(body.showProfileContact),

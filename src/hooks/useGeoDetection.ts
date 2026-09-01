@@ -193,8 +193,12 @@ export function useGeoDetection() {
     }
   }
 
-  /** Clear manual choice and re-detect from IP */
-  const clearManualLocation = useCallback(() => {
+  /** Clear manual choice and re-detect from IP. Returns detected location. */
+  const clearManualLocation = useCallback(async (): Promise<{
+    countryCode: string | null;
+    countryName: string | null;
+    city: string | null;
+  }> => {
     try {
       localStorage.removeItem(MANUAL_KEY);
       localStorage.removeItem(DETECTED_KEY);
@@ -202,7 +206,38 @@ export function useGeoDetection() {
       /* ignore */
     }
     setGeo(emptyGeo({ loading: true }));
-    void detectFromIp(true);
+    try {
+      const data = await lookupIpGeo();
+      const result = {
+        countryCode: data.countryCode,
+        countryName: data.countryName,
+        region: data.region,
+        city: data.city,
+        currency: data.countryCode
+          ? getCurrencyForCountry(data.countryCode)
+          : null,
+        loading: false,
+        error: false,
+        isManual: false,
+      };
+      setGeo(result);
+      try {
+        localStorage.setItem(
+          DETECTED_KEY,
+          JSON.stringify({ ...result, timestamp: Date.now() })
+        );
+      } catch {
+        /* ignore */
+      }
+      return {
+        countryCode: result.countryCode,
+        countryName: result.countryName,
+        city: result.city,
+      };
+    } catch {
+      setGeo((prev) => ({ ...prev, loading: false, error: true }));
+      return { countryCode: null, countryName: null, city: null };
+    }
   }, []);
 
   useEffect(() => {

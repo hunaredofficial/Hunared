@@ -244,15 +244,7 @@ function SidebarContent({
 
       <div className="px-4 py-3 border-b">
         <p className="text-sm font-medium truncate">{fullName}</p>
-        <p className="text-xs text-muted-foreground">
-          {role === "employer"
-            ? "Company"
-            : role === "personal"
-              ? "Personal"
-              : role === "admin"
-                ? "Admin"
-                : "Job Seeker"}
-        </p>
+        <p className="text-xs text-muted-foreground capitalize">{role}</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
@@ -353,7 +345,9 @@ export function DashboardShell({
 
       {/* Main content */}
       <main className="md:pl-60">
-        <div className="min-h-screen">{children}</div>
+        <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -10,7 +10,11 @@ export async function uploadToCloudinary(
   }
 ): Promise<{ url: string; publicId: string }> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  if (!cloudName) throw new Error("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set");
+  if (!cloudName) {
+    throw new Error(
+      "Image upload is not configured (missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME). Add Cloudinary env vars on Vercel."
+    );
+  }
 
   const uploadPreset =
     options?.preset ??

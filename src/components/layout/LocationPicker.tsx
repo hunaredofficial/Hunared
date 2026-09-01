@@ -16,8 +16,8 @@ export function LocationPicker({ className }: { className?: string }) {
   useEffect(() => {
     if (!open) return;
     setCountry(geo.countryCode ?? "");
-    // City is manual — do not force detected city into the form
-    setCity(geo.isManual ? geo.city ?? "" : "");
+    // Prefill city from detection or manual selection
+    setCity(geo.city ?? "");
   }, [open, geo.countryCode, geo.city, geo.isManual]);
 
   const cities = useMemo(
@@ -127,12 +127,27 @@ export function LocationPicker({ className }: { className?: string }) {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  geo.clearManualLocation();
+                onClick={async () => {
+                  const detected = await geo.clearManualLocation();
+                  if (detected.countryCode) {
+                    const match = COUNTRIES.find(
+                      (x) => x.code === detected.countryCode
+                    );
+                    geo.setManualLocation({
+                      countryCode: detected.countryCode,
+                      countryName:
+                        match?.name ??
+                        detected.countryName ??
+                        detected.countryCode,
+                      city: detected.city ?? "",
+                    });
+                    setCountry(detected.countryCode);
+                    setCity(detected.city ?? "");
+                  }
                   setOpen(false);
                 }}
                 className="h-9 px-3 rounded-lg border border-border text-sm inline-flex items-center gap-1 hover:bg-muted"
-                title="Detect country automatically"
+                title="Detect country and city automatically"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Auto

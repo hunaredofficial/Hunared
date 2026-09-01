@@ -6,25 +6,22 @@ import { cn } from "@/lib/utils";
 type Size = "sm" | "md" | "lg" | "xl";
 
 const ICON_PX: Record<Size, number> = {
-  sm: 30,
-  md: 38,
-  lg: 46,
-  xl: 58,
+  sm: 32,
+  md: 40,
+  lg: 48,
+  xl: 60,
 };
 
 const WORDMARK_CLASS: Record<Size, string> = {
   sm: "text-[17px] sm:text-lg",
   md: "text-[21px] sm:text-[24px]",
-  lg: "text-[26px] sm:text-[29px]",
+  lg: "text-[26px] sm:text-[30px]",
   xl: "text-[30px] sm:text-[34px]",
 };
 
-/** New filename forces browsers/CDN to drop old cached gold mark */
-const MARK_SRC = "/assets/logos/hunared-mark-v2.png";
+/** Gold mark v3 — new filename busts CDN/browser cache */
+const MARK_SRC = "/assets/logos/hunared-mark-v3.png";
 
-/**
- * Hunared brand mark + white animated wordmark (sitewide).
- */
 export function HunaredLogo({
   href = "/",
   size = "md",
@@ -53,16 +50,16 @@ export function HunaredLogo({
         <span
           className={cn(
             "relative shrink-0 transition-transform duration-500 ease-out",
-            "group-hover/logo:scale-[1.08] group-hover/logo:-rotate-[2deg]"
+            "group-hover/logo:scale-[1.09] group-hover/logo:-rotate-[3deg]"
           )}
           style={{ width: px, height: px }}
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-[-18%] rounded-[22%] opacity-40 blur-[10px] transition-all duration-500 group-hover/logo:opacity-70 group-hover/logo:blur-[14px]"
+            className="pointer-events-none absolute inset-[-16%] rounded-[22%] opacity-45 blur-[9px] transition-all duration-500 group-hover/logo:opacity-75 group-hover/logo:blur-[13px]"
             style={{
               background:
-                "radial-gradient(circle at 50% 45%, rgba(255,255,255,0.55) 0%, rgba(200,220,255,0.15) 45%, transparent 72%)",
+                "radial-gradient(circle at 50% 45%, rgba(245,186,24,0.65) 0%, rgba(212,175,55,0.2) 50%, transparent 72%)",
             }}
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -73,9 +70,9 @@ export function HunaredLogo({
             height={px}
             className={cn(
               "relative z-[1] h-full w-full object-contain",
-              "drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]",
+              "drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]",
               "transition-[filter,transform] duration-500",
-              "group-hover/logo:drop-shadow-[0_4px_14px_rgba(255,255,255,0.28)]"
+              "group-hover/logo:drop-shadow-[0_4px_16px_rgba(245,186,24,0.45)]"
             )}
             style={{ width: px, height: px }}
             decoding="async"
@@ -106,11 +103,7 @@ export function HunaredLogo({
   }
 
   return (
-    <Link
-      href={href}
-      className="inline-flex items-center shrink-0"
-      aria-label="Hunared home"
-    >
+    <Link href={href} className="inline-flex items-center shrink-0" aria-label="Hunared home">
       {content}
     </Link>
   );

@@ -40,12 +40,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/assets/logos/hunared-mark-v2-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/assets/logos/hunared-mark-v2-64.png", sizes: "64x64", type: "image/png" },
-      { url: "/assets/logos/hunared-mark-v2.png", sizes: "512x512", type: "image/png" },
+      { url: "/assets/logos/hunared-mark-v3-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/assets/logos/hunared-mark-v3-64.png", sizes: "64x64", type: "image/png" },
+      { url: "/assets/logos/hunared-mark-v3.png", sizes: "512x512", type: "image/png" },
     ],
-    shortcut: "/assets/logos/hunared-mark-v2-32.png",
-    apple: [{ url: "/assets/logos/hunared-mark-v2-192.png", sizes: "192x192", type: "image/png" }],
+    shortcut: "/assets/logos/hunared-mark-v3-32.png",
+    apple: [{ url: "/assets/logos/hunared-mark-v3-192.png", sizes: "192x192", type: "image/png" }],
   },
   robots: {
     index: true,

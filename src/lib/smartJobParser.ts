@@ -18,19 +18,23 @@ export type ParsedField<T> = {
 
 export type SmartJobParseResult = {
   category?: ParsedField<string>;
-  /** All matched standardized categories (multi-select). */
+  /** Multiple matched categories for multi-select forms. */
   categories?: ParsedField<string[]>;
-  country?: ParsedField<string>; // ISO code
+  country?: ParsedField<string>;
   city?: ParsedField<string>;
   currency?: ParsedField<string>;
   salaryRate?: ParsedField<string>;
   salaryType?: ParsedField<string>;
   duration?: ParsedField<string>;
-  /** permanent | temporary | task_force — inferred from duration / wording */
   employmentType?: ParsedField<"permanent" | "temporary" | "task_force">;
   jobTitle?: ParsedField<string>;
+  jobDescription?: ParsedField<string>;
   companyEmail?: ParsedField<string>;
   companyPhone?: ParsedField<string>;
+  companyName?: ParsedField<string>;
+  companyAddress?: ParsedField<string>;
+  mapLocation?: ParsedField<string>;
+  positions?: ParsedField<string>;
   keywords: string[];
 };
 
@@ -56,7 +60,6 @@ const CATEGORY_KEYWORDS: { category: string; terms: string[]; weight: number }[]
     { category: "Civil", terms: ["civil engineer", "civil works", "structural engineer"], weight: 3 },
     { category: "Piping", terms: ["piping", "pipefitter", "pipe fitter"], weight: 3 },
     { category: "Scaffolding", terms: ["scaffolder", "scaffolding", "scaffold"], weight: 3 },
-    { category: "Testing", terms: ["tester", "test engineer", "quality assurance"], weight: 3 },
     { category: "HVAC", terms: ["hvac", "air conditioning", "refrigeration"], weight: 3 },
     { category: "Oil & Gas", terms: ["oil & gas", "oil and gas", "aramco", "offshore oil", "upstream", "downstream"], weight: 2 },
     { category: "Accounting", terms: ["accountant", "accounting", "bookkeeper", "auditor"], weight: 3 },
@@ -621,36 +624,288 @@ function suggestTitle(
 /**
  * Parse job title + description into structured suggestions.
  */
+
+/** Extract "Label: value" pairs from pasted job text (case-insensitive). */
+function extractLabeledFields(raw: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const lines = raw.split(/\r?\n/);
+  let currentKey: string | null = null;
+  let buf: string[] = [];
+
+  const flush = () => {
+    if (currentKey && buf.length) {
+      out[currentKey] = buf.join("\n").trim();
+    }
+    buf = [];
+  };
+
+  for (const line of lines) {
+    const m = line.match(
+      /^\s*([A-Za-z0-9][A-Za-z0-9 &/()+.-]{1,60})\s*:\s*(.*)$/
+    );
+    if (m) {
+      flush();
+      currentKey = m[1].trim().toLowerCase().replace(/\s+/g, " ");
+      buf = [m[2].trim()];
+    } else if (currentKey) {
+      buf.push(line);
+    }
+  }
+  flush();
+  return out;
+}
+
+function labelGet(
+  labels: Record<string, string>,
+  ...keys: string[]
+): string | undefined {
+  for (const k of keys) {
+    const v = labels[k.toLowerCase()];
+    if (v && v.trim()) return v.trim();
+  }
+  return undefined;
+}
+
 export function parseJobText(
   jobTitle: string,
   description: string
 ): SmartJobParseResult {
-  const text = normalizeText(`${jobTitle}\n${description}`);
+  const combined = `${jobTitle}\n${description}`;
+  const text = normalizeText(combined);
   if (text.length < 8) {
     return { keywords: [] };
   }
 
-  const category = detectCategory(text);
-  const categories = detectCategories(text);
-  const country = detectCountry(text);
-  const city = detectCity(text, country?.value);
+  const labels = extractLabeledFields(combined);
+
+  // Prefer explicit labeled values when user pastes structured text
+  const labeledTitle = labelGet(
+    labels,
+    "job title",
+    "title",
+    "position",
+    "role"
+  );
+  const labeledDesc = labelGet(
+    labels,
+    "job description",
+    "description",
+    "details",
+    "responsibilities"
+  );
+  const labeledCategory = labelGet(
+    labels,
+    "job categories",
+    "job category",
+    "categories",
+    "category",
+    "profession"
+  );
+  const labeledSub = labelGet(labels, "subcategory", "sub category", "sub-category");
+  const labeledCountry = labelGet(labels, "country");
+  const labeledCity = labelGet(labels, "city", "work location city");
+  const labeledLocation = labelGet(labels, "work location", "location");
+  const labeledPositions = labelGet(
+    labels,
+    "number of positions",
+    "positions",
+    "vacancies"
+  );
+  const labeledDuration = labelGet(labels, "duration", "contract duration");
+  const labeledSalaryType = labelGet(labels, "salary type", "pay type");
+  const labeledHourly = labelGet(
+    labels,
+    "salary / rate (hourly)",
+    "hourly rate",
+    "salary hourly"
+  );
+  const labeledMonthly = labelGet(
+    labels,
+    "salary / rate (monthly)",
+    "monthly rate",
+    "salary monthly",
+    "salary / rate"
+  );
+  const labeledNegotiable = labelGet(labels, "negotiable");
+  const labeledCompany = labelGet(labels, "company name", "company", "employer");
+  const labeledPhone = labelGet(labels, "company phone", "phone", "mobile");
+  const labeledEmail = labelGet(labels, "company email", "email");
+  const labeledAddress = labelGet(labels, "company address", "address");
+  const labeledMap = labelGet(
+    labels,
+    "map location link",
+    "map location",
+    "google maps",
+    "map link",
+    "location link"
+  );
+
+  let category = detectCategory(text);
+  let categories = detectCategories(text);
+
+  if (labeledCategory) {
+    const parts = labeledCategory
+      .split(/[,;/|]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const matched: string[] = [];
+    for (const p of parts) {
+      const found = JOB_CATEGORIES.find(
+        (c) => c.toLowerCase() === p.toLowerCase()
+      );
+      if (found && !matched.includes(found)) matched.push(found);
+    }
+    // Also try subcategory as profession name → parent category via keyword map
+    if (matched.length === 0 && labeledSub) {
+      const fromSub = detectCategory(normalizeText(labeledSub));
+      if (fromSub?.value) matched.push(fromSub.value);
+    }
+    if (matched.length) {
+      categories = {
+        value: matched,
+        confidence: "high",
+        label: matched.join(", "),
+      };
+      category = {
+        value: matched[0],
+        confidence: "high",
+        label: matched[0],
+      };
+    }
+  }
+
+  // Profession/subcategory text → category
+  if (labeledSub) {
+    const fromSub = detectCategory(normalizeText(labeledSub + " " + labeledSub));
+    if (fromSub?.value) {
+      if (!categories) {
+        categories = {
+          value: [fromSub.value],
+          confidence: fromSub.confidence,
+          label: fromSub.value,
+        };
+      } else if (!categories.value.includes(fromSub.value)) {
+        categories = {
+          ...categories,
+          value: [...categories.value, fromSub.value],
+        };
+      }
+      if (!category) category = fromSub;
+    }
+  }
+
+  let country = detectCountry(text);
+  if (labeledCountry) {
+    const found = COUNTRIES.find(
+      (c) =>
+        c.name.toLowerCase() === labeledCountry.toLowerCase() ||
+        c.code.toLowerCase() === labeledCountry.toLowerCase()
+    );
+    if (found) {
+      country = {
+        value: found.code,
+        confidence: "high",
+        label: found.name,
+      };
+    }
+  }
+
+  let city = detectCity(text, country?.value);
+  if (labeledCity) {
+    city = { value: labeledCity, confidence: "high", label: labeledCity };
+  } else if (labeledLocation && !city) {
+    // "Riyadh, Saudi Arabia" style
+    const parts = labeledLocation.split(",").map((s) => s.trim());
+    if (parts[0]) {
+      city = { value: parts[0], confidence: "medium", label: parts[0] };
+    }
+  }
+
   const currency = detectCurrency(text, country?.value);
   const salary = detectSalary(text);
-  const duration = detectDuration(text);
+  let duration = detectDuration(text);
+  if (labeledDuration) {
+    duration = {
+      value: labeledDuration,
+      confidence: "high",
+      label: labeledDuration,
+    };
+  }
+
+  let salaryType = salary.type;
+  let salaryRate = salary.rate;
+  if (labeledSalaryType) {
+    const st = labeledSalaryType.toLowerCase();
+    if (st.includes("hour"))
+      salaryType = { value: "Hourly", confidence: "high", label: "Hourly" };
+    else if (st.includes("month"))
+      salaryType = { value: "Monthly", confidence: "high", label: "Monthly" };
+    else if (st.includes("negot"))
+      salaryType = {
+        value: "Negotiable",
+        confidence: "high",
+        label: "Negotiable",
+      };
+  }
+  if (labeledNegotiable && /^(yes|true|1|y)$/i.test(labeledNegotiable)) {
+    salaryType = {
+      value: "Negotiable",
+      confidence: "high",
+      label: "Negotiable",
+    };
+  }
+  if (labeledHourly) {
+    salaryRate = { value: labeledHourly, confidence: "high", label: labeledHourly };
+    if (!salaryType)
+      salaryType = { value: "Hourly", confidence: "high", label: "Hourly" };
+  }
+  if (labeledMonthly) {
+    salaryRate = {
+      value: labeledMonthly,
+      confidence: "high",
+      label: labeledMonthly,
+    };
+    if (!salaryType || salaryType.value === "Hourly")
+      salaryType = { value: "Monthly", confidence: "high", label: "Monthly" };
+  }
+
   const employmentType = inferEmploymentType(duration?.value, text);
-  const companyEmail = detectEmail(text);
-  const companyPhone = detectPhone(text);
-  const suggestedTitle = suggestTitle(jobTitle, description, category?.value);
+  let companyEmail = detectEmail(text);
+  if (labeledEmail) {
+    companyEmail = {
+      value: labeledEmail,
+      confidence: "high",
+      label: labeledEmail,
+    };
+  }
+  let companyPhone = detectPhone(text);
+  if (labeledPhone) {
+    companyPhone = {
+      value: labeledPhone,
+      confidence: "high",
+      label: labeledPhone,
+    };
+  }
+
+  let suggestedTitle = suggestTitle(jobTitle, description, category?.value);
+  if (labeledTitle) {
+    suggestedTitle = {
+      value: labeledTitle,
+      confidence: "high",
+      label: labeledTitle,
+    };
+  }
+
   const keywords = extractKeywords(text, category?.value);
 
-  return {
+  const result: SmartJobParseResult = {
     category,
     categories,
     country,
     city,
     currency,
-    salaryRate: salary.rate,
-    salaryType: salary.type,
+    salaryRate,
+    salaryType,
     duration,
     employmentType,
     jobTitle: suggestedTitle,
@@ -658,6 +913,25 @@ export function parseJobText(
     companyPhone,
     keywords,
   };
+
+  // Extra labeled fields attached for form apply (optional consumers)
+  if (labeledCompany) {
+    result.companyName = { value: labeledCompany, confidence: "high", label: labeledCompany };
+  }
+  if (labeledAddress) {
+    result.companyAddress = { value: labeledAddress, confidence: "high", label: labeledAddress };
+  }
+  if (labeledMap) {
+    result.mapLocation = { value: labeledMap, confidence: "high", label: labeledMap };
+  }
+  if (labeledPositions) {
+    result.positions = { value: labeledPositions, confidence: "high", label: labeledPositions };
+  }
+  if (labeledDesc) {
+    result.jobDescription = { value: labeledDesc, confidence: "high", label: labeledDesc };
+  }
+
+  return result;
 }
 
 export function hasSuggestions(r: SmartJobParseResult): boolean {
