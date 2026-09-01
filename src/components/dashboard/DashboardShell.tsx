@@ -244,7 +244,15 @@ function SidebarContent({
 
       <div className="px-4 py-3 border-b">
         <p className="text-sm font-medium truncate">{fullName}</p>
-        <p className="text-xs text-muted-foreground capitalize">{role}</p>
+        <p className="text-xs text-muted-foreground">
+          {role === "employer"
+            ? "Company"
+            : role === "personal"
+              ? "Personal"
+              : role === "admin"
+                ? "Admin"
+                : "Job Seeker"}
+        </p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">

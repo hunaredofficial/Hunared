@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { deleteCv } from "@/lib/storage";
 import type { UserRole } from "@/types/database";
 
-const VALID_ROLES: UserRole[] = ["seeker", "employer", "admin"];
+const VALID_ROLES: UserRole[] = ["seeker", "employer", "personal", "admin"];
 
 /** PATCH /api/admin/users/[id]  — change role */
 export async function PATCH(
@@ -32,7 +33,6 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
 
-  // Prevent self-demotion
   if (id === userId && body.role !== "admin") {
     return NextResponse.json(
       { error: "Cannot change your own role away from admin" },
@@ -50,7 +50,10 @@ export async function PATCH(
   return NextResponse.json({ success: true });
 }
 
-/** DELETE /api/admin/users/[id]  — soft-delete by setting deleted_at */
+/**
+ * DELETE /api/admin/users/[id]
+ * Permanent delete: removes profile (frees email), deletes Clerk user, cleans CV.
+ */
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -75,12 +78,33 @@ export async function DELETE(
     return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
   }
 
-  const { error } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
+    .select("cv_url")
+    .eq("id", id)
+    .maybeSingle();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (profile?.cv_url) {
+    try {
+      await deleteCv(profile.cv_url);
+    } catch (e) {
+      console.error("[admin/users DELETE] CV cleanup failed:", e);
+    }
+  }
 
-  return NextResponse.json({ success: true });
+  const { error } = await supabase.from("profiles").delete().eq("id", id);
+
+  if (error) {
+    console.error("[admin/users DELETE] Supabase error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  try {
+    const client = await clerkClient();
+    await client.users.deleteUser(id);
+  } catch (e) {
+    console.error("[admin/users DELETE] Clerk deleteUser failed:", e);
+  }
+
+  return NextResponse.json({ success: true, permanent: true });
 }
