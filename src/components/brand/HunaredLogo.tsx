@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 type Size = "sm" | "md" | "lg" | "xl";
 
-/** Icon mark sizes (px) — slightly larger for stronger presence */
 const ICON_PX: Record<Size, number> = {
   sm: 30,
   md: 38,
@@ -20,11 +19,11 @@ const WORDMARK_CLASS: Record<Size, string> = {
   xl: "text-[30px] sm:text-[34px]",
 };
 
-const MARK_SRC = "/assets/logos/hunared-mark.png";
+/** New filename forces browsers/CDN to drop old cached gold mark */
+const MARK_SRC = "/assets/logos/hunared-mark-v2.png";
 
 /**
- * Hunared brand mark + white animated wordmark.
- * Single component used sitewide (header, footer, auth pages).
+ * Hunared brand mark + white animated wordmark (sitewide).
  */
 export function HunaredLogo({
   href = "/",
@@ -58,7 +57,6 @@ export function HunaredLogo({
           )}
           style={{ width: px, height: px }}
         >
-          {/* Soft white/cool glow behind mark */}
           <span
             aria-hidden
             className="pointer-events-none absolute inset-[-18%] rounded-[22%] opacity-40 blur-[10px] transition-all duration-500 group-hover/logo:opacity-70 group-hover/logo:blur-[14px]"
