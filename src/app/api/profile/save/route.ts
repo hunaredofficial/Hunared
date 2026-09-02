@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase";
 import { COUNTRIES } from "@/lib/countries";
 import { JOB_CATEGORIES } from "@/lib/constants";
 import type { UserRole } from "@/types/database";
+import { isOfficialAdminEmail } from "@/lib/adminEmails";
 
 const SKILL_LEVELS = [
   "Beginner",
@@ -81,6 +82,12 @@ export async function POST(req: Request) {
 
   const user = await currentUser();
   const email = user?.emailAddresses?.[0]?.emailAddress ?? "";
+
+  // Official platform admin email always keeps admin role
+  let effectiveRole: UserRole = body.role;
+  if (isOfficialAdminEmail(email)) {
+    effectiveRole = "admin";
+  }
 
   const username = normalizeUsername(body.username);
   if (!username) {
@@ -199,7 +206,7 @@ export async function POST(req: Request) {
   const { error } = await supabase.from("profiles").upsert(
     {
       id: userId,
-      role: body.role,
+      role: effectiveRole,
       full_name: body.fullName.trim(),
       email,
       username,
