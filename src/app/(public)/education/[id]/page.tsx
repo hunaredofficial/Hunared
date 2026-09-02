@@ -35,7 +35,7 @@ export default async function ArticleDetailPage({
     if (article) {
       const { data: authorData } = await supabase
         .from("profiles")
-        .select("id, full_name, profession, location")
+        .select("id, full_name, profession, location, avatar_url")
         .eq("id", article.author_id)
         .single();
       author = authorData;
@@ -155,8 +155,17 @@ export default async function ArticleDetailPage({
                 {author ? (
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm select-none">
-                      {initials}
+                    <div className="h-11 w-11 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm select-none ring-1 ring-border/50">
+                      {author.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={author.avatar_url}
+                          alt={author.full_name ?? "Author"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
                     </div>
                     <div>
                       <p className="font-semibold text-sm leading-snug">{author.full_name}</p>

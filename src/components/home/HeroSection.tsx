@@ -41,11 +41,13 @@ const QUICK_LINKS: { label: string; href: string; accent?: boolean; external?: b
   { label: "Services", href: "/market?category=services" },
   { label: "Home & Furniture", href: "/market?category=home_furniture" },
   { label: "Lost & Found", href: "/market?category=lost_found" },
+  { label: "Wanted", href: "/market?category=wanted" },
+  { label: "Offers & Deals", href: "/market?category=offers_deals" },
+  { label: "Community", href: "/market?category=community" },
   { label: "Learning", href: "/education" },
   { label: "Courses", href: "https://hunared.org/courses", external: true },
   { label: "Training & Certification", href: "https://hunared.org", external: true },
   { label: "Program", href: "/program" },
-  { label: "Offers & Deals", href: "/market?category=offers_deals" },
 ];
 
 export function HeroSection() {
@@ -206,20 +208,20 @@ export function HeroSection() {
           </button>
         </form>
 
-        {/* Quick links — larger chips + richer color */}
+        {/* Quick links — softer tones matching site palette */}
         <div className="mt-8 sm:mt-12">
-          <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card to-[var(--brand-via)]/10 shadow-[0_0_40px_-12px_rgba(59,130,246,0.35)]">
+          <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/6 via-card to-[var(--brand-via)]/5 shadow-[0_0_32px_-16px_rgba(59,130,246,0.18)]">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(var(--brand-from)/0.2),transparent_55%)]"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgb(var(--brand-from)/0.1),transparent_55%)]"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute -top-28 right-0 h-64 w-64 rounded-full bg-[var(--brand-from)] opacity-30 blur-3xl"
+              className="pointer-events-none absolute -top-28 right-0 h-64 w-64 rounded-full bg-[var(--brand-from)] opacity-12 blur-3xl"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute -bottom-24 -left-12 h-52 w-52 rounded-full bg-[var(--brand-via)] opacity-25 blur-3xl"
+              className="pointer-events-none absolute -bottom-24 -left-12 h-52 w-52 rounded-full bg-[var(--brand-via)] opacity-10 blur-3xl"
             />
 
             <div className="relative px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-9">
@@ -241,7 +243,7 @@ export function HeroSection() {
                     key={"accent-" + link.href + link.label}
                     type="button"
                     onClick={() => handleQuickLink(link.href, link.external)}
-                    className="inline-flex items-center justify-center gap-2 min-h-12 px-5 sm:px-6 rounded-full text-sm sm:text-base font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 ring-1 ring-primary/40 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                    className="inline-flex items-center justify-center gap-2 min-h-12 px-5 sm:px-6 rounded-full text-sm sm:text-base font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 ring-1 ring-primary/25 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
                   >
                     {link.label}
                   </button>
@@ -254,7 +256,7 @@ export function HeroSection() {
                     key={link.href + link.label}
                     type="button"
                     onClick={() => handleQuickLink(link.href, link.external)}
-                    className="group flex items-center justify-center min-h-[3.25rem] sm:min-h-[3.5rem] px-3 sm:px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-center leading-snug border border-primary/20 bg-background/80 backdrop-blur-sm text-foreground hover:border-primary/55 hover:bg-primary/15 hover:text-primary hover:shadow-md hover:shadow-primary/15 transition-all duration-200"
+                    className="group flex items-center justify-center min-h-[3.25rem] sm:min-h-[3.5rem] px-3 sm:px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-center leading-snug border border-primary/15 bg-background/70 backdrop-blur-sm text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary hover:shadow-md hover:shadow-primary/10 transition-all duration-200"
                   >
                     <span className="whitespace-normal break-words">{link.label}</span>
                   </button>
