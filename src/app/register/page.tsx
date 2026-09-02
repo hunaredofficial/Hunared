@@ -336,6 +336,10 @@ function RegisterInner() {
         setError("Company phone is required.");
         return;
       }
+      if (!avatarFile && !avatarPreview) {
+        setError("Company logo / profile photo is required.");
+        return;
+      }
       if (industries.length === 0) {
         setError("Select at least one industry.");
         return;
@@ -755,7 +759,7 @@ function RegisterInner() {
               {(goal === "seeker" || goal === "employer") && (
                 <div className="space-y-2">
                   <Label>
-                    {goal === "employer" ? "Company logo / profile image" : "Profile image"}
+                    {goal === "employer" ? "Company logo / profile image *" : "Profile image"}
                   </Label>
                   <div className="flex items-center gap-3">
                     {avatarPreview ? (
@@ -1107,7 +1111,7 @@ function RegisterInner() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mapLocation">Company Location (optional)</Label>
+                    <Label htmlFor="mapLocation">Company Location</Label>
                     <Input
                       id="mapLocation"
                       value={mapLocation}

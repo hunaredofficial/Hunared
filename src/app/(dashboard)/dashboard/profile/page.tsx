@@ -18,6 +18,28 @@ export default async function ProfilePage() {
 
   if (!profile) redirect("/register");
 
+  // Load company industries/services when user has a company row
+  let initialIndustries: string[] = [];
+  let initialServices: string[] = [];
+  try {
+    const { data: company } = await supabase
+      .from("companies")
+      .select("industry, services")
+      .eq("owner_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (company) {
+      if (Array.isArray(company.industry)) {
+        initialIndustries = company.industry.filter(Boolean).map(String);
+      }
+      if (Array.isArray(company.services)) {
+        initialServices = company.services.filter(Boolean).map(String);
+      }
+    }
+  } catch {
+    // non-fatal — form still works with empty lists
+  }
+
   return (
     <div className="w-full">
       <div className="mb-6 sm:mb-8">
@@ -26,7 +48,11 @@ export default async function ProfilePage() {
           Keep your information up to date. Switch account type anytime.
         </p>
       </div>
-      <ProfileEditForm initialProfile={profile} />
+      <ProfileEditForm
+        initialProfile={profile}
+        initialIndustries={initialIndustries}
+        initialServices={initialServices}
+      />
     </div>
   );
 }

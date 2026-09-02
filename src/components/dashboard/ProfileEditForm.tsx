@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { User, Upload, X, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,20 @@ import { PROFESSIONS, JOB_CATEGORIES } from "@/lib/constants";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { buildUsernameSuggestions } from "@/lib/usernameSuggest";
 import { COUNTRIES } from "@/lib/countries";
+import { INDUSTRIES } from "@/lib/companyConstants";
+import { recommendServicesForIndustries, allServices } from "@/lib/industryServiceRecommendations";
 import type { Profile } from "@/types/database";
+
+const ALL_SERVICES = allServices();
 
 export function ProfileEditForm({
   initialProfile,
+  initialIndustries = [],
+  initialServices = [],
 }: {
   initialProfile: Profile;
+  initialIndustries?: string[];
+  initialServices?: string[];
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +85,16 @@ export function ProfileEditForm({
   const [companyLocation, setCompanyLocation] = useState(
     (initialProfile as { company_location?: string | null }).company_location ?? ""
   );
+  const [industries, setIndustries] = useState<string[]>(
+    Array.isArray(initialIndustries) ? initialIndustries : []
+  );
+  const [services, setServices] = useState<string[]>(
+    Array.isArray(initialServices) ? initialServices : []
+  );
+  const recommendedServices = useMemo(
+    () => recommendServicesForIndustries(industries),
+    [industries]
+  );
 
   // Avatar
   const [avatarPreview, setAvatarPreview] = useState(
@@ -118,7 +136,25 @@ export function ProfileEditForm({
       toast.error("Username must be at least 3 characters (letters, numbers, underscore).");
       return;
     }
-setIsLoading(true);
+    if (role === "employer") {
+      if (industries.length === 0) {
+        toast.error("Select at least one industry.");
+        return;
+      }
+      if (services.length === 0) {
+        toast.error("Select at least one service.");
+        return;
+      }
+      const hasPhoto =
+        (!!avatarFile && !avatarRemoved) ||
+        (!!avatarPreview && !avatarRemoved) ||
+        (!!initialProfile.avatar_url && !avatarRemoved);
+      if (!hasPhoto) {
+        toast.error("Company logo / profile photo is required.");
+        return;
+      }
+    }
+    setIsLoading(true);
     try {
       let avatarUrl: string | null = initialProfile.avatar_url;
       let avatarPublicId: string | null = initialProfile.avatar_public_id;
@@ -171,6 +207,8 @@ setIsLoading(true);
           companyAddress: isEmployer ? companyAddress.trim() || null : null,
           mapLocation: isEmployer ? companyLocation.trim() || null : null,
           companyLocation: isEmployer ? companyLocation.trim() || null : null,
+          industries: isEmployer ? industries : null,
+          services: isEmployer ? services : null,
         }),
       });
 
@@ -247,9 +285,13 @@ setIsLoading(true);
           )}
         </div>
         <div>
-          <p className="text-sm font-medium mb-1">Profile Photo</p>
+          <p className="text-sm font-medium mb-1">
+            {isEmployer ? "Company Logo / Profile Photo *" : "Profile Photo"}
+          </p>
           <p className="text-xs text-muted-foreground mb-2">
-            JPG, PNG or WebP, max 10MB
+            {isEmployer
+              ? "Required for company accounts · JPG, PNG or WebP, max 10MB"
+              : "JPG, PNG or WebP, max 10MB"}
           </p>
           <input
             ref={avatarInputRef}
@@ -580,6 +622,58 @@ setIsLoading(true);
                 placeholder="https://company.com"
               />
             </Field>
+            <Field label="Industry *" className="col-span-full">
+              <MultiSelectChips
+                options={[...INDUSTRIES]}
+                value={industries}
+                onChange={setIndustries}
+                placeholder="Select industry"
+                searchPlaceholder="Search industries…"
+                label="Industry"
+              />
+            </Field>
+            {recommendedServices.length > 0 && (
+              <div className="col-span-full space-y-2">
+                <p className="text-sm font-medium text-primary">Recommended services</p>
+                <p className="text-xs text-muted-foreground">
+                  Based on your industry. Tap to add — nothing is forced.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {recommendedServices.slice(0, 24).map((s) => {
+                    const on = services.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() =>
+                          setServices((prev) =>
+                            on ? prev.filter((x) => x !== s) : [...prev, s]
+                          )
+                        }
+                        className={cn(
+                          "text-xs rounded-full border px-2.5 py-1 transition-colors",
+                          on
+                            ? "border-primary bg-primary/15 text-primary"
+                            : "border-border hover:bg-accent"
+                        )}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <Field label="Services *" className="col-span-full">
+              <MultiSelectChips
+                options={ALL_SERVICES}
+                value={services}
+                onChange={setServices}
+                placeholder="Select services you offer"
+                searchPlaceholder="Search services…"
+                label="Services"
+              />
+            </Field>
             <Field label="Company Address" className="col-span-full">
               <Input
                 value={companyAddress}
@@ -587,7 +681,7 @@ setIsLoading(true);
                 placeholder="Street, City, Country"
               />
             </Field>
-            <Field label="Company Location (optional)" className="col-span-full">
+            <Field label="Company Location" className="col-span-full">
               <Input
                 type="url"
                 value={companyLocation}
@@ -595,7 +689,7 @@ setIsLoading(true);
                 placeholder="https://maps.google.com/... or Google Maps share link"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Optional. Paste a Google Maps (or similar) link to your office / location.
+                Paste a Google Maps (or similar) link to share your office location.
               </p>
             </Field>
           </div>
