@@ -10,7 +10,7 @@ export type UserRole = "admin" | "employer" | "seeker" | "personal";
 export type JobStatus = "pending" | "approved" | "rejected" | "draft" | "closed";
 export type EmploymentType = "permanent" | "temporary" | "task_force";
 export type ArticleStatus = "pending" | "approved";
-export type ArticleCategory = "safety_hse" | "engineering" | "career_tips";
+export type ArticleCategory = "safety_hse" | "engineering" | "career_tips" | "rights_responsibilities";
 export type ListingStatus = "pending" | "approved" | "rejected";
 export type ListingCategory =
   | "for_sale"
@@ -77,7 +77,6 @@ export interface Database {
           company_cr: string | null;
           company_website: string | null;
           company_address: string | null;
-          company_location: string | null;
           available_for_hire: boolean;
           skill_level: string | null;          // ← added
           deleted_at: string | null;
@@ -102,7 +101,6 @@ export interface Database {
           company_cr?: string | null;
           company_website?: string | null;
           company_address?: string | null;
-          company_location?: string | null;
           available_for_hire?: boolean;
           skill_level?: string | null;         // ← added
           deleted_at?: string | null;
@@ -127,7 +125,6 @@ export interface Database {
           company_cr?: string | null;
           company_website?: string | null;
           company_address?: string | null;
-          company_location?: string | null;
           available_for_hire?: boolean;
           skill_level?: string | null;         // ← added
           deleted_at?: string | null;

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ShareButton } from "@/components/shared/ShareButton";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
@@ -524,6 +525,47 @@ export default async function JobDetailPage({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function Stat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/50">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        <span className="text-xs">{label}</span>
+      </div>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function Detail({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | null | undefined;
+}) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground">{value}</p>
       </div>
     </div>
   );

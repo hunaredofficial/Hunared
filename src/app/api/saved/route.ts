@@ -5,9 +5,12 @@ import { rateLimit } from "@/lib/rateLimit";
 
 type ItemType = "job" | "listing";
 
-function parseBody(body: unknown): { itemType: ItemType; itemId: string } | null {
+function parseBody(
+  body: unknown
+): { itemType: ItemType; itemId: string } | { removeAll: true } | null {
   if (!body || typeof body !== "object") return null;
   const b = body as Record<string, unknown>;
+  if (b.removeAll === true) return { removeAll: true };
   const itemType = b.itemType;
   const itemId = b.itemId;
   if (itemType !== "job" && itemType !== "listing") return null;
@@ -15,7 +18,7 @@ function parseBody(body: unknown): { itemType: ItemType; itemId: string } | null
   return { itemType, itemId: itemId.trim() };
 }
 
-/** GET — list current user's saved items */
+/** GET — enriched list for My Saved page → { items: [...] } */
 export async function GET() {
   const { userId } = await auth();
   if (!userId) {
@@ -23,7 +26,8 @@ export async function GET() {
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+
+  const { data: rows, error } = await supabase
     .from("saved_items")
     .select("id, item_type, item_id, created_at")
     .eq("user_id", userId)
@@ -32,10 +36,93 @@ export async function GET() {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ saved: data ?? [] });
+
+  const list = rows ?? [];
+  const jobIds = list.filter((r) => r.item_type === "job").map((r) => r.item_id);
+  const listingIds = list
+    .filter((r) => r.item_type === "listing")
+    .map((r) => r.item_id);
+
+  const jobsMap = new Map<string, Record<string, unknown>>();
+  const listingsMap = new Map<string, Record<string, unknown>>();
+
+  if (jobIds.length) {
+    const { data: jobs } = await supabase.from("jobs").select("*").in("id", jobIds);
+    for (const j of jobs ?? []) jobsMap.set(j.id as string, j as Record<string, unknown>);
+  }
+  if (listingIds.length) {
+    const { data: listings } = await supabase
+      .from("marketplace_listings")
+      .select("*")
+      .in("id", listingIds);
+    for (const l of listings ?? [])
+      listingsMap.set(l.id as string, l as Record<string, unknown>);
+  }
+
+  const items = list.map((row) => {
+    if (row.item_type === "job") {
+      const job = jobsMap.get(row.item_id);
+      if (!job) {
+        return {
+          type: "job" as const,
+          unavailable: true,
+          job: {
+            id: row.item_id,
+            job_title: "Unavailable job",
+            company_name: "",
+            location: "",
+            salary_type: null,
+            salary_rate: null,
+            currency: null,
+          },
+        };
+      }
+      return {
+        type: "job" as const,
+        unavailable: job.status !== "approved",
+        job: {
+          id: job.id,
+          job_title: job.job_title,
+          company_name: job.company_name,
+          location: job.location,
+          salary_type: job.salary_type,
+          salary_rate: job.salary_rate,
+          currency: job.currency,
+        },
+      };
+    }
+
+    const listing = listingsMap.get(row.item_id);
+    if (!listing) {
+      return {
+        type: "listing" as const,
+        unavailable: true,
+        listing: {
+          id: row.item_id,
+          title: "Unavailable listing",
+          price: null,
+          currency: null,
+          location: "",
+        },
+      };
+    }
+    return {
+      type: "listing" as const,
+      unavailable: listing.status !== "approved",
+      listing: {
+        id: listing.id,
+        title: listing.title,
+        price: listing.price,
+        currency: listing.currency,
+        location: listing.location ?? [listing.city, listing.country].filter(Boolean).join(", "),
+      },
+    };
+  });
+
+  return NextResponse.json({ items });
 }
 
-/** POST — save an item { itemType, itemId } */
+/** POST — save { itemType, itemId } */
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) {
@@ -54,7 +141,7 @@ export async function POST(req: Request) {
   }
 
   const parsed = parseBody(raw);
-  if (!parsed) {
+  if (!parsed || "removeAll" in parsed) {
     return NextResponse.json(
       { error: "itemType and itemId are required" },
       { status: 400 }
@@ -72,21 +159,33 @@ export async function POST(req: Request) {
   );
 
   if (error) {
-    // Fallback: try without ignoreDuplicates style if constraint name differs
+    // Fallback insert (ignore duplicate)
     const { error: err2 } = await supabase.from("saved_items").insert({
       user_id: userId,
       item_type: parsed.itemType,
       item_id: parsed.itemId,
     });
-    if (err2 && !err2.message?.includes("duplicate")) {
+    if (err2 && !/duplicate|unique/i.test(err2.message ?? "")) {
       return NextResponse.json({ error: err2.message }, { status: 500 });
     }
+  }
+
+  // Also mirror jobs into saved_jobs for legacy compatibility
+  if (parsed.itemType === "job") {
+    await supabase
+      .from("saved_jobs")
+      .upsert(
+        { user_id: userId, job_id: parsed.itemId },
+        { onConflict: "user_id,job_id", ignoreDuplicates: true }
+      )
+      .then(() => null)
+      .catch(() => null);
   }
 
   return NextResponse.json({ saved: true });
 }
 
-/** DELETE — unsave an item { itemType, itemId } */
+/** DELETE — unsave one item or removeAll */
 export async function DELETE(req: Request) {
   const { userId } = await auth();
   if (!userId) {
@@ -102,13 +201,24 @@ export async function DELETE(req: Request) {
 
   const parsed = parseBody(raw);
   if (!parsed) {
-    return NextResponse.json(
-      { error: "itemType and itemId are required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
   const supabase = createAdminClient();
+
+  if ("removeAll" in parsed) {
+    const { error } = await supabase
+      .from("saved_items")
+      .delete()
+      .eq("user_id", userId);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    // best-effort clear legacy table
+    await supabase.from("saved_jobs").delete().eq("user_id", userId);
+    return NextResponse.json({ cleared: true });
+  }
+
   const { error } = await supabase
     .from("saved_items")
     .delete()
@@ -119,5 +229,14 @@ export async function DELETE(req: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  if (parsed.itemType === "job") {
+    await supabase
+      .from("saved_jobs")
+      .delete()
+      .eq("user_id", userId)
+      .eq("job_id", parsed.itemId);
+  }
+
   return NextResponse.json({ saved: false });
 }
