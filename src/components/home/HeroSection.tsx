@@ -24,22 +24,23 @@ const CATEGORIES = [
   { value: "hunared program", label: "Hunared Program" },
 ];
 
-const POPULAR_CHIPS = [
-  "Jobs",
-  "Accommodation",
-  "Marketplace",
-  "Services",
-  "Lost & Found",
-  "For Sale",
-  "Announcements",
-  "Property",
-  "Education & Training",
-  "For Rent",
-  "Electronics",
-  "Vehicle",
-  "Home & Furniture",
-  "Community",
-  "Offers & Deals",
+/** Quick links → open related pages (not universal search) */
+const QUICK_LINKS: { label: string; href: string }[] = [
+  { label: "Jobs", href: "/jobs" },
+  { label: "Accommodation", href: "/market?category=accommodation" },
+  { label: "Marketplace", href: "/market" },
+  { label: "Services", href: "/market?category=services" },
+  { label: "Lost & Found", href: "/market?category=lost_found" },
+  { label: "Announcements", href: "/market?category=announcements" },
+  { label: "Property", href: "/market?category=property" },
+  { label: "Education & Training", href: "/market?category=education_training" },
+  { label: "For Sale", href: "/market?category=for_sale" },
+  { label: "For Rent", href: "/market?category=for_rent" },
+  { label: "Electronics", href: "/market?category=electronics" },
+  { label: "Home & Furniture", href: "/market?category=home_furniture" },
+  { label: "Vehicle", href: "/market?category=vehicles" },
+  { label: "Community", href: "/market?category=community" },
+  { label: "Offers & Deals", href: "/market?category=offers_deals" },
 ];
 
 export function HeroSection() {
@@ -74,12 +75,8 @@ export function HeroSection() {
     router.push(`/search?${params.toString()}`);
   }
 
-  function handleChip(term: string) {
-    const params = new URLSearchParams();
-    params.set("q", term);
-    if (country) params.set("country", country);
-    if (city) params.set("city", city);
-    router.push(`/search?${params.toString()}`);
+  function handleQuickLink(href: string) {
+    router.push(href);
   }
 
   return (
@@ -200,20 +197,20 @@ export function HeroSection() {
           </button>
         </form>
 
-        {/* Popular chips */}
+        {/* Quick links — open related pages, not universal search */}
         <div className="mt-5 sm:mt-8 space-y-2.5 sm:space-y-3 text-center">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Popular Searches
+            Quick Links
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            {POPULAR_CHIPS.map((chip) => (
+            {QUICK_LINKS.map((link) => (
               <button
-                key={chip}
+                key={link.href + link.label}
                 type="button"
-                onClick={() => handleChip(chip)}
+                onClick={() => handleQuickLink(link.href)}
                 className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium border border-primary/15 bg-card text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-all duration-200"
               >
-                {chip}
+                {link.label}
               </button>
             ))}
           </div>

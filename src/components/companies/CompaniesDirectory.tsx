@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Hunared Company Directory
+ * Company Directory
  * Matches Jobs / Marketplace page pattern:
  * gradient hero · icon + gradient title · horizontal filter bar · results grid
  */
@@ -751,7 +751,7 @@ export function CompaniesDirectory() {
           <div className="flex items-center gap-3 mb-2">
             <Building2 className="h-7 w-7 text-primary shrink-0" />
             <h1 className="text-3xl sm:text-4xl font-bold">
-              <span className="gradient-text">Hunared Company Directory</span>
+              <span className="gradient-text">Company Directory</span>
             </h1>
           </div>
           <p className="text-muted-foreground max-w-xl mb-6">

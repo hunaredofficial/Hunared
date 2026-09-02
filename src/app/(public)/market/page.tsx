@@ -190,7 +190,7 @@ export default async function MarketPage({
           <div className="flex items-center gap-3 mb-3">
             <ShoppingBag className="h-7 w-7 text-primary" />
             <h1 className="text-3xl sm:text-4xl font-bold">
-              <span className="gradient-text">Hunared Marketplace</span>
+              <span className="gradient-text">Marketplace</span>
             </h1>
           </div>
           <p className="text-muted-foreground max-w-xl">

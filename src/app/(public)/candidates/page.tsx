@@ -90,7 +90,7 @@ export default async function CandidatesPage({
       <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            <span className="gradient-text">Hunared Talent Pool</span>
+            <span className="gradient-text">Talent Pool</span>
           </h1>
           <p className="text-muted-foreground mb-6">
             {total > 0

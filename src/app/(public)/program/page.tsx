@@ -125,21 +125,21 @@ export default function ProgramPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <a
-              href={PROGRAMS_URL}
+              href={ORG_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 h-11 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
-              Explore Programs
+              Explore Organization
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
             <a
-              href={ORG_URL}
+              href={PROGRAMS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 h-11 rounded-full border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
             >
-              Discover Hunared Organization
+              Discover Hunared Programs
             </a>
           </div>
         </div>

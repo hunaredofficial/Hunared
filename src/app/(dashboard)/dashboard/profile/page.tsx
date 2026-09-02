@@ -18,5 +18,15 @@ export default async function ProfilePage() {
 
   if (!profile) redirect("/register");
 
-  return <ProfileEditForm initialProfile={profile} />;
+  return (
+    <div className="w-full">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Profile</h1>
+        <p className="text-sm text-muted-foreground mt-1.5">
+          Keep your information up to date. Switch account type anytime.
+        </p>
+      </div>
+      <ProfileEditForm initialProfile={profile} />
+    </div>
+  );
 }
