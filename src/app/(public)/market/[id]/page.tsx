@@ -292,20 +292,6 @@ export default async function ListingDetailPage({
             image: item.image_urls?.[0] || item.image_url || null,
           }))}
         />
-                    <div className="p-3 space-y-1">
-                      <p className="font-semibold text-sm line-clamp-2">
-                        {item.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {item.category}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

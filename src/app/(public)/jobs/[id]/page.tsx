@@ -492,29 +492,6 @@ export default async function JobDetailPage({
               (rj.positions != null ? String(rj.positions) : "Not Specified"),
           }))}
         />
-                    >
-                      {rj.category}
-                    </Badge>
-                  )}
-                  <p className="font-semibold text-sm line-clamp-2">
-                    {rj.job_title}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {rj.company_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{rj.location}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Positions:{" "}
-                    {rj.positions != null ? rj.positions : "Not Specified"}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
