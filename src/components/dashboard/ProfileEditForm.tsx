@@ -29,10 +29,13 @@ export function ProfileEditForm({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Account type (role)
-  const [role, setRole] = useState<"seeker" | "employer">(
-    initialProfile.role === "employer" ? "employer" : "seeker"
-  );
+  // Account type (role) — personal | seeker | employer (Company)
+  const [role, setRole] = useState<"personal" | "seeker" | "employer">(() => {
+    const r = initialProfile.role;
+    if (r === "employer") return "employer";
+    if (r === "personal") return "personal";
+    return "seeker";
+  });
 
   // Basic info
   const [fullName, setFullName] = useState(initialProfile.full_name ?? "");
@@ -88,6 +91,8 @@ export function ProfileEditForm({
   const cvInputRef = useRef<HTMLInputElement>(null);
 
   const isSeeker = role === "seeker";
+  const isEmployer = role === "employer";
+  const isPersonal = role === "personal";
 
   function handleDeleteCv() {
     setExistingCvUrl("");
@@ -158,9 +163,9 @@ setIsLoading(true);
           avatarUrl,
           avatarPublicId,
           cvUrl: cvUrl || null,
-          companyCr: !isSeeker ? companyCr.trim() || null : null,
-          companyWebsite: !isSeeker ? companyWebsite.trim() || null : null,
-          companyAddress: !isSeeker ? companyAddress.trim() || null : null,
+          companyCr: isEmployer ? companyCr.trim() || null : null,
+          companyWebsite: isEmployer ? companyWebsite.trim() || null : null,
+          companyAddress: isEmployer ? companyAddress.trim() || null : null,
         }),
       });
 
@@ -182,7 +187,7 @@ setIsLoading(true);
     <div className="w-full max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">
-          {isSeeker ? "My Profile" : "Company Profile"}
+          {isEmployer ? "Company Profile" : "My Profile"}
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Keep your information up to date to improve visibility.
@@ -194,14 +199,15 @@ setIsLoading(true);
         <label className="text-sm font-medium block mb-1.5">Account type</label>
         <select data-color-scheme="dark"
           value={role}
-          onChange={(e) => setRole(e.target.value as "seeker" | "employer")}
+          onChange={(e) => setRole(e.target.value as "personal" | "seeker" | "employer")}
           className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
         >
-          <option className="bg-background text-foreground" value="seeker">Job Seeker / Personal</option>
-          <option className="bg-background text-foreground" value="employer">Employer</option>
+          <option className="bg-background text-foreground" value="personal">Personal</option>
+          <option className="bg-background text-foreground" value="seeker">Seeker</option>
+          <option className="bg-background text-foreground" value="employer">Company</option>
         </select>
         <p className="text-xs text-muted-foreground mt-1">
-          You can change this anytime. Seeker = find jobs. Employer = post jobs.
+          You can change this anytime. Personal = browse &amp; learn. Seeker = find jobs. Company = post jobs &amp; hire.
         </p>
       </div>
 
@@ -238,7 +244,7 @@ setIsLoading(true);
         <div>
           <p className="text-sm font-medium mb-1">Profile Photo</p>
           <p className="text-xs text-muted-foreground mb-2">
-            JPG, PNG or WebP, max 5MB
+            JPG, PNG or WebP, max 10MB
           </p>
           <input
             ref={avatarInputRef}
@@ -248,6 +254,11 @@ setIsLoading(true);
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (!f) return;
+              if (f.size > 10 * 1024 * 1024) {
+                toast.error("Image must be under 10MB");
+                e.target.value = "";
+                return;
+              }
               setAvatarFile(f);
               setAvatarPreview(URL.createObjectURL(f));
               setAvatarRemoved(false);
@@ -543,7 +554,7 @@ setIsLoading(true);
       )}
 
       {/* Employer: Company details */}
-      {!isSeeker && (
+      {isEmployer && (
         <div className="w-full p-5 rounded-xl border border-border bg-card space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Company Info

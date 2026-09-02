@@ -811,8 +811,8 @@ function RegisterInner() {
                         onChange={(e) => {
                           const f = e.target.files?.[0];
                           if (!f) return;
-                          if (f.size > 5 * 1024 * 1024) {
-                            toast.error("Image must be under 5MB");
+                          if (f.size > 10 * 1024 * 1024) {
+                            toast.error("Image must be under 10MB");
                             return;
                           }
                           setAvatarFile(f);
@@ -823,8 +823,8 @@ function RegisterInner() {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {goal === "employer"
-                      ? "Optional · JPG, PNG or WebP · max 5MB"
-                      : "JPG, PNG or WebP · max 5MB"}
+                      ? "Optional · JPG, PNG or WebP · max 10MB"
+                      : "JPG, PNG or WebP · max 10MB"}
                   </p>
                 </div>
               )}
