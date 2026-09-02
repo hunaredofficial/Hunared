@@ -117,7 +117,7 @@ export function HeroSection() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search jobs, accommodations, services, property, courses ..."
+              placeholder="What are you looking for? Search here..."
               className="w-full h-12 sm:h-16 md:h-[4.25rem] pl-11 sm:pl-14 pr-12 sm:pr-14 rounded-xl sm:rounded-2xl border border-primary/15 bg-background/70 text-foreground text-sm sm:text-base md:text-lg placeholder:text-muted-foreground/65 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/35 transition"
               autoComplete="off"
             />
@@ -197,22 +197,40 @@ export function HeroSection() {
           </button>
         </form>
 
-        {/* Quick links — open related pages, not universal search */}
-        <div className="mt-5 sm:mt-8 space-y-2.5 sm:space-y-3 text-center">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Quick Links
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {QUICK_LINKS.map((link) => (
-              <button
-                key={link.href + link.label}
-                type="button"
-                onClick={() => handleQuickLink(link.href)}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[11px] sm:text-sm font-medium border border-primary/15 bg-card text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-all duration-200"
-              >
-                {link.label}
-              </button>
-            ))}
+        {/* Quick links — attractive grid */}
+        <div className="mt-6 sm:mt-10">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-4 sm:p-6 md:p-7">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-[var(--brand-from)] opacity-20 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-[var(--brand-via)] opacity-15 blur-3xl"
+            />
+            <div className="relative text-center space-y-1 mb-4 sm:mb-5">
+              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                Explore Hunared
+              </p>
+              <h3 className="text-base sm:text-lg font-bold text-foreground">
+                Quick Links
+              </h3>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                Jump straight to jobs, marketplace, learning and more.
+              </p>
+            </div>
+            <div className="relative grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 sm:gap-2.5">
+              {QUICK_LINKS.map((link) => (
+                <button
+                  key={link.href + link.label}
+                  type="button"
+                  onClick={() => handleQuickLink(link.href)}
+                  className="group flex items-center justify-center min-h-[2.75rem] sm:min-h-[3rem] px-2 sm:px-3 py-2 rounded-xl text-[11px] sm:text-sm font-medium text-center border border-primary/15 bg-background/70 backdrop-blur-sm text-foreground/90 hover:border-primary/50 hover:bg-primary/15 hover:text-primary hover:shadow-md hover:shadow-primary/10 transition-all duration-200"
+                >
+                  <span className="line-clamp-2 leading-snug">{link.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

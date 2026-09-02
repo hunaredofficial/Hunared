@@ -16,6 +16,9 @@ import { toast } from "sonner";
 import { ARTICLE_CATEGORIES } from "@/lib/constants";
 import { Bold, Heading2, List, ListOrdered, Eye, EyeOff } from "lucide-react";
 
+const RECAPTCHA_SITE_KEY =
+  process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.trim() || "";
+
 export default function NewArticlePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -164,7 +167,7 @@ export default function NewArticlePage() {
       toast.error("Please select a category");
       return;
     }
-    if (!recaptchaToken) {
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
       toast.error("Please complete the reCAPTCHA verification");
       return;
     }
@@ -361,18 +364,22 @@ Formula: **V = I × R**
 
             {/* reCAPTCHA */}
             <div>
+              {RECAPTCHA_SITE_KEY ? (
               <ReCAPTCHA
                 ref={recaptchaRef}
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ""}
+                sitekey={RECAPTCHA_SITE_KEY}
                 onChange={(token) => setRecaptchaToken(token)}
                 onExpired={() => setRecaptchaToken(null)}
               />
+            ) : (
+              <p className="text-xs text-muted-foreground">Security check is not configured — you can still submit.</p>
+            )}
             </div>
 
             <div className="flex gap-3 pt-2">
               <Button
                 type="submit"
-                disabled={loading || !recaptchaToken}
+                disabled={loading || (Boolean(RECAPTCHA_SITE_KEY) && !recaptchaToken)}
                 className="min-w-[120px] cursor-pointer"
               >
                 {loading ? "Submitting…" : "Submit for Review"}

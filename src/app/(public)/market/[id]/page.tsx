@@ -58,6 +58,23 @@ export default async function ListingDetailPage({
 
   if (!listing) notFound();
 
+  let relatedListings: Listing[] = [];
+  try {
+    const supabase = createAdminClient();
+    let q = supabase
+      .from("marketplace_listings")
+      .select("*")
+      .eq("status", "approved")
+      .neq("id", id)
+      .order("created_at", { ascending: false })
+      .limit(6);
+    if (listing.category) q = q.eq("category", listing.category);
+    const { data } = await q;
+    relatedListings = (data as Listing[]) ?? [];
+  } catch {
+    // non-fatal
+  }
+
   const catLabel =
     LISTING_CATEGORIES.find((c) => c.value === listing!.category)?.label ??
     listing.category;
@@ -255,6 +272,44 @@ export default async function ListingDetailPage({
             </Button>
           </div>
         </div>
+
+        {relatedListings.length > 0 && (
+          <div className="mt-10 space-y-4">
+            <h2 className="text-lg font-semibold">Similar listings</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedListings.map((item) => {
+                const img =
+                  item.image_urls?.[0] || item.image_url || null;
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/market/${item.id}`}
+                    className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors"
+                  >
+                    {img ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={img}
+                        alt=""
+                        className="h-36 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-36 w-full bg-muted" />
+                    )}
+                    <div className="p-3 space-y-1">
+                      <p className="font-semibold text-sm line-clamp-2">
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {item.category}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -549,6 +549,9 @@ export default function PostJobPage() {
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave empty to show &quot;Not Specified&quot; on the job listing.
+              </p>
             </Field>
 
             <Field label="Duration *">
