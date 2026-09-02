@@ -1,5 +1,6 @@
 import { ShareButton } from "@/components/shared/ShareButton";
 import { SaveButton } from "@/components/shared/SaveButton";
+import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
 import { createAdminClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -61,16 +62,17 @@ export default async function ListingDetailPage({
   let relatedListings: Listing[] = [];
   try {
     const supabase = createAdminClient();
-    let q = supabase
-      .from("marketplace_listings")
-      .select("*")
-      .eq("status", "approved")
-      .neq("id", id)
-      .order("created_at", { ascending: false })
-      .limit(6);
-    if (listing.category) q = q.eq("category", listing.category);
-    const { data } = await q;
-    relatedListings = (data as Listing[]) ?? [];
+    if (listing.category) {
+      const { data } = await supabase
+        .from("marketplace_listings")
+        .select("*")
+        .eq("status", "approved")
+        .eq("category", listing.category)
+        .neq("id", id)
+        .order("created_at", { ascending: false })
+        .limit(24);
+      relatedListings = (data as Listing[]) ?? [];
+    }
   } catch {
     // non-fatal
   }
@@ -273,29 +275,23 @@ export default async function ListingDetailPage({
           </div>
         </div>
 
-        {relatedListings.length > 0 && (
-          <div className="mt-10 space-y-4">
-            <h2 className="text-lg font-semibold">Similar listings</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedListings.map((item) => {
-                const img =
-                  item.image_urls?.[0] || item.image_url || null;
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/market/${item.id}`}
-                    className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors"
-                  >
-                    {img ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={img}
-                        alt=""
-                        className="h-36 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-36 w-full bg-muted" />
-                    )}
+        <RelatedCarousel
+          title="Similar listings"
+          items={relatedListings.map((item) => ({
+            kind: "listing" as const,
+            id: item.id,
+            title: item.title,
+            subtitle: item.category,
+            location: item.location || [item.city, item.country].filter(Boolean).join(", "),
+            category: item.category,
+            date: new Date(item.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+            image: item.image_urls?.[0] || item.image_url || null,
+          }))}
+        />
                     <div className="p-3 space-y-1">
                       <p className="font-semibold text-sm line-clamp-2">
                         {item.title}

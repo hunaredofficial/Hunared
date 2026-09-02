@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ShareButton } from "@/components/shared/ShareButton";
+import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
@@ -74,41 +75,25 @@ export default async function JobDetailPage({
 
   if (!job) notFound();
 
-  // Similar jobs (same category / country), exclude current
+  // Similar jobs — same category only, up to 24
   let relatedJobs: Pick<
     Job,
     "id" | "job_title" | "company_name" | "location" | "category" | "salary_rate" | "currency" | "salary_type" | "duration" | "positions" | "created_at"
   >[] = [];
   try {
     const supabase = createAdminClient();
-    let q = supabase
-      .from("jobs")
-      .select(
-        "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
-      )
-      .eq("status", "approved")
-      .neq("id", id)
-      .order("created_at", { ascending: false })
-      .limit(6);
-    if (job.category) q = q.eq("category", job.category);
-    const { data: rel } = await q;
-    relatedJobs = (rel as typeof relatedJobs) ?? [];
-    if (relatedJobs.length < 3 && job.country) {
-      const { data: rel2 } = await supabase
+    if (job.category) {
+      const { data: rel } = await supabase
         .from("jobs")
         .select(
           "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
         )
         .eq("status", "approved")
-        .eq("country", job.country)
+        .eq("category", job.category)
         .neq("id", id)
         .order("created_at", { ascending: false })
-        .limit(6);
-      const ids = new Set(relatedJobs.map((j) => j.id));
-      for (const j of rel2 ?? []) {
-        if (!ids.has(j.id)) relatedJobs.push(j as (typeof relatedJobs)[0]);
-      }
-      relatedJobs = relatedJobs.slice(0, 6);
+        .limit(24);
+      relatedJobs = (rel as typeof relatedJobs) ?? [];
     }
   } catch {
     // non-fatal
@@ -485,23 +470,28 @@ export default async function JobDetailPage({
           </div>
         </div>
 
-        {/* Related / similar jobs */}
-        {relatedJobs.length > 0 && (
-          <div className="mt-10 space-y-4">
-            <h2 className="text-lg font-semibold">Similar jobs</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedJobs.map((rj) => (
-                <Link
-                  key={rj.id}
-                  href={`/jobs/${rj.id}`}
-                  className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors space-y-2"
-                >
-                  {rj.category && (
-                    <Badge
-                      className={cn(
-                        "text-[10px]",
-                        CATEGORY_COLORS[rj.category] ?? CATEGORY_COLORS["Other"]
-                      )}
+        <RelatedCarousel
+          title="Similar jobs"
+          items={relatedJobs.map((rj) => ({
+            kind: "job" as const,
+            id: rj.id,
+            title: rj.job_title,
+            subtitle: rj.company_name,
+            location: rj.location,
+            category: rj.category,
+            categoryClass:
+              (rj.category && CATEGORY_COLORS[rj.category]) ||
+              CATEGORY_COLORS["Other"],
+            date: new Date(rj.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+            meta:
+              "Positions: " +
+              (rj.positions != null ? String(rj.positions) : "Not Specified"),
+          }))}
+        />
                     >
                       {rj.category}
                     </Badge>

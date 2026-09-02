@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
 import type { Article, Profile } from "@/types/database";
+import { ArticleBody } from "@/components/articles/ArticleBody";
+import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
 
 export default async function ArticleDetailPage({
   params,
@@ -42,17 +44,28 @@ export default async function ArticleDetailPage({
 
   if (!article) notFound();
 
+  let relatedArticles: Article[] = [];
+  try {
+    const supabase = createAdminClient();
+    let q = supabase
+      .from("articles")
+      .select("*")
+      .eq("status", "approved")
+      .neq("id", id)
+      .order("created_at", { ascending: false })
+      .limit(24);
+    if (article.category) q = q.eq("category", article.category);
+    const { data } = await q;
+    relatedArticles = (data as Article[]) ?? [];
+  } catch {
+    // non-fatal
+  }
+
   const catLabel =
     ARTICLE_CATEGORIES.find((c) => c.value === article!.category)?.label ??
     article.category;
   const colorClass =
     ARTICLE_CATEGORY_COLORS[article.category] ?? "bg-muted text-muted-foreground";
-
-  // Convert plain-text newlines to paragraphs for display
-  const paragraphs = article.content
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean);
 
   // Author initials for avatar
   const initials = author?.full_name
@@ -107,14 +120,8 @@ export default async function ArticleDetailPage({
             {/* Divider */}
             <div className="border-t border-border mb-10" />
 
-            {/* Body */}
-            <div className="max-w-3xl space-y-6">
-              {paragraphs.map((para, i) => (
-                <p key={i} className="text-lg leading-[1.85] text-muted-foreground">
-                  {para}
-                </p>
-              ))}
-            </div>
+            {/* Body — rendered like write-article preview */}
+            <ArticleBody content={article.content} />
 
             {/* Bottom back link */}
             <div className="mt-16 pt-8 border-t border-border">
@@ -202,6 +209,27 @@ export default async function ArticleDetailPage({
             </Button>
           </aside>
         </div>
+
+        {/* Similar articles — same category, scroll for more */}
+        <RelatedCarousel
+          title="Similar articles"
+          items={relatedArticles.map((a) => ({
+            kind: "article" as const,
+            id: a.id,
+            title: a.title,
+            category:
+              ARTICLE_CATEGORIES.find((c) => c.value === a.category)?.label ??
+              a.category,
+            categoryClass:
+              ARTICLE_CATEGORY_COLORS[a.category] ??
+              "bg-muted text-muted-foreground",
+            date: new Date(a.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+          }))}
+        />
       </div>
     </div>
   );
