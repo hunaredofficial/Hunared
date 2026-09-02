@@ -146,23 +146,13 @@ function getNavItems(role: UserRole): NavItem[] {
     ];
   }
 
-  // seeker / personal (default) — can also post jobs
+  // seeker (default)
   return [
     {
       href: "/dashboard",
       label: "Overview",
       icon: <LayoutDashboard className="h-4 w-4" />,
       exact: true,
-    },
-    {
-      href: "/dashboard/jobs",
-      label: "My Job Posts",
-      icon: <Briefcase className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/jobs/new",
-      label: "Post a Job",
-      icon: <Plus className="h-4 w-4" />,
     },
     {
       href: "/dashboard/profile",
@@ -254,15 +244,7 @@ function SidebarContent({
 
       <div className="px-4 py-3 border-b">
         <p className="text-sm font-medium truncate">{fullName}</p>
-        <p className="text-xs text-muted-foreground">
-          {role === "employer"
-            ? "Company"
-            : role === "personal"
-              ? "Personal"
-              : role === "admin"
-                ? "Admin"
-                : "Job Seeker"}
-        </p>
+        <p className="text-xs text-muted-foreground capitalize">{role}</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
@@ -316,7 +298,7 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r bg-card md:flex md:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-card md:flex md:flex-col">
         <SidebarContent
           role={role}
           fullName={fullName}
@@ -362,8 +344,8 @@ export function DashboardShell({
       )}
 
       {/* Main content */}
-      <main className="md:pl-60">
-        <div className="min-h-screen">{children}</div>
+      <main className="md:pl-64">
+        <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 pb-12 max-w-[90rem] mx-auto w-full">{children}</div>
       </main>
     </div>
   );

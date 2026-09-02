@@ -1,17 +1,8 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import {
-  User,
-  Upload,
-  X,
-  Loader2,
-  Save,
-  Briefcase,
-  Building2,
-  UserCircle2,
-} from "lucide-react";
+import { User, Upload, X, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,55 +15,11 @@ import {
 import { toast } from "sonner";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
-import { JOB_CATEGORIES } from "@/lib/constants";
-import { INDUSTRIES } from "@/lib/companyConstants";
-import { COMPANY_SERVICES } from "@/lib/companyServices";
+import { PROFESSIONS, JOB_CATEGORIES } from "@/lib/constants";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { buildUsernameSuggestions } from "@/lib/usernameSuggest";
 import { COUNTRIES } from "@/lib/countries";
-import type { Profile, UserRole } from "@/types/database";
-
-const SKILL_LEVELS = [
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "Expert",
-  "Master",
-] as const;
-
-type AccountRole = "personal" | "seeker" | "employer";
-
-const ROLE_CARDS: {
-  id: AccountRole;
-  title: string;
-  description: string;
-  icon: typeof User;
-}[] = [
-  {
-    id: "personal",
-    title: "Personal",
-    description: "Marketplace & community. You can also post jobs.",
-    icon: UserCircle2,
-  },
-  {
-    id: "seeker",
-    title: "Job Seeker",
-    description: "Find jobs, appear in Candidates, CV & availability.",
-    icon: Briefcase,
-  },
-  {
-    id: "employer",
-    title: "Company",
-    description: "Company profile, industries, services, hire talent.",
-    icon: Building2,
-  },
-];
-
-function normalizeRole(role: string | null | undefined): AccountRole {
-  if (role === "employer") return "employer";
-  if (role === "personal") return "personal";
-  return "seeker";
-}
+import type { Profile } from "@/types/database";
 
 export function ProfileEditForm({
   initialProfile,
@@ -82,22 +29,29 @@ export function ProfileEditForm({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const [role, setRole] = useState<AccountRole>(
-    normalizeRole(initialProfile.role)
+  // Account type (role)
+  const [role, setRole] = useState<"seeker" | "employer">(
+    initialProfile.role === "employer" ? "employer" : "seeker"
   );
 
+  // Basic info
   const [fullName, setFullName] = useState(initialProfile.full_name ?? "");
   const [username, setUsername] = useState(initialProfile.username ?? "");
   const [phone, setPhone] = useState(initialProfile.phone ?? "");
   const [gender, setGender] = useState(initialProfile.gender ?? "");
+
+  // Email (read-only), country, city
   const [email] = useState(initialProfile.email ?? "");
   const [country, setCountry] = useState(initialProfile.country ?? "");
   const [city, setCity] = useState(initialProfile.city ?? "");
   const [skillLevel, setSkillLevel] = useState(initialProfile.skill_level ?? "");
 
+  // Seeker fields
+  const [profession, setProfession] = useState(
+    initialProfile.profession ?? ""
+  );
   const [jobInterests, setJobInterests] = useState<string[]>(
-    Array.isArray(initialProfile.job_interests) &&
-      initialProfile.job_interests.length
+    Array.isArray(initialProfile.job_interests) && initialProfile.job_interests.length
       ? initialProfile.job_interests
       : initialProfile.profession
         ? [initialProfile.profession]
@@ -107,21 +61,18 @@ export function ProfileEditForm({
     initialProfile.available_for_hire !== false
   );
 
-  const [companyCr, setCompanyCr] = useState(initialProfile.company_cr ?? "");
+  // Employer fields
+  const [companyCr, setCompanyCr] = useState(
+    initialProfile.company_cr ?? ""
+  );
   const [companyWebsite, setCompanyWebsite] = useState(
     initialProfile.company_website ?? ""
   );
   const [companyAddress, setCompanyAddress] = useState(
     initialProfile.company_address ?? ""
   );
-  const [mapLocation, setMapLocation] = useState(
-    (initialProfile as { map_location?: string | null }).map_location ?? ""
-  );
 
-  // Company industries / services (from related company row may not be on profile — start empty or from any known fields)
-  const [industries, setIndustries] = useState<string[]>([]);
-  const [services, setServices] = useState<string[]>([]);
-
+  // Avatar
   const [avatarPreview, setAvatarPreview] = useState(
     initialProfile.avatar_url ?? ""
   );
@@ -129,6 +80,7 @@ export function ProfileEditForm({
   const [avatarRemoved, setAvatarRemoved] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // CV
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [existingCvUrl, setExistingCvUrl] = useState(
     initialProfile.cv_url ?? ""
@@ -136,50 +88,29 @@ export function ProfileEditForm({
   const cvInputRef = useRef<HTMLInputElement>(null);
 
   const isSeeker = role === "seeker";
-  const isEmployer = role === "employer";
 
-  const usernameSuggestions = useMemo(
-    () => buildUsernameSuggestions(fullName || initialProfile.full_name || "user"),
-    [fullName, initialProfile.full_name]
-  );
+  function handleDeleteCv() {
+    setExistingCvUrl("");
+    setCvFile(null);
+  }
 
   async function handleSave() {
     if (!fullName.trim()) {
       toast.error("Full name is required.");
       return;
     }
+
+    
     if (!username.trim()) {
       toast.error("Username / handle is required.");
       return;
     }
-    const handle = username
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, "");
+    const handle = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (handle.length < 3) {
-      toast.error(
-        "Username must be at least 3 characters (letters, numbers, underscore)."
-      );
+      toast.error("Username must be at least 3 characters (letters, numbers, underscore).");
       return;
     }
-    if (isSeeker && jobInterests.length === 0) {
-      toast.error("Select at least one profession / job category.");
-      return;
-    }
-    if (isSeeker && !skillLevel) {
-      toast.error("Skill level is required for Job Seeker.");
-      return;
-    }
-    if (isEmployer && industries.length === 0) {
-      toast.error("Select at least one industry.");
-      return;
-    }
-    if (isEmployer && services.length === 0) {
-      toast.error("Select at least one service.");
-      return;
-    }
-
-    setIsLoading(true);
+setIsLoading(true);
     try {
       let avatarUrl: string | null = initialProfile.avatar_url;
       let avatarPublicId: string | null = initialProfile.avatar_public_id;
@@ -213,176 +144,153 @@ export function ProfileEditForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role: role as UserRole,
+          role,
           fullName: fullName.trim(),
-          username: handle,
-          jobInterests: isSeeker ? jobInterests : [],
+          username: username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "") || null,
+          jobInterests: isSeeker ? jobInterests : null,
           phone: phone.trim() || null,
           gender: gender || null,
           country: country || null,
           city: city.trim() || null,
-          profession: isSeeker ? jobInterests[0] || null : null,
-          skillLevel: isSeeker ? skillLevel || null : null,
-          availableForHire: isSeeker ? availableForHire : true,
+          profession: isSeeker ? profession || null : null,
+          skillLevel: isSeeker ? skillLevel || null : null, // ← added
+          availableForHire: isSeeker ? availableForHire : undefined,
           avatarUrl,
           avatarPublicId,
-          cvUrl: isSeeker ? cvUrl || null : null,
-          companyCr: isEmployer ? companyCr.trim() || null : null,
-          companyWebsite: isEmployer ? companyWebsite.trim() || null : null,
-          companyAddress: isEmployer ? companyAddress.trim() || null : null,
-          mapLocation: isEmployer ? mapLocation.trim() || null : null,
-          industries: isEmployer ? industries : [],
-          services: isEmployer ? services : [],
+          cvUrl: cvUrl || null,
+          companyCr: !isSeeker ? companyCr.trim() || null : null,
+          companyWebsite: !isSeeker ? companyWebsite.trim() || null : null,
+          companyAddress: !isSeeker ? companyAddress.trim() || null : null,
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Save failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? "Failed to save profile");
+      }
 
-      toast.success(
-        isEmployer
-          ? "Company profile saved. You no longer appear in Candidates."
-          : isSeeker
-            ? "Seeker profile saved. You can appear in Candidates."
-            : "Profile saved"
-      );
+      toast.success("Profile updated. Refreshing…");
       router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save profile");
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message ?? "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="w-full max-w-3xl space-y-6">
+    <div className="w-full max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">
+          {isSeeker ? "My Profile" : "Company Profile"}
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Keep your information up to date to improve visibility.
+        </p>
+      </div>
+
       {/* Account type */}
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
-        <div>
-          <h2 className="text-base font-semibold">Account type</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Switch anytime. Job Seeker appears in Candidates; Company does not.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {ROLE_CARDS.map((card) => {
-            const Icon = card.icon;
-            const selected = role === card.id;
-            return (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => setRole(card.id)}
-                className={cn(
-                  "rounded-xl border p-4 text-left transition-all",
-                  selected
-                    ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                    : "border-border bg-background/50 hover:border-primary/40 hover:bg-muted/40"
-                )}
-              >
-                <div
-                  className={cn(
-                    "mb-2 flex h-9 w-9 items-center justify-center rounded-lg",
-                    selected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                </div>
-                <p className="text-sm font-semibold">{card.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground leading-snug">
-                  {card.description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      <div className="w-full p-5 rounded-xl border border-border bg-card">
+        <label className="text-sm font-medium block mb-1.5">Account type</label>
+        <select data-color-scheme="dark"
+          value={role}
+          onChange={(e) => setRole(e.target.value as "seeker" | "employer")}
+          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option className="bg-background text-foreground" value="seeker">Job Seeker / Personal</option>
+          <option className="bg-background text-foreground" value="employer">Employer</option>
+        </select>
+        <p className="text-xs text-muted-foreground mt-1">
+          You can change this anytime. Seeker = find jobs. Employer = post jobs.
+        </p>
+      </div>
 
-      {/* Photo */}
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="relative shrink-0">
-            {avatarPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarPreview}
-                alt="Avatar"
-                className="h-24 w-24 rounded-full object-cover border-2 border-primary/20"
-              />
-            ) : (
-              <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
-                <User className="h-9 w-9 text-muted-foreground" />
-              </div>
-            )}
-            {avatarPreview && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAvatarPreview("");
-                  setAvatarFile(null);
-                  setAvatarRemoved(true);
-                }}
-                className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center"
-                aria-label="Remove photo"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-          <div>
-            <p className="text-sm font-medium">Profile photo</p>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-              JPG, PNG or WebP · max 5MB
-            </p>
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                if (f.size > 5 * 1024 * 1024) {
-                  toast.error("Image must be under 5MB");
-                  return;
-                }
-                setAvatarFile(f);
-                setAvatarRemoved(false);
-                setAvatarPreview(URL.createObjectURL(f));
-              }}
+      {/* Avatar */}
+      <div className="w-full flex items-center gap-5 p-5 rounded-xl border border-border bg-card">
+        <div className="relative shrink-0">
+          {avatarPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarPreview}
+              alt="Avatar"
+              className="h-20 w-20 rounded-full object-cover border-2 border-primary/20"
             />
-            <Button
+          ) : (
+            <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
+              <User className="h-8 w-8 text-muted-foreground" />
+            </div>
+          )}
+          {avatarPreview && (
+            <button
               type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => avatarInputRef.current?.click()}
+              onClick={() => {
+                setAvatarPreview("");
+                setAvatarFile(null);
+                setAvatarRemoved(true);
+              }}
+              className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center cursor-pointer"
+              aria-label="Remove photo"
             >
-              <Upload className="h-3.5 w-3.5 mr-1.5" />
-              Upload photo
-            </Button>
-          </div>
+              <X className="h-3 w-3" />
+            </button>
+          )}
         </div>
-      </section>
+        <div>
+          <p className="text-sm font-medium mb-1">Profile Photo</p>
+          <p className="text-xs text-muted-foreground mb-2">
+            JPG, PNG or WebP, max 5MB
+          </p>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              setAvatarFile(f);
+              setAvatarPreview(URL.createObjectURL(f));
+              setAvatarRemoved(false);
+            }}
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => avatarInputRef.current?.click()}
+            className="cursor-pointer"
+          >
+            <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload Photo
+          </Button>
+        </div>
+      </div>
 
-      {/* Personal info */}
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
+      {/* Personal Info */}
+      <div className="w-full p-5 rounded-xl border border-border bg-card space-y-4">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Personal info
+          Personal Info
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Full name *">
+          <Field label="Full Name" className="col-span-full">
             <Input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Your full name"
+              placeholder="Ahmed Al-Rashidi"
             />
           </Field>
-          <Field label="Email">
-            <Input value={email} disabled className="opacity-70" />
+
+          <Field label="Email address" className="col-span-full">
+            <Input
+              value={email}
+              readOnly
+              className="bg-muted/50 cursor-not-allowed"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Your login email cannot be changed here.
+            </p>
           </Field>
-          <Field label="Username / handle *" className="md:col-span-2">
+
+          <Field label="Username / Handle *">
             <Input
               value={username}
               onChange={(e) =>
@@ -390,16 +298,19 @@ export function ProfileEditForm({
                   e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
                 )
               }
-              placeholder="your_handle"
+              placeholder="ahmed_hse"
             />
-            {usernameSuggestions.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Unique handle. Letters, numbers, underscore. Min 3 characters.
+            </p>
+            {fullName.trim().length >= 2 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {usernameSuggestions.slice(0, 4).map((s) => (
+                {buildUsernameSuggestions(fullName).slice(0, 5).map((s) => (
                   <button
                     key={s}
                     type="button"
+                    className="text-xs rounded-full border px-2 py-0.5 hover:bg-accent"
                     onClick={() => setUsername(s)}
-                    className="text-xs px-2 py-0.5 rounded-full border border-border hover:border-primary/50 hover:bg-primary/10"
                   >
                     @{s}
                   </button>
@@ -407,6 +318,7 @@ export function ProfileEditForm({
               </div>
             )}
           </Field>
+
           <Field label="Phone">
             <Input
               value={phone}
@@ -414,6 +326,7 @@ export function ProfileEditForm({
               placeholder="+966 5x xxx xxxx"
             />
           </Field>
+
           <Field label="Gender">
             <Select
               value={gender || undefined}
@@ -437,6 +350,7 @@ export function ProfileEditForm({
               </SelectContent>
             </Select>
           </Field>
+
           <Field label="Country">
             <Select
               value={country || undefined}
@@ -460,6 +374,7 @@ export function ProfileEditForm({
               </SelectContent>
             </Select>
           </Field>
+
           <Field label="City">
             <Input
               value={city}
@@ -468,166 +383,201 @@ export function ProfileEditForm({
             />
           </Field>
         </div>
-      </section>
+      </div>
 
-      {/* Job Seeker */}
+      {/* Seeker: Professional Info */}
       {isSeeker && (
-        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
+        <div className="w-full p-5 rounded-xl border border-border bg-card space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Job seeker — professions
+            Professional Info
           </h2>
-          <Field label="Professions / job categories *">
-            <MultiSelectChips
-              options={[...JOB_CATEGORIES]}
-              value={jobInterests}
-              onChange={setJobInterests}
-              placeholder="Select one or more"
-            />
-          </Field>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Experience / skill level *">
-              <Select
-                value={skillLevel || undefined}
-                onValueChange={(v) => {
-                  if (v) setSkillLevel(v);
-                }}
-              >
-                <SelectTrigger className="cursor-pointer">
-                  <SelectValue placeholder="Select level" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SKILL_LEVELS.map((l) => (
-                    <SelectItem key={l} value={l} className="cursor-pointer">
-                      {l}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field label="Availability *">
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={availableForHire ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setAvailableForHire(true)}
-                >
-                  Available for hire
-                </Button>
-                <Button
-                  type="button"
-                  variant={!availableForHire ? "default" : "outline"}
-                  className="flex-1"
-                  onClick={() => setAvailableForHire(false)}
-                >
-                  Unavailable
-                </Button>
-              </div>
-            </Field>
-          </div>
-          <Field label="CV (PDF)">
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                ref={cvInputRef}
-                type="file"
-                accept="application/pdf"
-                className="sr-only"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setCvFile(f);
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => cvInputRef.current?.click()}
-              >
-                <Upload className="h-3.5 w-3.5 mr-1.5" />
-                {cvFile
-                  ? cvFile.name
-                  : existingCvUrl
-                    ? "Replace CV"
-                    : "Upload CV"}
-              </Button>
-              {(cvFile || existingCvUrl) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setCvFile(null);
-                    setExistingCvUrl("");
-                  }}
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          </Field>
-        </section>
-      )}
 
-      {/* Company */}
-      {isEmployer && (
-        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Company info
-          </h2>
-          <Field label="Industries *">
+          <Field label="Professions / Job Categories">
             <MultiSelectChips
-              options={[...INDUSTRIES]}
-              value={industries}
-              onChange={setIndustries}
-              placeholder="Select industries"
+              options={JOB_CATEGORIES}
+              value={jobInterests}
+              onChange={(next) => {
+                setJobInterests(next);
+                setProfession(next[0] ?? "");
+              }}
+              placeholder="Select one or more professions"
+              searchPlaceholder="Search professions…"
+              label="Professions"
             />
-          </Field>
-          <Field label="Services *">
-            <MultiSelectChips
-              options={[...COMPANY_SERVICES]}
-              value={services}
-              onChange={setServices}
-              placeholder="Select services"
-            />
-          </Field>
-          <Field label="CR / License">
-            <Input
-              value={companyCr}
-              onChange={(e) => setCompanyCr(e.target.value)}
-              placeholder="Commercial registration"
-            />
-          </Field>
-          <Field label="Website">
-            <Input
-              type="url"
-              value={companyWebsite}
-              onChange={(e) => setCompanyWebsite(e.target.value)}
-              placeholder="https://"
-            />
-          </Field>
-          <Field label="Address">
-            <Input
-              value={companyAddress}
-              onChange={(e) => setCompanyAddress(e.target.value)}
-              placeholder="Business address"
-            />
-          </Field>
-          <Field label="Office map location link (optional)">
-            <Input
-              value={mapLocation}
-              onChange={(e) => setMapLocation(e.target.value)}
-              placeholder="https://maps.google.com/... share link"
-            />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Optional. Google Maps (or similar) link to your office.
+            <p className="text-xs text-muted-foreground mt-1">
+              You can select multiple roles. Job matching uses all of them.
             </p>
           </Field>
-        </section>
+
+          {/* Skill Level – added */}
+          <Field label="Skill Level">
+            <Select
+              value={skillLevel || undefined}
+              onValueChange={(v) => setSkillLevel(v)}
+            >
+              <SelectTrigger className="cursor-pointer">
+                <SelectValue placeholder="Select your level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Beginner" className="cursor-pointer">
+                  Beginner
+                </SelectItem>
+                <SelectItem value="Intermediate" className="cursor-pointer">
+                  Intermediate
+                </SelectItem>
+                <SelectItem value="Advanced" className="cursor-pointer">
+                  Advanced
+                </SelectItem>
+                <SelectItem value="Expert" className="cursor-pointer">
+                  Expert
+                </SelectItem>
+                <SelectItem value="Master" className="cursor-pointer">
+                  Master
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {/* Job hiring status */}
+          <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+            <p className="text-sm font-medium">Job hiring status</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="radio"
+                  name="availableForHire"
+                  checked={availableForHire === true}
+                  onChange={() => setAvailableForHire(true)}
+                  className="h-4 w-4"
+                />
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                  Available for hire
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="radio"
+                  name="availableForHire"
+                  checked={availableForHire === false}
+                  onChange={() => setAvailableForHire(false)}
+                  className="h-4 w-4"
+                />
+                <span className="text-muted-foreground font-medium">
+                  Unavailable
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Employers see this on your public candidate profile.
+            </p>
+          </div>
+
+          <Field label="CV / Resume">
+            <div className="space-y-2">
+              {existingCvUrl && !cvFile && (
+                <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                  <span className="text-sm text-muted-foreground truncate max-w-[70%]">
+                    CV uploaded
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive/80"
+                    onClick={handleDeleteCv}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              )}
+
+              <label
+                className={cn(
+                  "flex items-center gap-3 h-11 px-3 rounded-lg border border-dashed cursor-pointer transition-colors",
+                  "border-border hover:border-primary/50 hover:bg-primary/5",
+                  cvFile && "border-primary/40 bg-primary/5"
+                )}
+              >
+                <input
+                  ref={cvInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setCvFile(f);
+                      setExistingCvUrl("");
+                    }
+                  }}
+                />
+                <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-sm text-muted-foreground truncate">
+                  {cvFile
+                    ? cvFile.name
+                    : existingCvUrl
+                      ? "Click to replace current CV"
+                      : "Upload CV (PDF, max 10MB)"}
+                </span>
+                {cvFile && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCvFile(null);
+                      if (initialProfile.cv_url) {
+                        setExistingCvUrl(initialProfile.cv_url);
+                      }
+                    }}
+                    className="ml-auto"
+                    aria-label="Remove new CV file"
+                  >
+                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                  </button>
+                )}
+              </label>
+            </div>
+          </Field>
+        </div>
+      )}
+
+      {/* Employer: Company details */}
+      {!isSeeker && (
+        <div className="w-full p-5 rounded-xl border border-border bg-card space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Company Info
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Company CR Number" className="col-span-full">
+              <Input
+                value={companyCr}
+                onChange={(e) => setCompanyCr(e.target.value)}
+                placeholder="e.g. 1010123456"
+              />
+            </Field>
+            <Field label="Company Website" className="col-span-full">
+              <Input
+                type="url"
+                value={companyWebsite}
+                onChange={(e) => setCompanyWebsite(e.target.value)}
+                placeholder="https://company.com"
+              />
+            </Field>
+            <Field label="Company Address" className="col-span-full">
+              <Input
+                value={companyAddress}
+                onChange={(e) => setCompanyAddress(e.target.value)}
+                placeholder="Street, City, Country"
+              />
+            </Field>
+          </div>
+        </div>
       )}
 
       <Button
         size="lg"
-        className="h-11 w-full sm:w-auto min-w-[180px]"
+        className="h-11"
         disabled={isLoading}
         onClick={handleSave}
       >
@@ -636,7 +586,7 @@ export function ProfileEditForm({
         ) : (
           <Save className="h-4 w-4 mr-2" />
         )}
-        Save changes
+        Save Changes
       </Button>
     </div>
   );

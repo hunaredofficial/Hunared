@@ -190,12 +190,12 @@ function SeekerDashboard({
   const firstName = profile.full_name.split(" ")[0];
 
   return (
-    <div className="space-y-8 w-full max-w-7xl mx-auto">
+    <div className="space-y-7 sm:space-y-9 w-full max-w-6xl mx-auto pb-8">
       {/* Greeting */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
           <p className="text-sm text-muted-foreground mb-1">Good day,</p>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
               {firstName}
             </span>{" "}
@@ -213,7 +213,7 @@ function SeekerDashboard({
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         <StatCard
           icon={<Briefcase className="h-5 w-5 text-blue-600" />}
           iconBg="bg-blue-100 dark:bg-blue-900/30"
@@ -237,7 +237,7 @@ function SeekerDashboard({
 
       {/* Profile completeness banner */}
       {completeness < 80 && (
-        <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent px-5 py-4 sm:py-5">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
               <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -261,8 +261,8 @@ function SeekerDashboard({
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-base font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <ActionCard
             href="/jobs"
             icon={<SearchIcon className="h-5 w-5 text-blue-600" />}
@@ -326,12 +326,12 @@ function EmployerDashboard({
   const firstName = profile.full_name.split(" ")[0];
 
   return (
-    <div className="space-y-8 w-full max-w-7xl mx-auto">
+    <div className="space-y-7 sm:space-y-9 w-full max-w-6xl mx-auto pb-8">
       {/* Greeting */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
           <p className="text-sm text-muted-foreground mb-1">Good day,</p>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
               {firstName}
             </span>{" "}
@@ -349,7 +349,7 @@ function EmployerDashboard({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         <StatCard
           icon={<Briefcase className="h-5 w-5 text-blue-600" />}
           iconBg="bg-blue-100 dark:bg-blue-900/30"
@@ -373,7 +373,7 @@ function EmployerDashboard({
       {/* Recent job posts */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold">Recent Job Posts</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent Job Posts</h2>
           <Button variant="ghost" size="sm" asChild className="text-xs h-7">
             <Link href="/dashboard/jobs">
               View all <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
@@ -421,8 +421,8 @@ function EmployerDashboard({
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-base font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <ActionCard
             href="/dashboard/jobs/new"
             icon={<Plus className="h-5 w-5 text-blue-600" />}
@@ -465,10 +465,10 @@ function AdminDashboard({
   pendingListings: number;
 }) {
   return (
-    <div className="space-y-8 w-full max-w-7xl mx-auto">
+    <div className="space-y-7 sm:space-y-9 w-full max-w-6xl mx-auto pb-8">
       <div>
         <p className="text-sm text-muted-foreground mb-1">Platform overview</p>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
             Admin
           </span>{" "}
@@ -507,8 +507,8 @@ function AdminDashboard({
       </div>
 
       <div>
-        <h2 className="text-base font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <ActionCard
             href="/dashboard/admin/jobs"
             icon={<CheckCircle className="h-5 w-5 text-emerald-600" />}
@@ -568,19 +568,36 @@ function StatCard({
   link?: { href: string; label: string };
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow p-5">
-      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center mb-4", iconBg)}>
-        {icon}
-      </div>
-      <p className="text-3xl font-bold text-foreground tracking-tight">{value}</p>
-      <div className="flex items-center justify-between mt-1">
-        <p className="text-xs text-muted-foreground font-medium">{label}</p>
+    <div className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-sm hover:shadow-lg hover:border-primary/25 transition-all duration-300">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"
+      />
+      <div className="flex items-start justify-between gap-3 mb-5">
+        <div
+          className={cn(
+            "h-11 w-11 rounded-xl flex items-center justify-center ring-1 ring-black/5 dark:ring-white/10",
+            iconBg
+          )}
+        >
+          {icon}
+        </div>
         {link && (
-          <Link href={link.href} className="text-xs text-primary hover:underline font-medium">
-            {link.label} &rarr;
+          <Link
+            href={link.href}
+            className="text-[11px] font-semibold text-primary/80 hover:text-primary inline-flex items-center gap-0.5"
+          >
+            {link.label}
+            <ArrowRight className="h-3 w-3" />
           </Link>
         )}
       </div>
+      <p className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground font-medium">
+        {label}
+      </p>
     </div>
   );
 }
@@ -601,18 +618,27 @@ function ActionCard({
   return (
     <Link
       href={href}
-      className="group flex items-start gap-4 p-5 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40 transition-all duration-200"
+      className="group relative flex items-center gap-4 p-4 sm:p-5 rounded-2xl border border-border/80 bg-card shadow-sm hover:shadow-md hover:border-primary/35 hover:bg-primary/[0.03] transition-all duration-200"
     >
-      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
+      <div
+        className={cn(
+          "h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-black/5 dark:ring-white/10",
+          iconBg
+        )}
+      >
         {icon}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
           {title}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
+          {desc}
+        </p>
       </div>
-      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
+      <span className="h-8 w-8 rounded-full border border-border/80 flex items-center justify-center shrink-0 group-hover:border-primary/40 group-hover:bg-primary/10 transition-colors">
+        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+      </span>
     </Link>
   );
 }
