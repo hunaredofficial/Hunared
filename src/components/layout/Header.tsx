@@ -31,8 +31,8 @@ const NAV_ITEMS: NavItem[] = [
   { type: "link", href: "/candidates", label: "Candidates" },
   { type: "link", href: "/companies", label: "Companies" },
   { type: "link", href: "/market", label: "Marketplace" },
-  { type: "link", href: "/program", label: "Program" },
   { type: "link", href: "/education", label: "Learning" },
+  { type: "link", href: "/program", label: "Program" },
 ];
 
 export function Header() {

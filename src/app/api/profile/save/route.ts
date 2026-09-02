@@ -37,6 +37,7 @@ interface SaveProfileBody {
   industries?: string[] | null;
   services?: string[] | null;
   mapLocation?: string | null;
+  companyLocation?: string | null;
 }
 
 function normalizeUsername(raw: string | null | undefined): string | null {
@@ -226,6 +227,7 @@ export async function POST(req: Request) {
       company_cr: body.companyCr ?? null,
       company_website: body.companyWebsite ?? null,
       company_address: body.companyAddress ?? null,
+      company_location: body.companyLocation ?? body.mapLocation ?? null,
       available_for_hire: isSeeker
         ? Boolean(body.availableForHire)
         : true,
@@ -301,7 +303,7 @@ export async function POST(req: Request) {
             website: body.companyWebsite || null,
             logo_url: body.avatarUrl || null,
             logo_public_id: body.avatarPublicId || null,
-            headquarters_address: body.mapLocation || body.companyAddress || null,
+            headquarters_address: body.companyLocation || body.mapLocation || body.companyAddress || null,
             updated_at: new Date().toISOString(),
           })
           .eq("owner_id", userId);
@@ -321,7 +323,7 @@ export async function POST(req: Request) {
           website: body.companyWebsite || null,
           logo_url: body.avatarUrl || null,
           logo_public_id: body.avatarPublicId || null,
-          headquarters_address: body.mapLocation || body.companyAddress || null,
+          headquarters_address: body.companyLocation || body.mapLocation || body.companyAddress || null,
           status: "active",
         });
       }

@@ -1107,7 +1107,7 @@ function RegisterInner() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mapLocation">Map location link</Label>
+                    <Label htmlFor="mapLocation">Company Location (optional)</Label>
                     <Input
                       id="mapLocation"
                       value={mapLocation}
@@ -1116,7 +1116,7 @@ function RegisterInner() {
                       className="h-11 rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Optional. Paste a Google Maps (or similar) link to your office.
+                      Optional. Paste a Google Maps (or similar) link to share your office location.
                     </p>
                   </div>
 

@@ -77,6 +77,7 @@ export interface Database {
           company_cr: string | null;
           company_website: string | null;
           company_address: string | null;
+          company_location: string | null;
           available_for_hire: boolean;
           skill_level: string | null;          // ← added
           deleted_at: string | null;
@@ -101,6 +102,7 @@ export interface Database {
           company_cr?: string | null;
           company_website?: string | null;
           company_address?: string | null;
+          company_location?: string | null;
           available_for_hire?: boolean;
           skill_level?: string | null;         // ← added
           deleted_at?: string | null;
@@ -125,6 +127,7 @@ export interface Database {
           company_cr?: string | null;
           company_website?: string | null;
           company_address?: string | null;
+          company_location?: string | null;
           available_for_hire?: boolean;
           skill_level?: string | null;         // ← added
           deleted_at?: string | null;

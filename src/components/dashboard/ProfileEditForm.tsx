@@ -74,6 +74,9 @@ export function ProfileEditForm({
   const [companyAddress, setCompanyAddress] = useState(
     initialProfile.company_address ?? ""
   );
+  const [companyLocation, setCompanyLocation] = useState(
+    (initialProfile as { company_location?: string | null }).company_location ?? ""
+  );
 
   // Avatar
   const [avatarPreview, setAvatarPreview] = useState(
@@ -166,6 +169,8 @@ setIsLoading(true);
           companyCr: isEmployer ? companyCr.trim() || null : null,
           companyWebsite: isEmployer ? companyWebsite.trim() || null : null,
           companyAddress: isEmployer ? companyAddress.trim() || null : null,
+          mapLocation: isEmployer ? companyLocation.trim() || null : null,
+          companyLocation: isEmployer ? companyLocation.trim() || null : null,
         }),
       });
 
@@ -581,6 +586,17 @@ setIsLoading(true);
                 onChange={(e) => setCompanyAddress(e.target.value)}
                 placeholder="Street, City, Country"
               />
+            </Field>
+            <Field label="Company Location (optional)" className="col-span-full">
+              <Input
+                type="url"
+                value={companyLocation}
+                onChange={(e) => setCompanyLocation(e.target.value)}
+                placeholder="https://maps.google.com/... or Google Maps share link"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional. Paste a Google Maps (or similar) link to your office / location.
+              </p>
             </Field>
           </div>
         </div>
