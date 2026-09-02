@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
+import { SaveButton } from "@/components/shared/SaveButton";
 import type { Article } from "@/types/database";
 
 interface SearchParams {
@@ -106,7 +107,7 @@ export default async function EducationPage({
           </div>
         ) : (
           <>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {articles.map((article) => (
                 <ArticleCard key={article.id} article={article} />
               ))}
@@ -154,34 +155,70 @@ export default async function EducationPage({
   );
 }
 
+function plainExcerpt(content: string, max = 150) {
+  const cleaned = content
+    .replace(/^#+\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/^[\*\-]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.length > max ? cleaned.slice(0, max).trim() + "…" : cleaned;
+}
+
 function ArticleCard({ article }: { article: Article }) {
   const catLabel =
     ARTICLE_CATEGORIES.find((c) => c.value === article.category)?.label ??
     article.category;
   const colorClass =
-    ARTICLE_CATEGORY_COLORS[article.category] ?? "bg-muted text-muted-foreground";
-  const excerpt = article.content.replace(/\s+/g, " ").slice(0, 160).trim();
+    ARTICLE_CATEGORY_COLORS[article.category] ??
+    "bg-muted text-muted-foreground";
+  const excerpt = plainExcerpt(article.content);
 
   return (
-    <Card className="group flex flex-col hover:border-primary/40 hover:shadow-md transition-all duration-200">
-      <CardContent className="pt-5 pb-5 flex flex-col flex-1">
-        <Badge className={`text-xs border-0 w-fit mb-3 ${colorClass}`}>{catLabel}</Badge>
-        <h3 className="font-semibold text-sm leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-2">
+    <Card className="group relative flex flex-col overflow-hidden border-border/80 bg-card/80 hover:border-primary/45 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-[var(--brand-via)]/70 to-primary/40 opacity-80"
+      />
+      <CardContent className="pt-5 pb-4 flex flex-col flex-1 gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <Badge className={`text-[10px] border-0 w-fit ${colorClass}`}>
+            {catLabel}
+          </Badge>
+          <SaveButton
+            itemType="article"
+            itemId={article.id}
+            size="icon"
+            className="h-8 w-8 rounded-full"
+          />
+        </div>
+
+        <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
           <Link href={`/education/${article.id}`}>{article.title}</Link>
         </h3>
-        <p className="text-xs text-muted-foreground line-clamp-3 flex-1">{excerpt}…</p>
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <CalendarDays className="h-3 w-3" />
+
+        <p className="text-sm text-muted-foreground line-clamp-3 flex-1 leading-relaxed">
+          {excerpt}
+        </p>
+
+        <div className="flex items-center justify-between pt-1 border-t border-border/60 mt-1">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" />
             {new Date(article.created_at).toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
               year: "numeric",
             })}
           </div>
-          <Button size="sm" variant="ghost" className="h-6 text-xs gap-1 px-2" asChild>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs gap-1 px-2 text-primary hover:text-primary"
+            asChild
+          >
             <Link href={`/education/${article.id}`}>
-              Read <ArrowRight className="h-3 w-3" />
+              Read <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Button>
         </div>

@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { rateLimit } from "@/lib/rateLimit";
 
-type ItemType = "job" | "listing";
+type ItemType = "job" | "listing" | "article";
 
 function parseBody(
   body: unknown
@@ -13,7 +13,7 @@ function parseBody(
   if (b.removeAll === true) return { removeAll: true };
   const itemType = b.itemType;
   const itemId = b.itemId;
-  if (itemType !== "job" && itemType !== "listing") return null;
+  if (itemType !== "job" && itemType !== "listing" && itemType !== "article") return null;
   if (typeof itemId !== "string" || !itemId.trim()) return null;
   return { itemType, itemId: itemId.trim() };
 }
@@ -42,9 +42,13 @@ export async function GET() {
   const listingIds = list
     .filter((r) => r.item_type === "listing")
     .map((r) => r.item_id);
+  const articleIds = list
+    .filter((r) => r.item_type === "article")
+    .map((r) => r.item_id);
 
   const jobsMap = new Map<string, Record<string, unknown>>();
   const listingsMap = new Map<string, Record<string, unknown>>();
+  const articlesMap = new Map<string, Record<string, unknown>>();
 
   if (jobIds.length) {
     const { data: jobs } = await supabase.from("jobs").select("*").in("id", jobIds);
@@ -58,8 +62,40 @@ export async function GET() {
     for (const l of listings ?? [])
       listingsMap.set(l.id as string, l as Record<string, unknown>);
   }
+  if (articleIds.length) {
+    const { data: articles } = await supabase
+      .from("articles")
+      .select("*")
+      .in("id", articleIds);
+    for (const a of articles ?? [])
+      articlesMap.set(a.id as string, a as Record<string, unknown>);
+  }
 
   const items = list.map((row) => {
+    if (row.item_type === "article") {
+      const article = articlesMap.get(row.item_id);
+      if (!article) {
+        return {
+          type: "article" as const,
+          unavailable: true,
+          article: {
+            id: row.item_id,
+            title: "Unavailable article",
+            category: null,
+          },
+        };
+      }
+      return {
+        type: "article" as const,
+        unavailable: article.status !== "approved",
+        article: {
+          id: article.id,
+          title: article.title,
+          category: article.category,
+          created_at: article.created_at,
+        },
+      };
+    }
     if (row.item_type === "job") {
       const job = jobsMap.get(row.item_id);
       if (!job) {

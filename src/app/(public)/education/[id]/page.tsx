@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
 import type { Article, Profile } from "@/types/database";
 import { ArticleBody } from "@/components/articles/ArticleBody";
+import { ShareButton } from "@/components/shared/ShareButton";
+import { SaveButton } from "@/components/shared/SaveButton";
 import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
 
 export default async function ArticleDetailPage({
@@ -114,6 +116,15 @@ export default async function ArticleDetailPage({
                     {author.full_name}
                   </div>
                 )}
+              </div>
+
+              <div className="flex items-center gap-2 mt-5">
+                <SaveButton itemType="article" itemId={article.id} size="sm" />
+                <ShareButton
+                  url={`/education/${article.id}`}
+                  title={article.title}
+                  size="sm"
+                />
               </div>
             </div>
 

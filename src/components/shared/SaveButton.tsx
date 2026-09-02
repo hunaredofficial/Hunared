@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-type ItemType = "job" | "listing";
+type ItemType = "job" | "listing" | "article";
 
 export function SaveButton({
   itemType,
@@ -62,7 +62,11 @@ export function SaveButton({
       type="button"
       variant={saved ? "default" : "outline"}
       size={size}
-      onClick={toggle}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggle();
+      }}
       disabled={loading}
       className={cn("gap-1.5 shrink-0", className)}
     >

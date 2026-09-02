@@ -25,7 +25,7 @@ const CATEGORIES = [
 ];
 
 /** Quick links → open related pages (not universal search) */
-const QUICK_LINKS: { label: string; href: string; accent?: boolean }[] = [
+const QUICK_LINKS: { label: string; href: string; accent?: boolean; external?: boolean }[] = [
   { label: "Post an Ad", href: "/dashboard/market/new", accent: true },
   { label: "Post a Job", href: "/dashboard/jobs/new", accent: true },
   { label: "Jobs", href: "/jobs" },
@@ -42,6 +42,8 @@ const QUICK_LINKS: { label: string; href: string; accent?: boolean }[] = [
   { label: "Home & Furniture", href: "/market?category=home_furniture" },
   { label: "Lost & Found", href: "/market?category=lost_found" },
   { label: "Learning", href: "/education" },
+  { label: "Courses", href: "https://hunared.org/courses", external: true },
+  { label: "Training & Certification", href: "https://hunared.org", external: true },
   { label: "Program", href: "/program" },
   { label: "Offers & Deals", href: "/market?category=offers_deals" },
 ];
@@ -78,7 +80,11 @@ export function HeroSection() {
     router.push(`/search?${params.toString()}`);
   }
 
-  function handleQuickLink(href: string) {
+  function handleQuickLink(href: string, external?: boolean) {
+    if (external || href.startsWith("http://") || href.startsWith("https://")) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      return;
+    }
     router.push(href);
   }
 
@@ -200,60 +206,57 @@ export function HeroSection() {
           </button>
         </form>
 
-        {/* Quick links — premium explore strip */}
-        <div className="mt-7 sm:mt-12">
-          <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-card shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+        {/* Quick links — larger chips + richer color */}
+        <div className="mt-8 sm:mt-12">
+          <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card to-[var(--brand-via)]/10 shadow-[0_0_40px_-12px_rgba(59,130,246,0.35)]">
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--brand-from)]/15 via-transparent to-[var(--brand-via)]/10"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(var(--brand-from)/0.2),transparent_55%)]"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute -top-24 right-0 h-56 w-56 rounded-full bg-[var(--brand-from)] opacity-25 blur-3xl"
+              className="pointer-events-none absolute -top-28 right-0 h-64 w-64 rounded-full bg-[var(--brand-from)] opacity-30 blur-3xl"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-[var(--brand-via)] opacity-20 blur-3xl"
+              className="pointer-events-none absolute -bottom-24 -left-12 h-52 w-52 rounded-full bg-[var(--brand-via)] opacity-25 blur-3xl"
             />
 
-            <div className="relative px-4 py-5 sm:px-7 sm:py-7 md:px-9 md:py-8">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5 sm:mb-6">
-                <div className="space-y-1">
-                  <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                    Start here
-                  </p>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-foreground">
-                    Quick Links
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-lg">
-                    Post, hire, buy, rent, or learn — one tap to the right place.
-                  </p>
-                </div>
+            <div className="relative px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-9">
+              <div className="mb-5 sm:mb-6 space-y-1.5">
+                <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                  Start here
+                </p>
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+                  Quick Links
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-xl">
+                  Post, hire, buy, rent, learn, or train — one tap to the right place.
+                </p>
               </div>
 
-              {/* Accent actions first */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-5">
+              <div className="flex flex-wrap gap-2.5 sm:gap-3 mb-5 sm:mb-6">
                 {QUICK_LINKS.filter((l) => l.accent).map((link) => (
                   <button
                     key={"accent-" + link.href + link.label}
                     type="button"
-                    onClick={() => handleQuickLink(link.href)}
-                    className="inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 sm:px-5 rounded-full text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    onClick={() => handleQuickLink(link.href, link.external)}
+                    className="inline-flex items-center justify-center gap-2 min-h-12 px-5 sm:px-6 rounded-full text-sm sm:text-base font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 ring-1 ring-primary/40 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
                   >
                     {link.label}
                   </button>
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3">
                 {QUICK_LINKS.filter((l) => !l.accent).map((link) => (
                   <button
                     key={link.href + link.label}
                     type="button"
-                    onClick={() => handleQuickLink(link.href)}
-                    className="group flex items-center justify-center min-h-[2.85rem] sm:min-h-[3.15rem] px-2.5 sm:px-3 py-2 rounded-2xl text-[11px] sm:text-sm font-medium text-center border border-border/80 bg-background/60 backdrop-blur-sm text-foreground/90 hover:border-primary/45 hover:bg-primary/10 hover:text-primary hover:shadow-md hover:shadow-primary/10 transition-all duration-200"
+                    onClick={() => handleQuickLink(link.href, link.external)}
+                    className="group flex items-center justify-center min-h-[3.25rem] sm:min-h-[3.5rem] px-3 sm:px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-center leading-snug border border-primary/20 bg-background/80 backdrop-blur-sm text-foreground hover:border-primary/55 hover:bg-primary/15 hover:text-primary hover:shadow-md hover:shadow-primary/15 transition-all duration-200"
                   >
-                    <span className="line-clamp-2 leading-snug">{link.label}</span>
+                    <span className="whitespace-normal break-words">{link.label}</span>
                   </button>
                 ))}
               </div>
