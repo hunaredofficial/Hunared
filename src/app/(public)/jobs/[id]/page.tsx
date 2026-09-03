@@ -143,11 +143,11 @@ export default async function JobDetailPage({
             {/* Header card */}
             <Card>
               <CardContent className="pt-6 pb-5">
-                <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
                   {job.category ? (
                     <Badge
                       className={cn(
-                        "text-xs",
+                        "text-xs font-medium max-w-[min(100%,18rem)] sm:max-w-[min(100%,22rem)] whitespace-normal text-left leading-snug h-auto py-1 px-2.5",
                         CATEGORY_COLORS[job.category] ??
                           CATEGORY_COLORS["Other"]
                       )}
@@ -155,9 +155,9 @@ export default async function JobDetailPage({
                       {job.category}
                     </Badge>
                   ) : (
-                    <span />
+                    <span className="min-w-0" />
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0 ml-auto">
                     <ShareButton
                       url={`/jobs/${job.id}`}
                       title={job.job_title}

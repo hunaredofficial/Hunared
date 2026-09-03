@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { createAdminClient } from "@/lib/supabase";
 
 function escapeHtml(s: string): string {
   return s
@@ -44,35 +45,49 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Basic email format guard
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
-  const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
-  const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-  const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465", 10);
-  if (!SMTP_USER || !SMTP_PASS) {
-    console.error("[contact] SMTP_USER/SMTP_PASS (or EMAIL_USER/EMAIL_PASS) env vars are not set");
-    return NextResponse.json(
-      { error: "Mail server is not configured. Please email hunaredofficial@gmail.com directly." },
-      { status: 500 }
-    );
+  const name = fullName.trim();
+  const mail = email.trim();
+  const msg = message.trim();
+  const reasonDisplay = reason.trim();
+  const phoneDisplay =
+    typeof phone === "string" && phone.trim() ? phone.trim() : null;
+
+  // 1) Always try to store in database first (works without SMTP)
+  let savedToDb = false;
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("contact_messages").insert({
+      full_name: name,
+      email: mail,
+      phone: phoneDisplay,
+      reason: reasonDisplay,
+      message: msg,
+    });
+    if (error) {
+      console.error("[contact] DB insert failed:", error.message);
+    } else {
+      savedToDb = true;
+    }
+  } catch (e) {
+    console.error("[contact] DB unavailable:", e);
   }
 
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
+  // 2) Optional email via SMTP (if configured)
+  const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const SMTP_PASS =
+    process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
+  const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465", 10);
+  const CONTACT_TO =
+    process.env.CONTACT_TO || process.env.SMTP_TO || "hunaredofficial@gmail.com";
 
-  const phoneDisplay =
-    typeof phone === "string" && phone.trim() ? phone.trim() : "—";
-  const reasonDisplay = reason.trim();
-
-  const html = `
+  let emailed = false;
+  if (SMTP_USER && SMTP_PASS) {
+    const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111;">
       <h2 style="background: #0f172a; color: #fff; padding: 16px 24px; border-radius: 8px 8px 0 0; margin: 0;">
         New Contact Form Submission
@@ -81,17 +96,17 @@ export async function POST(request: NextRequest) {
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; width: 120px; vertical-align: top;">Name</td>
-            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(fullName.trim())}</td>
+            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(name)}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Email</td>
             <td style="padding: 8px 0;">
-              <a href="mailto:${escapeHtml(email.trim())}" style="color: #2563eb;">${escapeHtml(email.trim())}</a>
+              <a href="mailto:${escapeHtml(mail)}" style="color: #2563eb;">${escapeHtml(mail)}</a>
             </td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Phone</td>
-            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(phoneDisplay)}</td>
+            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(phoneDisplay || "—")}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Reason</td>
@@ -99,28 +114,55 @@ export async function POST(request: NextRequest) {
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Message</td>
-            <td style="padding: 8px 0; color: #0f172a; white-space: pre-wrap;">${escapeHtml(message.trim())}</td>
+            <td style="padding: 8px 0; color: #0f172a; white-space: pre-wrap;">${escapeHtml(msg)}</td>
           </tr>
         </table>
       </div>
       <p style="color: #94a3b8; font-size: 12px; margin-top: 16px; text-align: center;">
-        Sent from the Hunared contact form &bull; Reply directly to reach the sender.
+        Sent from the Hunared contact form · Reply directly to reach the sender.
       </p>
     </div>
   `;
 
-  try {
-    await transporter.sendMail({
-      from: `"Hunared Contact" <${SMTP_USER}>`,
-      to: "hunaredofficial@gmail.com",
-      replyTo: `"${escapeHtml(fullName.trim())}" <${escapeHtml(email.trim())}>`,
-      subject: `[${escapeHtml(reasonDisplay)}] Message from ${escapeHtml(fullName.trim())}`,
-      html,
-    });
-  } catch (err) {
-    console.error("[contact] Failed to send email:", err);
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
+    try {
+      const transporter = nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        secure: SMTP_PORT === 465,
+        auth: { user: SMTP_USER, pass: SMTP_PASS },
+      });
+      await transporter.sendMail({
+        from: `"Hunared Contact" <${SMTP_USER}>`,
+        to: CONTACT_TO,
+        replyTo: `"${name.replace(/"/g, "")}" <${mail}>`,
+        subject: `[${reasonDisplay}] Message from ${name}`,
+        html,
+      });
+      emailed = true;
+    } catch (err) {
+      console.error("[contact] Failed to send email:", err);
+    }
+  } else {
+    console.warn(
+      "[contact] SMTP not configured (set SMTP_USER + SMTP_PASS). Message stored in DB only."
+    );
   }
 
-  return NextResponse.json({ ok: true });
+  // Success if either path worked
+  if (savedToDb || emailed) {
+    return NextResponse.json({
+      ok: true,
+      emailed,
+      saved: savedToDb,
+    });
+  }
+
+  // Both failed
+  return NextResponse.json(
+    {
+      error:
+        "Could not send your message. Please email hunaredofficial@gmail.com directly, or try again later.",
+    },
+    { status: 500 }
+  );
 }

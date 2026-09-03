@@ -396,7 +396,7 @@ function JobCard({ job }: { job: Partial<Job> }) {
           {job.category && (
             <Badge
               className={cn(
-                "text-xs",
+                "text-xs whitespace-normal leading-snug h-auto py-1 max-w-full",
                 CATEGORY_COLORS[job.category] ?? CATEGORY_COLORS["Other"]
               )}
             >
