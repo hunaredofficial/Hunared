@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
@@ -69,25 +78,25 @@ export async function POST(request: NextRequest) {
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; width: 120px; vertical-align: top;">Name</td>
-            <td style="padding: 8px 0; color: #0f172a;">${fullName.trim()}</td>
+            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(fullName.trim())}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Email</td>
             <td style="padding: 8px 0;">
-              <a href="mailto:${email.trim()}" style="color: #2563eb;">${email.trim()}</a>
+              <a href="mailto:${escapeHtml(email.trim())}" style="color: #2563eb;">${escapeHtml(email.trim())}</a>
             </td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Phone</td>
-            <td style="padding: 8px 0; color: #0f172a;">${phoneDisplay}</td>
+            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(phoneDisplay)}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Reason</td>
-            <td style="padding: 8px 0; color: #0f172a;">${reasonDisplay}</td>
+            <td style="padding: 8px 0; color: #0f172a;">${escapeHtml(reasonDisplay)}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; font-weight: 600; color: #475569; vertical-align: top;">Message</td>
-            <td style="padding: 8px 0; color: #0f172a; white-space: pre-wrap;">${message.trim()}</td>
+            <td style="padding: 8px 0; color: #0f172a; white-space: pre-wrap;">${escapeHtml(message.trim())}</td>
           </tr>
         </table>
       </div>
@@ -101,8 +110,8 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail({
       from: `"Hunared Contact" <${SMTP_USER}>`,
       to: "hunaredofficial@gmail.com",
-      replyTo: `"${fullName.trim()}" <${email.trim()}>`,
-      subject: `[${reasonDisplay}] Message from ${fullName.trim()}`,
+      replyTo: `"${escapeHtml(fullName.trim())}" <${escapeHtml(email.trim())}>`,
+      subject: `[${escapeHtml(reasonDisplay)}] Message from ${escapeHtml(fullName.trim())}`,
       html,
     });
   } catch (err) {

@@ -142,9 +142,15 @@ function RelatedCard({ item }: { item: Card }) {
             <span />
           )}
 
-          {(item.kind === "job" || item.kind === "listing") && (
+          {(item.kind === "job" || item.kind === "listing" || item.kind === "article") && (
             <SaveButton
-              itemType={item.kind === "job" ? "job" : "listing"}
+              itemType={
+                item.kind === "job"
+                  ? "job"
+                  : item.kind === "listing"
+                    ? "listing"
+                    : "article"
+              }
               itemId={item.id}
               size="sm"
             />

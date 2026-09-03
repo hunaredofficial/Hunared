@@ -26,7 +26,7 @@ export type SmartJobParseResult = {
   salaryRate?: ParsedField<string>;
   salaryType?: ParsedField<string>;
   duration?: ParsedField<string>;
-  employmentType?: ParsedField<"permanent" | "temporary" | "task_force">;
+  employmentType?: ParsedField<"permanent" | "temporary">;
   jobTitle?: ParsedField<string>;
   jobDescription?: ParsedField<string>;
   companyEmail?: ParsedField<string>;
@@ -530,7 +530,7 @@ function detectCategories(text: string): ParsedField<string[]> | undefined {
 export function inferEmploymentType(
   duration: string | null | undefined,
   text: string
-): ParsedField<"permanent" | "temporary" | "task_force"> | undefined {
+): ParsedField<"permanent" | "temporary"> | undefined {
   const lower = `${duration ?? ""} ${text}`.toLowerCase();
 
   if (
@@ -546,7 +546,7 @@ export function inferEmploymentType(
     /\bturnaround\b/.test(lower) ||
     /\boutage\b/.test(lower)
   ) {
-    return { value: "task_force", confidence: "high", label: "Task Force" };
+    return { value: "temporary", confidence: "high", label: "Temporary" };
   }
   if (
     /\btemporary\b/.test(lower) ||

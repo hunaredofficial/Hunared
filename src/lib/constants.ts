@@ -116,15 +116,29 @@ export type JobCategory = (typeof JOB_CATEGORIES)[number];
 
 export const DURATIONS = [
   "1 Month",
-  "2 Month",
+  "2 Months",
   "3 Months",
-  "4 Month",
-  "5 Month",
+  "4 Months",
+  "5 Months",
   "6 Months",
   "1 Year",
   "Shutdown",
   "Long Term",
   "Permanent",
+  "UnSpecified",
+] as const;
+
+/** Durations that map to Temporary employment type */
+export const TEMPORARY_DURATIONS = [
+  "1 Month",
+  "2 Months",
+  "3 Months",
+  "4 Months",
+  "5 Months",
+  "6 Months",
+  "1 Year",
+  "Shutdown",
+  "Long Term",
   "UnSpecified",
 ] as const;
 

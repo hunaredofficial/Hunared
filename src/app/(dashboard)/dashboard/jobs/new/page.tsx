@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import {
   CURRENCIES,
@@ -116,6 +116,14 @@ export default function PostJobPage() {
   // Suggest Temporary when duration implies fixed term (do not overwrite manual)
   useEffect(() => {
     if (touched.employmentType || !form.duration) return;
+    if ((TEMPORARY_DURATIONS as readonly string[]).includes(form.duration)) {
+      setForm((prev) => ({ ...prev, employmentType: "temporary" }));
+      return;
+    }
+    if (form.duration === "Permanent") {
+      setForm((prev) => ({ ...prev, employmentType: "permanent" }));
+      return;
+    }
     const inferred = inferEmploymentType(form.duration, form.jobDescription);
     if (inferred?.value) {
       setForm((prev) => ({ ...prev, employmentType: inferred.value }));
@@ -379,6 +387,11 @@ export default function PostJobPage() {
         }),
       });
 
+      if (res.status === 401) {
+        toast.error("Your session expired. Please sign in again, then retry posting.");
+        router.push("/sign-in?redirect_url=/dashboard/jobs/new");
+        return;
+      }
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Failed to post job");
@@ -535,7 +548,6 @@ export default function PostJobPage() {
                 <SelectContent>
                   <SelectItem value="permanent">Permanent</SelectItem>
                   <SelectItem value="temporary">Temporary</SelectItem>
-                  <SelectItem value="task_force">Task Force</SelectItem>
                 </SelectContent>
               </Select>
             </Field>

@@ -54,7 +54,7 @@ function matchesDurationFilter(
   const emp = (job.employment_type ?? "").toLowerCase();
 
   if (filter === "temporary") {
-    return emp === "temporary" || emp === "task_force";
+    return emp === "temporary";
   }
   if (filter === "short_term") {
     // 1–6 Month style durations
@@ -147,7 +147,7 @@ export default async function JobsPage({
     if (
       employmentType === "permanent" ||
       employmentType === "temporary" ||
-      employmentType === "task_force"
+      employmentType === "temporary"
     ) {
       query = query.eq("employment_type", employmentType);
     }
@@ -181,7 +181,7 @@ export default async function JobsPage({
           const emp = (j.employment_type ?? "").toLowerCase();
           const dur = (j.duration ?? "").toLowerCase();
           if (experience === "beginner") {
-            return emp === "temporary" || emp === "task_force" || /^\d+\s*month/.test(dur);
+            return emp === "temporary" || /^\d+\s*month/.test(dur);
           }
           if (experience === "intermediate") {
             return dur.includes("6 month") || dur.includes("1 year");

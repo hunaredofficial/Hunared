@@ -211,7 +211,7 @@ export default async function JobDetailPage({
             <Card>
               <CardContent className="pt-6 pb-6">
                 <h2 className="text-lg font-semibold mb-4">Job Description</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground leading-relaxed">
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground leading-relaxed break-words [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md [&_table]:max-w-full [&_pre]:overflow-x-auto">
                   {job.job_description}
                 </div>
               </CardContent>
@@ -272,7 +272,13 @@ export default async function JobDetailPage({
                   <Detail
                     icon={<Tag className="h-4 w-4" />}
                     label="Employment"
-                    value={job.employment_type}
+                    value={
+                      job.employment_type === "permanent"
+                        ? "Permanent"
+                        : job.employment_type === "temporary"
+                          ? "Temporary"
+                          : String(job.employment_type).replace(/_/g, " ")
+                    }
                   />
                 )}
               </CardContent>
@@ -460,6 +466,34 @@ export default async function JobDetailPage({
                   >
                     {poster.company_website}
                   </a>
+                )}
+                {showPhone && poster?.phone && (
+                  <div className="flex items-start gap-2.5">
+                    <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Profile phone</p>
+                      <a
+                        href={`tel:${poster.phone.replace(/\s+/g, "")}`}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        {poster.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                {showEmail && poster?.email && (
+                  <div className="flex items-start gap-2.5">
+                    <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Profile email</p>
+                      <a
+                        href={`mailto:${poster.email}`}
+                        className="text-sm text-primary hover:underline break-all"
+                      >
+                        {poster.email}
+                      </a>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>

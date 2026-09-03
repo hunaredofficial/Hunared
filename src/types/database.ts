@@ -8,7 +8,7 @@ export type Json =
 
 export type UserRole = "admin" | "employer" | "seeker" | "personal";
 export type JobStatus = "pending" | "approved" | "rejected" | "draft" | "closed";
-export type EmploymentType = "permanent" | "temporary" | "task_force";
+export type EmploymentType = "permanent" | "temporary";
 export type ArticleStatus = "pending" | "approved";
 export type ArticleCategory = "safety_hse" | "engineering" | "career_tips" | "rights_responsibilities";
 export type ListingStatus = "pending" | "approved" | "rejected";

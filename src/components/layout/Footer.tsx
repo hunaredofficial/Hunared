@@ -13,9 +13,9 @@ const FOOTER_LINKS = {
   ],
   Resources: [
     { href: "/education", label: "Education Hub" },
-    { href: "/education/safety-hse", label: "Safety & HSE" },
-    { href: "/education/engineering", label: "Engineering" },
-    { href: "/education/career-tips", label: "Career Tips" },
+    { href: "/education?category=safety_hse", label: "Safety & HSE" },
+    { href: "/education?category=engineering", label: "Engineering" },
+    { href: "/education?category=career_tips", label: "Career Tips" },
   ],
   Company: [
     { href: "/about", label: "About Us" },

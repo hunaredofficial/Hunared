@@ -6,7 +6,7 @@ import { COUNTRIES } from "@/lib/countries";
 import { computeExpiresAt } from "@/lib/expiration";
 import type { EmploymentType } from "@/types/database";
 
-const EMPLOYMENT_TYPES = ["permanent", "temporary", "task_force"] as const;
+const EMPLOYMENT_TYPES = ["permanent", "temporary"] as const;
 
 interface PostJobBody {
   jobTitle: string;
@@ -122,7 +122,9 @@ export async function POST(req: Request) {
   if (!body.jobTitle?.trim()) return NextResponse.json({ error: "Job title is required" }, { status: 400 });
   if (!body.jobDescription?.trim()) return NextResponse.json({ error: "Job description is required" }, { status: 400 });
   if (!body.companyName?.trim()) return NextResponse.json({ error: "Company name is required" }, { status: 400 });
-  if (!body.companyPhone?.trim()) return NextResponse.json({ error: "Company phone is required" }, { status: 400 });
+  if (!body.companyPhone?.trim() || body.companyPhone.replace(/\D/g, "").length < 7) {
+    return NextResponse.json({ error: "A valid company phone number is required to post a job." }, { status: 400 });
+  }
 
   if (!body.country || !COUNTRIES.some((c) => c.code === body.country)) {
     return NextResponse.json({ error: "Invalid country" }, { status: 400 });
@@ -137,7 +139,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Location is required" }, { status: 400 });
   }
 
-  if (!DURATIONS.includes(body.duration as (typeof DURATIONS)[number])) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
+  const rawDur = String(body.duration ?? "").trim();
+  const normalizedDuration = rawDur
+    .replace(/^(\d+) Month$/, "$1 Months");
+  const durationOk =
+    (DURATIONS as readonly string[]).includes(rawDur) ||
+    (DURATIONS as readonly string[]).includes(normalizedDuration);
+  if (!durationOk) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
+  body.duration = (DURATIONS as readonly string[]).includes(rawDur) ? rawDur : normalizedDuration;
   if (!SALARY_TYPES.includes(body.salaryType as (typeof SALARY_TYPES)[number])) return NextResponse.json({ error: "Invalid salary type" }, { status: 400 });
   if (body.positions != null && (typeof body.positions !== "number" || body.positions < 1)) return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
 

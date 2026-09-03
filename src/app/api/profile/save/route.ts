@@ -330,6 +330,13 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[profile/save] company upsert non-fatal:", e);
     }
+  } else {
+    // Leaving Company role → remove company directory entry
+    try {
+      await supabase.from("companies").delete().eq("owner_id", userId);
+    } catch (e) {
+      console.error("[profile/save] company delete non-fatal:", e);
+    }
   }
 
   return NextResponse.json({ success: true });

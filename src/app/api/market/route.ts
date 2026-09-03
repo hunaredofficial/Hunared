@@ -105,6 +105,9 @@ export async function POST(req: Request) {
   if (!body.category || !VALID_CATEGORIES.includes(body.category as ListingCategory)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
+  if (!body.contact_phone?.trim() || body.contact_phone.replace(/\D/g, "").length < 7) {
+    return NextResponse.json({ error: "A valid phone number is required to post a listing." }, { status: 400 });
+  }
   // Country is optional for listings, but if provided it must be a valid ISO code
   if (body.country && !COUNTRIES.some((c) => c.code === body.country)) {
     return NextResponse.json({ error: "Invalid country" }, { status: 400 });
