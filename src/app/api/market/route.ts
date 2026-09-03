@@ -119,10 +119,6 @@ export async function POST(req: Request) {
   const supabase = createAdminClient();
 
   // Determine target status: auto-approve or send to pending review
-      );
-    }
-  }
-
   const autoApprove = await getAutoApproveSetting();
   const newStatus: ListingStatus = autoApprove ? "approved" : "pending";
 
