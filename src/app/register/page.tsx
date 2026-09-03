@@ -131,6 +131,7 @@ function RegisterInner() {
   const [jobInterests, setJobInterests] = useState<string[]>([]);
   const [skillLevel, setSkillLevel] = useState("");
   const [availableForHire, setAvailableForHire] = useState<boolean | null>(null);
+  const [listedPublicly, setListedPublicly] = useState(true);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   // Employer
@@ -415,8 +416,10 @@ function RegisterInner() {
         payload.profession = jobInterests[0] ?? null;
         payload.skillLevel = skillLevel;
         payload.availableForHire = availableForHire === true;
+        payload.listedPublicly = listedPublicly;
       }
       if (activeGoal === "employer") {
+        payload.listedPublicly = listedPublicly;
         payload.industries = industries;
         payload.services = services;
         payload.mapLocation = mapLocation.trim() || null;
@@ -492,6 +495,7 @@ function RegisterInner() {
     jobInterests,
     skillLevel,
     availableForHire,
+    listedPublicly,
     avatarFile,
     avatarPreview,
     companyCr,
@@ -1044,12 +1048,38 @@ function RegisterInner() {
                     </div>
                   </div>
 
+                  <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border p-3">
+                    <input
+                      type="checkbox"
+                      checked={listedPublicly}
+                      onChange={(e) => setListedPublicly(e.target.checked)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <span>
+                      <span className="text-sm font-medium block">Show my profile in Candidates</span>
+                      <span className="text-xs text-muted-foreground">Uncheck to keep your seeker profile private.</span>
+                    </span>
+                  </label>
+
                 </>
               )}
 
               {/* ── EMPLOYER / COMPANY FIELDS ── */}
               {goal === "employer" && (
                 <>
+                  <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border p-3">
+                    <input
+                      type="checkbox"
+                      checked={listedPublicly}
+                      onChange={(e) => setListedPublicly(e.target.checked)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <span>
+                      <span className="text-sm font-medium block">Show my company in Companies directory</span>
+                      <span className="text-xs text-muted-foreground">Uncheck to hide your company from the public directory.</span>
+                    </span>
+                  </label>
+
                   <div className="space-y-2">
                     <Label>Industry *</Label>
                     <MultiSelectChips

@@ -34,6 +34,7 @@ interface SaveProfileBody {
   companyWebsite?: string | null;
   companyAddress?: string | null;
   availableForHire?: boolean;
+  listedPublicly?: boolean;
   industries?: string[] | null;
   services?: string[] | null;
   mapLocation?: string | null;
@@ -230,7 +231,11 @@ export async function POST(req: Request) {
       company_location: body.companyLocation ?? body.mapLocation ?? null,
       available_for_hire: isSeeker
         ? Boolean(body.availableForHire)
-        : true,
+        : false,
+      listed_publicly:
+        body.listedPublicly === undefined
+          ? true
+          : Boolean(body.listedPublicly),
     },
     { onConflict: "id" }
   );
@@ -304,11 +309,12 @@ export async function POST(req: Request) {
             logo_url: body.avatarUrl || null,
             logo_public_id: body.avatarPublicId || null,
             headquarters_address: body.companyLocation || body.mapLocation || body.companyAddress || null,
+            status: body.listedPublicly === false ? "temporarily_closed" : "active",
             updated_at: new Date().toISOString(),
           })
           .eq("owner_id", userId);
       } else {
-        await supabase.from("companies").insert({
+        const { error: coInsErr } = await supabase.from("companies").insert({
           owner_id: userId,
           name: body.fullName.trim(),
           slug: `${slugBase}-${userId.slice(-6)}`.slice(0, 60),
@@ -324,8 +330,15 @@ export async function POST(req: Request) {
           logo_url: body.avatarUrl || null,
           logo_public_id: body.avatarPublicId || null,
           headquarters_address: body.companyLocation || body.mapLocation || body.companyAddress || null,
-          status: "active",
+          status: body.listedPublicly === false ? "temporarily_closed" : "active",
         });
+        if (coInsErr) {
+          console.error("[profile/save] company insert failed:", coInsErr);
+          return NextResponse.json(
+            { error: "Profile saved but company directory entry failed: " + coInsErr.message },
+            { status: 500 }
+          );
+        }
       }
     } catch (e) {
       console.error("[profile/save] company upsert non-fatal:", e);

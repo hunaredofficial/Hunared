@@ -585,8 +585,93 @@ export function CompaniesDirectory() {
   const [mounted, setMounted] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 12;
+  const [remoteCompanies, setRemoteCompanies] = useState<CompanyRecord[] | null>(null);
+  const [remoteLoading, setRemoteLoading] = useState(true);
+  const [remoteTotal, setRemoteTotal] = useState(0);
 
   useEffect(() => setMounted(true), []);
+
+  // Load real companies from API (falls back to mock if empty/error)
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setRemoteLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set("page", "1");
+        params.set("limit", "100");
+        if (appliedSearch) params.set("q", appliedSearch);
+        if (industry) params.set("industry", industry);
+        if (companyType) params.set("type", companyType);
+        if (service) params.set("services", service);
+        if (size) params.set("size", size);
+        if (country) params.set("country", country);
+        if (city.trim()) params.set("city", city.trim());
+        if (verifiedOnly) params.set("verified", "1");
+        if (featuredOnly) params.set("featured", "1");
+        if (hiringOnly) params.set("hiring", "1");
+        if (sort) params.set("sort", sort);
+
+        const res = await fetch(`/api/companies?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        const rows = (data.companies || data.data || []) as any[];
+        const mapped: CompanyRecord[] = rows.map((c) => ({
+          id: c.id,
+          slug: c.slug,
+          name: c.name,
+          logo_url: c.logo_url ?? null,
+          industry: Array.isArray(c.industry) ? c.industry : [],
+          services: Array.isArray(c.services) ? c.services : [],
+          company_type: c.company_type || "",
+          business_size: c.business_size || "",
+          headquarters_city: c.headquarters_city || "",
+          headquarters_country: c.headquarters_country || "",
+          country_code: c.headquarters_country_code || c.country_code || "",
+          is_verified: c.verification_status === "verified" || c.is_verified === true,
+          is_featured: Boolean(c.is_featured),
+          is_hiring: Boolean(c.is_hiring),
+          is_premium: Boolean(c.is_premium),
+          followers_count: c.followers_count ?? 0,
+          jobs_count: c.jobs_count ?? 0,
+          rating_avg: Number(c.rating_avg ?? 0),
+          reviews_count: c.reviews_count ?? 0,
+          services_count: c.services_count ?? 0,
+          founded_year: c.founded_year ?? null,
+          employee_range: c.employee_range || "",
+          about: c.about || c.short_description || "",
+          updated_at: c.updated_at || c.created_at || "",
+        }));
+        if (!cancelled) {
+          setRemoteCompanies(mapped);
+          setRemoteTotal(data.total ?? mapped.length);
+        }
+      } catch {
+        if (!cancelled) {
+          setRemoteCompanies(null); // use mock
+          setRemoteTotal(0);
+        }
+      } finally {
+        if (!cancelled) setRemoteLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appliedSearch,
+    industry,
+    companyType,
+    service,
+    size,
+    country,
+    city,
+    verifiedOnly,
+    featuredOnly,
+    hiringOnly,
+    sort,
+  ]);
 
   const applySearch = useCallback(() => {
     setAppliedSearch(search.trim());
@@ -620,7 +705,9 @@ export function CompaniesDirectory() {
   ].filter(Boolean).length;
 
   const filtered = useMemo(() => {
-    let list = [...MOCK_COMPANIES];
+    let list = remoteCompanies !== null
+      ? [...remoteCompanies]
+      : [...MOCK_COMPANIES];
     const q = appliedSearch.toLowerCase();
     if (q) {
       const tokens = q.split(/\s+/).filter(Boolean);
@@ -697,6 +784,7 @@ export function CompaniesDirectory() {
     }
     return list;
   }, [
+    remoteCompanies,
     appliedSearch,
     industry,
     companyType,
@@ -710,10 +798,10 @@ export function CompaniesDirectory() {
     sort,
   ]);
 
-  const featured = useMemo(
-    () => MOCK_COMPANIES.filter((c) => c.is_featured).slice(0, 4),
-    []
-  );
+  const featured = useMemo(() => {
+    const base = remoteCompanies !== null ? remoteCompanies : MOCK_COMPANIES;
+    return base.filter((c) => c.is_featured).slice(0, 4);
+  }, [remoteCompanies]);
 
   const hasFilters = !!(
     appliedSearch ||

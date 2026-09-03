@@ -55,6 +55,7 @@ export default async function CandidatesPage({
       )
       .eq("role", "seeker")
       .is("deleted_at", null)
+      .eq("listed_publicly", true)
       .order("created_at", { ascending: false })
       .range(from, from + limit - 1);
 

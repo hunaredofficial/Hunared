@@ -108,6 +108,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  try {
+    await supabase.from("saved_items").delete().eq("item_type", "listing").eq("item_id", id);
+  } catch {
+    /* ignore */
+  }
   const { error } = await supabase.from("marketplace_listings").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

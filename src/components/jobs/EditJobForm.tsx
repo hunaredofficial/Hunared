@@ -42,6 +42,7 @@ interface JobForm {
   companyName: string;
   companyPhone: string;
   companyEmail: string;
+  showProfileContact: boolean;
   companyAddress: string;
 }
 
@@ -59,6 +60,7 @@ function jobToForm(job: Job): JobForm {
     companyName: job.company_name,
     companyPhone: job.company_phone ?? "",
     companyEmail: job.company_email ?? "",
+    showProfileContact: Boolean((job as { show_profile_contact?: boolean }).show_profile_contact),
     companyAddress: job.company_address ?? "",
   };
 }
@@ -78,7 +80,7 @@ export function EditJobForm({ job }: { job: Job }) {
 
   const [form, setForm] = useState<JobForm>(jobToForm(job));
 
-  const set = (field: keyof JobForm, value: string) =>
+  const set = (field: keyof JobForm, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const salaryAmountRequired =
@@ -152,6 +154,7 @@ export function EditJobForm({ job }: { job: Job }) {
           company_name: form.companyName.trim(),
           company_phone: form.companyPhone.trim() || null,
           company_email: form.companyEmail.trim() || null,
+          show_profile_contact: form.showProfileContact,
           company_address: form.companyAddress.trim() || null,
           office_lat:
             officeLocation && officeLocation.lat !== 0
@@ -383,6 +386,26 @@ export function EditJobForm({ job }: { job: Job }) {
             label="Paste Google Maps URL (Optional)"
           />
         </Section>
+
+        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              id="showProfileContact"
+              type="checkbox"
+              checked={form.showProfileContact}
+              onChange={(e) => set("showProfileContact", e.target.checked)}
+              className="mt-1 h-4 w-4"
+            />
+            <span>
+              <span className="text-sm font-medium block">
+                Show my profile phone &amp; email on this job
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Uses contact details from your signup profile. If unchecked, only your name appears under “Posted by”.
+              </span>
+            </span>
+          </label>
+        </div>
 
         <Button
           type="submit"

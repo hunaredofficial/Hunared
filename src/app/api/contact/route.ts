@@ -49,19 +49,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
-  const { SMTP_USER, SMTP_PASS } = process.env;
+  const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
+  const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465", 10);
   if (!SMTP_USER || !SMTP_PASS) {
-    console.error("[contact] SMTP_USER or SMTP_PASS env vars are not set");
+    console.error("[contact] SMTP_USER/SMTP_PASS (or EMAIL_USER/EMAIL_PASS) env vars are not set");
     return NextResponse.json(
-      { error: "Server configuration error" },
+      { error: "Mail server is not configured. Please email hunaredofficial@gmail.com directly." },
       { status: 500 }
     );
   }
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
 

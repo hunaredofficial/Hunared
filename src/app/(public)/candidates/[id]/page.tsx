@@ -73,6 +73,7 @@ export default async function CandidateDetailPage({
       .select("*")
       .eq("id", id)
       .eq("role", "seeker")
+      .eq("listed_publicly", true)
       .is("deleted_at", null)
       .single();
     candidate = data;

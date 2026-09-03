@@ -126,8 +126,8 @@ export default async function JobDetailPage({
   const hasMap = job.office_lat != null && job.office_lng != null;
 
   return (
-    <div className="min-h-screen py-10">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-10 overflow-x-hidden">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 overflow-x-hidden">
         {/* Back */}
         <div className="mb-6">
           <Button variant="ghost" size="sm" className="gap-1.5 -ml-2" asChild>
@@ -211,7 +211,7 @@ export default async function JobDetailPage({
             <Card>
               <CardContent className="pt-6 pb-6">
                 <h2 className="text-lg font-semibold mb-4">Job Description</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground leading-relaxed break-words [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-md [&_table]:max-w-full [&_pre]:overflow-x-auto">
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground leading-relaxed break-words [&_img]:!max-w-full [&_img]:!h-auto [&_img]:rounded-md [&_img]:object-contain [&_table]:max-w-full [&_pre]:overflow-x-auto">
                   {job.job_description}
                 </div>
               </CardContent>
@@ -432,7 +432,7 @@ export default async function JobDetailPage({
                     <img
                       src={poster.avatar_url}
                       alt=""
-                      className="h-10 w-10 rounded-full object-cover border border-border"
+                      className="h-10 w-10 min-h-10 min-w-10 max-h-10 max-w-10 rounded-full object-cover border border-border shrink-0"
                     />
                   ) : (
                     <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center text-sm font-semibold text-primary">

@@ -59,7 +59,7 @@ export async function PATCH(
   const allowed: (keyof JobUpdate)[] = [
     "job_title", "job_description", "positions", "location",
     "duration", "salary_rate", "salary_type", "category", "subcategory",
-    "company_name", "company_phone", "company_email", "company_address",
+    "company_name", "company_phone", "company_email", "company_address", "show_profile_contact",
     "office_lat", "office_lng", "office_address",
     "status",
   ];
@@ -121,6 +121,16 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  try {
+    await supabase.from("saved_items").delete().eq("item_type", "job").eq("item_id", id);
+  } catch {
+    /* ignore */
+  }
+  try {
+    await supabase.from("saved_jobs").delete().eq("job_id", id);
+  } catch {
+    /* ignore */
+  }
   const { error } = await supabase.from("jobs").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

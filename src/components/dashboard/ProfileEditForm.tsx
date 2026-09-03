@@ -71,6 +71,9 @@ export function ProfileEditForm({
   const [availableForHire, setAvailableForHire] = useState(
     initialProfile.available_for_hire !== false
   );
+  const [listedPublicly, setListedPublicly] = useState(
+    (initialProfile as { listed_publicly?: boolean | null }).listed_publicly !== false
+  );
 
   // Employer fields
   const [companyCr, setCompanyCr] = useState(
@@ -199,6 +202,7 @@ export function ProfileEditForm({
           profession: isSeeker ? profession || null : null,
           skillLevel: isSeeker ? skillLevel || null : null, // ← added
           availableForHire: isSeeker ? availableForHire : undefined,
+          listedPublicly: (isSeeker || isEmployer) ? listedPublicly : false,
           avatarUrl,
           avatarPublicId,
           cvUrl: cvUrl || null,
@@ -253,6 +257,29 @@ export function ProfileEditForm({
           You can change this anytime. Personal = browse &amp; learn. Seeker = find jobs. Company = post jobs &amp; hire.
         </p>
       </div>
+
+      {(isSeeker || isEmployer) && (
+        <div className="w-full p-5 rounded-xl border border-border bg-card space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={listedPublicly}
+              onChange={(e) => setListedPublicly(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-input"
+            />
+            <span>
+              <span className="text-sm font-medium block">
+                {isEmployer
+                  ? "Show my company in the Companies directory"
+                  : "Show my profile in the Candidates section"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Uncheck to hide your public profile. You can change this anytime.
+              </span>
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Avatar */}
       <div className="w-full flex items-center gap-5 p-5 rounded-xl border border-border bg-card">
