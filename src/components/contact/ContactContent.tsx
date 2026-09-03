@@ -23,7 +23,7 @@ const contactInfo = [
   {
     icon: MapPin,
     label: "Location",
-    value: "Serving expats worldwide",
+    value: "Serving professionals and organizations worldwide",
     href: null as string | null,
   },
 ];

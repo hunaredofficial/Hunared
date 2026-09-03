@@ -50,7 +50,7 @@ const ITEMS = [
 
 export function HomePlatformStrip() {
   return (
-    <section className="relative py-14 sm:py-16 md:py-20 border-y border-border/60 bg-muted/20">
+    <section className="relative py-12 sm:py-14 md:py-16 border-y border-border/60 bg-muted/15">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-10 space-y-2">
           <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
