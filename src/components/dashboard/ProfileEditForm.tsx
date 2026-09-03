@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { PhoneVerifyBox } from "@/components/verify/PhoneVerifyBox";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 import { PROFESSIONS, JOB_CATEGORIES } from "@/lib/constants";
@@ -49,6 +50,9 @@ export function ProfileEditForm({
   const [fullName, setFullName] = useState(initialProfile.full_name ?? "");
   const [username, setUsername] = useState(initialProfile.username ?? "");
   const [phone, setPhone] = useState(initialProfile.phone ?? "");
+  const [phoneVerified, setPhoneVerified] = useState(
+    Boolean((initialProfile as { phone_verified_at?: string | null }).phone_verified_at)
+  );
   const [gender, setGender] = useState(initialProfile.gender ?? "");
 
   // Email (read-only), country, city
@@ -411,6 +415,15 @@ export function ProfileEditForm({
               placeholder="+966 5x xxx xxxx"
             />
           </Field>
+
+          <PhoneVerifyBox
+            phone={phone}
+            onPhoneChange={setPhone}
+            purpose="listing"
+            alreadyVerified={phoneVerified}
+            onVerified={() => setPhoneVerified(true)}
+            label="Verify phone for posting jobs & listings"
+          />
 
           <Field label="Gender">
             <Select

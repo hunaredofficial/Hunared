@@ -93,7 +93,7 @@ export async function POST(req: Request) {
   // Confirm user is an employer
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, phone_verified_at, phone")
     .eq("id", userId)
     .single();
 
@@ -107,6 +107,17 @@ export async function POST(req: Request) {
   if (!["admin", "employer", "seeker", "personal"].includes(profile.role)) {
     return NextResponse.json(
       { error: "You must complete registration before posting jobs." },
+      { status: 403 }
+    );
+  }
+
+  if (profile.role !== "admin" && !(profile as { phone_verified_at?: string | null }).phone_verified_at) {
+    return NextResponse.json(
+      {
+        error:
+          "Verify your phone number once before posting jobs. Complete SMS verification on the form or in My Profile.",
+        code: "PHONE_NOT_VERIFIED",
+      },
       { status: 403 }
     );
   }

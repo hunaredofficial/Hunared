@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (typeof phone !== "string" || !phone.trim() || phone.replace(/\D/g, "").length < 8) {
+    return NextResponse.json(
+      { error: "A valid phone number is required" },
+      { status: 400 }
+    );
+  }
+
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }

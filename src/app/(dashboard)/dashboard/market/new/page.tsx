@@ -16,6 +16,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { PhoneVerifyBox } from "@/components/verify/PhoneVerifyBox";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
@@ -173,6 +174,7 @@ function NewListingForm() {
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [listingType, setListingType] = useState<ListingType>("standard");
   const [externalLink, setExternalLink] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -252,6 +254,10 @@ function NewListingForm() {
     }
     if (!city.trim()) {
       toast.error("City is required");
+      return;
+    }
+    if (!phoneVerified) {
+      toast.error("Verify your phone with SMS before posting a listing.");
       return;
     }
     if (!contactPhone.trim()) {
@@ -622,19 +628,15 @@ function NewListingForm() {
               </div>
             )}
 
-            {/* Contact phone */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Contact Phone <span className="text-destructive">*</span>
-              </label>
-              <input
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                placeholder="+966 5XX XXX XXXX"
-                type="tel"
-                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
+            {/* Contact phone + SMS verify */}
+            <PhoneVerifyBox
+              phone={contactPhone}
+              onPhoneChange={setContactPhone}
+              purpose="listing"
+              alreadyVerified={phoneVerified}
+              onVerified={() => setPhoneVerified(true)}
+              label="Contact phone"
+            />
 
             {/* Description */}
             <div>

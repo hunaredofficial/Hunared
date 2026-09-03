@@ -35,6 +35,7 @@ import {
   type SmartFillFieldKey,
 } from "@/components/jobs/SmartJobFill";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { PhoneVerifyBox } from "@/components/verify/PhoneVerifyBox";
 import {
   EXPIRATION_OPTIONS,
   type ExpirationOptionValue,
@@ -67,6 +68,7 @@ export default function PostJobPage() {
   const router = useRouter();
   const geo = useGeo();
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [currencyTouched, setCurrencyTouched] = useState(false);
   /** Fields the user edited manually — parser must not overwrite these */
   const [touched, setTouched] = useState<Partial<Record<keyof JobForm, boolean>>>({});
@@ -337,6 +339,10 @@ export default function PostJobPage() {
       return;
     }
 
+    if (!phoneVerified) {
+      toast.error("Verify your phone with SMS code before posting a job.");
+      return;
+    }
     if (!form.companyPhone.trim() && !form.companyEmail.trim()) {
       toast.error(
         "Please provide at least one contact method: Phone or Email."
@@ -712,6 +718,17 @@ export default function PostJobPage() {
 
             <div className="col-span-full text-[10px] text-muted-foreground mt-1">
               At least one contact method (Phone or Email) is required.
+            </div>
+
+            <div className="col-span-full">
+              <PhoneVerifyBox
+                phone={form.companyPhone}
+                onPhoneChange={(v) => set("companyPhone", v, true)}
+                purpose="listing"
+                alreadyVerified={phoneVerified}
+                onVerified={() => setPhoneVerified(true)}
+                label="Verify phone (required to publish)"
+              />
             </div>
 
             <div className="col-span-full flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
