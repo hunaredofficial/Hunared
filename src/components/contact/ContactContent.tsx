@@ -28,7 +28,7 @@ const contactInfo = [
   },
 ];
 
-type VerifyState = {
+type EmailVerifyState = {
   sent: boolean;
   verified: boolean;
   code: string;
@@ -47,14 +47,7 @@ export function ContactContent() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
   );
-  const [emailV, setEmailV] = useState<VerifyState>({
-    sent: false,
-    verified: false,
-    code: "",
-    sending: false,
-    checking: false,
-  });
-  const [phoneV, setPhoneV] = useState<VerifyState>({
+  const [emailV, setEmailV] = useState<EmailVerifyState>({
     sent: false,
     verified: false,
     code: "",
@@ -78,75 +71,54 @@ export function ContactContent() {
         checking: false,
       });
     }
-    if (name === "phone") {
-      setPhoneV({
-        sent: false,
-        verified: false,
-        code: "",
-        sending: false,
-        checking: false,
-      });
-    }
   }
 
-  async function sendOtp(channel: "email" | "phone") {
-    const destination =
-      channel === "email" ? form.email.trim() : form.phone.trim();
-    if (channel === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)) {
+  async function sendEmailCode() {
+    const destination = form.email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)) {
       toast.error("Enter a valid email first");
       return;
     }
-    if (channel === "phone" && destination.replace(/\D/g, "").length < 8) {
-      toast.error("Enter a valid phone with country code first");
-      return;
-    }
-    const setV = channel === "email" ? setEmailV : setPhoneV;
-    setV((s) => ({ ...s, sending: true }));
+    setEmailV((s) => ({ ...s, sending: true }));
     try {
       const res = await fetch("/api/verify/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          channel,
+          channel: "email",
           destination,
           purpose: "contact",
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send code");
-      setV((s) => ({ ...s, sent: true, sending: false }));
-      toast.success(
-        channel === "email" ? "Code sent to your email" : "SMS code sent"
-      );
+      setEmailV((s) => ({ ...s, sent: true, sending: false }));
+      toast.success("Verification code sent to your email");
     } catch (e) {
-      setV((s) => ({ ...s, sending: false }));
+      setEmailV((s) => ({ ...s, sending: false }));
       toast.error(e instanceof Error ? e.message : "Failed to send code");
     }
   }
 
-  async function checkOtp(channel: "email" | "phone") {
-    const destination =
-      channel === "email" ? form.email.trim() : form.phone.trim();
-    const v = channel === "email" ? emailV : phoneV;
-    const setV = channel === "email" ? setEmailV : setPhoneV;
-    setV((s) => ({ ...s, checking: true }));
+  async function checkEmailCode() {
+    setEmailV((s) => ({ ...s, checking: true }));
     try {
       const res = await fetch("/api/verify/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          channel,
-          destination,
-          code: v.code.trim(),
+          channel: "email",
+          destination: form.email.trim(),
+          code: emailV.code.trim(),
           purpose: "contact",
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invalid code");
-      setV((s) => ({ ...s, verified: true, checking: false }));
-      toast.success(channel === "email" ? "Email verified" : "Phone verified");
+      setEmailV((s) => ({ ...s, verified: true, checking: false }));
+      toast.success("Email verified");
     } catch (e) {
-      setV((s) => ({ ...s, checking: false }));
+      setEmailV((s) => ({ ...s, checking: false }));
       toast.error(e instanceof Error ? e.message : "Verification failed");
     }
   }
@@ -169,10 +141,6 @@ export function ContactContent() {
       toast.error("Please verify your email with the code we send");
       return;
     }
-    if (!phoneV.verified) {
-      toast.error("Please verify your phone with the SMS code");
-      return;
-    }
 
     setStatus("sending");
     try {
@@ -186,7 +154,6 @@ export function ContactContent() {
           reason: form.reason,
           message: form.message.trim(),
           emailVerified: true,
-          phoneVerified: true,
         }),
       });
       const data = await res.json();
@@ -200,18 +167,13 @@ export function ContactContent() {
         sending: false,
         checking: false,
       });
-      setPhoneV({
-        sent: false,
-        verified: false,
-        code: "",
-        sending: false,
-        checking: false,
-      });
       toast.success("Message sent! We'll get back to you shortly.");
     } catch (err) {
       setStatus("error");
       toast.error(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
       );
     }
   }
@@ -259,7 +221,8 @@ export function ContactContent() {
         <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
           <h2 className="text-xl font-bold mb-1">Send us a message</h2>
           <p className="text-sm text-muted-foreground mb-6">
-            Email and phone must both be verified before sending (anti-spam).
+            Verify your email with a one-time code before sending (anti-spam).
+            Phone is also required.
           </p>
 
           {status === "sent" ? (
@@ -309,21 +272,21 @@ export function ContactContent() {
                   {!emailV.verified && (
                     <button
                       type="button"
-                      onClick={() => sendOtp("email")}
+                      onClick={sendEmailCode}
                       disabled={emailV.sending}
                       className="h-11 px-4 rounded-lg bg-secondary text-secondary-foreground text-sm font-medium whitespace-nowrap disabled:opacity-50"
                     >
                       {emailV.sending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : emailV.sent ? (
-                        "Resend email code"
+                        "Resend code"
                       ) : (
                         "Send email code"
                       )}
                     </button>
                   )}
                   {emailV.verified && (
-                    <span className="flex items-center gap-1 text-sm text-emerald-500 px-2">
+                    <span className="flex items-center gap-1 text-sm text-emerald-500 px-2 shrink-0">
                       <CheckCircle2 className="h-4 w-4" /> Verified
                     </span>
                   )}
@@ -338,13 +301,13 @@ export function ContactContent() {
                           code: e.target.value.replace(/\D/g, "").slice(0, 6),
                         }))
                       }
-                      placeholder="6-digit email code"
+                      placeholder="6-digit code from email"
                       maxLength={6}
                       className={fieldClass}
                     />
                     <button
                       type="button"
-                      onClick={() => checkOtp("email")}
+                      onClick={checkEmailCode}
                       disabled={emailV.checking || emailV.code.length !== 6}
                       className="h-11 px-4 rounded-lg border border-border text-sm font-medium disabled:opacity-50"
                     >
@@ -358,72 +321,20 @@ export function ContactContent() {
                 )}
               </div>
 
-              {/* Phone + verify */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium block">
+              {/* Phone required, no SMS */}
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
                   Contact number <span className="text-destructive">*</span>
                 </label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    name="phone"
-                    type="tel"
-                    value={form.phone}
-                    onChange={handleChange}
-                    required
-                    disabled={phoneV.verified}
-                    placeholder="+966 5x xxx xxxx"
-                    className={fieldClass}
-                  />
-                  {!phoneV.verified && (
-                    <button
-                      type="button"
-                      onClick={() => sendOtp("phone")}
-                      disabled={phoneV.sending}
-                      className="h-11 px-4 rounded-lg bg-secondary text-secondary-foreground text-sm font-medium whitespace-nowrap disabled:opacity-50"
-                    >
-                      {phoneV.sending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : phoneV.sent ? (
-                        "Resend SMS"
-                      ) : (
-                        "Send SMS code"
-                      )}
-                    </button>
-                  )}
-                  {phoneV.verified && (
-                    <span className="flex items-center gap-1 text-sm text-emerald-500 px-2">
-                      <CheckCircle2 className="h-4 w-4" /> Verified
-                    </span>
-                  )}
-                </div>
-                {phoneV.sent && !phoneV.verified && (
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      value={phoneV.code}
-                      onChange={(e) =>
-                        setPhoneV((s) => ({
-                          ...s,
-                          code: e.target.value.replace(/\D/g, "").slice(0, 6),
-                        }))
-                      }
-                      placeholder="6-digit SMS code"
-                      maxLength={6}
-                      className={fieldClass}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => checkOtp("phone")}
-                      disabled={phoneV.checking || phoneV.code.length !== 6}
-                      className="h-11 px-4 rounded-lg border border-border text-sm font-medium disabled:opacity-50"
-                    >
-                      {phoneV.checking ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Verify phone"
-                      )}
-                    </button>
-                  </div>
-                )}
+                <input
+                  name="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="+966 5x xxx xxxx"
+                  className={fieldClass}
+                />
               </div>
 
               <div>
@@ -462,9 +373,7 @@ export function ContactContent() {
 
               <button
                 type="submit"
-                disabled={
-                  status === "sending" || !emailV.verified || !phoneV.verified
-                }
+                disabled={status === "sending" || !emailV.verified}
                 className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {status === "sending" ? (

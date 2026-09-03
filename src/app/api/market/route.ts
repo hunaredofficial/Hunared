@@ -119,21 +119,6 @@ export async function POST(req: Request) {
   const supabase = createAdminClient();
 
   // Determine target status: auto-approve or send to pending review
-  // Require verified phone for sellers
-  {
-    const { data: phoneProf } = await supabase
-      .from("profiles")
-      .select("role, phone_verified_at")
-      .eq("id", userId)
-      .maybeSingle();
-    if (phoneProf?.role !== "admin" && !phoneProf?.phone_verified_at) {
-      return NextResponse.json(
-        {
-          error:
-            "Verify your phone number once before posting listings. Complete SMS verification first.",
-          code: "PHONE_NOT_VERIFIED",
-        },
-        { status: 403 }
       );
     }
   }

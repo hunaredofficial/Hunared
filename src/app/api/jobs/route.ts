@@ -111,17 +111,6 @@ export async function POST(req: Request) {
     );
   }
 
-  if (profile.role !== "admin" && !(profile as { phone_verified_at?: string | null }).phone_verified_at) {
-    return NextResponse.json(
-      {
-        error:
-          "Verify your phone number once before posting jobs. Complete SMS verification on the form or in My Profile.",
-        code: "PHONE_NOT_VERIFIED",
-      },
-      { status: 403 }
-    );
-  }
-
   let body: PostJobBody;
   try {
     body = (await req.json()) as PostJobBody;
