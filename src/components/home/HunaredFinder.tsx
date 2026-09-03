@@ -349,7 +349,7 @@ export function HunaredFinder() {
   }
 
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-14 sm:py-16 md:py-20 bg-muted/25">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-card border border-primary/20 brand-glow p-8 sm:p-10 md:p-12 space-y-8">
           <div className="text-center space-y-3">

@@ -91,7 +91,7 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative min-h-[auto] sm:min-h-[88vh] flex flex-col items-center justify-center overflow-hidden pt-24 sm:pt-28 pb-10 sm:pb-16">
+    <section className="relative min-h-[auto] sm:min-h-[82vh] flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-12">
       {/* Clean background like other sections */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/25" />
@@ -108,17 +108,24 @@ export function HeroSection() {
         {/* Larger premium card — same language as CTA / Program */}
         <form
           onSubmit={handleSearch}
-          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border border-primary/20 brand-glow p-4 sm:p-8 md:p-10 lg:p-12 space-y-4 sm:space-y-6"
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border border-primary/20 brand-glow p-4 sm:p-7 md:p-9 lg:p-11 space-y-4 sm:space-y-5 md:space-y-6"
         >
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -top-12 -right-12 h-64 w-64 rounded-full bg-[var(--brand-from)] opacity-[0.06] blur-3xl" />
             <div className="absolute -bottom-12 -left-12 h-64 w-64 rounded-full bg-[var(--brand-via)] opacity-[0.06] blur-3xl" />
           </div>
 
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-2.5 sm:space-y-3">
             <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold tracking-wide text-primary">
               Universal Smart Search
             </span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-bold tracking-tight leading-tight px-1">
+              Find work, talent &amp; opportunity{" "}
+              <span className="gradient-text">worldwide</span>
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed px-2">
+              Search jobs, candidates, companies, marketplace, and learning in one place.
+            </p>
           </div>
 
           {/* Large search input */}
@@ -233,7 +240,7 @@ export function HeroSection() {
                   Quick Links
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xl">
-                  Post, hire, buy, rent, learn, or train — one tap to the right place.
+                  Post jobs, hire talent, list services, or learn — jump straight to the right place.
                 </p>
               </div>
 

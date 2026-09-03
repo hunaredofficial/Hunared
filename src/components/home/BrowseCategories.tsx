@@ -117,21 +117,24 @@ export function BrowseCategories() {
 
   return (
     <section
-      className="py-16 px-4 sm:px-6"
+      className="relative py-14 sm:py-16 md:py-20 px-4 sm:px-6"
       aria-labelledby="browse-categories-heading"
     >
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-7 sm:space-y-8">
         {/* Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2.5">
           <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary mb-1">
             <LayoutGrid className="h-5 w-5" />
           </div>
-          <h2 id="browse-categories-heading" className="text-3xl font-bold">
-            Browse by Categories
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Explore
+          </p>
+          <h2 id="browse-categories-heading" className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Browse by categories
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-            Explore jobs, learning, marketplace, property, and services. Open a
-            tab to see categories.
+            Jobs, learning, marketplace, property, and services — open a tab to
+            jump in.
           </p>
         </div>
 

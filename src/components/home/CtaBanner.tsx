@@ -1,42 +1,46 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function CtaBanner() {
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-card border border-primary/20 brand-glow p-10 md:p-16 text-center">
-          {/* Background decoration */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-            <div className="absolute -top-10 -right-10 h-60 w-60 rounded-full bg-[var(--brand-from)] opacity-[0.06] blur-3xl" />
-            <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-[var(--brand-via)] opacity-[0.06] blur-3xl" />
+    <section className="relative py-14 sm:py-18 md:py-20 px-4 sm:px-6">
+      <div className="mx-auto max-w-5xl">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card px-6 py-12 sm:px-10 sm:py-14 md:px-14 md:py-16 text-center brand-glow">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-primary/25 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-20 -right-10 h-40 w-40 rounded-full bg-[var(--brand-via)] opacity-20 blur-3xl"
+          />
+
+          <div className="relative mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Free to join
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            <span className="gradient-text">Ready to Take the Next Step?</span>
+          <h2 className="relative text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 sm:mb-4">
+            Ready for your next{" "}
+            <span className="gradient-text">opportunity?</span>
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg mb-8">
-            Join thousands of expat professionals who found their dream role or perfect hire through Hunared.
+          <p className="relative mx-auto max-w-xl text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
+            Create a free account to post jobs, list services, build your
+            profile, or hire talent — all on one global platform.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              size="lg"
-              className="h-12 px-8 text-base bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300 hover:scale-105"
-              asChild
-            >
+
+          <div className="relative flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3">
+            <Button asChild size="lg" className="gap-2 min-h-12">
               <Link href="/register">
-                Create Free Account
-                <ArrowRight className="ml-2 h-4 w-4" />
+                Create free account <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 px-8 text-base border-primary/30 hover:border-primary/60"
-              asChild
-            >
-              <Link href="/about">Learn More About Us</Link>
+            <Button asChild variant="outline" size="lg" className="min-h-12">
+              <Link href="/jobs">Browse jobs</Link>
+            </Button>
+            <Button asChild variant="ghost" size="lg" className="min-h-12">
+              <Link href="/about">About Hunared</Link>
             </Button>
           </div>
         </div>
