@@ -1,43 +1,45 @@
 import type { Metadata } from "next";
 import { SiteContainer } from "@/components/layout/SiteContainer";
 import { ContactContent } from "@/components/contact/ContactContent";
-import { MessageSquare } from "lucide-react";
+import { Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Contact Us",
+  title: "Contact Us", 
   description:
-    "Contact Hunared support — questions about accounts, jobs, marketplace, programs, or partnerships. We typically respond within one business day.",
-};
-
+    "Get in touch with the Hunared team. We're here to help with questions, feedback, or partnership enquiries.",
+}; 
+ 
 export default function ContactPage() {
   return (
     <div className="min-h-screen">
-      <section className="relative border-b border-border overflow-hidden">
+      {/* ── Hero ──────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/10 via-background to-background py-20 sm:py-28">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/12 via-background to-background"
           aria-hidden
+          className="pointer-events-none absolute -top-32 right-0 h-96 w-96 rounded-full bg-primary/5 blur-3xl"
         />
-        <SiteContainer className="relative py-12 sm:py-16 md:py-18 text-center sm:text-left">
-          <div className="max-w-3xl mx-auto sm:mx-0">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
-              <MessageSquare className="h-3.5 w-3.5" />
-              Support
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-              Contact us
-            </h1>
-            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl">
-              Questions about accounts, listings, programs, or partnerships —
-              send a message and our team will get back to you, typically within
-              one business day.
-            </p>
+        <SiteContainer className="relative text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary mb-6">
+            <Mail className="h-3.5 w-3.5" />
+            Get in touch
           </div>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+            We&apos;d love to{" "}
+            <span className="gradient-text">hear from you</span>
+          </h1>
+          <p className="mx-auto max-w-xl text-muted-foreground text-lg">
+            Have a question, suggestion, or just want to say hello? Reach out
+            and our team will get back to you.
+          </p>
         </SiteContainer>
       </section>
 
-      <SiteContainer className="py-12 sm:py-16 md:py-20">
-        <ContactContent />
-      </SiteContainer>
+      {/* ── Split layout ──────────────────────────────────────── */}
+      <section className="py-20 sm:py-28">
+        <SiteContainer>
+          <ContactContent />
+        </SiteContainer>
+      </section>
     </div>
   );
 }
