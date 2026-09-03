@@ -7,6 +7,7 @@ import {
   Briefcase,
   BookOpen,
   ShoppingBag,
+  Star,
   Target,
   Eye,
   Heart,
@@ -19,13 +20,6 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
-  MapPin,
-  Lock,
-  Zap,
-  Layers,
-  Search,
-  UserPlus,
-  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,43 +34,37 @@ const features = [
     icon: Briefcase,
     title: "Global Job Board",
     description:
-      "Discover roles across industries and experience levels. Post openings, filter by skill and location, and hire with clear contact paths.",
-    href: "/jobs",
+      "Discover roles across industries and experience levels. Post openings, filter by location and skill, and hire with confidence.",
   },
   {
     icon: Users,
     title: "Candidate Directory",
     description:
-      "A living talent network where skilled professionals can be found — and employers discover people ready to contribute.",
-    href: "/candidates",
+      "A living talent network where skilled professionals can be found — and where employers discover people ready to contribute.",
   },
   {
     icon: Building2,
     title: "Company Directory",
     description:
-      "Explore organizations by industry and services. Build brand visibility and connect with the right partners.",
-    href: "/companies",
+      "Explore organizations by industry and services. Build visibility for your brand and connect with the right partners.",
   },
   {
     icon: ShoppingBag,
     title: "Marketplace",
     description:
-      "List products, services, and offers. Reach a professional audience with moderated, contact-ready listings.",
-    href: "/marketplace",
+      "List products, services, and community offers. Buy and sell with clear contact paths and moderated listings.",
   },
   {
     icon: BookOpen,
     title: "Learning Hub",
     description:
-      "Practical articles on safety, engineering, careers, and growth — knowledge that compounds over time.",
-    href: "/education",
+      "Practical articles on safety, engineering, careers, and professional growth — knowledge that compounds over time.",
   },
   {
     icon: GraduationCap,
     title: "Programs & Credentials",
     description:
-      "Training and certification pathways with official verification through Hunared.org.",
-    href: "/program",
+      "Training, certification, and career pathways with official verification through Hunared.org.",
   },
 ];
 
@@ -109,9 +97,9 @@ const values = [
 
 const stats = [
   { value: "50+", label: "Countries reached" },
-  { value: "6", label: "Core platform areas" },
-  { value: "1", label: "Account for everything" },
-  { value: "24/7", label: "Global access" },
+  { value: "All-in-one", label: "Career platform" },
+  { value: "Jobs + Talent", label: "Two-sided market" },
+  { value: "Verified", label: "Program credentials" },
 ];
 
 const pillars = [
@@ -132,95 +120,39 @@ const pillars = [
   },
 ];
 
-const steps = [
-  {
-    icon: UserPlus,
-    step: "01",
-    title: "Create your account",
-    text: "Sign up as Personal, Seeker, or Company. Complete your profile so the right people can find you.",
-  },
-  {
-    icon: Search,
-    step: "02",
-    title: "Explore or publish",
-    text: "Browse jobs, talent, companies, and marketplace — or post openings and listings in minutes.",
-  },
-  {
-    icon: Rocket,
-    step: "03",
-    title: "Engage & grow",
-    text: "Apply, hire, learn, and verify credentials. One platform that stays with you as your goals evolve.",
-  },
-];
-
-const trustItems = [
-  {
-    icon: Lock,
-    title: "Secure accounts",
-    text: "Authenticated sessions and protected profiles.",
-  },
-  {
-    icon: Shield,
-    title: "Moderated listings",
-    text: "Review flows help keep jobs and ads professional.",
-  },
-  {
-    icon: MapPin,
-    title: "Global reach",
-    text: "Built for opportunity across regions and industries.",
-  },
-  {
-    icon: Zap,
-    title: "Fast to start",
-    text: "Post a job or complete a profile without friction.",
-  },
-];
-
 export default function AboutPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/15 via-background to-background"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
-          aria-hidden
-        />
-        <SiteContainer className="relative py-16 sm:py-24 text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1.5 text-xs font-medium text-primary">
-            <Layers className="h-3.5 w-3.5" />
-            Global careers & opportunity platform
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-[3.35rem] leading-[1.15]">
-            One platform for work,{" "}
-            <span className="gradient-text">talent & growth</span>
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-primary/5 via-background to-background py-16 sm:py-24">
+        <SiteContainer className="relative text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            About Hunared
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-tight">
+            The global platform for{" "}
+            <span className="gradient-text">careers & opportunity</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg leading-relaxed">
-            Hunared unites jobs, candidates, companies, marketplace, learning,
-            and verified programs — so professionals and organizations worldwide
-            can find each other, hire with clarity, and keep developing skills.
+            Hunared brings jobs, talent, companies, marketplace, learning, and
+            verified programs together — so professionals and organizations
+            worldwide can find each other, grow, and succeed in one place.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="gap-2">
               <Link href="/register">
-                Get started free <ArrowRight className="h-4 w-4" />
+                Get started <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/jobs">Browse jobs</Link>
-            </Button>
-            <Button asChild variant="ghost" size="lg">
-              <Link href="/program">View programs</Link>
+              <Link href="/jobs">Explore jobs</Link>
             </Button>
           </div>
         </SiteContainer>
       </section>
 
       {/* Stats */}
-      <section className="border-b border-border py-10 sm:py-12 bg-muted/15">
+      <section className="border-b border-border py-10 sm:py-12">
         <SiteContainer>
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {stats.map((s) => (
@@ -237,23 +169,20 @@ export default function AboutPage() {
         </SiteContainer>
       </section>
 
-      {/* Story + pillars */}
+      {/* Story */}
       <section className="py-16 sm:py-20">
         <SiteContainer>
           <div className="mx-auto max-w-3xl text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
-              Our story
-            </p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
               Built for a{" "}
               <span className="gradient-text">connected world of work</span>
             </h2>
             <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
               Careers are no longer limited by a single city or channel. Talent
-              moves across regions, companies hire beyond borders, and skills need
-              continuous growth. Hunared simplifies that reality — one place where
-              opportunity is discoverable, listings stay clear, and learning is
-              always within reach.
+              moves across borders, companies hire across regions, and skills
+              need continuous growth. Hunared was created to simplify that
+              reality — one platform where opportunity is discoverable, listings
+              are clear, and learning stays within reach.
             </p>
           </div>
 
@@ -261,7 +190,7 @@ export default function AboutPage() {
             {pillars.map(({ icon: Icon, title, text }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-sm hover:border-primary/30 transition-colors"
+                className="rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-sm"
               >
                 <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <Icon className="h-5 w-5" />
@@ -276,78 +205,42 @@ export default function AboutPage() {
         </SiteContainer>
       </section>
 
-      {/* How it works */}
+      {/* Mission & Vision */}
       <section className="border-y border-border bg-muted/20 py-16 sm:py-20">
         <SiteContainer>
-          <div className="mx-auto max-w-2xl text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
-              How it works
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
-              Three steps to get value
-            </h2>
-            <p className="text-muted-foreground">
-              Whether you are hiring, job seeking, or listing services — start
-              simply and expand as you need.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {steps.map(({ icon: Icon, step, title, text }) => (
-              <div
-                key={step}
-                className="relative rounded-2xl border border-border bg-card p-6 sm:p-7"
-              >
-                <span className="absolute top-5 right-5 text-3xl font-bold text-primary/15 select-none">
-                  {step}
-                </span>
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </SiteContainer>
-      </section>
-
-      {/* Mission & Vision */}
-      <section className="py-16 sm:py-20">
-        <SiteContainer>
           <div className="grid gap-8 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 relative overflow-hidden">
-              <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+            <div className="rounded-2xl border border-border bg-card p-7 sm:p-9">
               <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Target className="h-6 w-6" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3">Our mission</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3">
+                Our mission
+              </h2>
               <p className="text-muted-foreground leading-relaxed">
                 To empower people and organizations to{" "}
                 <span className="font-medium text-foreground">
                   find opportunity, hire with clarity, and grow skills
                 </span>{" "}
-                through a single, trusted global platform — from first search to
-                long-term career development.
+                through a single, trusted global platform — from first job
+                search to long-term career development.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-7 sm:p-9 relative overflow-hidden">
-              <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+            <div className="rounded-2xl border border-border bg-card p-7 sm:p-9">
               <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Eye className="h-6 w-6" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3">Our vision</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3">
+                Our vision
+              </h2>
               <p className="text-muted-foreground leading-relaxed">
                 A world where{" "}
                 <span className="font-medium text-foreground">
                   access to work and learning is not fragmented
                 </span>
                 . Hunared aims to be the place professionals and companies turn
-                to for roles, talent, services, knowledge, and verified
-                credentials — without juggling a dozen tools.
+                to when they need roles, talent, services, knowledge, and
+                verified credentials — without switching between a dozen tools.
               </p>
             </div>
           </div>
@@ -355,12 +248,9 @@ export default function AboutPage() {
       </section>
 
       {/* Platform pillars */}
-      <section className="border-t border-border bg-muted/15 py-16 sm:py-20">
+      <section className="py-16 sm:py-20">
         <SiteContainer>
           <div className="mx-auto max-w-2xl text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
-              Platform
-            </p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
               Everything in one{" "}
               <span className="gradient-text">professional ecosystem</span>
@@ -372,40 +262,34 @@ export default function AboutPage() {
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ icon: Icon, title, description, href }) => (
-              <Link
+            {features.map(({ icon: Icon, title, description }) => (
+              <div
                 key={title}
-                href={href}
-                className="group rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm"
+                className="group rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
               >
                 <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  {title}
-                  <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary" />
-                </h3>
+                <h3 className="font-semibold mb-2">{title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {description}
                 </p>
-              </Link>
+              </div>
             ))}
           </div>
         </SiteContainer>
       </section>
 
       {/* Values */}
-      <section className="py-16 sm:py-20">
+      <section className="border-t border-border bg-muted/20 py-16 sm:py-20">
         <SiteContainer>
           <div className="mx-auto max-w-2xl text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
-              Principles
-            </p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
               What we stand for
             </h2>
             <p className="text-muted-foreground">
-              Guides for product decisions, moderation, and how we serve members.
+              Principles that guide product decisions, moderation, and how we
+              serve members.
             </p>
           </div>
 
@@ -431,12 +315,9 @@ export default function AboutPage() {
       </section>
 
       {/* Who it's for */}
-      <section className="border-y border-border bg-muted/20 py-16 sm:py-20">
+      <section className="py-16 sm:py-20">
         <SiteContainer>
           <div className="mx-auto max-w-2xl text-center mb-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">
-              Members
-            </p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
               Who Hunared is for
             </h2>
@@ -453,7 +334,7 @@ export default function AboutPage() {
                 points: [
                   "Browse and apply to jobs",
                   "Build a public candidate profile",
-                  "Save listings and track opportunities",
+                  "Save listings and follow opportunities",
                   "Learn via Education Hub & programs",
                 ],
               },
@@ -498,44 +379,19 @@ export default function AboutPage() {
         </SiteContainer>
       </section>
 
-      {/* Trust strip */}
-      <section className="py-14 sm:py-16">
-        <SiteContainer>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {trustItems.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="flex gap-3 items-start">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-4.5 w-4.5 h-[18px] w-[18px]" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm mb-0.5">{title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {text}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </SiteContainer>
-      </section>
-
       {/* CTA */}
-      <section className="border-t border-border pb-16 sm:pb-20">
+      <section className="border-t border-border py-16 sm:py-20">
         <SiteContainer>
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card px-6 py-12 sm:px-12 sm:py-16 text-center">
-            <div
-              className="pointer-events-none absolute -top-20 left-1/2 h-40 w-80 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
-              aria-hidden
-            />
-            <h2 className="relative text-2xl sm:text-3xl font-bold tracking-tight mb-3">
-              Ready for your next{" "}
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-card to-card px-6 py-12 sm:px-12 sm:py-16 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+              Ready to find your next{" "}
               <span className="gradient-text">opportunity?</span>
             </h2>
-            <p className="relative mx-auto max-w-xl text-muted-foreground mb-8">
+            <p className="mx-auto max-w-xl text-muted-foreground mb-8">
               Join professionals and organizations using Hunared for jobs,
               talent, marketplace, and learning — worldwide.
             </p>
-            <div className="relative flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="gap-2">
                 <Link href="/register">
                   Create free account <ArrowRight className="h-4 w-4" />
