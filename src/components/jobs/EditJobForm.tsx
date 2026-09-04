@@ -322,12 +322,12 @@ export function EditJobForm({ job }: { job: Job }) {
 
             <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="https://maps.google.com/... or workplace address"
+                placeholder="e.g. Building name, area, or Google Maps link"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Optional map link or address — separate from City.
+                Optional. Different from City — exact workplace address or map link.
               </p>
             </Field>
 
@@ -425,7 +425,7 @@ export function EditJobForm({ job }: { job: Job }) {
           </div>
         </Section>
 
-        <Section title="Work Location map (Optional)">
+        <Section title="Office map pin (Optional)">
           <OfficeLocationPicker
             value={officeLocation}
             onChange={setOfficeLocation}

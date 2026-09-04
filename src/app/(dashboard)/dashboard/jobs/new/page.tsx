@@ -549,6 +549,17 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
+            <Field label="Work Location (Optional)" className="sm:col-span-2">
+              <Input
+                placeholder="e.g. Building name, area, or Google Maps link"
+                value={form.mapLocation}
+                onChange={(e) => set("mapLocation", e.target.value, true)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Optional. Different from City — exact workplace address or map link.
+              </p>
+            </Field>
+
             <Field label="Employment Type *">
               <Select
                 value={form.employmentType}
@@ -756,17 +767,6 @@ export default function PostJobPage() {
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
-            </Field>
-
-            <Field label="Work Location (Optional)" className="col-span-full">
-              <Input
-                placeholder="https://maps.google.com/... or Google Maps share link"
-                value={form.mapLocation}
-                onChange={(e) => set("mapLocation", e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Optional Google Maps or address link for the exact workplace (separate from City).
-              </p>
             </Field>
           </div>
         </Section>
