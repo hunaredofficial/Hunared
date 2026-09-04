@@ -13,12 +13,11 @@ export default function PrivacyPolicyPage() {
         <h1>Privacy Policy</h1>
 
         <p className="lead">
-          <strong>Last Updated: September 4, 2026</strong>
+          <strong>Last Updated: August 14, 2026</strong>
         </p>
 
         <p>
-          Hunared (&quot;Hunared,&quot; &quot;we,&quot; &quot;us,&quot; or
-          &quot;our&quot;) respects your privacy and is committed to protecting
+          Hunared respects your privacy and is committed to protecting
           the personal information entrusted to us.
         </p>
 
