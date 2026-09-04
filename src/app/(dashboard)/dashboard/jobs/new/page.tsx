@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -68,13 +67,6 @@ interface JobForm {
 }
 
 
-const OfficeLocationPicker = dynamic(
-  () =>
-    import("@/components/jobs/OfficeLocationPicker").then(
-      (m) => m.OfficeLocationPicker
-    ),
-  { ssr: false }
-);
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -91,8 +83,6 @@ export default function PostJobPage() {
 
   const markTouched = (field: keyof JobForm) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
-
-  const [workMapPin, setWorkMapPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [form, setForm] = useState<JobForm>({
     jobTitle: "",
     jobDescription: "",
@@ -396,8 +386,6 @@ export default function PostJobPage() {
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
           mapLocation: form.workLocation.trim() || null,
-          officeLat: workMapPin?.lat ?? null,
-          officeLng: workMapPin?.lng ?? null,
           officeLocationLink: form.mapLocation.trim() || null,
           workLocation: form.workLocation.trim() || null,
           showProfileContact: form.showProfileContact,
@@ -567,6 +555,17 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
+                        <Field label="Work Location (Optional)" className="sm:col-span-2">
+              <Input
+                placeholder="e.g. Project name, area, or Google Maps link"
+                value={form.workLocation}
+                onChange={(e) => set("workLocation", e.target.value, true)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Optional. Project, area, or map link for the job site (separate from City).
+              </p>
+            </Field>
+
             <Field label="Employment Type *">
               <Select
                 value={form.employmentType}
@@ -708,26 +707,6 @@ export default function PostJobPage() {
         </Section>
 
         {/* Company Details */}
-        <Section title="Work Location (Optional)">
-          <p className="text-xs text-muted-foreground -mt-2">
-            Job site / workplace — separate from City and from Office Location in company details.
-          </p>
-          <Field label="Work Location">
-            <Input
-              placeholder="e.g. Building, area, or Google Maps link"
-              value={form.workLocation}
-              onChange={(e) => set("workLocation", e.target.value, true)}
-            />
-          </Field>
-          <OfficeLocationPicker
-            value={workMapPin}
-            onChange={(v) => {
-              setWorkMapPin(v);
-              if (v?.address) set("workLocation", v.address, true);
-            }}
-            label="Or paste Google Maps URL for the work site"
-          />
-        </Section>
 
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

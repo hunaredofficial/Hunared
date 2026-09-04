@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,17 +18,9 @@ import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
-import type { OfficeLocation } from "@/components/jobs/OfficeLocationPicker";
 import type { Job } from "@/types/database";
 import Link from "next/link";
 
-const OfficeLocationPicker = dynamic(
-  () =>
-    import("@/components/jobs/OfficeLocationPicker").then(
-      (m) => m.OfficeLocationPicker
-    ),
-  { ssr: false }
-);
 
 interface JobForm {
   jobTitle: string;
@@ -103,16 +94,7 @@ export function EditJobForm({ job }: { job: Job }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState<JobForm>(() => jobToForm(job));
-  const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(
-    job.office_lat != null && job.office_lng != null
-      ? {
-          lat: job.office_lat,
-          lng: job.office_lng,
-          address: job.office_address ?? "",
-        }
-      : null
-  );
-
+  
   function set<K extends keyof JobForm>(key: K, value: JobForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
@@ -208,8 +190,8 @@ export function EditJobForm({ job }: { job: Job }) {
             officeLocation && officeLocation.lng !== 0
               ? officeLocation.lng
               : null,
-          office_address: form.workLocation.trim() || officeLocation?.address?.trim() || null,
-          work_location: form.workLocation.trim() || officeLocation?.address?.trim() || null,
+          office_address: form.workLocation.trim() || null,
+          work_location: form.workLocation.trim() || null,
           office_location_link: form.officeLocationLink.trim() || null,
         }),
       });
@@ -328,6 +310,16 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
+                        <Field label="Work Location (Optional)" className="sm:col-span-2">
+              <Input
+                placeholder="e.g. Project name, area, or Google Maps link"
+                value={form.workLocation}
+                onChange={(e) => set("workLocation", e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Optional. Project, area, or map link for the job site (separate from City).
+              </p>
+            </Field>
             <Field label="Number of Positions (Optional)">
               <Input
                 type="number"
@@ -431,29 +423,7 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
           </div>
         </Section>
-
-        <Section title="Work Location (Optional)">
-          <p className="text-xs text-muted-foreground -mt-1">
-            Job site / workplace map — separate from City and from Office Location in company details.
-          </p>
-          <Field label="Work Location">
-            <Input
-              placeholder="e.g. Building, area, or Google Maps link"
-              value={form.workLocation}
-              onChange={(e) => set("workLocation", e.target.value)}
-            />
-          </Field>
-          <OfficeLocationPicker
-            value={officeLocation}
-            onChange={(v) => {
-              setOfficeLocation(v);
-              if (v?.address) set("workLocation", v.address);
-            }}
-            label="Or paste Google Maps URL for work site"
-          />
-        </Section>
-
-        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+<div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               id="showProfileContact"
