@@ -48,6 +48,7 @@ interface JobForm {
   showProfileContact: boolean;
   companyAddress: string;
   workLocation: string;
+  officeLocationLink: string;
 }
 
 function jobToForm(job: Job): JobForm {
@@ -89,7 +90,12 @@ function jobToForm(job: Job): JobForm {
       (job as { show_profile_contact?: boolean }).show_profile_contact
     ),
     companyAddress: job.company_address ?? "",
-    workLocation: job.office_address ?? "",
+    workLocation:
+      (job as { work_location?: string | null }).work_location ??
+      job.office_address ??
+      "",
+    officeLocationLink:
+      (job as { office_location_link?: string | null }).office_location_link ?? "",
   };
 }
 
@@ -203,6 +209,8 @@ export function EditJobForm({ job }: { job: Job }) {
               ? officeLocation.lng
               : null,
           office_address: form.workLocation.trim() || officeLocation?.address?.trim() || null,
+          work_location: form.workLocation.trim() || officeLocation?.address?.trim() || null,
+          office_location_link: form.officeLocationLink.trim() || null,
         }),
       });
       const data = await res.json();
@@ -320,17 +328,6 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
-            <Field label="Work Location (Optional)" className="sm:col-span-2">
-              <Input
-                placeholder="e.g. Building name, area, or Google Maps link"
-                value={form.workLocation}
-                onChange={(e) => set("workLocation", e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Optional. Different from City — exact workplace address or map link.
-              </p>
-            </Field>
-
             <Field label="Number of Positions (Optional)">
               <Input
                 type="number"
@@ -422,14 +419,37 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
+            <Field label="Office Location Link (Optional)" className="col-span-full">
+              <Input
+                placeholder="https://maps.google.com/... or Google Maps share link"
+                value={form.officeLocationLink}
+                onChange={(e) => set("officeLocationLink", e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Company office map link — different from Work Location.
+              </p>
+            </Field>
           </div>
         </Section>
 
-        <Section title="Office map pin (Optional)">
+        <Section title="Work Location (Optional)">
+          <p className="text-xs text-muted-foreground -mt-1">
+            Job site / workplace map — separate from City and from Office Location in company details.
+          </p>
+          <Field label="Work Location">
+            <Input
+              placeholder="e.g. Building, area, or Google Maps link"
+              value={form.workLocation}
+              onChange={(e) => set("workLocation", e.target.value)}
+            />
+          </Field>
           <OfficeLocationPicker
             value={officeLocation}
-            onChange={setOfficeLocation}
-            label="Paste Google Maps URL (Optional)"
+            onChange={(v) => {
+              setOfficeLocation(v);
+              if (v?.address) set("workLocation", v.address);
+            }}
+            label="Or paste Google Maps URL for work site"
           />
         </Section>
 

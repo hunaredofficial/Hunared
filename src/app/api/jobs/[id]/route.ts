@@ -61,7 +61,7 @@ export async function PATCH(
     "country", "city",
     "duration", "salary_rate", "salary_type", "category", "subcategory",
     "company_name", "company_phone", "company_email", "company_address", "show_profile_contact",
-    "office_lat", "office_lng", "office_address",
+    "office_lat", "office_lng", "office_address", "work_location", "office_location_link",
     "status",
   ];
   const updateData: JobUpdate = {};

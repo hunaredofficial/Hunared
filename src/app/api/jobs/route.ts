@@ -28,6 +28,8 @@ interface PostJobBody {
   companyEmail?: string | null;
   companyAddress?: string | null;
   mapLocation?: string | null;
+  workLocation?: string | null;
+  officeLocationLink?: string | null;
   officeAddress?: string | null;
   officeLat?: number | null;
   officeLng?: number | null;
@@ -218,7 +220,10 @@ export async function POST(req: Request) {
       company_address: body.companyAddress ?? null,
       office_lat: body.officeLat ?? null,
       office_lng: body.officeLng ?? null,
-      office_address: body.mapLocation ?? body.officeAddress ?? null,
+      office_address: body.workLocation?.trim() || body.mapLocation?.trim() || body.officeAddress?.trim() || null,
+      work_location: body.workLocation?.trim() || body.mapLocation?.trim() || null,
+      office_location_link: body.officeLocationLink?.trim() || null,
+
       status: jobStatus,
       expires_at: expiresAt,
       show_profile_contact: Boolean(body.showProfileContact),
