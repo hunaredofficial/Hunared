@@ -70,7 +70,7 @@ export function Header() {
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
         "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
         scrolled
-          ? "top-4 w-[min(90%,72rem)] max-w-7xl bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 border border-border/50 shadow-lg rounded-2xl"
+          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border border-border/50 shadow-lg rounded-2xl overflow-hidden"
           : "top-0 w-full max-w-full bg-background border-b border-border/40 rounded-none shadow-none"
       )}
     >
@@ -167,9 +167,16 @@ export function Header() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Location — desktop */}
-            <div className="hidden md:block">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
+            {/* Location — desktop only when not scrolled (keeps compact header clean) */}
+            <div
+              className={cn(
+                "hidden md:block transition-all duration-300 overflow-hidden",
+                scrolled
+                  ? "max-w-0 opacity-0 pointer-events-none scale-95"
+                  : "max-w-[12rem] opacity-100"
+              )}
+            >
               <LocationPicker />
             </div>
 
@@ -201,13 +208,29 @@ export function Header() {
                 </Button>
               </Show>
               <Show when="signed-in">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/dashboard">
-                    <LayoutDashboard className="h-4 w-4 mr-1.5" />
-                    Dashboard
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn("shrink-0", scrolled && "px-2")}
+                  asChild
+                >
+                  <Link href="/dashboard" className="inline-flex items-center">
+                    <LayoutDashboard className="h-4 w-4 sm:mr-1.5" />
+                    <span className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}>
+                      Dashboard
+                    </span>
                   </Link>
                 </Button>
-                <UserButton />
+                <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: "h-8 w-8",
+                        userButtonTrigger: "focus:shadow-none",
+                      },
+                    }}
+                  />
+                </div>
               </Show>
             </div>
 

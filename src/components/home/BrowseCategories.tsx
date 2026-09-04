@@ -113,14 +113,14 @@ const SERVICE_CATEGORIES: { label: string; category: string }[] = [
 ];
 
 export function BrowseCategories() {
-  const [tab, setTab] = useState<TabKey | null>(null);
+  const [tab, setTab] = useState<TabKey | null>("careers");
 
   return (
     <section
-      className="relative py-14 sm:py-16 md:py-20 px-4 sm:px-6"
+      className="relative py-10 sm:py-12 md:py-14 px-4 sm:px-6"
       aria-labelledby="browse-categories-heading"
     >
-      <div className="max-w-6xl mx-auto space-y-7 sm:space-y-8">
+      <div className="max-w-6xl mx-auto space-y-5 sm:space-y-6">
         {/* Header */}
         <div className="text-center space-y-2.5">
           <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary mb-1">
@@ -159,7 +159,7 @@ export function BrowseCategories() {
         </div>
 
         {tab === null && (
-          <p className="text-center text-sm text-muted-foreground py-2">
+          <p className="text-center text-sm text-muted-foreground py-0">
             Click a tab above to view categories.
           </p>
         )}
