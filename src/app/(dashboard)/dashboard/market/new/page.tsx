@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import { COUNTRIES } from "@/lib/countries";
 
 const RichTextEditor = dynamic(
@@ -498,11 +499,13 @@ function NewListingForm() {
                 <label className="text-sm font-medium block mb-1.5">
                   City <span className="text-destructive">*</span>
                 </label>
-                <input
+                <CityCombobox
+                  id="new-listing-city"
+                  country={country}
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Riyadh"
-                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  onChange={setCity}
+                  size="md"
+                  variant="select"
                 />
               </div>
             </div>
@@ -510,7 +513,7 @@ function NewListingForm() {
             {/* Google Maps URL (Optional) */}
             <div className="col-span-full">
               <label className="text-sm font-medium block mb-1.5">
-                Location (Optional)
+                Work Location map link (Optional)
               </label>
               <input
                 value={mapsUrl}

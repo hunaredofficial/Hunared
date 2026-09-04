@@ -58,6 +58,7 @@ export async function PATCH(
   // Only allow updating these fields (whitelist)
   const allowed: (keyof JobUpdate)[] = [
     "job_title", "job_description", "positions", "location",
+    "country", "city",
     "duration", "salary_rate", "salary_type", "category", "subcategory",
     "company_name", "company_phone", "company_email", "company_address", "show_profile_contact",
     "office_lat", "office_lng", "office_address",

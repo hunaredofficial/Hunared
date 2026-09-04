@@ -17,6 +17,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { COUNTRIES } from "@/lib/countries";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import type { OfficeLocation } from "@/components/jobs/OfficeLocationPicker";
 import type { Job } from "@/types/database";
 import Link from "next/link";
@@ -33,7 +35,8 @@ interface JobForm {
   jobTitle: string;
   jobDescription: string;
   positions: string;
-  location: string;
+  country: string;
+  city: string;
   duration: string;
   salaryType: string;
   salaryRate: string;
@@ -47,11 +50,32 @@ interface JobForm {
 }
 
 function jobToForm(job: Job): JobForm {
+  const j = job as Job & { country?: string | null; city?: string | null };
+  let country = j.country ?? "";
+  let city = j.city ?? "";
+  // Fallback: parse "City, Country Name" from location display string
+  if (!country && job.location) {
+    const parts = job.location.split(",").map((s) => s.trim());
+    if (parts.length >= 2) {
+      city = city || parts[0];
+      const countryName = parts.slice(1).join(", ");
+      const match = COUNTRIES.find(
+        (c) => c.name.toLowerCase() === countryName.toLowerCase()
+      );
+      if (match) country = match.code;
+    } else {
+      const match = COUNTRIES.find(
+        (c) => c.name.toLowerCase() === job.location.toLowerCase()
+      );
+      if (match) country = match.code;
+    }
+  }
   return {
     jobTitle: job.job_title,
     jobDescription: job.job_description,
     positions: job.positions != null ? String(job.positions) : "",
-    location: job.location,
+    country,
+    city: city || "",
     duration: job.duration,
     salaryType: job.salary_type ?? "",
     salaryRate: job.salary_rate ?? "",
@@ -60,7 +84,9 @@ function jobToForm(job: Job): JobForm {
     companyName: job.company_name,
     companyPhone: job.company_phone ?? "",
     companyEmail: job.company_email ?? "",
-    showProfileContact: Boolean((job as { show_profile_contact?: boolean }).show_profile_contact),
+    showProfileContact: Boolean(
+      (job as { show_profile_contact?: boolean }).show_profile_contact
+    ),
     companyAddress: job.company_address ?? "",
   };
 }
@@ -68,6 +94,7 @@ function jobToForm(job: Job): JobForm {
 export function EditJobForm({ job }: { job: Job }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [form, setForm] = useState<JobForm>(() => jobToForm(job));
   const [officeLocation, setOfficeLocation] = useState<OfficeLocation | null>(
     job.office_lat != null && job.office_lng != null
       ? {
@@ -78,10 +105,9 @@ export function EditJobForm({ job }: { job: Job }) {
       : null
   );
 
-  const [form, setForm] = useState<JobForm>(jobToForm(job));
-
-  const set = (field: keyof JobForm, value: string | boolean) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+  function set<K extends keyof JobForm>(key: K, value: JobForm[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
 
   const salaryAmountRequired =
     form.salaryType === "Hourly" || form.salaryType === "Monthly";
@@ -97,8 +123,12 @@ export function EditJobForm({ job }: { job: Job }) {
       toast.error("Job Description is required.");
       return;
     }
-    if (!form.location) {
-      toast.error("Location is required.");
+    if (!form.country) {
+      toast.error("Country is required.");
+      return;
+    }
+    if (!form.city.trim()) {
+      toast.error("City is required.");
       return;
     }
     if (!form.duration) {
@@ -121,8 +151,6 @@ export function EditJobForm({ job }: { job: Job }) {
       toast.error("Company Name is required.");
       return;
     }
-
-    // Check that at least one contact method is provided
     if (!form.companyPhone.trim() && !form.companyEmail.trim()) {
       toast.error("Please provide at least one contact method: Phone or Email.");
       return;
@@ -132,9 +160,15 @@ export function EditJobForm({ job }: { job: Job }) {
       ? parseInt(form.positions, 10)
       : null;
     if (positionsNum !== null && (isNaN(positionsNum) || positionsNum < 1)) {
-      toast.error("Number of Positions must be at least 1.");
+      toast.error("Number of Positions must be at least 1 if provided.");
       return;
     }
+
+    const countryName =
+      COUNTRIES.find((c) => c.code === form.country)?.name ?? form.country;
+    const location = form.city.trim()
+      ? `${form.city.trim()}, ${countryName}`
+      : countryName;
 
     setIsLoading(true);
     try {
@@ -145,7 +179,9 @@ export function EditJobForm({ job }: { job: Job }) {
           job_title: form.jobTitle.trim(),
           job_description: form.jobDescription.trim(),
           positions: positionsNum,
-          location: form.location,
+          location,
+          country: form.country,
+          city: form.city.trim(),
           duration: form.duration,
           salary_type: form.salaryType,
           salary_rate: salaryAmountRequired ? form.salaryRate.trim() : null,
@@ -164,57 +200,46 @@ export function EditJobForm({ job }: { job: Job }) {
             officeLocation && officeLocation.lng !== 0
               ? officeLocation.lng
               : null,
-          office_address: officeLocation?.address ?? null,
+          office_address: officeLocation?.address?.trim() || null,
         }),
       });
-
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Failed to update job");
-      }
-
-      toast.success("Job updated. It will be reviewed before going live again.");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update job");
+      toast.success("Job updated successfully.");
       router.push("/dashboard/jobs");
-    } catch (err: unknown) {
-      toast.error((err as Error)?.message ?? "Something went wrong.");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+        <Button variant="ghost" size="sm" asChild>
           <Link href="/dashboard/jobs">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
           </Link>
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Edit Job</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Changes will be reviewed before going live again.
-          </p>
-        </div>
+        <h1 className="text-xl font-semibold">Edit Job</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Job Details */}
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="e.g. Senior HSE Engineer"
               value={form.jobTitle}
               onChange={(e) => set("jobTitle", e.target.value)}
             />
           </Field>
-
           <Field label="Job Description *">
             <Textarea
-              placeholder="Describe the role, responsibilities, requirements..."
+              rows={6}
               value={form.jobDescription}
               onChange={(e) => set("jobDescription", e.target.value)}
-              className="min-h-32 resize-y"
             />
           </Field>
 
@@ -238,7 +263,6 @@ export function EditJobForm({ job }: { job: Job }) {
                 </SelectContent>
               </Select>
             </Field>
-
             <Field label="Subcategory">
               <Input
                 placeholder="e.g. NEBOSH, IOSH"
@@ -247,22 +271,41 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
-            <Field label="Location *">
+            <Field label="Country *">
               <Select
-                value={form.location}
+                value={form.country}
                 onValueChange={(v: string | null) => {
-                  if (v) set("location", v);
+                  if (v) {
+                    set("country", v);
+                    set("city", "");
+                  }
                 }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
-                {/* <SelectContent>
-                  {LOCATIONS.map((l) => (
-                    <SelectItem key={l} value={l}>{l}</SelectItem>
+                <SelectContent>
+                  {COUNTRIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.name}
+                    </SelectItem>
                   ))}
-                </SelectContent> */}
+                </SelectContent>
               </Select>
+            </Field>
+
+            <Field label="City *">
+              <CityCombobox
+                id="edit-job-city"
+                country={form.country}
+                value={form.city}
+                onChange={(v) => set("city", v)}
+                size="md"
+                variant="select"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Type or pick a city for the selected country.
+              </p>
             </Field>
 
             <Field label="Number of Positions (Optional)">
@@ -270,7 +313,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="e.g. 3"
+                placeholder="Leave empty for Not Specified"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
@@ -300,19 +343,16 @@ export function EditJobForm({ job }: { job: Job }) {
               <Select
                 value={form.salaryType}
                 onValueChange={(v: string | null) => {
-                  if (v) {
-                    set("salaryType", v);
-                    if (v === "After Interview") set("salaryRate", "");
-                  }
+                  if (v) set("salaryType", v);
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Select salary type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {SALARY_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
+                  {SALARY_TYPES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -320,57 +360,47 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
 
             {salaryAmountRequired && (
-              <Field label={`Salary / Rate (${form.salaryType}) *`}>
+              <Field label="Salary / Rate *">
                 <Input
-                  placeholder={
-                    form.salaryType === "Hourly"
-                      ? "e.g. $25 - $35/hr"
-                      : "e.g. $6,000 - $9,000/mo"
-                  }
                   value={form.salaryRate}
                   onChange={(e) => set("salaryRate", e.target.value)}
                 />
               </Field>
             )}
           </div>
+
+          <Field label="Work Location (optional map link)">
+            <p className="text-xs text-muted-foreground mb-1">
+              Country + City above define the work location shown on the job.
+              Optionally paste a Google Maps link below.
+            </p>
+          </Field>
         </Section>
 
-        {/* Company Details */}
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
               <Input
-                placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
             </Field>
-
-            <Field label="Company Phone" className="col-span-full sm:col-span-1">
+            <Field label="Company Phone">
               <Input
                 type="tel"
-                placeholder="+966 1x xxx xxxx"
                 value={form.companyPhone}
                 onChange={(e) => set("companyPhone", e.target.value)}
               />
             </Field>
-
-            <Field label="Company Email" className="col-span-full sm:col-span-1">
+            <Field label="Company Email">
               <Input
                 type="email"
-                placeholder="hr@company.com"
                 value={form.companyEmail}
                 onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
-
-            <div className="col-span-full text-[10px] text-muted-foreground mt-1">
-              At least one contact method (Phone or Email) is required.
-            </div>
-
             <Field label="Company Address (Optional)" className="col-span-full">
               <Input
-                placeholder="Street, City, Country"
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
@@ -378,8 +408,7 @@ export function EditJobForm({ job }: { job: Job }) {
           </div>
         </Section>
 
-        {/* Office Location */}
-        <Section title="Office Location (Optional)">
+        <Section title="Work Location map (Optional)">
           <OfficeLocationPicker
             value={officeLocation}
             onChange={setOfficeLocation}
@@ -401,7 +430,8 @@ export function EditJobForm({ job }: { job: Job }) {
                 Show my profile phone &amp; email on this job
               </span>
               <span className="text-xs text-muted-foreground">
-                Uses contact details from your signup profile. If unchecked, only your name appears under “Posted by”.
+                Uses contact details from your signup profile. If unchecked, only
+                your name appears under “Posted by”.
               </span>
             </span>
           </label>
@@ -412,9 +442,7 @@ export function EditJobForm({ job }: { job: Job }) {
           className="h-11 w-full sm:w-auto cursor-pointer"
           disabled={isLoading}
         >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : null}
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           Save Changes
         </Button>
       </form>

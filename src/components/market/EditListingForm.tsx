@@ -15,6 +15,8 @@ import {
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import { COUNTRIES } from "@/lib/countries";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import type { Listing } from "@/types/database";
 
 const RichTextEditor = dynamic(
@@ -66,6 +68,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
   const [price, setPrice] = useState(listing.price);
   const [currency, setCurrency] = useState(listing.currency ?? "USD");
   const [category, setCategory] = useState(listing.category);
+  const [country, setCountry] = useState((listing as { country?: string | null }).country ?? "");
+  const [city, setCity] = useState((listing as { city?: string | null }).city ?? "");
+  const [mapsUrl, setMapsUrl] = useState("");
+  // Keep legacy location string for fallback display
   const [location, setLocation] = useState(listing.location ?? "");
   const [contactPhone, setContactPhone] = useState(
     listing.contact_phone ?? ""
@@ -123,6 +129,14 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!country) {
+      toast.error("Country is required.");
+      return;
+    }
+    if (!city.trim()) {
+      toast.error("City is required.");
+      return;
+    }
     if (!title.trim()) {
       toast.error("Title is required");
       return;
@@ -175,7 +189,13 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           price: price.trim(),
           currency,
           category,
-          location: location || undefined,
+          location: (() => {
+            const countryName = COUNTRIES.find((c) => c.code === country)?.name ?? country;
+            const parts = [city.trim(), countryName, mapsUrl.trim()].filter(Boolean);
+            return parts.join(", ") || location || undefined;
+          })(),
+          country: country || undefined,
+          city: city.trim() || undefined,
           contact_phone: contactPhone.trim() || undefined,
           image_urls: finalImageUrls,
           listing_type: listingType,
@@ -310,25 +330,56 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Location
-              </label>
-              <Select
-                value={location}
-                onValueChange={(v) => {
-                  if (v) setLocation(v);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select location..." />
-                </SelectTrigger>
-                {/* <SelectContent> 
-                  {LOCATIONS.map((l) => (
-                    <SelectItem key={l} value={l}>{l}</SelectItem>
-                  ))}
-                </SelectContent> */}
-              </Select>
+            <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Country <span className="text-destructive">*</span>
+                </label>
+                <Select
+                  value={country}
+                  onValueChange={(v) => {
+                    if (v) {
+                      setCountry(v);
+                      setCity("");
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select country..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  City <span className="text-destructive">*</span>
+                </label>
+                <CityCombobox
+                  id="edit-listing-city"
+                  country={country}
+                  value={city}
+                  onChange={setCity}
+                  size="md"
+                  variant="select"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium block mb-1.5">
+                  Work Location map link (optional)
+                </label>
+                <input
+                  value={mapsUrl}
+                  onChange={(e) => setMapsUrl(e.target.value)}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
             </div>
           </div>
 

@@ -148,6 +148,8 @@ export async function PUT(
     currency?: string;
     category?: string;
     location?: string;
+  country?: string;
+  city?: string;
     contact_phone?: string;
     image_urls?: string[];
     listing_type?: string;
@@ -195,6 +197,8 @@ export async function PUT(
       currency: body.currency ?? "USD",
       category: body.category as ListingCategory,
       location: body.location?.trim() || null,
+      country: body.country?.trim() || null,
+      city: body.city?.trim() || null,
       contact_phone: body.contact_phone?.trim() || null,
       image_url: primaryImageUrl,
       image_urls: imageUrls,

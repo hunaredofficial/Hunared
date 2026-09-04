@@ -148,7 +148,13 @@ export async function POST(req: Request) {
   if (!durationOk) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
   body.duration = (DURATIONS as readonly string[]).includes(rawDur) ? rawDur : normalizedDuration;
   if (!SALARY_TYPES.includes(body.salaryType as (typeof SALARY_TYPES)[number])) return NextResponse.json({ error: "Invalid salary type" }, { status: 400 });
-  if (body.positions != null && (typeof body.positions !== "number" || body.positions < 1)) return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
+  if (body.positions != null && body.positions !== "") {
+    const n = typeof body.positions === "number" ? body.positions : parseInt(String(body.positions), 10);
+    if (isNaN(n) || n < 1) return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
+    body.positions = n;
+  } else {
+    body.positions = null as unknown as number;
+  }
 
   const rawCats = Array.isArray(body.categories)
     ? body.categories

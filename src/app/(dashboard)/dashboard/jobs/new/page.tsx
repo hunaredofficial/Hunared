@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import {
   CURRENCIES,
   currencyForCountry,
@@ -527,11 +528,17 @@ export default function PostJobPage() {
             </Field>
 
             <Field label="City *">
-              <Input
-                placeholder="e.g. Dubai"
+              <CityCombobox
+                id="new-job-city"
+                country={form.country}
                 value={form.city}
-                onChange={(e) => set("city", e.target.value)}
+                onChange={(v) => set("city", v, true)}
+                size="md"
+                variant="select"
               />
+              <p className="text-[11px] text-muted-foreground">
+                Type or select a city for the chosen country (work location).
+              </p>
             </Field>
 
             <Field label="Employment Type *">
@@ -556,7 +563,7 @@ export default function PostJobPage() {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="e.g. 3"
+                placeholder="Leave empty for Not Specified"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
@@ -750,7 +757,7 @@ export default function PostJobPage() {
                 onChange={(e) => set("mapLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Optional. Paste a Google Maps (or similar) link for the office / work location.
+                Work Location (optional): paste a Google Maps link for the exact workplace.
               </p>
             </Field>
           </div>
