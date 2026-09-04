@@ -349,159 +349,248 @@ export function HunaredFinder() {
   }
 
   return (
-    <section className="py-14 sm:py-16 md:py-20 bg-muted/25">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-card border border-primary/20 brand-glow p-8 sm:p-10 md:p-12 space-y-8">
-          <div className="text-center space-y-3">
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              Community Service
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              <span className="gradient-text">Hunared Finder</span>
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
-              Lost something? Found an item? Search by type, or report an item so
-              the community can help.
-            </p>
-          </div>
+    <section className="relative py-12 sm:py-14 md:py-16 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background"
+      />
+      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card brand-glow shadow-[0_0_48px_-20px_rgba(59,130,246,0.25)]">
+          {/* ambient */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-28 -right-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-rose-500/10 blur-3xl"
+          />
 
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
-              <input
-                type="search"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="Search lost or found items..."
-                className="w-full h-14 pl-12 pr-12 rounded-2xl border border-primary/15 bg-background/70 text-base focus:outline-none focus:ring-2 focus:ring-primary/35"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <VoiceSearchButton
-                  onResult={(t) => setKeyword(t)}
+          <div className="relative p-5 sm:p-8 md:p-10 lg:p-12 space-y-7 sm:space-y-8">
+            {/* Header */}
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                Community service
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                <span className="gradient-text">Hunared Finder</span>
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Lost something? Found an item? Search the community board or
+                report it so others can help reunite people with what matters.
+              </p>
+            </div>
+
+            {/* How it works */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              {[
+                {
+                  step: "1",
+                  title: "Search",
+                  text: "Filter by place & status",
+                },
+                {
+                  step: "2",
+                  title: "Report",
+                  text: "Post lost or found items",
+                },
+                {
+                  step: "3",
+                  title: "Reconnect",
+                  text: "Help the community recover",
+                },
+              ].map((s) => (
+                <div
+                  key={s.step}
+                  className="flex items-center gap-3 rounded-2xl border border-border/60 bg-background/50 px-3.5 py-3"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-sm font-bold">
+                    {s.step}
+                  </span>
+                  <div className="min-w-0 text-left">
+                    <p className="text-sm font-semibold leading-tight">{s.title}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {s.text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Search form */}
+            <form onSubmit={handleSearch} className="space-y-3 sm:space-y-3.5">
+              <div className="relative">
+                <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-primary pointer-events-none" />
+                <input
+                  type="search"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="Search lost or found items..."
+                  className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 rounded-2xl border border-primary/15 bg-background/70 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/35 transition"
+                  autoComplete="off"
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <VoiceSearchButton onResult={(t) => setKeyword(t)} />
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <select data-color-scheme="dark"
-                  value={country}
-                  onChange={(e) => handleCountryChange(e.target.value)}
-                  className="[color-scheme:dark] w-full h-12 pl-9 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-                >
-                  <option className="bg-background text-foreground" value="">All Countries</option>
-                  {COUNTRIES.map((c) => (
-                    <option className="bg-background text-foreground" key={c.code} value={c.code}>
-                      {c.name}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                  <select
+                    value={country}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    data-color-scheme="dark"
+                    className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
+                  >
+                    <option value="" className="bg-background text-foreground">
+                      All Countries
                     </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    {COUNTRIES.map((c) => (
+                      <option
+                        key={c.code}
+                        value={c.code}
+                        className="bg-background text-foreground"
+                      >
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
+
+                <CityCombobox
+                  id="finder-city"
+                  country={country}
+                  value={city}
+                  onChange={setCity}
+                  size="lg"
+                  variant="hero"
+                />
+
+                <div className="relative">
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    data-color-scheme="dark"
+                    className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
+                  >
+                    {STATUS_OPTIONS.map((o) => (
+                      <option
+                        key={o.value || "all"}
+                        value={o.value}
+                        className="bg-background text-foreground"
+                      >
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
               </div>
 
-              <CityCombobox
-                id="finder-city"
-                country={country}
-                value={city}
-                onChange={setCity}
-                size="lg"
-                variant="hero"
-              />
-
-              <div className="relative">
-                <select data-color-scheme="dark"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="[color-scheme:dark] w-full h-12 pl-3 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option className="bg-background text-foreground" key={s.value || "all"} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full h-12 rounded-full font-semibold text-sm text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg transition-all"
-            >
-              Search Listings
-            </button>
-          </form>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/dashboard/market/new?category=lost_found&type=Lost"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-11 rounded-full text-sm font-semibold text-white bg-red-600 hover:bg-red-500"
-            >
-              <AlertCircle className="h-4 w-4" />
-              Report Lost Item
-            </Link>
-            <Link
-              href="/dashboard/market/new?category=lost_found&type=Found"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-11 rounded-full text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              Report Found Item
-            </Link>
-          </div>
-
-          {/* Browse categories + Latest */}
-          <div className="pt-2 border-t border-border/60 space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8">
               <button
-                type="button"
-                onClick={() => setShowCategories((v) => !v)}
-                className={cn(
-                  "inline-flex items-center gap-2 text-sm font-medium transition-colors",
-                  showCategories
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-primary"
-                )}
+                type="submit"
+                className="w-full h-11 sm:h-12 rounded-full font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
               >
-                <LayoutGrid className="h-4 w-4" />
-                Browse categories
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 transition-transform",
-                    showCategories && "rotate-180"
-                  )}
-                />
+                Search listings
               </button>
+            </form>
+
+            {/* Report actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
-                href={`/market?category=${FINDER_CATEGORY}`}
-                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=lost`}
+                className="group flex items-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/15 px-4 py-3.5 transition-all hover:scale-[1.01]"
               >
-                <List className="h-4 w-4" />
-                Latest community listings
-                <ArrowRight className="h-3.5 w-3.5" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-md shadow-rose-500/30">
+                  <AlertCircle className="h-5 w-5" />
+                </span>
+                <span className="text-left min-w-0">
+                  <span className="block text-sm font-semibold text-foreground group-hover:text-rose-400">
+                    Report lost item
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    Tell the community what you lost
+                  </span>
+                </span>
+              </Link>
+              <Link
+                href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=found`}
+                className="group flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/15 px-4 py-3.5 transition-all hover:scale-[1.01]"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/30">
+                  <CheckCircle2 className="h-5 w-5" />
+                </span>
+                <span className="text-left min-w-0">
+                  <span className="block text-sm font-semibold text-foreground group-hover:text-emerald-400">
+                    Report found item
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    Help return something to its owner
+                  </span>
+                </span>
               </Link>
             </div>
 
-            {showCategories && (
-              <div className="rounded-2xl border border-border/60 bg-background/50 p-4 sm:p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 text-center">
-                  Lost &amp; Found item types
+            {/* Popular types always visible */}
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Popular item types
                 </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {FINDER_ITEM_CATEGORIES.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => openItemCategory(item)}
-                      className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-colors"
-                    >
-                      {item}
-                      <ChevronRight className="h-3.5 w-3.5 opacity-50" />
-                    </button>
-                  ))}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowCategories((v) => !v)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium transition-colors",
+                      showCategories
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-primary"
+                    )}
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                    {showCategories ? "Hide all types" : "Show all types"}
+                    <ChevronDown
+                      className={cn(
+                        "h-3.5 w-3.5 transition-transform",
+                        showCategories && "rotate-180"
+                      )}
+                    />
+                  </button>
+                  <Link
+                    href={`/market?category=${FINDER_CATEGORY}`}
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <List className="h-3.5 w-3.5" />
+                    Latest listings
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
               </div>
-            )}
+
+              <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                {(showCategories
+                  ? FINDER_ITEM_CATEGORIES
+                  : FINDER_ITEM_CATEGORIES.slice(0, 8)
+                ).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => openItemCategory(item)}
+                    className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-background/60 px-3 py-1.5 text-xs sm:text-sm text-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    {item}
+                    <ChevronRight className="h-3 w-3 opacity-40" />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
