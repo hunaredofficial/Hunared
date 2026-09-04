@@ -28,8 +28,6 @@ interface PostJobBody {
   companyEmail?: string | null;
   companyAddress?: string | null;
   mapLocation?: string | null;
-  workLocation?: string | null;
-  officeLocationLink?: string | null;
   officeAddress?: string | null;
   officeLat?: number | null;
   officeLng?: number | null;
@@ -150,12 +148,15 @@ export async function POST(req: Request) {
   if (!durationOk) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
   body.duration = (DURATIONS as readonly string[]).includes(rawDur) ? rawDur : normalizedDuration;
   if (!SALARY_TYPES.includes(body.salaryType as (typeof SALARY_TYPES)[number])) return NextResponse.json({ error: "Invalid salary type" }, { status: 400 });
-  if (body.positions != null && body.positions !== "") {
-    const n = typeof body.positions === "number" ? body.positions : parseInt(String(body.positions), 10);
-    if (isNaN(n) || n < 1) return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
-    body.positions = n;
-  } else {
+  // Positions optional: empty/null → null (Not Specified). Requires DB column nullable.
+  if (body.positions === "" || body.positions === undefined) {
     body.positions = null as unknown as number;
+  } else if (body.positions != null) {
+    const n = typeof body.positions === "number" ? body.positions : parseInt(String(body.positions), 10);
+    if (isNaN(n) || n < 1) {
+      return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
+    }
+    body.positions = n;
   }
 
   const rawCats = Array.isArray(body.categories)
@@ -223,7 +224,6 @@ export async function POST(req: Request) {
       office_address: body.workLocation?.trim() || body.mapLocation?.trim() || body.officeAddress?.trim() || null,
       work_location: body.workLocation?.trim() || body.mapLocation?.trim() || null,
       office_location_link: body.officeLocationLink?.trim() || null,
-
       status: jobStatus,
       expires_at: expiresAt,
       show_profile_contact: Boolean(body.showProfileContact),

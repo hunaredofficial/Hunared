@@ -348,12 +348,15 @@ export default function PostJobPage() {
       return;
     }
 
-    const positionsNum = form.positions.trim()
-      ? parseInt(form.positions, 10)
-      : null;
-    if (positionsNum !== null && (isNaN(positionsNum) || positionsNum < 1)) {
-      toast.error("Number of Positions must be at least 1.");
-      return;
+    let positionsNum: number | null = null;
+    const positionsRaw = form.positions.trim();
+    if (positionsRaw !== "") {
+      const n = parseInt(positionsRaw, 10);
+      if (isNaN(n) || n < 1) {
+        toast.error("Number of Positions must be at least 1 if provided, or leave empty.");
+        return;
+      }
+      positionsNum = n;
     }
 
     setIsLoading(true);
@@ -586,8 +589,8 @@ export default function PostJobPage() {
             <Field label="Number of Positions (Optional)">
               <Input
                 type="number"
-                min="1"
-                max="999"
+                min={1}
+                max={999}
                 placeholder="Leave empty for Not Specified"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
@@ -712,7 +715,7 @@ export default function PostJobPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
               <Input
-                placeholder="e.g. Aramco Projects Ltd."
+                placeholder="e.g. Hunared Company Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />

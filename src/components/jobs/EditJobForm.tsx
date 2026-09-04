@@ -146,12 +146,15 @@ export function EditJobForm({ job }: { job: Job }) {
       return;
     }
 
-    const positionsNum = form.positions.trim()
-      ? parseInt(form.positions, 10)
-      : null;
-    if (positionsNum !== null && (isNaN(positionsNum) || positionsNum < 1)) {
-      toast.error("Number of Positions must be at least 1 if provided.");
-      return;
+    let positionsNum: number | null = null;
+    const positionsRaw = form.positions.trim();
+    if (positionsRaw !== "") {
+      const n = parseInt(positionsRaw, 10);
+      if (isNaN(n) || n < 1) {
+        toast.error("Number of Positions must be at least 1 if provided, or leave empty.");
+        return;
+      }
+      positionsNum = n;
     }
 
     const countryName =
@@ -182,14 +185,6 @@ export function EditJobForm({ job }: { job: Job }) {
           company_email: form.companyEmail.trim() || null,
           show_profile_contact: form.showProfileContact,
           company_address: form.companyAddress.trim() || null,
-          office_lat:
-            officeLocation && officeLocation.lat !== 0
-              ? officeLocation.lat
-              : null,
-          office_lng:
-            officeLocation && officeLocation.lng !== 0
-              ? officeLocation.lng
-              : null,
           office_address: form.workLocation.trim() || null,
           work_location: form.workLocation.trim() || null,
           office_location_link: form.officeLocationLink.trim() || null,
@@ -323,8 +318,8 @@ export function EditJobForm({ job }: { job: Job }) {
             <Field label="Number of Positions (Optional)">
               <Input
                 type="number"
-                min="1"
-                max="999"
+                min={1}
+                max={999}
                 placeholder="Leave empty for Not Specified"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
