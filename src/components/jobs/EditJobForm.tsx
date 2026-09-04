@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
-import { CityCombobox } from "@/components/shared/CityCombobox";
+import { getCitiesForCountry } from "@/lib/cities";
 import type { OfficeLocation } from "@/components/jobs/OfficeLocationPicker";
 import type { Job } from "@/types/database";
 import Link from "next/link";
@@ -47,6 +47,7 @@ interface JobForm {
   companyEmail: string;
   showProfileContact: boolean;
   companyAddress: string;
+  workLocation: string;
 }
 
 function jobToForm(job: Job): JobForm {
@@ -88,6 +89,7 @@ function jobToForm(job: Job): JobForm {
       (job as { show_profile_contact?: boolean }).show_profile_contact
     ),
     companyAddress: job.company_address ?? "",
+    workLocation: job.office_address ?? "",
   };
 }
 
@@ -200,7 +202,7 @@ export function EditJobForm({ job }: { job: Job }) {
             officeLocation && officeLocation.lng !== 0
               ? officeLocation.lng
               : null,
-          office_address: officeLocation?.address?.trim() || null,
+          office_address: form.workLocation.trim() || officeLocation?.address?.trim() || null,
         }),
       });
       const data = await res.json();
@@ -295,16 +297,37 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
 
             <Field label="City *">
-              <CityCombobox
-                id="edit-job-city"
-                country={form.country}
-                value={form.city}
-                onChange={(v) => set("city", v)}
-                size="md"
-                variant="select"
+              <Select
+                value={form.city || undefined}
+                onValueChange={(v: string | null) => {
+                  if (v) set("city", v);
+                }}
+                disabled={!form.country}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(form.city && !getCitiesForCountry(form.country).includes(form.city)
+                    ? [form.city, ...getCitiesForCountry(form.country)]
+                    : getCitiesForCountry(form.country)
+                  ).map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field label="Work Location (Optional)" className="sm:col-span-2">
+              <Input
+                placeholder="https://maps.google.com/... or workplace address"
+                value={form.workLocation}
+                onChange={(e) => set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Type or pick a city for the selected country.
+                Optional map link or address — separate from City.
               </p>
             </Field>
 
@@ -369,13 +392,7 @@ export function EditJobForm({ job }: { job: Job }) {
             )}
           </div>
 
-          <Field label="Work Location (optional map link)">
-            <p className="text-xs text-muted-foreground mb-1">
-              Country + City above define the work location shown on the job.
-              Optionally paste a Google Maps link below.
-            </p>
-          </Field>
-        </Section>
+          </Section>
 
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

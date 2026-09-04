@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
-import { CityCombobox } from "@/components/shared/CityCombobox";
+import { getCitiesForCountry } from "@/lib/cities";
 import {
   CURRENCIES,
   currencyForCountry,
@@ -507,6 +507,7 @@ export default function PostJobPage() {
                 onValueChange={(v: string | null) => {
                   if (v) {
                     set("country", v, true);
+                    set("city", "", true);
                     // Keep currency in sync with country until user overrides currency
                     if (!currencyTouched) {
                       set("currency", currencyForCountry(v));
@@ -528,17 +529,24 @@ export default function PostJobPage() {
             </Field>
 
             <Field label="City *">
-              <CityCombobox
-                id="new-job-city"
-                country={form.country}
-                value={form.city}
-                onChange={(v) => set("city", v, true)}
-                size="md"
-                variant="select"
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Type or select a city for the chosen country (work location).
-              </p>
+              <Select
+                value={form.city || undefined}
+                onValueChange={(v: string | null) => {
+                  if (v) set("city", v, true);
+                }}
+                disabled={!form.country}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {getCitiesForCountry(form.country).map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field label="Employment Type *">
@@ -750,14 +758,14 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Office Location Link (Optional)" className="col-span-full">
+            <Field label="Work Location (Optional)" className="col-span-full">
               <Input
                 placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.mapLocation}
                 onChange={(e) => set("mapLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Work Location (optional): paste a Google Maps link for the exact workplace.
+                Optional Google Maps or address link for the exact workplace (separate from City).
               </p>
             </Field>
           </div>

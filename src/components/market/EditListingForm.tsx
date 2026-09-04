@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
-import { CityCombobox } from "@/components/shared/CityCombobox";
+import { getCitiesForCountry } from "@/lib/cities";
 import type { Listing } from "@/types/database";
 
 const RichTextEditor = dynamic(
@@ -360,18 +360,24 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 <label className="text-sm font-medium block mb-1.5">
                   City <span className="text-destructive">*</span>
                 </label>
-                <CityCombobox
-                  id="edit-listing-city"
-                  country={country}
-                  value={city}
-                  onChange={setCity}
-                  size="md"
-                  variant="select"
-                />
+                <Select
+                  value={city || undefined}
+                  onValueChange={(v) => { if (v) setCity(v); }}
+                  disabled={!country}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={country ? "Select city" : "Select country first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getCitiesForCountry(country).map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="sm:col-span-2">
                 <label className="text-sm font-medium block mb-1.5">
-                  Work Location map link (optional)
+                  Location map link (optional)
                 </label>
                 <input
                   value={mapsUrl}
