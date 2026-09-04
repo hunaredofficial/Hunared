@@ -25,13 +25,15 @@ const FINDER_CATEGORY = "lost_found";
 /** Lost & Found item types — used in browse + post listing */
 export const FINDER_ITEM_CATEGORIES = [
   "Mobile Phones",
+  "Documents",
+  "ID / Cards",
   "Laptops",
   "Electronics",
-  "Documents",
   "Passport",
-  "ID / Cards",
-  "Keys",
   "Wallets",
+  "Missing Persons",
+  "Keys",
+  "Personal Items",
   "Bags / Luggage",
   "Jewelry",
   "Watches",
@@ -39,8 +41,6 @@ export const FINDER_ITEM_CATEGORIES = [
   "Motorcycles",
   "Bicycles",
   "Pets",
-  "Personal Items",
-  "Missing Persons",
   "Other",
 ];
 
