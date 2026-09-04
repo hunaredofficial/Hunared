@@ -5,23 +5,25 @@ import { cn } from "@/lib/utils";
 
 type Size = "sm" | "md" | "lg" | "xl";
 
-/** Slightly smaller marks so header sits balanced / centered */
 const ICON_PX: Record<Size, number> = {
-  sm: 26,
-  md: 32,
-  lg: 36,
-  xl: 44,
+  sm: 28,
+  md: 34,
+  lg: 40,
+  xl: 52,
 };
 
 const WORDMARK_CLASS: Record<Size, string> = {
-  sm: "text-[15px] sm:text-base",
-  md: "text-[18px] sm:text-[20px]",
-  lg: "text-[20px] sm:text-[22px]",
-  xl: "text-[24px] sm:text-[26px]",
+  sm: "text-lg sm:text-xl",
+  md: "text-[22px] sm:text-[26px]",
+  lg: "text-[26px] sm:text-[30px]",
+  xl: "text-[30px] sm:text-[34px]",
 };
 
-const MARK_SRC = "/assets/logos/hunared-mark-v4.png";
+const MARK_SRC = "/assets/logos/hunared-mark.png";
 
+/**
+ * Hunared brand mark (gold H, gold border, black field) + refined metallic wordmark.
+ */
 export function HunaredLogo({
   href = "/",
   size = "md",
@@ -42,25 +44,24 @@ export function HunaredLogo({
   const content = (
     <span
       className={cn(
-        "group/logo inline-flex items-center gap-2 sm:gap-2.5 shrink-0 leading-none",
+        "group/logo inline-flex items-center justify-center gap-2.5 sm:gap-3 shrink-0",
         className
       )}
     >
       {showIcon && (
         <span
           className={cn(
-            "relative shrink-0 flex items-center justify-center",
-            "transition-transform duration-500 ease-out",
-            "group-hover/logo:scale-[1.07] group-hover/logo:-rotate-[2deg]"
+            "relative shrink-0 transition-transform duration-400 ease-out",
+            "group-hover/logo:scale-[1.06]"
           )}
           style={{ width: px, height: px }}
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-[-14%] rounded-[22%] opacity-50 blur-[8px] transition-all duration-500 group-hover/logo:opacity-80 group-hover/logo:blur-[12px]"
+            className="pointer-events-none absolute inset-[-12%] rounded-[22%] opacity-35 blur-[8px] transition-all duration-400 group-hover/logo:opacity-60 group-hover/logo:blur-[10px]"
             style={{
               background:
-                "radial-gradient(circle at 50% 45%, rgba(245,186,24,0.7) 0%, rgba(212,175,55,0.25) 48%, transparent 72%)",
+                "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.55) 0%, transparent 70%)",
             }}
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -70,10 +71,10 @@ export function HunaredLogo({
             width={px}
             height={px}
             className={cn(
-              "relative z-[1] h-full w-full object-contain",
-              "drop-shadow-[0_1px_6px_rgba(0,0,0,0.45)]",
-              "transition-[filter] duration-500",
-              "group-hover/logo:drop-shadow-[0_3px_14px_rgba(245,186,24,0.5)]"
+              "relative z-[1] h-full w-full object-contain rounded-[18%]",
+              "drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]",
+              "transition-[filter] duration-400",
+              "group-hover/logo:drop-shadow-[0_2px_10px_rgba(212,175,55,0.4)]"
             )}
             style={{ width: px, height: px }}
             decoding="async"
@@ -84,12 +85,12 @@ export function HunaredLogo({
       {showWordmark && (
         <span
           className={cn(
-            "hunared-wordmark relative inline-flex items-center leading-none select-none",
-            "transition-transform duration-500 ease-out group-hover/logo:translate-x-[1.5px]",
+            "hunared-wordmark relative inline-block leading-none select-none",
+            "transition-transform duration-400 ease-out group-hover/logo:translate-x-[1.5px]",
             WORDMARK_CLASS[size]
           )}
         >
-          <span className="hunared-wordmark-text">Hunared</span>
+          <span className="hunared-wordmark-text font-semibold tracking-tight">Hunared</span>
         </span>
       )}
     </span>
@@ -106,7 +107,7 @@ export function HunaredLogo({
   return (
     <Link
       href={href}
-      className="inline-flex items-center shrink-0 self-center"
+      className="inline-flex items-center shrink-0"
       aria-label="Hunared home"
     >
       {content}
