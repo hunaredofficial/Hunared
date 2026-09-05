@@ -19,7 +19,7 @@ const WORDMARK_CLASS: Record<Size, string> = {
   xl: "text-[30px] sm:text-[34px]",
 };
 
-const MARK_SRC = "/assets/logos/hunared-mark.png";
+const MARK_SRC = "/assets/logos/hunared-mark.png?v=20260905";
 
 /**
  * Hunared brand mark (gold H, gold border, black field) + refined metallic wordmark.
