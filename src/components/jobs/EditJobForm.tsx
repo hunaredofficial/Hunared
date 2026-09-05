@@ -196,9 +196,8 @@ export function EditJobForm({ job }: { job: Job }) {
           company_address: form.companyAddress.trim() || null,
           work_location: form.workLocation.trim() || null,
           office_location_link: form.officeLocationLink.trim() || null,
-          // Keep office_address as work location text for backward compatibility
-          office_address: form.workLocation.trim() || null,
-          // Do not reference undefined officeLocation — clear coords unless set elsewhere
+          // Keep office_address separate from work_location (company address text only if needed)
+          office_address: form.companyAddress.trim() || null,
           office_lat: null,
           office_lng: null,
         }),
@@ -318,14 +317,14 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
-                        <Field label="Work Location (Optional)" className="sm:col-span-2">
+            <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Project name, area, or Google Maps link"
+                placeholder="e.g. Project site, plant name, or area"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                One field for both: work site name or a Google Maps link.
+                Work site name or area (Quick Details). Separate from company location link.
               </p>
             </Field>
             <Field label="Number of Positions (Optional)">
@@ -465,14 +464,14 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
-            <Field label="Office Location Link (Optional)" className="col-span-full">
+            <Field label="Company Location Link (Optional)" className="col-span-full">
               <Input
                 placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.officeLocationLink}
                 onChange={(e) => set("officeLocationLink", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Company office map link — different from Work Location.
+                Company office map link (Company Contact section). Different from Work Location.
               </p>
             </Field>
           </div>

@@ -551,12 +551,12 @@ export default function PostJobPage() {
 
             <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Site name, area, or Google Maps link"
+                placeholder="e.g. Project site, plant name, or area"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                One field for both: work site name or a Google Maps link.
+                Work site name or area (shown in Quick Details on the job page). Separate from company location.
               </p>
             </Field>
 
@@ -786,14 +786,14 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Office Location Link (Optional)" className="col-span-full">
+            <Field label="Company Location Link (Optional)" className="col-span-full">
               <Input
                 placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.mapLocation}
                 onChange={(e) => set("mapLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Optional. Paste a Google Maps (or similar) link for the office / work location.
+                Company office map link (shown under Company Contact on the job page). Different from Work Location.
               </p>
             </Field>
           </div>

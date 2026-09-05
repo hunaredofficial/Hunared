@@ -285,7 +285,6 @@ export default async function JobDetailPage({
                 {(() => {
                   const wl = (
                     (job as { work_location?: string | null }).work_location ||
-                    job.office_address ||
                     ""
                   ).trim();
                   if (!wl) return null;
@@ -398,18 +397,14 @@ export default async function JobDetailPage({
                     ""
                   ).trim();
                   const officeAddr = (job.company_address || "").trim();
-                  const fallbackMaps =
-                    (job.office_address || "").trim() &&
-                    (/^https?:\/\//i.test(job.office_address || "") ||
-                      (job.office_address || "").includes("maps."));
-                  const link = officeLink || (fallbackMaps ? job.office_address : "");
+                  const link = officeLink;
                   const show = Boolean(link || officeAddr || hasMap);
                   if (!show) return null;
                   return (
                     <div className="flex items-start gap-2.5">
                       <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground">Office location</p>
+                        <p className="text-xs text-muted-foreground">Company Location</p>
                         {link ? (
                           <a
                             href={link}
@@ -417,7 +412,7 @@ export default async function JobDetailPage({
                             rel="noopener noreferrer"
                             className="text-sm text-primary hover:underline break-all"
                           >
-                            Open office on Google Maps
+                            Open company location on Google Maps
                           </a>
                         ) : officeAddr ? (
                           <p className="text-sm text-foreground break-words">
@@ -427,7 +422,7 @@ export default async function JobDetailPage({
                         {hasMap && job.office_lat != null && job.office_lng != null && (
                           <div className="mt-2 rounded-lg overflow-hidden border border-border">
                             <iframe
-                              title="Office Location"
+                              title="Company Location"
                               width="100%"
                               height="180"
                               loading="lazy"
