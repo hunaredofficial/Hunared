@@ -59,6 +59,7 @@ interface JobForm {
   companyEmail: string;
   companyAddress: string;
   mapLocation: string;
+  workLocation: string;
   showProfileContact: boolean;
   expiration: ExpirationOptionValue;
 }
@@ -98,6 +99,7 @@ export default function PostJobPage() {
     companyEmail: "",
     companyAddress: "",
     mapLocation: "",
+    workLocation: "",
     showProfileContact: false,
     expiration: "never",
   });
@@ -276,6 +278,9 @@ export default function PostJobPage() {
     if (smartResult.mapLocation && !touched.mapLocation) {
       setForm((prev) => ({ ...prev, mapLocation: String(smartResult.mapLocation!.value) }));
     }
+    if (smartResult.workLocation && !touched.workLocation) {
+      setForm((prev) => ({ ...prev, workLocation: String(smartResult.workLocation!.value) }));
+    }
     if (smartResult.jobDescription && !touched.jobDescription) {
       setForm((prev) => ({ ...prev, jobDescription: String(smartResult.jobDescription!.value) }));
     }
@@ -386,6 +391,7 @@ export default function PostJobPage() {
           companyPhone: form.companyPhone.trim() || null,
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
+          workLocation: form.workLocation.trim() || null,
           mapLocation: form.mapLocation.trim() || null,
           // API expects officeLocationLink for the maps link field
           officeLocationLink: form.mapLocation.trim() || null,
@@ -542,6 +548,18 @@ export default function PostJobPage() {
               />
             </Field>
 
+
+            <Field label="Work Location (Optional)" className="sm:col-span-2">
+              <Input
+                placeholder="e.g. Site name, area, or Google Maps link"
+                value={form.workLocation}
+                onChange={(e) => set("workLocation", e.target.value, true)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                One field for both: work site name or a Google Maps link.
+              </p>
+            </Field>
+
             <Field label="Employment Type *">
               <Select
                 value={form.employmentType || undefined}
@@ -557,9 +575,6 @@ export default function PostJobPage() {
                   <SelectItem value="permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                1–6 Months, 1 Year, Shutdown, Long Term, UnSpecified → Temporary. Permanent → Permanent.
-              </p>
             </Field>
 
             <Field label="Number of Positions (Optional)">

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ShareButton } from "@/components/shared/ShareButton";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
@@ -281,20 +282,44 @@ export default async function JobDetailPage({
                   label="Duration"
                   value={job.duration}
                 />
-                {((job as { work_location?: string | null }).work_location ||
-                  (job.office_address &&
-                    !/^https?:\/\//i.test(job.office_address) &&
-                    !job.office_address.includes("maps."))) && (
-                  <Detail
-                    icon={<MapPin className="h-4 w-4" />}
-                    label="Work location"
-                    value={
-                      (job as { work_location?: string | null }).work_location ||
-                      job.office_address ||
-                      null
-                    }
-                  />
-                )}
+                {(() => {
+                  const wl = (
+                    (job as { work_location?: string | null }).work_location ||
+                    job.office_address ||
+                    ""
+                  ).trim();
+                  if (!wl) return null;
+                  const isMaps =
+                    /^https?:\/\//i.test(wl) ||
+                    wl.includes("maps.") ||
+                    wl.includes("goo.gl") ||
+                    wl.includes("maps.app.goo.gl");
+                  if (isMaps) {
+                    return (
+                      <div className="flex items-start gap-2.5">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">Work Location</p>
+                          <a
+                            href={wl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline break-all"
+                          >
+                            Open work location on Google Maps
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Detail
+                      icon={<MapPin className="h-4 w-4" />}
+                      label="Work Location"
+                      value={wl}
+                    />
+                  );
+                })()}
                 <div className="flex items-start gap-2.5">
                   <Banknote className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
@@ -569,6 +594,48 @@ export default async function JobDetailPage({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+
+function Stat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/50">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        <span className="text-xs">{label}</span>
+      </div>
+      <p className="text-sm font-semibold text-foreground">{value || "—"}</p>
+    </div>
+  );
+}
+
+function Detail({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | null | undefined;
+}) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground break-words">{value}</p>
       </div>
     </div>
   );

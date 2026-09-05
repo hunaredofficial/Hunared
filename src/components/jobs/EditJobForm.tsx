@@ -325,7 +325,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Optional. Project, area, or map link for the job site (separate from City).
+                One field for both: work site name or a Google Maps link.
               </p>
             </Field>
             <Field label="Number of Positions (Optional)">
