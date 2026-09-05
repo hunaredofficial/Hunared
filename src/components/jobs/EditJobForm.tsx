@@ -324,7 +324,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Work site name or area (Quick Details). Separate from company location link.
+                Work site name, area or address.
               </p>
             </Field>
             <Field label="Number of Positions (Optional)">
@@ -471,7 +471,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("officeLocationLink", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Company office map link (Company Contact section). Different from Work Location.
+                Company office map link.
               </p>
             </Field>
           </div>
