@@ -59,7 +59,7 @@ export async function PATCH(
   const allowed: (keyof JobUpdate)[] = [
     "job_title", "job_description", "positions", "location",
     "country", "city",
-    "duration", "employment_type", "salary_rate", "salary_type", "category", "subcategory",
+    "duration", "salary_rate", "salary_type", "category", "subcategory",
     "company_name", "company_phone", "company_email", "company_address", "show_profile_contact",
     "office_lat", "office_lng", "office_address",
     "work_location", "office_location_link",
