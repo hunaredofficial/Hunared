@@ -757,14 +757,23 @@ export function parseJobText(
   const labeledAddress = labelGet(labels, "company address", "address");
   const labeledMap = labelGet(
     labels,
+    "office location link",
+    "office location",
+    "office map",
+    "office maps",
     "map location link",
     "map location",
     "google maps",
     "map link",
-    "location link",
+    "location link"
+  );
+  const labeledWorkLoc = labelGet(
+    labels,
     "work location",
     "workplace",
-    "project location"
+    "project location",
+    "project",
+    "site location"
   );
 
   let category = detectCategory(text);
@@ -974,16 +983,41 @@ export function parseJobText(
   }
   if (labeledMap) {
     result.mapLocation = { value: labeledMap, confidence: "high", label: labeledMap };
+  }
+  // Work location (project / site) — separate from office map link
+  if (labeledWorkLoc) {
+    result.mapLocation = result.mapLocation; // keep office link if set
+    (result as SmartJobParseResult & { workLocation?: ParsedField<string> }).workLocation = {
+      value: labeledWorkLoc,
+      confidence: "high",
+      label: labeledWorkLoc,
+    };
   } else if (labeledLocation) {
     const loc = labeledLocation.trim();
     const isMaps =
       /^https?:\/\//i.test(loc) ||
       /maps\.google|goo\.gl\/maps|maps\.app\.goo/i.test(loc);
-    // Free-text work location / project (not a pure city name handled above)
-    if (isMaps || (loc.length >= 3 && !result.city)) {
+    if (isMaps && !result.mapLocation) {
       result.mapLocation = { value: loc, confidence: "high", label: loc };
-    } else if (isMaps || loc.length >= 3) {
-      result.mapLocation = { value: loc, confidence: "medium", label: loc };
+    } else if (!isMaps && loc.length >= 3) {
+      (result as SmartJobParseResult & { workLocation?: ParsedField<string> }).workLocation = {
+        value: loc,
+        confidence: "medium",
+        label: loc,
+      };
+    }
+  }
+  // Bare Google Maps URL in text → office location link if not set
+  if (!result.mapLocation) {
+    const urlMatch = text.match(
+      /https?:\/\/\S*(?:maps\.google|goo\.gl\/maps|maps\.app\.goo)\S*/i
+    );
+    if (urlMatch) {
+      result.mapLocation = {
+        value: urlMatch[0].replace(/[),.;]+$/, ""),
+        confidence: "medium",
+        label: urlMatch[0],
+      };
     }
   }
   if (labeledPositions) {
@@ -1005,6 +1039,8 @@ export function hasSuggestions(r: SmartJobParseResult): boolean {
     r.categories ||
     r.country ||
     r.city ||
+    r.mapLocation ||
+    r.workLocation ||
     r.currency ||
     r.salaryRate ||
     r.salaryType ||

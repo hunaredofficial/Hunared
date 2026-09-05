@@ -23,8 +23,43 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS } from "@/lib/constants";
-import { formatMoney } from "@/lib/currencies";
+import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import type { Job } from "@/types/database";
+
+
+function WorkLocationBlock({ job }: { job: Job }) {
+  const wl =
+    (job as { work_location?: string | null }).work_location ||
+    job.office_address ||
+    "";
+  const isLink =
+    !!wl &&
+    (/^https?:\/\//i.test(wl) ||
+      wl.includes("maps.google") ||
+      wl.includes("goo.gl") ||
+      wl.includes("maps.app.goo"));
+  if (isLink) {
+    return (
+      <a
+        href={wl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-primary hover:underline break-all"
+      >
+        Open location on Google Maps
+      </a>
+    );
+  }
+  if (wl) {
+    return <p className="text-sm text-foreground break-words">{wl}</p>;
+  }
+  if (job.company_address) {
+    return (
+      <p className="text-sm text-foreground break-words">{job.company_address}</p>
+    );
+  }
+  return null;
+}
 
 export default async function JobDetailPage({
   params,
@@ -49,12 +84,15 @@ export default async function JobDetailPage({
 
   try {
     const supabase = createAdminClient();
-    const { data } = await supabase
+    const { data, error: jobErr } = await supabase
       .from("jobs")
       .select("*")
       .eq("id", id)
       .eq("status", "approved")
-      .single();
+      .maybeSingle();
+    if (jobErr) {
+      console.error("[job detail]", jobErr.message);
+    }
     job = data;
 
     if (job?.employer_id) {
@@ -128,14 +166,16 @@ export default async function JobDetailPage({
     year: "numeric",
   });
 
-  const salaryLabel =
-    job.salary_type === "After Interview"
-      ? "To be discussed"
-      : job.salary_rate
-        ? `${formatMoney(job.salary_rate, job.currency)}${
-            job.salary_type ? ` (${job.salary_type})` : ""
-          }`
-        : job.salary_type ?? "Not specified";
+  const baseSalary = formatJobSalary(
+    job.salary_rate,
+    job.currency,
+    job.salary_type
+  );
+  const salaryLabel = baseSalary
+    ? baseSalary
+    : job.salary_type && job.salary_type !== "Negotiable"
+      ? job.salary_type
+      : "Not specified";
 
   const hasMap = job.office_lat != null && job.office_lng != null;
 
@@ -333,48 +373,16 @@ export default async function JobDetailPage({
                   </div>
                 )}
                 {/* Location: map link, office address, or company address */}
-                {((job as { work_location?: string | null }).work_location || job.office_address || job.company_address || hasMap) && (
+                {(Boolean((job as { work_location?: string | null }).work_location) ||
+                  Boolean(job.office_address) ||
+                  Boolean(job.company_address) ||
+                  hasMap) && (
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Work location</p>
-                      {(() => {
-                        const wl =
-                          (job as { work_location?: string | null }).work_location ||
-                          job.office_address ||
-                          "";
-                        const isLink =
-                          /^https?:\/\//i.test(wl) ||
-                          wl.includes("maps.google") ||
-                          wl.includes("goo.gl") ||
-                          wl.includes("maps.app.goo");
-                        if (isLink && wl) {
-                          return (
-                            <a
-                              href={wl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-primary hover:underline break-all"
-                            >
-                              Open work location on Google Maps
-                            </a>
-                          );
-                        }
-                        if (wl) {
-                          return (
-                            <p className="text-sm text-foreground break-words">{wl}</p>
-                          );
-                        }
-                        if (job.company_address) {
-                          return (
-                            <p className="text-sm text-foreground break-words">
-                              {job.company_address}
-                            </p>
-                          );
-                        }
-                        return null;
-                      })()}
-                      {hasMap && (
+                      <p className="text-xs text-muted-foreground">Work / office location</p>
+                      <WorkLocationBlock job={job} />
+                      {hasMap && job.office_lat != null && job.office_lng != null && (
                         <div className="mt-2 rounded-lg overflow-hidden border border-border">
                           <iframe
                             title="Office Location"

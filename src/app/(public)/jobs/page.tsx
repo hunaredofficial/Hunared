@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS, JOB_CATEGORIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
-import { formatMoney } from "@/lib/currencies";
+import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 
@@ -54,7 +54,7 @@ function matchesDurationFilter(
   const emp = (job.employment_type ?? "").toLowerCase();
 
   if (filter === "temporary") {
-    return emp === "temporary";
+    return emp === "temporary" || emp === "task_force";
   }
   if (filter === "short_term") {
     // 1–6 Month style durations
@@ -147,7 +147,7 @@ export default async function JobsPage({
     if (
       employmentType === "permanent" ||
       employmentType === "temporary" ||
-      employmentType === "temporary"
+      employmentType === "task_force"
     ) {
       query = query.eq("employment_type", employmentType);
     }
@@ -181,7 +181,7 @@ export default async function JobsPage({
           const emp = (j.employment_type ?? "").toLowerCase();
           const dur = (j.duration ?? "").toLowerCase();
           if (experience === "beginner") {
-            return emp === "temporary" || /^\d+\s*month/.test(dur);
+            return emp === "temporary" || emp === "task_force" || /^\d+\s*month/.test(dur);
           }
           if (experience === "intermediate") {
             return dur.includes("6 month") || dur.includes("1 year");
@@ -384,10 +384,11 @@ function JobCard({ job }: { job: Partial<Job> }) {
       })
     : "";
 
-  const salaryLabel =
-    job.salary_type === "After Interview"
-      ? "To be discussed"
-      : formatMoney(job.salary_rate, job.currency);
+  const salaryLabel = formatJobSalary(
+    job.salary_rate,
+    job.currency,
+    job.salary_type
+  );
 
   return (
     <Card className="group hover:border-primary/40 hover:shadow-md transition-all duration-200">
@@ -396,7 +397,7 @@ function JobCard({ job }: { job: Partial<Job> }) {
           {job.category && (
             <Badge
               className={cn(
-                "text-xs whitespace-normal leading-snug h-auto py-1 max-w-full",
+                "text-xs",
                 CATEGORY_COLORS[job.category] ?? CATEGORY_COLORS["Other"]
               )}
             >
@@ -425,12 +426,12 @@ function JobCard({ job }: { job: Partial<Job> }) {
               {job.location}
             </div>
           )}
-          {(job.salary_rate || job.salary_type === "After Interview") && (
+          {salaryLabel ? (
             <div className="flex items-center gap-1.5">
               <DollarSign className="h-3.5 w-3.5 shrink-0" />
               {salaryLabel}
             </div>
-          )}
+          ) : null}
           {job.duration && (
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 shrink-0" />

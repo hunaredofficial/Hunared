@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -15,8 +16,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
+import { getCitiesForCountry } from "@/lib/cities";
 import {
   CURRENCIES,
   currencyForCountry,
@@ -64,6 +66,8 @@ interface JobForm {
   expiration: ExpirationOptionValue;
 }
 
+
+
 export default function PostJobPage() {
   const router = useRouter();
   const geo = useGeo();
@@ -79,7 +83,6 @@ export default function PostJobPage() {
 
   const markTouched = (field: keyof JobForm) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
-
   const [form, setForm] = useState<JobForm>({
     jobTitle: "",
     jobDescription: "",
@@ -118,6 +121,14 @@ export default function PostJobPage() {
   // Suggest Temporary when duration implies fixed term (do not overwrite manual)
   useEffect(() => {
     if (touched.employmentType || !form.duration) return;
+    if ((TEMPORARY_DURATIONS as readonly string[]).includes(form.duration)) {
+      setForm((prev) => ({ ...prev, employmentType: "temporary" }));
+      return;
+    }
+    if (form.duration === "Permanent") {
+      setForm((prev) => ({ ...prev, employmentType: "permanent" }));
+      return;
+    }
     const inferred = inferEmploymentType(form.duration, form.jobDescription);
     if (inferred?.value) {
       setForm((prev) => ({ ...prev, employmentType: inferred.value }));
@@ -267,23 +278,17 @@ export default function PostJobPage() {
     if (smartResult.companyAddress && !touched.companyAddress) {
       setForm((prev) => ({ ...prev, companyAddress: String(smartResult.companyAddress!.value) }));
     }
-    if (smartResult.mapLocation && !touched.mapLocation && !touched.workLocation) {
-      const wl = String(smartResult.mapLocation!.value);
+    if (smartResult.mapLocation && !touched.mapLocation) {
       setForm((prev) => ({
         ...prev,
-        workLocation: wl,
-        // keep office mapLocation only if it looks like a maps URL and work is free text — same single field for work
-        mapLocation: prev.mapLocation,
+        mapLocation: String(smartResult.mapLocation!.value),
       }));
     }
-    // Also apply city after country so Select can match
-    if (smartResult.city && !touched.city) {
-      const cityVal = String(smartResult.city.value);
-      setForm((prev) => ({ ...prev, city: cityVal }));
-    }
-    if (smartResult.country && !touched.country) {
-      const code = String(smartResult.country.value);
-      setForm((prev) => ({ ...prev, country: code }));
+    if (smartResult.workLocation && !touched.workLocation) {
+      setForm((prev) => ({
+        ...prev,
+        workLocation: String(smartResult.workLocation!.value),
+      }));
     }
     if (smartResult.jobDescription && !touched.jobDescription) {
       setForm((prev) => ({ ...prev, jobDescription: String(smartResult.jobDescription!.value) }));
@@ -345,7 +350,6 @@ export default function PostJobPage() {
       toast.error("Company Name is required.");
       return;
     }
-
     if (!form.companyPhone.trim() && !form.companyEmail.trim()) {
       toast.error(
         "Please provide at least one contact method: Phone or Email."
@@ -391,13 +395,18 @@ export default function PostJobPage() {
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
           workLocation: form.workLocation.trim() || null,
-          mapLocation: form.workLocation.trim() || form.mapLocation.trim() || null,
+          mapLocation: form.mapLocation.trim() || null,
           officeLocationLink: form.mapLocation.trim() || null,
           showProfileContact: form.showProfileContact,
           expiration: form.expiration,
         }),
       });
 
+      if (res.status === 401) {
+        toast.error("Your session expired. Please sign in again, then retry posting.");
+        router.push("/sign-in?redirect_url=/dashboard/jobs/new");
+        return;
+      }
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Failed to post job");
@@ -406,7 +415,6 @@ export default function PostJobPage() {
       toast.success(
         "Job submitted for review! It will appear publicly once approved."
       );
-      if (typeof window !== "undefined") window.scrollTo(0, 0);
       router.push("/dashboard/jobs");
     } catch (err: unknown) {
       toast.error((err as Error)?.message ?? "Something went wrong.");
@@ -514,6 +522,7 @@ export default function PostJobPage() {
                 onValueChange={(v: string | null) => {
                   if (v) {
                     set("country", v, true);
+                    set("city", "", true);
                     // Keep currency in sync with country until user overrides currency
                     if (!currencyTouched) {
                       set("currency", currencyForCountry(v));
@@ -535,14 +544,27 @@ export default function PostJobPage() {
             </Field>
 
             <Field label="City *">
-              <Input
-                placeholder="e.g. Dubai"
-                value={form.city}
-                onChange={(e) => set("city", e.target.value)}
-              />
+              <Select
+                value={form.city || undefined}
+                onValueChange={(v: string | null) => {
+                  if (v) set("city", v, true);
+                }}
+                disabled={!form.country}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {getCitiesForCountry(form.country).map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
-            <Field label="Work Location (Optional)" className="sm:col-span-2">
+                        <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
                 placeholder="e.g. Project name, area, or Google Maps link"
                 value={form.workLocation}
@@ -566,7 +588,6 @@ export default function PostJobPage() {
                 <SelectContent>
                   <SelectItem value="permanent">Permanent</SelectItem>
                   <SelectItem value="temporary">Temporary</SelectItem>
-                  <SelectItem value="task_force">Task Force</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -576,7 +597,7 @@ export default function PostJobPage() {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="e.g. 3"
+                placeholder="Leave empty for Not Specified"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
@@ -695,11 +716,12 @@ export default function PostJobPage() {
         </Section>
 
         {/* Company Details */}
+
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
               <Input
-                placeholder="e.g. Hunared Company Ltd."
+                placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
@@ -770,7 +792,7 @@ export default function PostJobPage() {
                 onChange={(e) => set("mapLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Optional. Paste a Google Maps (or similar) link for the office / work location.
+                Company office map link — different from Work Location above.
               </p>
             </Field>
           </div>

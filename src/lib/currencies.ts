@@ -380,9 +380,31 @@ export function formatMoney(
   currency?: string | null
 ): string {
   if (price == null || String(price).trim() === "") return "";
-  const cur = (currency || "").trim();
   const p = String(price).trim();
+  // Text-only rates (e.g. Negotiable) — never prefix currency alone
+  if (!/\d/.test(p)) return p;
+  const cur = (currency || "").trim();
   return cur ? `${cur} ${p}` : p;
+}
+
+/** Job card / detail salary line. No lone currency when rate is missing. */
+export function formatJobSalary(
+  salaryRate: string | number | null | undefined,
+  currency?: string | null,
+  salaryType?: string | null
+): string {
+  const type = (salaryType || "").trim();
+  if (type === "After Interview") return "To be discussed";
+  if (type === "Negotiable") {
+    const r = salaryRate != null ? String(salaryRate).trim() : "";
+    // If a real numeric rate exists with Negotiable type, still show currency + rate
+    if (r && /\d/.test(r)) return formatMoney(r, currency);
+    return "Negotiable";
+  }
+  const rate = salaryRate != null ? String(salaryRate).trim() : "";
+  if (!rate) return "";
+  if (!/\d/.test(rate)) return rate; // Negotiable stored in rate field
+  return formatMoney(rate, currency);
 }
 
 /** Label for dropdowns */
