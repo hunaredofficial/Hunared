@@ -451,27 +451,36 @@ function detectEmail(text: string): ParsedField<string> | undefined {
 }
 
 function detectPhone(text: string): ParsedField<string> | undefined {
-  // Prefer international format
-  const intl = text.match(
-    /(?:whatsapp[:\s]*)?(\+\d{1,3}[\s-]?\d{6,14})/i
-  );
-  if (intl) {
-    const num = intl[1].replace(/[\s-]/g, "");
-    if (num.length >= 10 && num.length <= 16) {
-      return { value: num, confidence: "high", label: num };
-    }
+  // Collect candidates in document order; always use the FIRST phone only.
+  const candidates: { value: string; conf: Confidence }[] = [];
+  const seen = new Set<string>();
+
+  const push = (raw: string, conf: Confidence) => {
+    const num = raw.replace(/[\s()-]/g, "");
+    if (num.length < 9 || num.length > 16) return;
+    if (seen.has(num)) return;
+    seen.add(num);
+    candidates.push({ value: num, conf });
+  };
+
+  // 1) International (+966...)
+  for (const m of text.matchAll(/\+\d{1,3}[\s-]?\d{6,14}/g)) {
+    push(m[0], "high");
   }
-  // Local with 0
-  const local = text.match(
-    /(?:tel|phone|mobile|call)[:\s]*([0-9][0-9\s-]{8,16}\d)/i
-  );
-  if (local) {
-    const num = local[1].replace(/[\s-]/g, "");
-    if (num.length >= 9) {
-      return { value: num, confidence: "medium", label: num };
-    }
+  // 2) Labeled phone/mobile/tel/whatsapp
+  for (const m of text.matchAll(
+    /(?:tel|phone|mobile|call|whatsapp|contact)[:\s]*([+0-9][0-9\s()-]{7,18}\d)/gi
+  )) {
+    push(m[1], "high");
   }
-  return undefined;
+  // 3) Local mobile starting with 0 (e.g. Saudi 05xxxxxxxx)
+  for (const m of text.matchAll(/(?:^|[^\d])(0\d{8,12})(?!\d)/g)) {
+    push(m[1], "medium");
+  }
+
+  if (candidates.length === 0) return undefined;
+  const first = candidates[0];
+  return { value: first.value, confidence: first.conf, label: first.value };
 }
 
 function extractKeywords(text: string, category?: string): string[] {
@@ -752,7 +761,10 @@ export function parseJobText(
     "map location",
     "google maps",
     "map link",
-    "location link"
+    "location link",
+    "work location",
+    "workplace",
+    "project location"
   );
 
   let category = detectCategory(text);
@@ -895,10 +907,15 @@ export function parseJobText(
   }
   let companyPhone = detectPhone(text);
   if (labeledPhone) {
+    // If paste has two numbers (e.g. "053x / 054x"), use only the first
+    const firstPhone =
+      labeledPhone.split(/[/|,;]+/).map((s) => s.trim()).find(Boolean) ||
+      labeledPhone;
+    const cleaned = firstPhone.replace(/[^\d+]/g, "");
     companyPhone = {
-      value: labeledPhone,
+      value: cleaned || firstPhone.trim(),
       confidence: "high",
-      label: labeledPhone,
+      label: cleaned || firstPhone.trim(),
     };
   }
 
@@ -957,6 +974,17 @@ export function parseJobText(
   }
   if (labeledMap) {
     result.mapLocation = { value: labeledMap, confidence: "high", label: labeledMap };
+  } else if (labeledLocation) {
+    const loc = labeledLocation.trim();
+    const isMaps =
+      /^https?:\/\//i.test(loc) ||
+      /maps\.google|goo\.gl\/maps|maps\.app\.goo/i.test(loc);
+    // Free-text work location / project (not a pure city name handled above)
+    if (isMaps || (loc.length >= 3 && !result.city)) {
+      result.mapLocation = { value: loc, confidence: "high", label: loc };
+    } else if (isMaps || loc.length >= 3) {
+      result.mapLocation = { value: loc, confidence: "medium", label: loc };
+    }
   }
   if (labeledPositions) {
     result.positions = { value: labeledPositions, confidence: "high", label: labeledPositions };

@@ -28,6 +28,8 @@ interface PostJobBody {
   companyEmail?: string | null;
   companyAddress?: string | null;
   mapLocation?: string | null;
+  workLocation?: string | null;
+  officeLocationLink?: string | null;
   officeAddress?: string | null;
   officeLat?: number | null;
   officeLng?: number | null;
@@ -93,7 +95,7 @@ export async function POST(req: Request) {
   // Confirm user is an employer
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role, phone_verified_at, phone")
+    .select("role")
     .eq("id", userId)
     .single();
 
@@ -148,16 +150,7 @@ export async function POST(req: Request) {
   if (!durationOk) return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
   body.duration = (DURATIONS as readonly string[]).includes(rawDur) ? rawDur : normalizedDuration;
   if (!SALARY_TYPES.includes(body.salaryType as (typeof SALARY_TYPES)[number])) return NextResponse.json({ error: "Invalid salary type" }, { status: 400 });
-  // Positions optional: empty/null → null (Not Specified). Requires DB column nullable.
-  if (body.positions === "" || body.positions === undefined) {
-    body.positions = null as unknown as number;
-  } else if (body.positions != null) {
-    const n = typeof body.positions === "number" ? body.positions : parseInt(String(body.positions), 10);
-    if (isNaN(n) || n < 1) {
-      return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
-    }
-    body.positions = n;
-  }
+  if (body.positions != null && (typeof body.positions !== "number" || body.positions < 1)) return NextResponse.json({ error: "Invalid positions count" }, { status: 400 });
 
   const rawCats = Array.isArray(body.categories)
     ? body.categories

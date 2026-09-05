@@ -18,8 +18,8 @@ import {
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import { COUNTRIES } from "@/lib/countries";
-import { getCitiesForCountry } from "@/lib/cities";
 
 const RichTextEditor = dynamic(
   () => import("@/components/ui/RichTextEditor").then((m) => m.RichTextEditor),
@@ -315,7 +315,14 @@ function NewListingForm() {
       if (!res.ok) throw new Error(data.error ?? "Failed to create listing");
 
       toast.success("Listing submitted for review!");
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" as ScrollBehavior : "auto" });
+      }
       router.push("/dashboard/market");
+      // Ensure top after navigation
+      setTimeout(() => {
+        if (typeof window !== "undefined") window.scrollTo(0, 0);
+      }, 50);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setUploading(false);
@@ -499,27 +506,21 @@ function NewListingForm() {
                 <label className="text-sm font-medium block mb-1.5">
                   City <span className="text-destructive">*</span>
                 </label>
-                <Select
-                  value={city || undefined}
-                  onValueChange={(v) => { if (v) setCity(v); }}
-                  disabled={!country}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={country ? "Select city" : "Select country first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getCitiesForCountry(country).map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CityCombobox
+                  id="new-listing-city"
+                  country={country}
+                  value={city}
+                  onChange={setCity}
+                  size="md"
+                  variant="select"
+                />
               </div>
             </div>
 
             {/* Google Maps URL (Optional) */}
             <div className="col-span-full">
               <label className="text-sm font-medium block mb-1.5">
-                Location map link (Optional)
+                Work Location map link (Optional)
               </label>
               <input
                 value={mapsUrl}

@@ -1,6 +1,4 @@
-import type { ReactNode } from "react";
 import { ShareButton } from "@/components/shared/ShareButton";
-import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
@@ -75,25 +73,41 @@ export default async function JobDetailPage({
 
   if (!job) notFound();
 
-  // Similar jobs — same category only, up to 24
+  // Similar jobs (same category / country), exclude current
   let relatedJobs: Pick<
     Job,
     "id" | "job_title" | "company_name" | "location" | "category" | "salary_rate" | "currency" | "salary_type" | "duration" | "positions" | "created_at"
   >[] = [];
   try {
     const supabase = createAdminClient();
-    if (job.category) {
-      const { data: rel } = await supabase
+    let q = supabase
+      .from("jobs")
+      .select(
+        "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
+      )
+      .eq("status", "approved")
+      .neq("id", id)
+      .order("created_at", { ascending: false })
+      .limit(6);
+    if (job.category) q = q.eq("category", job.category);
+    const { data: rel } = await q;
+    relatedJobs = (rel as typeof relatedJobs) ?? [];
+    if (relatedJobs.length < 3 && job.country) {
+      const { data: rel2 } = await supabase
         .from("jobs")
         .select(
           "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
         )
         .eq("status", "approved")
-        .eq("category", job.category)
+        .eq("country", job.country)
         .neq("id", id)
         .order("created_at", { ascending: false })
-        .limit(24);
-      relatedJobs = (rel as typeof relatedJobs) ?? [];
+        .limit(6);
+      const ids = new Set(relatedJobs.map((j) => j.id));
+      for (const j of rel2 ?? []) {
+        if (!ids.has(j.id)) relatedJobs.push(j as (typeof relatedJobs)[0]);
+      }
+      relatedJobs = relatedJobs.slice(0, 6);
     }
   } catch {
     // non-fatal
@@ -126,8 +140,8 @@ export default async function JobDetailPage({
   const hasMap = job.office_lat != null && job.office_lng != null;
 
   return (
-    <div className="min-h-screen py-10 overflow-x-hidden">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+    <div className="min-h-screen py-10">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Back */}
         <div className="mb-6">
           <Button variant="ghost" size="sm" className="gap-1.5 -ml-2" asChild>
@@ -143,11 +157,11 @@ export default async function JobDetailPage({
             {/* Header card */}
             <Card>
               <CardContent className="pt-6 pb-5">
-                <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                <div className="flex items-start justify-between gap-3 mb-3">
                   {job.category ? (
                     <Badge
                       className={cn(
-                        "text-xs font-medium max-w-[min(100%,18rem)] sm:max-w-[min(100%,22rem)] whitespace-normal text-left leading-snug h-auto py-1 px-2.5",
+                        "text-xs",
                         CATEGORY_COLORS[job.category] ??
                           CATEGORY_COLORS["Other"]
                       )}
@@ -155,9 +169,9 @@ export default async function JobDetailPage({
                       {job.category}
                     </Badge>
                   ) : (
-                    <span className="min-w-0" />
+                    <span />
                   )}
-                  <div className="flex items-center gap-2 shrink-0 ml-auto">
+                  <div className="flex items-center gap-2">
                     <ShareButton
                       url={`/jobs/${job.id}`}
                       title={job.job_title}
@@ -211,7 +225,7 @@ export default async function JobDetailPage({
             <Card>
               <CardContent className="pt-6 pb-6">
                 <h2 className="text-lg font-semibold mb-4">Job Description</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground leading-relaxed break-words [&_img]:!max-w-full [&_img]:!h-auto [&_img]:rounded-md [&_img]:object-contain [&_table]:max-w-full [&_pre]:overflow-x-auto">
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground leading-relaxed">
                   {job.job_description}
                 </div>
               </CardContent>
@@ -272,13 +286,7 @@ export default async function JobDetailPage({
                   <Detail
                     icon={<Tag className="h-4 w-4" />}
                     label="Employment"
-                    value={
-                      job.employment_type === "permanent"
-                        ? "Permanent"
-                        : job.employment_type === "temporary"
-                          ? "Temporary"
-                          : String(job.employment_type).replace(/_/g, " ")
-                    }
+                    value={job.employment_type}
                   />
                 )}
               </CardContent>
@@ -325,29 +333,47 @@ export default async function JobDetailPage({
                   </div>
                 )}
                 {/* Location: map link, office address, or company address */}
-                {(job.office_address || job.company_address || hasMap) && (
+                {((job as { work_location?: string | null }).work_location || job.office_address || job.company_address || hasMap) && (
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Location</p>
-                      {job.office_address &&
-                      (/^https?:\/\//i.test(job.office_address) ||
-                        job.office_address.includes("maps.google") ||
-                        job.office_address.includes("goo.gl") ||
-                        job.office_address.includes("maps.app.goo")) ? (
-                        <a
-                          href={job.office_address}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline break-all"
-                        >
-                          Open location on Google Maps
-                        </a>
-                      ) : (
-                        <p className="text-sm text-foreground break-words">
-                          {job.office_address || job.company_address}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground">Work location</p>
+                      {(() => {
+                        const wl =
+                          (job as { work_location?: string | null }).work_location ||
+                          job.office_address ||
+                          "";
+                        const isLink =
+                          /^https?:\/\//i.test(wl) ||
+                          wl.includes("maps.google") ||
+                          wl.includes("goo.gl") ||
+                          wl.includes("maps.app.goo");
+                        if (isLink && wl) {
+                          return (
+                            <a
+                              href={wl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline break-all"
+                            >
+                              Open work location on Google Maps
+                            </a>
+                          );
+                        }
+                        if (wl) {
+                          return (
+                            <p className="text-sm text-foreground break-words">{wl}</p>
+                          );
+                        }
+                        if (job.company_address) {
+                          return (
+                            <p className="text-sm text-foreground break-words">
+                              {job.company_address}
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
                       {hasMap && (
                         <div className="mt-2 rounded-lg overflow-hidden border border-border">
                           <iframe
@@ -366,6 +392,7 @@ export default async function JobDetailPage({
                 )}
                 {!job.company_phone &&
                   !job.company_email &&
+                  !(job as { work_location?: string | null }).work_location &&
                   !job.office_address &&
                   !job.company_address && (
                     <p className="text-xs text-muted-foreground">
@@ -432,7 +459,7 @@ export default async function JobDetailPage({
                     <img
                       src={poster.avatar_url}
                       alt=""
-                      className="h-10 w-10 min-h-10 min-w-10 max-h-10 max-w-10 rounded-full object-cover border border-border shrink-0"
+                      className="h-10 w-10 rounded-full object-cover border border-border"
                     />
                   ) : (
                     <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center text-sm font-semibold text-primary">
@@ -467,34 +494,6 @@ export default async function JobDetailPage({
                     {poster.company_website}
                   </a>
                 )}
-                {showPhone && poster?.phone && (
-                  <div className="flex items-start gap-2.5">
-                    <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Profile phone</p>
-                      <a
-                        href={`tel:${poster.phone.replace(/\s+/g, "")}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {poster.phone}
-                      </a>
-                    </div>
-                  </div>
-                )}
-                {showEmail && poster?.email && (
-                  <div className="flex items-start gap-2.5">
-                    <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Profile email</p>
-                      <a
-                        href={`mailto:${poster.email}`}
-                        className="text-sm text-primary hover:underline break-all"
-                      >
-                        {poster.email}
-                      </a>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -504,69 +503,46 @@ export default async function JobDetailPage({
           </div>
         </div>
 
-        <RelatedCarousel
-          title="Similar jobs"
-          items={relatedJobs.map((rj) => ({
-            kind: "job" as const,
-            id: rj.id,
-            title: rj.job_title,
-            subtitle: rj.company_name,
-            location: rj.location,
-            category: rj.category,
-            categoryClass:
-              (rj.category && CATEGORY_COLORS[rj.category]) ||
-              CATEGORY_COLORS["Other"],
-            date: new Date(rj.created_at).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            }),
-            meta:
-              "Positions: " +
-              (rj.positions != null ? String(rj.positions) : "Not Specified"),
-          }))}
-        />
-      </div>
-    </div>
-  );
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/50">
-      <div className="flex items-center gap-1.5 text-muted-foreground">
-        {icon}
-        <span className="text-xs">{label}</span>
-      </div>
-      <p className="text-sm font-semibold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function Detail({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string | null | undefined;
-}) {
-  if (value == null || value === "") return null;
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm text-foreground">{value}</p>
+        {/* Related / similar jobs */}
+        {relatedJobs.length > 0 && (
+          <div className="mt-10 space-y-4">
+            <h2 className="text-lg font-semibold">Similar jobs</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedJobs.map((rj) => (
+                <Link
+                  key={rj.id}
+                  href={`/jobs/${rj.id}`}
+                  className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors space-y-2"
+                >
+                  {rj.category && (
+                    <Badge
+                      className={cn(
+                        "text-[10px]",
+                        CATEGORY_COLORS[rj.category] ?? CATEGORY_COLORS["Other"]
+                      )}
+                    >
+                      {rj.category}
+                    </Badge>
+                  )}
+                  <p className="font-semibold text-sm line-clamp-2">
+                    {rj.job_title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {rj.company_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{rj.location}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Positions:{" "}
+                    {rj.positions != null ? rj.positions : "Not Specified"}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

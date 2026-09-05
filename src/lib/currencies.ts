@@ -376,22 +376,13 @@ export function currencyForCountry(
  * Example: "5,000 SAR" or "1,500 USD"
  */
 export function formatMoney(
-  amount: string | number | null | undefined,
-  currencyCode: string | null | undefined
+  price: string | number | null | undefined,
+  currency?: string | null
 ): string {
-  if (amount === null || amount === undefined || amount === "") {
-    return "—";
-  }
-  const cur = getCurrency(currencyCode);
-  const raw = String(amount).trim();
-  // Keep free-text salaries like "To be discussed"
-  if (/[a-zA-Z]/.test(raw) && !/^\d/.test(raw)) return raw;
-  const num = Number(String(raw).replace(/,/g, ""));
-  if (!Number.isFinite(num)) return `${raw} ${cur.code}`;
-  const formatted = new Intl.NumberFormat("en", {
-    maximumFractionDigits: cur.decimals ?? 2,
-  }).format(num);
-  return `${formatted} ${cur.code}`;
+  if (price == null || String(price).trim() === "") return "";
+  const cur = (currency || "").trim();
+  const p = String(price).trim();
+  return cur ? `${cur} ${p}` : p;
 }
 
 /** Label for dropdowns */

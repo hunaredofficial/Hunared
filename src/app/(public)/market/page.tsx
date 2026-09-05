@@ -343,9 +343,13 @@ function ListingCard({ listing }: { listing: Listing }) {
           <Link href={`/market/${listing.id}`}>{listing.title}</Link>
         </h3>
 
-        <p className="text-base font-bold text-primary mt-auto pt-2">
-          {formatMoney(listing.price, listing.currency)}
-        </p>
+        {formatMoney(listing.price, listing.currency) ? (
+          <p className="text-base font-bold text-primary mt-auto pt-2">
+            {formatMoney(listing.price, listing.currency)}
+          </p>
+        ) : (
+          <div className="mt-auto pt-2" />
+        )}
 
         {listing.location && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
