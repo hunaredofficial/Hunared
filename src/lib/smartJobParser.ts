@@ -3,7 +3,7 @@
  * No paid AI. Matches against existing JOB_CATEGORIES, COUNTRIES, cities, currencies.
  */
 
-import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { CURRENCIES, currencyForCountry } from "@/lib/currencies";
 import { getCitiesForCountry } from "@/lib/cities";
@@ -451,36 +451,27 @@ function detectEmail(text: string): ParsedField<string> | undefined {
 }
 
 function detectPhone(text: string): ParsedField<string> | undefined {
-  // Collect candidates in document order; always use the FIRST phone only.
-  const candidates: { value: string; conf: Confidence }[] = [];
-  const seen = new Set<string>();
-
-  const push = (raw: string, conf: Confidence) => {
-    const num = raw.replace(/[\s()-]/g, "");
-    if (num.length < 9 || num.length > 16) return;
-    if (seen.has(num)) return;
-    seen.add(num);
-    candidates.push({ value: num, conf });
-  };
-
-  // 1) International (+966...)
-  for (const m of text.matchAll(/\+\d{1,3}[\s-]?\d{6,14}/g)) {
-    push(m[0], "high");
+  // Prefer international format
+  const intl = text.match(
+    /(?:whatsapp[:\s]*)?(\+\d{1,3}[\s-]?\d{6,14})/i
+  );
+  if (intl) {
+    const num = intl[1].replace(/[\s-]/g, "");
+    if (num.length >= 10 && num.length <= 16) {
+      return { value: num, confidence: "high", label: num };
+    }
   }
-  // 2) Labeled phone/mobile/tel/whatsapp
-  for (const m of text.matchAll(
-    /(?:tel|phone|mobile|call|whatsapp|contact)[:\s]*([+0-9][0-9\s()-]{7,18}\d)/gi
-  )) {
-    push(m[1], "high");
+  // Local with 0
+  const local = text.match(
+    /(?:tel|phone|mobile|call)[:\s]*([0-9][0-9\s-]{8,16}\d)/i
+  );
+  if (local) {
+    const num = local[1].replace(/[\s-]/g, "");
+    if (num.length >= 9) {
+      return { value: num, confidence: "medium", label: num };
+    }
   }
-  // 3) Local mobile starting with 0 (e.g. Saudi 05xxxxxxxx)
-  for (const m of text.matchAll(/(?:^|[^\d])(0\d{8,12})(?!\d)/g)) {
-    push(m[1], "medium");
-  }
-
-  if (candidates.length === 0) return undefined;
-  const first = candidates[0];
-  return { value: first.value, confidence: first.conf, label: first.value };
+  return undefined;
 }
 
 function extractKeywords(text: string, category?: string): string[] {
@@ -536,27 +527,53 @@ function detectCategories(text: string): ParsedField<string[]> | undefined {
  * Infer employment type from duration string and free text.
  * Does not force Temporary when evidence is weak.
  */
+/**
+ * Infer employment type from duration + free text.
+ * Rule:
+ * - Duration "Permanent" (or permanent wording) → permanent
+ * - 1–6 Months, 1 Year, Shutdown, Long Term, UnSpecified → temporary
+ * - Explicit temporary/contract/shutdown wording → temporary
+ */
 export function inferEmploymentType(
   duration: string | null | undefined,
   text: string
 ): ParsedField<"permanent" | "temporary"> | undefined {
-  const lower = `${duration ?? ""} ${text}`.toLowerCase();
+  const durRaw = (duration ?? "").trim();
+  const lower = `${durRaw} ${text}`.toLowerCase();
+
+  // Explicit permanent duration value wins
+  if (durRaw === "Permanent") {
+    return { value: "permanent", confidence: "high", label: "Permanent" };
+  }
+
+  // Known temporary duration list (1 Month … UnSpecified, not Permanent)
+  if (
+    durRaw &&
+    (TEMPORARY_DURATIONS as readonly string[]).includes(durRaw)
+  ) {
+    return { value: "temporary", confidence: "high", label: "Temporary" };
+  }
 
   if (
-    /\bpermanent\b/.test(lower) ||
-    /\bfull[-\s]?time permanent\b/.test(lower) ||
-    /\blong[-\s]?term permanent\b/.test(lower)
+    /\bpermanent\b/.test(lower) &&
+    !/\btemporary\b/.test(lower) &&
+    !/\bcontract\b/.test(lower)
   ) {
     return { value: "permanent", confidence: "high", label: "Permanent" };
   }
+
   if (
     /\btask\s*force\b/.test(lower) ||
     /\bshutdown\b/.test(lower) ||
     /\bturnaround\b/.test(lower) ||
-    /\boutage\b/.test(lower)
+    /\boutage\b/.test(lower) ||
+    /\blong\s*term\b/.test(lower) ||
+    /\bunspecified\b/.test(lower) ||
+    /\b1\s*year\b/.test(lower)
   ) {
     return { value: "temporary", confidence: "high", label: "Temporary" };
   }
+
   if (
     /\btemporary\b/.test(lower) ||
     /\bcontract\b/.test(lower) ||
@@ -565,22 +582,8 @@ export function inferEmploymentType(
     return { value: "temporary", confidence: "high", label: "Temporary" };
   }
 
-  const dur = (duration ?? "").toLowerCase();
   if (
-    dur &&
-    dur !== "not specified" &&
-    dur !== "permanent" &&
-    /(\d+\s*(day|days|week|weeks|month|months|year|years)|1 day|3 days|1 week|1 month)/i.test(
-      dur
-    )
-  ) {
-    return { value: "temporary", confidence: "medium", label: "Temporary" };
-  }
-
-  if (
-    /\b(\d+)\s*(day|days|week|weeks|month|months)\s*(contract|project|position|assignment)?\b/.test(
-      lower
-    )
+    /\b(\d+)\s*(day|days|week|weeks|month|months|year|years)\b/.test(lower)
   ) {
     return { value: "temporary", confidence: "medium", label: "Temporary" };
   }
@@ -757,23 +760,11 @@ export function parseJobText(
   const labeledAddress = labelGet(labels, "company address", "address");
   const labeledMap = labelGet(
     labels,
-    "office location link",
-    "office location",
-    "office map",
-    "office maps",
     "map location link",
     "map location",
     "google maps",
     "map link",
     "location link"
-  );
-  const labeledWorkLoc = labelGet(
-    labels,
-    "work location",
-    "workplace",
-    "project location",
-    "project",
-    "site location"
   );
 
   let category = detectCategory(text);
@@ -916,15 +907,10 @@ export function parseJobText(
   }
   let companyPhone = detectPhone(text);
   if (labeledPhone) {
-    // If paste has two numbers (e.g. "053x / 054x"), use only the first
-    const firstPhone =
-      labeledPhone.split(/[/|,;]+/).map((s) => s.trim()).find(Boolean) ||
-      labeledPhone;
-    const cleaned = firstPhone.replace(/[^\d+]/g, "");
     companyPhone = {
-      value: cleaned || firstPhone.trim(),
+      value: labeledPhone,
       confidence: "high",
-      label: cleaned || firstPhone.trim(),
+      label: labeledPhone,
     };
   }
 
@@ -984,42 +970,6 @@ export function parseJobText(
   if (labeledMap) {
     result.mapLocation = { value: labeledMap, confidence: "high", label: labeledMap };
   }
-  // Work location (project / site) — separate from office map link
-  if (labeledWorkLoc) {
-    result.mapLocation = result.mapLocation; // keep office link if set
-    (result as SmartJobParseResult & { workLocation?: ParsedField<string> }).workLocation = {
-      value: labeledWorkLoc,
-      confidence: "high",
-      label: labeledWorkLoc,
-    };
-  } else if (labeledLocation) {
-    const loc = labeledLocation.trim();
-    const isMaps =
-      /^https?:\/\//i.test(loc) ||
-      /maps\.google|goo\.gl\/maps|maps\.app\.goo/i.test(loc);
-    if (isMaps && !result.mapLocation) {
-      result.mapLocation = { value: loc, confidence: "high", label: loc };
-    } else if (!isMaps && loc.length >= 3) {
-      (result as SmartJobParseResult & { workLocation?: ParsedField<string> }).workLocation = {
-        value: loc,
-        confidence: "medium",
-        label: loc,
-      };
-    }
-  }
-  // Bare Google Maps URL in text → office location link if not set
-  if (!result.mapLocation) {
-    const urlMatch = text.match(
-      /https?:\/\/\S*(?:maps\.google|goo\.gl\/maps|maps\.app\.goo)\S*/i
-    );
-    if (urlMatch) {
-      result.mapLocation = {
-        value: urlMatch[0].replace(/[),.;]+$/, ""),
-        confidence: "medium",
-        label: urlMatch[0],
-      };
-    }
-  }
   if (labeledPositions) {
     result.positions = { value: labeledPositions, confidence: "high", label: labeledPositions };
   } else {
@@ -1039,8 +989,6 @@ export function hasSuggestions(r: SmartJobParseResult): boolean {
     r.categories ||
     r.country ||
     r.city ||
-    r.mapLocation ||
-    r.workLocation ||
     r.currency ||
     r.salaryRate ||
     r.salaryType ||

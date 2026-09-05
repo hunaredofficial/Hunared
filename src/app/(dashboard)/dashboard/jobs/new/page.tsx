@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -18,7 +17,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
-import { getCitiesForCountry } from "@/lib/cities";
 import {
   CURRENCIES,
   currencyForCountry,
@@ -61,12 +59,9 @@ interface JobForm {
   companyEmail: string;
   companyAddress: string;
   mapLocation: string;
-  workLocation: string;
   showProfileContact: boolean;
   expiration: ExpirationOptionValue;
 }
-
-
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -83,13 +78,14 @@ export default function PostJobPage() {
 
   const markTouched = (field: keyof JobForm) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
+
   const [form, setForm] = useState<JobForm>({
     jobTitle: "",
     jobDescription: "",
     positions: "",
     country: "SA",
     city: "",
-    employmentType: "permanent",
+    employmentType: "",
     duration: "",
     salaryType: "",
     salaryRate: "",
@@ -102,7 +98,6 @@ export default function PostJobPage() {
     companyEmail: "",
     companyAddress: "",
     mapLocation: "",
-    workLocation: "",
     showProfileContact: false,
     expiration: "never",
   });
@@ -279,16 +274,7 @@ export default function PostJobPage() {
       setForm((prev) => ({ ...prev, companyAddress: String(smartResult.companyAddress!.value) }));
     }
     if (smartResult.mapLocation && !touched.mapLocation) {
-      setForm((prev) => ({
-        ...prev,
-        mapLocation: String(smartResult.mapLocation!.value),
-      }));
-    }
-    if (smartResult.workLocation && !touched.workLocation) {
-      setForm((prev) => ({
-        ...prev,
-        workLocation: String(smartResult.workLocation!.value),
-      }));
+      setForm((prev) => ({ ...prev, mapLocation: String(smartResult.mapLocation!.value) }));
     }
     if (smartResult.jobDescription && !touched.jobDescription) {
       setForm((prev) => ({ ...prev, jobDescription: String(smartResult.jobDescription!.value) }));
@@ -322,6 +308,10 @@ export default function PostJobPage() {
       toast.error("Duration is required.");
       return;
     }
+    if (!form.employmentType || !["permanent", "temporary"].includes(form.employmentType)) {
+      toast.error("Employment Type is required (Temporary or Permanent).");
+      return;
+    }
     const cats =
       form.categories.length > 0
         ? form.categories
@@ -350,6 +340,7 @@ export default function PostJobPage() {
       toast.error("Company Name is required.");
       return;
     }
+
     if (!form.companyPhone.trim() && !form.companyEmail.trim()) {
       toast.error(
         "Please provide at least one contact method: Phone or Email."
@@ -394,9 +385,7 @@ export default function PostJobPage() {
           companyPhone: form.companyPhone.trim() || null,
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
-          workLocation: form.workLocation.trim() || null,
           mapLocation: form.mapLocation.trim() || null,
-          officeLocationLink: form.mapLocation.trim() || null,
           showProfileContact: form.showProfileContact,
           expiration: form.expiration,
         }),
@@ -522,7 +511,6 @@ export default function PostJobPage() {
                 onValueChange={(v: string | null) => {
                   if (v) {
                     set("country", v, true);
-                    set("city", "", true);
                     // Keep currency in sync with country until user overrides currency
                     if (!currencyTouched) {
                       set("currency", currencyForCountry(v));
@@ -544,52 +532,31 @@ export default function PostJobPage() {
             </Field>
 
             <Field label="City *">
-              <Select
-                value={form.city || undefined}
-                onValueChange={(v: string | null) => {
-                  if (v) set("city", v, true);
-                }}
-                disabled={!form.country}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {getCitiesForCountry(form.country).map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-                        <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Project name, area, or Google Maps link"
-                value={form.workLocation}
-                onChange={(e) => set("workLocation", e.target.value, true)}
+                placeholder="e.g. Dubai"
+                value={form.city}
+                onChange={(e) => set("city", e.target.value)}
               />
-              <p className="text-[11px] text-muted-foreground">
-                Optional. Project, area, or map link for the job site (separate from City).
-              </p>
             </Field>
 
             <Field label="Employment Type *">
               <Select
-                value={form.employmentType}
+                value={form.employmentType || undefined}
                 onValueChange={(v: string | null) => {
                   if (v) set("employmentType", v, true);
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="permanent">Permanent</SelectItem>
                   <SelectItem value="temporary">Temporary</SelectItem>
+                  <SelectItem value="permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                1–6 Months, 1 Year, Shutdown, Long Term, UnSpecified → Temporary. Permanent → Permanent.
+              </p>
             </Field>
 
             <Field label="Number of Positions (Optional)">
@@ -597,7 +564,7 @@ export default function PostJobPage() {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="Leave empty for Not Specified"
+                placeholder="e.g. 3"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
@@ -610,7 +577,18 @@ export default function PostJobPage() {
               <Select
                 value={form.duration}
                 onValueChange={(v: string | null) => {
-                  if (v) set("duration", v, true);
+                  if (!v) return;
+                  set("duration", v, true);
+                  // Auto job type from duration unless user already chose employment type
+                  if (!touched.employmentType) {
+                    if (v === "Permanent") {
+                      set("employmentType", "permanent", false);
+                    } else if (
+                      (TEMPORARY_DURATIONS as readonly string[]).includes(v)
+                    ) {
+                      set("employmentType", "temporary", false);
+                    }
+                  }
                 }}
               >
                 <SelectTrigger>
@@ -716,12 +694,11 @@ export default function PostJobPage() {
         </Section>
 
         {/* Company Details */}
-
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
               <Input
-                placeholder="e.g. Hunared Company Ltd."
+                placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
@@ -792,7 +769,7 @@ export default function PostJobPage() {
                 onChange={(e) => set("mapLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                Company office map link — different from Work Location above.
+                Optional. Paste a Google Maps (or similar) link for the office / work location.
               </p>
             </Field>
           </div>
