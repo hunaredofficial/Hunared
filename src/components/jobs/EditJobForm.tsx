@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
 import type { Job } from "@/types/database";
@@ -28,6 +28,7 @@ interface JobForm {
   positions: string;
   country: string;
   city: string;
+  employmentType: string;
   duration: string;
   salaryType: string;
   salaryRate: string;
@@ -69,6 +70,7 @@ function jobToForm(job: Job): JobForm {
     positions: job.positions != null ? String(job.positions) : "",
     country,
     city: city || "",
+    employmentType: job.employment_type ?? "",
     duration: job.duration,
     salaryType: job.salary_type ?? "",
     salaryRate: job.salary_rate ?? "",
@@ -119,6 +121,10 @@ export function EditJobForm({ job }: { job: Job }) {
     }
     if (!form.city.trim()) {
       toast.error("City is required.");
+      return;
+    }
+    if (!form.employmentType || !["permanent", "temporary"].includes(form.employmentType)) {
+      toast.error("Employment Type is required (Temporary or Permanent).");
       return;
     }
     if (!form.duration) {
@@ -172,6 +178,7 @@ export function EditJobForm({ job }: { job: Job }) {
           location,
           country: form.country,
           city: form.city.trim(),
+          employment_type: form.employmentType,
           duration: form.duration,
           salary_type: form.salaryType,
           salary_rate: salaryAmountRequired ? form.salaryRate.trim() : null,
@@ -324,18 +331,87 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
+            <Field label="Employment Type *">
+              <div
+                className="grid grid-cols-2 gap-2"
+                role="group"
+                aria-label="Employment Type"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    set("employmentType", "temporary");
+                    if (form.duration === "Permanent") {
+                      set("duration", "");
+                    }
+                  }}
+                  className={cn(
+                    "rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    form.employmentType === "temporary"
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-input bg-background text-foreground hover:bg-muted/60"
+                  )}
+                >
+                  Temporary
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    set("employmentType", "permanent");
+                    set("duration", "Permanent");
+                  }}
+                  className={cn(
+                    "rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    form.employmentType === "permanent"
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-input bg-background text-foreground hover:bg-muted/60"
+                  )}
+                >
+                  Permanent
+                </button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                {form.employmentType === "permanent"
+                  ? "Permanent role — duration is set to Permanent."
+                  : form.employmentType === "temporary"
+                    ? "Fixed-term role — choose a duration below."
+                    : "Choose Temporary or Permanent."}
+              </p>
+            </Field>
+
             <Field label="Duration *">
               <Select
-                value={form.duration}
+                value={form.duration || undefined}
                 onValueChange={(v: string | null) => {
-                  if (v) set("duration", v);
+                  if (!v) return;
+                  set("duration", v);
+                  if (v === "Permanent") {
+                    set("employmentType", "permanent");
+                  } else if ((TEMPORARY_DURATIONS as readonly string[]).includes(v)) {
+                    set("employmentType", "temporary");
+                  }
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
+                  <SelectValue
+                    placeholder={
+                      form.employmentType === "temporary"
+                        ? "Select temporary duration"
+                        : form.employmentType === "permanent"
+                          ? "Permanent"
+                          : "Select duration"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {DURATIONS.map((d) => (
+                  {(form.employmentType === "temporary"
+                    ? (TEMPORARY_DURATIONS as readonly string[])
+                    : form.employmentType === "permanent"
+                      ? (["Permanent"] as const)
+                      : (DURATIONS as readonly string[])
+                  ).map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
