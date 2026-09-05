@@ -64,13 +64,17 @@ function jobToForm(job: Job): JobForm {
       if (match) country = match.code;
     }
   }
+  const emp =
+    (job as { employment_type?: string | null }).employment_type ||
+    (job.duration === "Permanent" ? "permanent" : "temporary");
+
   return {
     jobTitle: job.job_title,
     jobDescription: job.job_description,
     positions: job.positions != null ? String(job.positions) : "",
     country,
     city: city || "",
-    employmentType: job.employment_type ?? "",
+    employmentType: emp === "permanent" ? "permanent" : "temporary",
     duration: job.duration,
     salaryType: job.salary_type ?? "",
     salaryRate: job.salary_rate ?? "",
@@ -181,7 +185,8 @@ export function EditJobForm({ job }: { job: Job }) {
           employment_type: form.employmentType,
           duration: form.duration,
           salary_type: form.salaryType,
-          salary_rate: salaryAmountRequired ? form.salaryRate.trim() : null,
+          // Always persist rate when provided (even if type is Negotiable)
+          salary_rate: form.salaryRate.trim() || null,
           category: form.category,
           subcategory: form.subcategory.trim() || null,
           company_name: form.companyName.trim(),
@@ -193,6 +198,9 @@ export function EditJobForm({ job }: { job: Job }) {
           office_location_link: form.officeLocationLink.trim() || null,
           // Keep office_address as work location text for backward compatibility
           office_address: form.workLocation.trim() || null,
+          // Do not reference undefined officeLocation — clear coords unless set elsewhere
+          office_lat: null,
+          office_lng: null,
         }),
       });
       const data = await res.json();
@@ -332,52 +340,28 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
 
             <Field label="Employment Type *">
-              <div
-                className="grid grid-cols-2 gap-2"
-                role="group"
-                aria-label="Employment Type"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    set("employmentType", "temporary");
-                    if (form.duration === "Permanent") {
-                      set("duration", "");
-                    }
-                  }}
-                  className={cn(
-                    "rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    form.employmentType === "temporary"
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-input bg-background text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  Temporary
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    set("employmentType", "permanent");
+              <Select
+                value={form.employmentType || undefined}
+                onValueChange={(v: string | null) => {
+                  if (!v) return;
+                  set("employmentType", v);
+                  if (v === "permanent") {
                     set("duration", "Permanent");
-                  }}
-                  className={cn(
-                    "rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    form.employmentType === "permanent"
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-input bg-background text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  Permanent
-                </button>
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5">
-                {form.employmentType === "permanent"
-                  ? "Permanent role — duration is set to Permanent."
-                  : form.employmentType === "temporary"
-                    ? "Fixed-term role — choose a duration below."
-                    : "Choose Temporary or Permanent."}
+                  } else if (form.duration === "Permanent") {
+                    set("duration", "");
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Temporary or Permanent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="temporary">Temporary</SelectItem>
+                  <SelectItem value="permanent">Permanent</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Temporary = fixed term. Permanent = ongoing role.
               </p>
             </Field>
 
@@ -395,15 +379,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      form.employmentType === "temporary"
-                        ? "Select temporary duration"
-                        : form.employmentType === "permanent"
-                          ? "Permanent"
-                          : "Select duration"
-                    }
-                  />
+                  <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
                   {(form.employmentType === "temporary"
@@ -440,14 +416,23 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
-            {salaryAmountRequired && (
-              <Field label="Salary / Rate *">
-                <Input
-                  value={form.salaryRate}
-                  onChange={(e) => set("salaryRate", e.target.value)}
-                />
-              </Field>
-            )}
+            <Field
+              label={
+                salaryAmountRequired
+                  ? `Salary / Rate (${form.salaryType}) *`
+                  : "Salary / Rate (Optional)"
+              }
+            >
+              <Input
+                placeholder={
+                  salaryAmountRequired
+                    ? "e.g. 25 or 5000"
+                    : "Optional amount if known"
+                }
+                value={form.salaryRate}
+                onChange={(e) => set("salaryRate", e.target.value)}
+              />
+            </Field>
           </div>
 
           </Section>

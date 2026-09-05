@@ -50,7 +50,9 @@ export default async function JobDetailPage({
 
   try {
     const supabase = createAdminClient();
-    const { data, error: jobErr } = await supabase
+    // Prefer approved public listings; fall back to any status so a valid id still opens
+    // (e.g. pending post viewed from dashboard share) without crashing the page.
+    let { data, error: jobErr } = await supabase
       .from("jobs")
       .select("*")
       .eq("id", id)
@@ -58,6 +60,18 @@ export default async function JobDetailPage({
       .maybeSingle();
     if (jobErr) {
       console.error("[job detail]", jobErr.message);
+    }
+    if (!data) {
+      const second = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (second.error) {
+        console.error("[job detail fallback]", second.error.message);
+      }
+      // Only expose non-approved if the record exists (caller may be owner/admin via dashboard)
+      data = second.data;
     }
     job = data;
 
@@ -71,8 +85,8 @@ export default async function JobDetailPage({
         .maybeSingle();
       poster = profile;
     }
-  } catch {
-    // ignore
+  } catch (e) {
+    console.error("[job detail fatal]", e);
   }
 
   if (!job) notFound();
@@ -407,15 +421,6 @@ export default async function JobDetailPage({
                   !(job as { office_location_link?: string | null }).office_location_link &&
                   !job.company_address &&
                   !hasMap && (
-                    <p className="text-xs text-muted-foreground">
-                      Contact details not provided.
-                    </p>
-                  )}
-{!job.company_phone &&
-                  !job.company_email &&
-                  !(job as { work_location?: string | null }).work_location &&
-                  !job.office_address &&
-                  !job.company_address && (
                     <p className="text-xs text-muted-foreground">
                       Contact details not provided.
                     </p>

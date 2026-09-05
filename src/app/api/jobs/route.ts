@@ -223,7 +223,7 @@ export async function POST(req: Request) {
       office_lng: body.officeLng ?? null,
       office_address: body.workLocation?.trim() || body.mapLocation?.trim() || body.officeAddress?.trim() || null,
       work_location: body.workLocation?.trim() || body.mapLocation?.trim() || null,
-      office_location_link: body.officeLocationLink?.trim() || null,
+      office_location_link: body.officeLocationLink?.trim() || body.mapLocation?.trim() || null,
       status: jobStatus,
       expires_at: expiresAt,
       show_profile_contact: Boolean(body.showProfileContact),

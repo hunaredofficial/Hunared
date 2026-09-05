@@ -384,11 +384,11 @@ function JobCard({ job }: { job: Partial<Job> }) {
       })
     : "";
 
-  const salaryLabel = formatJobSalary(
-    job.salary_rate,
-    job.currency,
-    job.salary_type
-  );
+  const salaryLabel =
+    formatJobSalary(job.salary_rate, job.currency, job.salary_type) ||
+    (job.salary_rate && String(job.salary_rate).trim()) ||
+    (job.salary_type === "Negotiable" ? "Negotiable" : "") ||
+    "";
 
   return (
     <Card className="group hover:border-primary/40 hover:shadow-md transition-all duration-200">

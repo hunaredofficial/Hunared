@@ -387,24 +387,34 @@ export function formatMoney(
   return cur ? `${cur} ${p}` : p;
 }
 
-/** Job card / detail salary line. No lone currency when rate is missing. */
+/** Job card / detail salary line. Prefer real rate when present; never hide amount. */
 export function formatJobSalary(
   salaryRate: string | number | null | undefined,
   currency?: string | null,
   salaryType?: string | null
 ): string {
   const type = (salaryType || "").trim();
-  if (type === "After Interview") return "To be discussed";
-  if (type === "Negotiable") {
-    const r = salaryRate != null ? String(salaryRate).trim() : "";
-    // If a real numeric rate exists with Negotiable type, still show currency + rate
-    if (r && /\d/.test(r)) return formatMoney(r, currency);
-    return "Negotiable";
-  }
   const rate = salaryRate != null ? String(salaryRate).trim() : "";
-  if (!rate) return "";
-  if (!/\d/.test(rate)) return rate; // Negotiable stored in rate field
-  return formatMoney(rate, currency);
+  const hasNumericRate = Boolean(rate && /\d/.test(rate));
+
+  // Explicit “discuss later”
+  if (type === "After Interview" && !hasNumericRate) return "To be discussed";
+
+  // Numeric amount always wins over a Negotiable label
+  if (hasNumericRate) {
+    const money = formatMoney(rate, currency);
+    if (type === "Hourly") return `${money} / hr`;
+    if (type === "Monthly") return `${money} / mo`;
+    return money;
+  }
+
+  // Text-only rate (e.g. "Negotiable" stored in rate)
+  if (rate && !hasNumericRate) return rate;
+
+  if (type === "Negotiable") return "Negotiable";
+  if (type === "After Interview") return "To be discussed";
+  if (type) return type;
+  return "";
 }
 
 /** Label for dropdowns */

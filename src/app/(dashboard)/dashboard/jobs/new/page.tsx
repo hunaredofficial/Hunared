@@ -376,7 +376,8 @@ export default function PostJobPage() {
           employmentType: form.employmentType,
           duration: form.duration,
           salaryType: form.salaryType,
-          salaryRate: salaryAmountRequired ? form.salaryRate.trim() : null,
+          // Always save rate when provided so cards can show the amount
+          salaryRate: form.salaryRate.trim() || null,
           currency: form.currency,
           category: cats[0],
           categories: cats,
@@ -386,6 +387,8 @@ export default function PostJobPage() {
           companyEmail: form.companyEmail.trim() || null,
           companyAddress: form.companyAddress.trim() || null,
           mapLocation: form.mapLocation.trim() || null,
+          // API expects officeLocationLink for the maps link field
+          officeLocationLink: form.mapLocation.trim() || null,
           showProfileContact: form.showProfileContact,
           expiration: form.expiration,
         }),
@@ -540,54 +543,22 @@ export default function PostJobPage() {
             </Field>
 
             <Field label="Employment Type *">
-              <div
-                className="grid grid-cols-2 gap-2"
-                role="group"
-                aria-label="Employment Type"
+              <Select
+                value={form.employmentType || undefined}
+                onValueChange={(v: string | null) => {
+                  if (v) set("employmentType", v, true);
+                }}
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    set("employmentType", "temporary", true);
-                    // Clear Permanent duration so user picks a fixed-term option
-                    if (form.duration === "Permanent") {
-                      set("duration", "", false);
-                    }
-                  }}
-                  className={cn(
-                    "rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    form.employmentType === "temporary"
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-input bg-background text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  Temporary
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    set("employmentType", "permanent", true);
-                    // Permanent jobs use duration Permanent
-                    set("duration", "Permanent", false);
-                  }}
-                  className={cn(
-                    "rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    form.employmentType === "permanent"
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-input bg-background text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  Permanent
-                </button>
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5">
-                {form.employmentType === "permanent"
-                  ? "Permanent role — duration is set to Permanent."
-                  : form.employmentType === "temporary"
-                    ? "Fixed-term role — choose a duration below (1–6 Months, 1 Year, Shutdown, Long Term, etc.)."
-                    : "Choose Temporary (fixed term) or Permanent. Duration options will match your choice."}
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Temporary or Permanent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="temporary">Temporary</SelectItem>
+                  <SelectItem value="permanent">Permanent</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                1–6 Months, 1 Year, Shutdown, Long Term, UnSpecified → Temporary. Permanent → Permanent.
               </p>
             </Field>
 
@@ -607,7 +578,7 @@ export default function PostJobPage() {
 
             <Field label="Duration *">
               <Select
-                value={form.duration || undefined}
+                value={form.duration}
                 onValueChange={(v: string | null) => {
                   if (!v) return;
                   set("duration", v, true);
@@ -624,34 +595,16 @@ export default function PostJobPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      form.employmentType === "temporary"
-                        ? "Select temporary duration"
-                        : form.employmentType === "permanent"
-                          ? "Permanent"
-                          : "Select duration"
-                    }
-                  />
+                  <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(form.employmentType === "temporary"
-                    ? (TEMPORARY_DURATIONS as readonly string[])
-                    : form.employmentType === "permanent"
-                      ? (["Permanent"] as const)
-                      : (DURATIONS as readonly string[])
-                  ).map((d) => (
+                  {DURATIONS.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {form.employmentType === "permanent" && (
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Duration is locked to Permanent for permanent roles.
-                </p>
-              )}
             </Field>
 
             <Field label="Close Listing Automatically">
@@ -727,19 +680,25 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            {salaryAmountRequired && (
-              <Field label={`Salary / Rate (${form.salaryType}) *`}>
-                <Input
-                  placeholder={
-                    form.salaryType === "Hourly"
-                      ? "e.g. 25 - 35"
-                      : "e.g. 6000 - 9000"
-                  }
-                  value={form.salaryRate}
-                  onChange={(e) => set("salaryRate", e.target.value)}
-                />
-              </Field>
-            )}
+            <Field
+              label={
+                salaryAmountRequired
+                  ? `Salary / Rate (${form.salaryType}) *`
+                  : "Salary / Rate (Optional)"
+              }
+            >
+              <Input
+                placeholder={
+                  form.salaryType === "Hourly"
+                    ? "e.g. 25 - 35"
+                    : form.salaryType === "Monthly"
+                      ? "e.g. 6000 - 9000"
+                      : "Optional amount if known"
+                }
+                value={form.salaryRate}
+                onChange={(e) => set("salaryRate", e.target.value)}
+              />
+            </Field>
           </div>
         </Section>
 
