@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { ShareButton } from "@/components/shared/ShareButton";
+import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
@@ -25,41 +27,6 @@ import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS } from "@/lib/constants";
 import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import type { Job } from "@/types/database";
-
-
-function WorkLocationBlock({ job }: { job: Job }) {
-  const wl =
-    (job as { work_location?: string | null }).work_location ||
-    job.office_address ||
-    "";
-  const isLink =
-    !!wl &&
-    (/^https?:\/\//i.test(wl) ||
-      wl.includes("maps.google") ||
-      wl.includes("goo.gl") ||
-      wl.includes("maps.app.goo"));
-  if (isLink) {
-    return (
-      <a
-        href={wl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-sm text-primary hover:underline break-all"
-      >
-        Open location on Google Maps
-      </a>
-    );
-  }
-  if (wl) {
-    return <p className="text-sm text-foreground break-words">{wl}</p>;
-  }
-  if (job.company_address) {
-    return (
-      <p className="text-sm text-foreground break-words">{job.company_address}</p>
-    );
-  }
-  return null;
-}
 
 export default async function JobDetailPage({
   params,
@@ -90,9 +57,7 @@ export default async function JobDetailPage({
       .eq("id", id)
       .eq("status", "approved")
       .maybeSingle();
-    if (jobErr) {
-      console.error("[job detail]", jobErr.message);
-    }
+    if (jobErr) console.error("[job detail]", jobErr.message);
     job = data;
 
     if (job?.employer_id) {
@@ -111,41 +76,25 @@ export default async function JobDetailPage({
 
   if (!job) notFound();
 
-  // Similar jobs (same category / country), exclude current
+  // Similar jobs — same category only, up to 24
   let relatedJobs: Pick<
     Job,
     "id" | "job_title" | "company_name" | "location" | "category" | "salary_rate" | "currency" | "salary_type" | "duration" | "positions" | "created_at"
   >[] = [];
   try {
     const supabase = createAdminClient();
-    let q = supabase
-      .from("jobs")
-      .select(
-        "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
-      )
-      .eq("status", "approved")
-      .neq("id", id)
-      .order("created_at", { ascending: false })
-      .limit(6);
-    if (job.category) q = q.eq("category", job.category);
-    const { data: rel } = await q;
-    relatedJobs = (rel as typeof relatedJobs) ?? [];
-    if (relatedJobs.length < 3 && job.country) {
-      const { data: rel2 } = await supabase
+    if (job.category) {
+      const { data: rel } = await supabase
         .from("jobs")
         .select(
           "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
         )
         .eq("status", "approved")
-        .eq("country", job.country)
+        .eq("category", job.category)
         .neq("id", id)
         .order("created_at", { ascending: false })
-        .limit(6);
-      const ids = new Set(relatedJobs.map((j) => j.id));
-      for (const j of rel2 ?? []) {
-        if (!ids.has(j.id)) relatedJobs.push(j as (typeof relatedJobs)[0]);
-      }
-      relatedJobs = relatedJobs.slice(0, 6);
+        .limit(24);
+      relatedJobs = (rel as typeof relatedJobs) ?? [];
     }
   } catch {
     // non-fatal
@@ -156,15 +105,17 @@ export default async function JobDetailPage({
       ? [poster.city, poster.country].filter(Boolean).join(", ")
       : poster?.location || null;
 
-  const allowProfileContact = Boolean(job.show_profile_contact);
+  const allowProfileContact = Boolean((job as { show_profile_contact?: boolean }).show_profile_contact);
   const showPhone = allowProfileContact && Boolean(poster?.phone?.trim());
   const showEmail = allowProfileContact && Boolean(poster?.email?.trim());
 
-  const postedOn = new Date(job.created_at).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const postedOn = job.created_at
+    ? new Date(job.created_at).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
 
   const baseSalary = formatJobSalary(
     job.salary_rate,
@@ -176,6 +127,7 @@ export default async function JobDetailPage({
     : job.salary_type && job.salary_type !== "Negotiable"
       ? job.salary_type
       : "Not specified";
+
 
   const hasMap = job.office_lat != null && job.office_lng != null;
 
@@ -373,16 +325,55 @@ export default async function JobDetailPage({
                   </div>
                 )}
                 {/* Location: map link, office address, or company address */}
-                {(Boolean((job as { work_location?: string | null }).work_location) ||
-                  Boolean(job.office_address) ||
-                  Boolean(job.company_address) ||
+                {(((job as { work_location?: string | null }).work_location) ||
+                  job.office_address ||
+                  job.company_address ||
                   hasMap) && (
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Work / office location</p>
-                      <WorkLocationBlock job={job} />
-                      {hasMap && job.office_lat != null && job.office_lng != null && (
+                      {(() => {
+                        const wl = String(
+                          (job as { work_location?: string | null }).work_location ||
+                            job.office_address ||
+                            ""
+                        ).trim();
+                        const isLink =
+                          !!wl &&
+                          (/^https?:\/\//i.test(wl) ||
+                            wl.includes("maps.google") ||
+                            wl.includes("goo.gl") ||
+                            wl.includes("maps.app.goo"));
+                        if (isLink) {
+                          return (
+                            <a
+                              href={wl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline break-all"
+                            >
+                              Open location on Google Maps
+                            </a>
+                          );
+                        }
+                        if (wl) {
+                          return (
+                            <p className="text-sm text-foreground break-words">
+                              {wl}
+                            </p>
+                          );
+                        }
+                        if (job.company_address) {
+                          return (
+                            <p className="text-sm text-foreground break-words">
+                              {job.company_address}
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
+                      {hasMap && (
                         <div className="mt-2 rounded-lg overflow-hidden border border-border">
                           <iframe
                             title="Office Location"
@@ -400,7 +391,6 @@ export default async function JobDetailPage({
                 )}
                 {!job.company_phone &&
                   !job.company_email &&
-                  !(job as { work_location?: string | null }).work_location &&
                   !job.office_address &&
                   !job.company_address && (
                     <p className="text-xs text-muted-foreground">
@@ -511,46 +501,69 @@ export default async function JobDetailPage({
           </div>
         </div>
 
-        {/* Related / similar jobs */}
-        {relatedJobs.length > 0 && (
-          <div className="mt-10 space-y-4">
-            <h2 className="text-lg font-semibold">Similar jobs</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedJobs.map((rj) => (
-                <Link
-                  key={rj.id}
-                  href={`/jobs/${rj.id}`}
-                  className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors space-y-2"
-                >
-                  {rj.category && (
-                    <Badge
-                      className={cn(
-                        "text-[10px]",
-                        CATEGORY_COLORS[rj.category] ?? CATEGORY_COLORS["Other"]
-                      )}
-                    >
-                      {rj.category}
-                    </Badge>
-                  )}
-                  <p className="font-semibold text-sm line-clamp-2">
-                    {rj.job_title}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {rj.company_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{rj.location}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Positions:{" "}
-                    {rj.positions != null ? rj.positions : "Not Specified"}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        <RelatedCarousel
+          title="Similar jobs"
+          items={relatedJobs.map((rj) => ({
+            kind: "job" as const,
+            id: rj.id,
+            title: rj.job_title,
+            subtitle: rj.company_name,
+            location: rj.location,
+            category: rj.category,
+            categoryClass:
+              (rj.category && CATEGORY_COLORS[rj.category]) ||
+              CATEGORY_COLORS["Other"],
+            date: new Date(rj.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+            meta:
+              "Positions: " +
+              (rj.positions != null ? String(rj.positions) : "Not Specified"),
+          }))}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Stat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/50">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        <span className="text-xs">{label}</span>
+      </div>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function Detail({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | null | undefined;
+}) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground">{value}</p>
       </div>
     </div>
   );

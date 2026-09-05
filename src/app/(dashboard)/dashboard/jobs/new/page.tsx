@@ -721,7 +721,7 @@ export default function PostJobPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="col-span-full">
               <Input
-                placeholder="e.g. Aramco Projects Ltd."
+                placeholder="e.g. Hunared Company Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
