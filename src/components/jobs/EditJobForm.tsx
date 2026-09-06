@@ -355,8 +355,8 @@ export function EditJobForm({ job }: { job: Job }) {
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="temporary">Temporary</SelectItem>
-                  <SelectItem value="permanent">Permanent</SelectItem>
+                  <SelectItem value="Temporary">Temporary</SelectItem>
+                  <SelectItem value="Permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
