@@ -420,23 +420,28 @@ function detectSalary(
 function detectDuration(text: string): ParsedField<string> | undefined {
   const lower = text.toLowerCase();
 
-  // Map phrases → existing DURATIONS
+  // Map phrases → existing DURATIONS (values must match DURATIONS exactly)
   const maps: { re: RegExp; value: string; conf: Confidence }[] = [
     { re: /\bpermanent\b/i, value: "Permanent", conf: "high" },
-    { re: /\blong\s*term\b/i, value: "Long Term", conf: "high" },
-    { re: /\bshutdown\b/i, value: "Shutdown", conf: "high" },
-    { re: /\b1\s*year\b/i, value: "1 Year", conf: "high" },
+    { re: /\blong\s*[- ]?term\b/i, value: "Long Term", conf: "high" },
+    { re: /\bshutdown\b|\bshut\s*down\b/i, value: "Shutdown", conf: "high" },
+    { re: /\bun-?specified\b|\bnot specified\b/i, value: "UnSpecified", conf: "high" },
+    { re: /\b1\s*year\b|\b12\s*months?\b/i, value: "1 Year", conf: "high" },
     { re: /\b6\s*months?\b/i, value: "6 Months", conf: "high" },
+    { re: /\b5\s*months?\b/i, value: "5 Months", conf: "high" },
+    { re: /\b4\s*months?\b/i, value: "4 Months", conf: "high" },
     { re: /\b3\s*months?\b/i, value: "3 Months", conf: "high" },
-    { re: /\b2\s*months?\b/i, value: "2 Month", conf: "high" },
+    { re: /\b2\s*months?\b/i, value: "2 Months", conf: "high" },
     { re: /\b1\s*month\b/i, value: "1 Month", conf: "high" },
-    // 2 year → closest available Long Term (no "2 Year" in list)
     { re: /\b2\s*years?\b/i, value: "Long Term", conf: "medium" },
     { re: /\b24\s*months?\b/i, value: "Long Term", conf: "medium" },
   ];
 
   for (const m of maps) {
-    if (m.re.test(lower) && (DURATIONS as readonly string[]).includes(m.value)) {
+    if (
+      m.re.test(lower) &&
+      (DURATIONS as readonly string[]).includes(m.value)
+    ) {
       return { value: m.value, confidence: m.conf, label: m.value };
     }
   }
@@ -707,8 +712,8 @@ function labelGet(
   return undefined;
 }
 
-/** Map free-text duration to an exact DURATIONS value. */
-function normalizeDurationValue(raw: string): string | null {
+/** Map free-text duration to an exact DURATIONS value. Exported for form apply. */
+export function normalizeDurationValue(raw: string): string | null {
   const t = raw.trim();
   if (!t) return null;
   // Exact match (case-insensitive)
@@ -730,6 +735,21 @@ function normalizeDurationValue(raw: string): string | null {
     return "UnSpecified";
   if (/\bshutdown\b|shut\s*down/.test(lower)) return "Shutdown";
   if (/\blong\s*term\b/.test(lower)) return "Long Term";
+
+  // Bare number only: "6" → "6 Months", "12" → "1 Year"
+  if (/^\d{1,2}$/.test(lower)) {
+    const n = parseInt(lower, 10);
+    if (n === 12) return "1 Year";
+    const map: Record<number, string> = {
+      1: "1 Month",
+      2: "2 Months",
+      3: "3 Months",
+      4: "4 Months",
+      5: "5 Months",
+      6: "6 Months",
+    };
+    if (map[n]) return map[n];
+  }
 
   // "3 months", "3 month", "03 Months", "for 6 months", "6-month"
   const monthM = lower.match(/(?:^|\b)(\d{1,2})\s*-?\s*months?\b/);
@@ -892,7 +912,10 @@ export function parseJobText(
     "duration",
     "contract duration",
     "contract length",
-    "period"
+    "period",
+    "job duration",
+    "assignment duration",
+    "term"
   );
   const labeledEmployment = labelGet(
     labels,
@@ -1077,15 +1100,28 @@ export function parseJobText(
   let duration = detectDuration(text);
   if (labeledDuration) {
     const normalized = normalizeDurationValue(labeledDuration);
-    duration = {
-      value: normalized ?? labeledDuration,
-      confidence: "high",
-      label: normalized ?? labeledDuration,
-    };
+    if (normalized) {
+      duration = {
+        value: normalized,
+        confidence: "high",
+        label: normalized,
+      };
+    }
+    // If label present but not normalized, still try detectDuration on that phrase alone
+    else {
+      const fromLabel = detectDuration(labeledDuration);
+      if (fromLabel) {
+        duration = { ...fromLabel, confidence: "high" };
+      }
+    }
   } else if (duration?.value) {
     const normalized = normalizeDurationValue(duration.value);
     if (normalized) {
-      duration = { value: normalized, confidence: duration.confidence, label: normalized };
+      duration = {
+        value: normalized,
+        confidence: duration.confidence,
+        label: normalized,
+      };
     }
   }
 

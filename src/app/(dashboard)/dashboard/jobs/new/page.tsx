@@ -28,6 +28,7 @@ import {
   parseJobText,
   hasSuggestions,
   inferEmploymentType,
+  normalizeDurationValue,
   type SmartJobParseResult,
 } from "@/lib/smartJobParser";
 import {
@@ -217,7 +218,11 @@ export default function PostJobPage() {
         return;
       }
       if (key === "duration") {
-        const dur = String(field.value);
+        const raw = String(field.value);
+        const dur =
+          normalizeDurationValue(raw) ??
+          ((DURATIONS as readonly string[]).includes(raw) ? raw : null);
+        if (!dur) return;
         setForm((prev) => ({
           ...prev,
           duration: dur,
@@ -303,14 +308,22 @@ export default function PostJobPage() {
         next.salaryRate = String(smartResult.salaryRate.value);
       }
       if (smartResult.duration) {
-        next.duration = String(smartResult.duration.value);
+        const raw = String(smartResult.duration.value);
+        const normalized = normalizeDurationValue(raw) ?? raw;
+        // Only set if it matches a real Duration option (Select needs exact value)
+        const valid = (DURATIONS as readonly string[]).includes(normalized)
+          ? normalized
+          : normalizeDurationValue(raw);
+        if (valid) {
+          next.duration = valid;
+        }
       }
       if (smartResult.employmentType) {
         const emp = String(smartResult.employmentType.value).toLowerCase();
         next.employmentType =
           emp === "permanent" || emp === "temporary" ? emp : next.employmentType;
       }
-      // Duration drives employment type
+      // Duration drives employment type (must set temporary so Duration options unlock)
       if (next.duration === "Permanent") {
         next.employmentType = "permanent";
       } else if (next.duration) {
@@ -677,12 +690,9 @@ export default function PostJobPage() {
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Permanent employment → locked to Permanent only.
-                      Temporary / empty → full duration list (all options). */}
-                  {(form.employmentType === "permanent"
-                    ? (["Permanent"] as const)
-                    : (DURATIONS as readonly string[])
-                  ).map((d) => (
+                  {/* Always show full list so Smart Fill values display correctly.
+                      Selecting a value still syncs Employment Type. */}
+                  {DURATIONS.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
@@ -690,9 +700,8 @@ export default function PostJobPage() {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {form.employmentType === "permanent"
-                  ? "Locked to Permanent while Employment Type is Permanent."
-                  : "Selecting any duration sets Employment Type to Temporary (Permanent duration → Permanent)."}
+                Selecting any fixed term sets Employment Type to Temporary.
+                Permanent sets Employment Type to Permanent.
               </p>
             </Field>
 
