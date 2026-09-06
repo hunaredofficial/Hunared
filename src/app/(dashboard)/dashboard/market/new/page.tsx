@@ -53,6 +53,8 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "donations",
   "community",
   "education_training",
+  "events",
+  "business_commercial",
 ]);
 
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -533,7 +535,7 @@ function NewListingForm() {
             {/* Google Maps URL (Optional) */}
             <div className="col-span-full">
               <label className="text-sm font-medium block mb-1.5">
-                Work Location map link (Optional)
+                Location Map Link (Optional)
               </label>
               <input
                 value={mapsUrl}
@@ -541,10 +543,6 @@ function NewListingForm() {
                 placeholder="https://maps.app.goo.gl/... or Google Maps link"
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Optional. Paste a Google Maps link so buyers can open the place
-                on the map.
-              </p>
             </div>
 
             {/* Price + Currency */}

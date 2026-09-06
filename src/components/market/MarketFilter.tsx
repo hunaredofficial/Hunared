@@ -64,6 +64,13 @@ const SUBCATEGORIES: Record<string, string[]> = {
     "Decor",
     "Home Accessories",
   ],
+  home_furniture: [
+    "Furniture",
+    "Appliances",
+    "Kitchen",
+    "Decor",
+    "Home Accessories",
+  ],
   services: [
     "Electrical",
     "Mechanical",
@@ -83,7 +90,47 @@ const SUBCATEGORIES: Record<string, string[]> = {
   ],
   for_sale: ["New", "Used", "Like New"],
   for_rent: ["Daily", "Weekly", "Monthly", "Yearly"],
-  lost_found: ["Mobile Phones", "Laptops", "Tablets", "Documents", "Keys", "Other"],
+  lost_found: [
+    "Mobile Phones",
+    "Laptops",
+    "Tablets",
+    "Electronics",
+    "Documents",
+    "Passport",
+    "ID / Cards",
+    "Keys",
+    "Wallets",
+    "Bags / Luggage",
+    "Jewelry",
+    "Watches",
+    "Vehicles",
+    "Motorcycles",
+    "Bicycles",
+    "Pets",
+    "Personal Items",
+    "Missing Persons",
+    "Other",
+  ],
+  free_items: ["Furniture", "Electronics", "Clothes", "Other"],
+  wanted: ["Item Wanted", "Service Wanted", "Property Wanted"],
+  events: ["Workshop", "Meetup", "Conference", "Other"],
+  business_commercial: ["Office", "Shop", "Equipment", "Other"],
+  offers_deals: ["Discount", "Bundle", "Clearance"],
+  announcements: ["Public Notice", "Community Notice"],
+  donations: ["Clothes", "Food", "Equipment", "Other"],
+  community: ["Help Request", "Volunteer", "Other"],
+  education_training: ["Course", "Training", "Tutoring", "Certification"],
+  wholesale: ["Bulk Items", "Trade Supply"],
+  other: [
+    "Furniture",
+    "Home Appliances",
+    "Kitchen Equipment",
+    "Decor",
+    "Tools",
+    "Machinery",
+    "Safety Equipment",
+    "Construction Equipment",
+  ],
 };
 
 const SORT_OPTIONS = [
@@ -385,6 +432,40 @@ export function MarketFilter({
             {LISTING_CATEGORIES.map((c) => (
               <option className="bg-background text-foreground" key={c.value} value={c.value}>
                 {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">
+            Subcategory
+          </label>
+          <select
+            data-color-scheme="dark"
+            value={subcategory}
+            disabled={!category || (SUBCATEGORIES[category] ?? []).length === 0}
+            onChange={(e) => {
+              const v = e.target.value;
+              setSubcategory(v);
+              applyQuick({ subcategory: v });
+            }}
+            className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option className="bg-background text-foreground" value="">
+              {!category
+                ? "Select category first"
+                : (SUBCATEGORIES[category] ?? []).length === 0
+                  ? "No subcategories"
+                  : "All subcategories"}
+            </option>
+            {(SUBCATEGORIES[category] ?? []).map((s) => (
+              <option
+                className="bg-background text-foreground"
+                key={s}
+                value={s}
+              >
+                {s}
               </option>
             ))}
           </select>

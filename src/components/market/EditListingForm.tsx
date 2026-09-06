@@ -51,6 +51,8 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "donations",
   "community",
   "education_training",
+  "events",
+  "business_commercial",
 ]);
 
 async function uploadImageToCloudinary(
@@ -401,7 +403,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </div>
               <div className="sm:col-span-2">
                 <label className="text-sm font-medium block mb-1.5">
-                  Location map link (optional)
+                  Location Map Link (Optional)
                 </label>
                 <input
                   value={mapsUrl}
