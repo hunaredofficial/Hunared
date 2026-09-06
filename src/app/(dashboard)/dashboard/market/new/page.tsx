@@ -520,7 +520,7 @@ function NewListingForm() {
             {/* Google Maps URL (Optional) */}
             <div className="col-span-full">
               <label className="text-sm font-medium block mb-1.5">
-                Work Location map link (Optional)
+                Location map link (Optional)
               </label>
               <input
                 value={mapsUrl}
