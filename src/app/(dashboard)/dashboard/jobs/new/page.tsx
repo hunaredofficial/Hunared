@@ -608,8 +608,8 @@ export default function PostJobPage() {
                 onValueChange={(v: string | null) => {
                   if (!v) return;
                   set("duration", v, true);
-                  // Any duration option auto-sets Employment Type:
-                  // Permanent → permanent; everything else → temporary
+                  // Any non-Permanent duration → Temporary employment type
+                  // Permanent duration → Permanent employment type
                   if (v === "Permanent") {
                     set("employmentType", "permanent", false);
                   } else {
@@ -621,7 +621,12 @@ export default function PostJobPage() {
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DURATIONS.map((d) => (
+                  {/* Permanent employment → locked to Permanent only.
+                      Temporary / empty → full duration list (all options). */}
+                  {(form.employmentType === "permanent"
+                    ? (["Permanent"] as const)
+                    : (DURATIONS as readonly string[])
+                  ).map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
@@ -629,7 +634,9 @@ export default function PostJobPage() {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Choosing a fixed term sets Employment Type to Temporary. Permanent sets it to Permanent.
+                {form.employmentType === "permanent"
+                  ? "Locked to Permanent while Employment Type is Permanent."
+                  : "Any fixed term sets Employment Type to Temporary. Permanent sets it to Permanent."}
               </p>
             </Field>
 
