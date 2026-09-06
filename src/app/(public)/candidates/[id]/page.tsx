@@ -286,7 +286,7 @@ export default async function CandidateDetailPage({
                       capitalize
                     />
                   )}
-                  {candidate.phone && userId && (
+                  {candidate.phone && (
                     <InfoTile
                       icon={<Phone className="h-4 w-4" />}
                       label="Phone"
@@ -294,19 +294,19 @@ export default async function CandidateDetailPage({
                       href={`tel:${candidate.phone.replace(/[^+\d]/g, "")}`}
                     />
                   )}
-                  {!userId && (
+                  {candidate.email && (
                     <InfoTile
-                      icon={<Phone className="h-4 w-4" />}
-                      label="Phone"
-                      value="Sign in to view"
-                      muted
+                      icon={<Mail className="h-4 w-4" />}
+                      label="Email"
+                      value={candidate.email}
+                      href={`mailto:${candidate.email}`}
                     />
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Sign-in CTA for guests */}
+            {/* Sign-in CTA for guests (CV / offers still require sign-in) */}
             {!userId && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -315,7 +315,7 @@ export default async function CandidateDetailPage({
                       Want the full profile?
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Sign in to view phone number and download the CV.
+                      Sign in to download the CV and send job offers.
                     </p>
                   </div>
                   <Link

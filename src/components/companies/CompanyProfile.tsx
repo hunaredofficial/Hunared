@@ -198,14 +198,89 @@ export function CompanyProfile({ slug }: { slug: string }) {
   const [liveAvg, setLiveAvg] = useState<number | null>(null);
   const [liveCount, setLiveCount] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
-  const company = getProfile(slug);
+  const [liveCompany, setLiveCompany] = useState<any | null>(null);
+  const [companyLoading, setCompanyLoading] = useState(true);
+  const [companyError, setCompanyError] = useState<string | null>(null);
+
+  // Prefer live API; fall back to mock only if API fails
+  const company = liveCompany ?? getProfile(slug);
 
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) {
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    setCompanyLoading(true);
+    setCompanyError(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/companies/${encodeURIComponent(slug)}`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          if (res.status === 404) {
+            if (!cancelled) setCompanyError("Company not found or not listed publicly.");
+            return;
+          }
+          throw new Error("Failed to load company");
+        }
+        const data = await res.json();
+        if (!cancelled && data.company) {
+          setLiveCompany({
+            ...getProfile(slug),
+            ...data.company,
+            public_email: data.company.public_email ?? data.company.email ?? null,
+            public_phone: data.company.public_phone ?? data.company.phone ?? null,
+            is_verified: data.company.is_verified ?? data.company.verification_status === "verified",
+            industry: Array.isArray(data.company.industry)
+              ? data.company.industry
+              : data.company.industry
+                ? [data.company.industry]
+                : [],
+            services: Array.isArray(data.company.services) ? data.company.services : [],
+            locations:
+              Array.isArray(data.company.locations) && data.company.locations.length
+                ? data.company.locations
+                : data.company.headquarters_city || data.company.headquarters_country
+                  ? [
+                      {
+                        label: "Headquarters",
+                        country: data.company.headquarters_country,
+                        city: data.company.headquarters_city,
+                        address: data.company.headquarters_address,
+                        is_headquarters: true,
+                      },
+                    ]
+                  : [],
+          });
+        }
+      } catch (e) {
+        console.error("[CompanyProfile] live fetch", e);
+        // keep mock fallback
+      } finally {
+        if (!cancelled) setCompanyLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  if (!mounted || companyLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading company…</div>
+      </div>
+    );
+  }
+
+  if (companyError && !liveCompany) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <p className="text-muted-foreground">{companyError}</p>
+        <Link href="/companies" className="text-primary text-sm underline">
+          Back to Companies directory
+        </Link>
       </div>
     );
   }

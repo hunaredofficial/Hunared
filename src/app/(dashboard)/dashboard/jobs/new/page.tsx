@@ -564,7 +564,15 @@ export default function PostJobPage() {
               <Select
                 value={form.employmentType || undefined}
                 onValueChange={(v: string | null) => {
-                  if (v) set("employmentType", v, true);
+                  if (!v) return;
+                  set("employmentType", v, true);
+                  // Auto-select Duration when Employment Type is Permanent
+                  if (v === "permanent") {
+                    set("duration", "Permanent", false);
+                  } else if (form.duration === "Permanent") {
+                    // Clear Permanent duration when switching to Temporary so user picks a term
+                    set("duration", "", false);
+                  }
                 }}
               >
                 <SelectTrigger>
@@ -575,6 +583,9 @@ export default function PostJobPage() {
                   <SelectItem value="permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Temporary = fixed term. Permanent = ongoing role (Duration auto-fills).
+              </p>
             </Field>
 
             <Field label="Number of Positions (Optional)">
@@ -593,12 +604,21 @@ export default function PostJobPage() {
 
             <Field label="Duration *">
               <Select
-                value={form.duration}
+                value={form.duration || undefined}
                 onValueChange={(v: string | null) => {
                   if (!v) return;
                   set("duration", v, true);
                   // Auto job type from duration unless user already chose employment type
                   if (!touched.employmentType) {
+                    if (v === "Permanent") {
+                      set("employmentType", "permanent", false);
+                    } else if (
+                      (TEMPORARY_DURATIONS as readonly string[]).includes(v)
+                    ) {
+                      set("employmentType", "temporary", false);
+                    }
+                  } else {
+                    // Keep employment type in sync when user picks duration
                     if (v === "Permanent") {
                       set("employmentType", "permanent", false);
                     } else if (
@@ -613,7 +633,12 @@ export default function PostJobPage() {
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DURATIONS.map((d) => (
+                  {(form.employmentType === "temporary"
+                    ? (TEMPORARY_DURATIONS as readonly string[])
+                    : form.employmentType === "permanent"
+                      ? (["Permanent"] as const)
+                      : (DURATIONS as readonly string[])
+                  ).map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
@@ -756,28 +781,6 @@ export default function PostJobPage() {
               At least one contact method (Phone or Email) is required.
             </div>
 
-            <div className="col-span-full flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
-              <input
-                id="showProfileContact"
-                type="checkbox"
-                checked={form.showProfileContact}
-                onChange={(e) => set("showProfileContact", e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-input"
-              />
-              <label
-                htmlFor="showProfileContact"
-                className="text-sm leading-snug cursor-pointer"
-              >
-                <span className="font-medium text-foreground">
-                  Show my profile phone &amp; email on this job
-                </span>
-                <span className="block text-xs text-muted-foreground mt-0.5">
-                  Uses the same contact details from your signup profile. If
-                  unchecked, only your name appears under “Posted by”.
-                </span>
-              </label>
-            </div>
-
             <Field label="Company Address (Optional)" className="col-span-full">
               <Input
                 placeholder="Street, City, Country"
@@ -798,6 +801,29 @@ export default function PostJobPage() {
             </Field>
           </div>
         </Section>
+
+        {/* Bottom of form: profile contact visibility */}
+        <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4">
+          <input
+            id="showProfileContact"
+            type="checkbox"
+            checked={form.showProfileContact}
+            onChange={(e) => set("showProfileContact", e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-input"
+          />
+          <label
+            htmlFor="showProfileContact"
+            className="text-sm leading-snug cursor-pointer"
+          >
+            <span className="font-medium text-foreground">
+              Show my profile phone &amp; email on this job
+            </span>
+            <span className="block text-xs text-muted-foreground mt-0.5">
+              Uses the same contact details from your signup profile. If
+              unchecked, only your name appears under “Posted by”.
+            </span>
+          </label>
+        </div>
 
         <Button
           type="submit"
