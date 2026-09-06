@@ -259,9 +259,7 @@ export default function PostJobPage() {
       if (smartResult.jobTitle && shouldApply("jobTitle", smartResult.jobTitle.confidence)) {
         next.jobTitle = String(smartResult.jobTitle.value);
       }
-      if (smartResult.jobDescription && shouldApply("jobDescription", smartResult.jobDescription.confidence)) {
-        next.jobDescription = String(smartResult.jobDescription.value);
-      }
+      // Never overwrite Job Description — keep exactly what the user pasted/typed
       if (smartResult.categories?.value?.length) {
         if (shouldApply("category", smartResult.categories.confidence)) {
           next.categories = smartResult.categories.value;

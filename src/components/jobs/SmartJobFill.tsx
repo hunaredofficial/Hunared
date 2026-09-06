@@ -21,7 +21,6 @@ export type SmartFillFieldKey =
   | "duration"
   | "employmentType"
   | "jobTitle"
-  | "jobDescription"
   | "companyEmail"
   | "companyPhone"
   | "companyName"
@@ -41,7 +40,6 @@ const FIELD_LABELS: Record<SmartFillFieldKey, string> = {
   duration: "Duration",
   employmentType: "Job Type",
   jobTitle: "Job Title",
-  jobDescription: "Description",
   companyEmail: "Email",
   companyPhone: "Phone / WhatsApp",
   companyName: "Company Name",
