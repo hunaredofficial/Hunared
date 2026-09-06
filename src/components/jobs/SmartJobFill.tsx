@@ -21,8 +21,14 @@ export type SmartFillFieldKey =
   | "duration"
   | "employmentType"
   | "jobTitle"
+  | "jobDescription"
   | "companyEmail"
-  | "companyPhone";
+  | "companyPhone"
+  | "companyName"
+  | "companyAddress"
+  | "mapLocation"
+  | "workLocation"
+  | "positions";
 
 const FIELD_LABELS: Record<SmartFillFieldKey, string> = {
   category: "Category",
@@ -35,8 +41,14 @@ const FIELD_LABELS: Record<SmartFillFieldKey, string> = {
   duration: "Duration",
   employmentType: "Job Type",
   jobTitle: "Job Title",
+  jobDescription: "Description",
   companyEmail: "Email",
   companyPhone: "Phone / WhatsApp",
+  companyName: "Company Name",
+  companyAddress: "Company Address",
+  mapLocation: "Location Link",
+  workLocation: "Work Location",
+  positions: "Positions",
 };
 
 function confColor(c: Confidence): string {

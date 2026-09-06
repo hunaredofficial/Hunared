@@ -34,6 +34,7 @@ export type SmartJobParseResult = {
   companyName?: ParsedField<string>;
   companyAddress?: ParsedField<string>;
   mapLocation?: ParsedField<string>;
+  workLocation?: ParsedField<string>;
   positions?: ParsedField<string>;
   keywords: string[];
 };
@@ -646,19 +647,26 @@ function extractLabeledFields(raw: string): Record<string, string> {
 
   const flush = () => {
     if (currentKey && buf.length) {
-      out[currentKey] = buf.join("\n").trim();
+      const joined = buf.join("\n").trim();
+      if (joined) out[currentKey] = joined;
     }
     buf = [];
   };
 
   for (const line of lines) {
+    // Allow labels like "Salary / Rate:", "Company Location Link:", "Number of Positions:"
     const m = line.match(
-      /^\s*([A-Za-z0-9][A-Za-z0-9 &/()+.-]{1,60})\s*:\s*(.*)$/
+      /^\s*([A-Za-z0-9][A-Za-z0-9 &/()+._-]{0,80}?)\s*:\s*(.*)$/
     );
     if (m) {
       flush();
-      currentKey = m[1].trim().toLowerCase().replace(/\s+/g, " ");
-      buf = [m[2].trim()];
+      currentKey = m[1]
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/[._]+/g, " ");
+      const rest = (m[2] ?? "").trim();
+      buf = rest ? [rest] : [];
     } else if (currentKey) {
       buf.push(line);
     }
@@ -672,10 +680,99 @@ function labelGet(
   ...keys: string[]
 ): string | undefined {
   for (const k of keys) {
-    const v = labels[k.toLowerCase()];
+    const normalized = k.toLowerCase().replace(/\s+/g, " ");
+    const v = labels[normalized];
     if (v && v.trim()) return v.trim();
   }
+  // Fuzzy: key contained in label name or vice versa
+  for (const k of keys) {
+    const nk = k.toLowerCase().replace(/\s+/g, " ");
+    for (const [lk, lv] of Object.entries(labels)) {
+      if (!lv?.trim()) continue;
+      if (lk === nk || lk.includes(nk) || nk.includes(lk)) {
+        return lv.trim();
+      }
+    }
+  }
   return undefined;
+}
+
+/** Map free-text duration to an exact DURATIONS value. */
+function normalizeDurationValue(raw: string): string | null {
+  const t = raw.trim();
+  if (!t) return null;
+  // Exact match (case-insensitive)
+  const exact = (DURATIONS as readonly string[]).find(
+    (d) => d.toLowerCase() === t.toLowerCase()
+  );
+  if (exact) return exact;
+
+  const lower = t.toLowerCase().replace(/\s+/g, " ");
+  if (/^perm|indefinite|ongoing|full[- ]?time permanent/.test(lower)) {
+    return "Permanent";
+  }
+  if (/un-?specified|not specified|n\/a|na\b/.test(lower)) return "UnSpecified";
+  if (/shutdown|shut\s*down/.test(lower)) return "Shutdown";
+  if (/long\s*term|long-term/.test(lower)) return "Long Term";
+
+  // "3 months", "3 month", "03 Months"
+  const monthM = lower.match(/^(\d{1,2})\s*months?$/);
+  if (monthM) {
+    const n = parseInt(monthM[1], 10);
+    const map: Record<number, string> = {
+      1: "1 Month",
+      2: "2 Months",
+      3: "3 Months",
+      4: "4 Months",
+      5: "5 Months",
+      6: "6 Months",
+    };
+    if (map[n]) return map[n];
+  }
+  if (/^1\s*year|12\s*months?$/.test(lower)) return "1 Year";
+
+  // Partial contains
+  for (const d of DURATIONS) {
+    if (lower.includes(d.toLowerCase())) return d;
+  }
+  return null;
+}
+
+/** Parse employment type from labeled text. */
+function normalizeEmploymentType(
+  raw: string
+): "permanent" | "temporary" | null {
+  const lower = raw.trim().toLowerCase();
+  if (!lower) return null;
+  if (
+    /permanent|full[- ]?time(?!\s*temp)|ongoing|indefinite/.test(lower) &&
+    !/temporary|contract|fixed/.test(lower)
+  ) {
+    return "permanent";
+  }
+  if (
+    /temporary|temp\b|contract|fixed[- ]term|project[- ]based|freelance/.test(
+      lower
+    )
+  ) {
+    return "temporary";
+  }
+  if (lower === "permanent") return "permanent";
+  if (lower === "temporary") return "temporary";
+  return null;
+}
+
+/** Extract a numeric salary amount from free text. */
+function extractSalaryAmount(raw: string): string | null {
+  const t = raw.trim();
+  if (!t) return null;
+  // "5000", "5,000", "SAR 5000", "25/hr"
+  const m = t.match(
+    /(?:^|[^\d])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*(?:\/|\s)?(?:hr|hour|mo|month)?/i
+  );
+  if (m) return m[1].replace(/,/g, "");
+  if (/^\d+(\.\d+)?$/.test(t)) return t;
+  return null;
 }
 
 
@@ -710,6 +807,7 @@ export function parseJobText(
     labels,
     "job title",
     "title",
+    "position title",
     "position",
     "role"
   );
@@ -718,7 +816,8 @@ export function parseJobText(
     "job description",
     "description",
     "details",
-    "responsibilities"
+    "responsibilities",
+    "about the role"
   );
   const labeledCategory = labelGet(
     labels,
@@ -728,18 +827,54 @@ export function parseJobText(
     "category",
     "profession"
   );
-  const labeledSub = labelGet(labels, "subcategory", "sub category", "sub-category");
+  const labeledSub = labelGet(
+    labels,
+    "subcategory",
+    "sub category",
+    "sub-category",
+    "sub categories"
+  );
   const labeledCountry = labelGet(labels, "country");
   const labeledCity = labelGet(labels, "city", "work location city");
-  const labeledLocation = labelGet(labels, "work location", "location");
+  // Work Location is a separate field from City (site / plant / area)
+  const labeledWorkLocation = labelGet(
+    labels,
+    "work location",
+    "work site",
+    "site location",
+    "project location"
+  );
+  const labeledLocation = labelGet(labels, "location");
   const labeledPositions = labelGet(
     labels,
     "number of positions",
     "positions",
-    "vacancies"
+    "vacancies",
+    "openings",
+    "headcount"
   );
-  const labeledDuration = labelGet(labels, "duration", "contract duration");
-  const labeledSalaryType = labelGet(labels, "salary type", "pay type");
+  const labeledDuration = labelGet(
+    labels,
+    "duration",
+    "contract duration",
+    "contract length",
+    "period"
+  );
+  const labeledEmployment = labelGet(
+    labels,
+    "employment type",
+    "job type",
+    "employment",
+    "type of employment",
+    "contract type"
+  );
+  const labeledSalaryType = labelGet(
+    labels,
+    "salary type",
+    "pay type",
+    "rate type",
+    "compensation type"
+  );
   const labeledHourly = labelGet(
     labels,
     "salary / rate (hourly)",
@@ -750,21 +885,56 @@ export function parseJobText(
     labels,
     "salary / rate (monthly)",
     "monthly rate",
-    "salary monthly",
-    "salary / rate"
+    "salary monthly"
+  );
+  const labeledSalaryRate = labelGet(
+    labels,
+    "salary / rate",
+    "salary rate",
+    "salary",
+    "rate",
+    "pay rate",
+    "compensation"
   );
   const labeledNegotiable = labelGet(labels, "negotiable");
-  const labeledCompany = labelGet(labels, "company name", "company", "employer");
-  const labeledPhone = labelGet(labels, "company phone", "phone", "mobile");
-  const labeledEmail = labelGet(labels, "company email", "email");
-  const labeledAddress = labelGet(labels, "company address", "address");
+  const labeledCompany = labelGet(
+    labels,
+    "company name",
+    "company",
+    "employer",
+    "organization"
+  );
+  const labeledPhone = labelGet(
+    labels,
+    "company phone",
+    "phone",
+    "mobile",
+    "whatsapp",
+    "contact phone"
+  );
+  const labeledEmail = labelGet(
+    labels,
+    "company email",
+    "email",
+    "contact email",
+    "e-mail"
+  );
+  const labeledAddress = labelGet(
+    labels,
+    "company address",
+    "address",
+    "office address"
+  );
   const labeledMap = labelGet(
     labels,
+    "company location link",
     "map location link",
     "map location",
     "google maps",
     "map link",
-    "location link"
+    "location link",
+    "office location link",
+    "maps link"
   );
 
   let category = detectCategory(text);
@@ -777,9 +947,28 @@ export function parseJobText(
       .filter(Boolean);
     const matched: string[] = [];
     for (const p of parts) {
-      const found = JOB_CATEGORIES.find(
+      // Exact
+      let found = JOB_CATEGORIES.find(
         (c) => c.toLowerCase() === p.toLowerCase()
       );
+      // Alias / resolve
+      if (!found) {
+        const resolved = resolveCategory(p);
+        if (resolved) found = resolved as (typeof JOB_CATEGORIES)[number];
+      }
+      // Partial contains
+      if (!found) {
+        found = JOB_CATEGORIES.find(
+          (c) =>
+            c.toLowerCase().includes(p.toLowerCase()) ||
+            p.toLowerCase().includes(c.toLowerCase())
+        );
+      }
+      // Keyword detect as fallback
+      if (!found) {
+        const fromKw = detectCategory(normalizeText(p));
+        if (fromKw?.value) found = fromKw.value as (typeof JOB_CATEGORIES)[number];
+      }
       if (found && !matched.includes(found)) matched.push(found);
     }
     // Also try subcategory as profession name → parent category via keyword map
@@ -852,11 +1041,17 @@ export function parseJobText(
   const salary = detectSalary(text);
   let duration = detectDuration(text);
   if (labeledDuration) {
+    const normalized = normalizeDurationValue(labeledDuration);
     duration = {
-      value: labeledDuration,
+      value: normalized ?? labeledDuration,
       confidence: "high",
-      label: labeledDuration,
+      label: normalized ?? labeledDuration,
     };
+  } else if (duration?.value) {
+    const normalized = normalizeDurationValue(duration.value);
+    if (normalized) {
+      duration = { value: normalized, confidence: duration.confidence, label: normalized };
+    }
   }
 
   let salaryType = salary.type;
@@ -873,6 +1068,14 @@ export function parseJobText(
         confidence: "high",
         label: "Negotiable",
       };
+    else {
+      // Exact match against SALARY_TYPES
+      const found = (SALARY_TYPES as readonly string[]).find(
+        (s) => s.toLowerCase() === st
+      );
+      if (found)
+        salaryType = { value: found, confidence: "high", label: found };
+    }
   }
   if (labeledNegotiable && /^(yes|true|1|y)$/i.test(labeledNegotiable)) {
     salaryType = {
@@ -882,21 +1085,46 @@ export function parseJobText(
     };
   }
   if (labeledHourly) {
-    salaryRate = { value: labeledHourly, confidence: "high", label: labeledHourly };
+    const amt = extractSalaryAmount(labeledHourly) ?? labeledHourly;
+    salaryRate = { value: amt, confidence: "high", label: amt };
     if (!salaryType)
       salaryType = { value: "Hourly", confidence: "high", label: "Hourly" };
   }
   if (labeledMonthly) {
+    const amt = extractSalaryAmount(labeledMonthly) ?? labeledMonthly;
     salaryRate = {
-      value: labeledMonthly,
+      value: amt,
       confidence: "high",
-      label: labeledMonthly,
+      label: amt,
     };
     if (!salaryType || salaryType.value === "Hourly")
       salaryType = { value: "Monthly", confidence: "high", label: "Monthly" };
   }
+  // Generic "Salary / Rate: 5000" (when hourly/monthly labels not used)
+  if (labeledSalaryRate && !salaryRate) {
+    const amt = extractSalaryAmount(labeledSalaryRate) ?? labeledSalaryRate;
+    salaryRate = { value: amt, confidence: "high", label: amt };
+  } else if (labeledSalaryRate && salaryRate && salaryRate.confidence !== "high") {
+    const amt = extractSalaryAmount(labeledSalaryRate) ?? labeledSalaryRate;
+    salaryRate = { value: amt, confidence: "high", label: amt };
+  }
 
-  const employmentType = inferEmploymentType(duration?.value, text);
+  // Employment type: prefer explicit label, else duration, else text inference
+  let employmentType = inferEmploymentType(duration?.value, text);
+  if (labeledEmployment) {
+    const emp = normalizeEmploymentType(labeledEmployment);
+    if (emp) {
+      employmentType = { value: emp, confidence: "high", label: emp };
+    }
+  } else if (duration?.value === "Permanent") {
+    employmentType = { value: "permanent", confidence: "high", label: "permanent" };
+  } else if (
+    duration?.value &&
+    (TEMPORARY_DURATIONS as readonly string[]).includes(duration.value)
+  ) {
+    employmentType = { value: "temporary", confidence: "high", label: "temporary" };
+  }
+
   let companyEmail = detectEmail(text);
   if (labeledEmail) {
     companyEmail = {
@@ -962,22 +1190,64 @@ export function parseJobText(
 
   // Extra labeled fields attached for form apply (optional consumers)
   if (labeledCompany) {
-    result.companyName = { value: labeledCompany, confidence: "high", label: labeledCompany };
+    result.companyName = {
+      value: labeledCompany,
+      confidence: "high",
+      label: labeledCompany,
+    };
   }
   if (labeledAddress) {
-    result.companyAddress = { value: labeledAddress, confidence: "high", label: labeledAddress };
+    result.companyAddress = {
+      value: labeledAddress,
+      confidence: "high",
+      label: labeledAddress,
+    };
   }
   if (labeledMap) {
-    result.mapLocation = { value: labeledMap, confidence: "high", label: labeledMap };
+    result.mapLocation = {
+      value: labeledMap,
+      confidence: "high",
+      label: labeledMap,
+    };
+  }
+  // Work Location (site / plant) — do not confuse with City
+  if (labeledWorkLocation) {
+    result.workLocation = {
+      value: labeledWorkLocation,
+      confidence: "high",
+      label: labeledWorkLocation,
+    };
+  } else if (labeledLocation && !labeledCity) {
+    // Only use generic "Location" as work location when City was not provided
+    // and it does not look like "City, Country"
+    const parts = labeledLocation.split(",").map((s) => s.trim());
+    if (parts.length === 1) {
+      result.workLocation = {
+        value: labeledLocation,
+        confidence: "medium",
+        label: labeledLocation,
+      };
+    }
   }
   if (labeledPositions) {
-    result.positions = { value: labeledPositions, confidence: "high", label: labeledPositions };
+    // Digits only for positions field
+    const digits = labeledPositions.replace(/[^\d]/g, "");
+    const posVal = digits || labeledPositions;
+    result.positions = {
+      value: posVal,
+      confidence: "high",
+      label: posVal,
+    };
   } else {
     const pos = detectPositions(text);
     if (pos) result.positions = pos;
   }
   if (labeledDesc) {
-    result.jobDescription = { value: labeledDesc, confidence: "high", label: labeledDesc };
+    result.jobDescription = {
+      value: labeledDesc,
+      confidence: "high",
+      label: labeledDesc.slice(0, 80),
+    };
   }
 
   return result;
@@ -995,7 +1265,13 @@ export function hasSuggestions(r: SmartJobParseResult): boolean {
     r.duration ||
     r.employmentType ||
     r.jobTitle ||
+    r.jobDescription ||
     r.companyEmail ||
-    r.companyPhone
+    r.companyPhone ||
+    r.companyName ||
+    r.companyAddress ||
+    r.mapLocation ||
+    r.workLocation ||
+    r.positions
   );
 }

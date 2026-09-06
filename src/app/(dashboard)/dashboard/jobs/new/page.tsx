@@ -216,6 +216,30 @@ export default function PostJobPage() {
         markTouched("category");
         return;
       }
+      if (key === "duration") {
+        const dur = String(field.value);
+        setForm((prev) => ({
+          ...prev,
+          duration: dur,
+          employmentType:
+            dur === "Permanent"
+              ? "permanent"
+              : prev.employmentType || "temporary",
+        }));
+        markTouched("duration");
+        return;
+      }
+      if (key === "employmentType") {
+        const emp = String(field.value);
+        setForm((prev) => ({
+          ...prev,
+          employmentType: emp,
+          duration:
+            emp === "permanent" ? "Permanent" : prev.duration === "Permanent" ? "" : prev.duration,
+        }));
+        markTouched("employmentType");
+        return;
+      }
       set(key as keyof JobForm, field.value as string, true);
     },
     [touched.currency]
@@ -223,70 +247,91 @@ export default function PostJobPage() {
 
   const applyAllSmart = useCallback(() => {
     if (!smartResult) return;
-    const keys: SmartFillFieldKey[] = [
-      "jobTitle",
-      "category",
-      "categories",
-      "country",
-      "city",
-      "currency",
-      "salaryRate",
-      "salaryType",
-      "duration",
-      "employmentType",
-      "companyEmail",
-      "companyPhone",
-    ];
+    // Apply every extracted field in one update so labeled paste fills the whole form.
+    // High-confidence fields always apply (structured paste). Others skip if user already typed.
     setForm((prev) => {
       const next = { ...prev };
-      for (const key of keys) {
-        const field = smartResult[key];
-        if (!field) continue;
-        if (touched[key as keyof JobForm]) continue;
-        if (key === "currency") {
-          next.currency = field.value as string;
-          continue;
+      const shouldApply = (key: keyof JobForm, conf?: string) => {
+        if (conf === "high") return true;
+        return !touched[key];
+      };
+
+      if (smartResult.jobTitle && shouldApply("jobTitle", smartResult.jobTitle.confidence)) {
+        next.jobTitle = String(smartResult.jobTitle.value);
+      }
+      if (smartResult.jobDescription && shouldApply("jobDescription", smartResult.jobDescription.confidence)) {
+        next.jobDescription = String(smartResult.jobDescription.value);
+      }
+      if (smartResult.categories?.value?.length) {
+        if (shouldApply("category", smartResult.categories.confidence)) {
+          next.categories = smartResult.categories.value;
+          next.category = smartResult.categories.value[0] ?? next.category;
         }
-        if (key === "categories") {
-          const cats = field.value as string[];
-          next.categories = cats;
-          next.category = cats[0] ?? next.category;
-          continue;
+      } else if (smartResult.category && shouldApply("category", smartResult.category.confidence)) {
+        const cat = String(smartResult.category.value);
+        next.category = cat;
+        if (!next.categories.includes(cat)) {
+          next.categories = [...next.categories, cat];
         }
-        if (key === "category") {
-          const cat = field.value as string;
-          next.category = cat;
-          if (!next.categories.includes(cat)) {
-            next.categories = [...next.categories, cat];
-          }
-          continue;
+      }
+      if (smartResult.country && shouldApply("country", smartResult.country.confidence)) {
+        next.country = String(smartResult.country.value);
+      }
+      if (smartResult.city && shouldApply("city", smartResult.city.confidence)) {
+        next.city = String(smartResult.city.value);
+      }
+      if (smartResult.workLocation && shouldApply("workLocation", smartResult.workLocation.confidence)) {
+        next.workLocation = String(smartResult.workLocation.value);
+      }
+      if (smartResult.currency && shouldApply("currency", smartResult.currency.confidence)) {
+        next.currency = String(smartResult.currency.value);
+      }
+      if (smartResult.salaryRate && shouldApply("salaryRate", smartResult.salaryRate.confidence)) {
+        next.salaryRate = String(smartResult.salaryRate.value);
+      }
+      if (smartResult.salaryType && shouldApply("salaryType", smartResult.salaryType.confidence)) {
+        next.salaryType = String(smartResult.salaryType.value);
+      }
+      if (smartResult.duration && shouldApply("duration", smartResult.duration.confidence)) {
+        next.duration = String(smartResult.duration.value);
+      }
+      if (smartResult.employmentType && shouldApply("employmentType", smartResult.employmentType.confidence)) {
+        next.employmentType = String(smartResult.employmentType.value);
+      }
+      // Duration drives employment type when duration was filled
+      if (next.duration === "Permanent") {
+        next.employmentType = "permanent";
+      } else if (next.duration && next.duration !== "Permanent") {
+        // Fixed-term durations → temporary
+        if (!next.employmentType || next.employmentType === "permanent") {
+          next.employmentType = "temporary";
         }
-        (next as Record<string, unknown>)[key] = field.value;
+      }
+      if (smartResult.positions && shouldApply("positions", smartResult.positions.confidence)) {
+        next.positions = String(smartResult.positions.value);
+      }
+      if (smartResult.companyName && shouldApply("companyName", smartResult.companyName.confidence)) {
+        next.companyName = String(smartResult.companyName.value);
+      }
+      if (smartResult.companyPhone && shouldApply("companyPhone", smartResult.companyPhone.confidence)) {
+        next.companyPhone = String(smartResult.companyPhone.value);
+      }
+      if (smartResult.companyEmail && shouldApply("companyEmail", smartResult.companyEmail.confidence)) {
+        next.companyEmail = String(smartResult.companyEmail.value);
+      }
+      if (smartResult.companyAddress && shouldApply("companyAddress", smartResult.companyAddress.confidence)) {
+        next.companyAddress = String(smartResult.companyAddress.value);
+      }
+      if (smartResult.mapLocation && shouldApply("mapLocation", smartResult.mapLocation.confidence)) {
+        next.mapLocation = String(smartResult.mapLocation.value);
       }
       return next;
     });
-    if (smartResult.positions && !touched.positions) {
-      setForm((prev) => ({ ...prev, positions: String(smartResult.positions!.value) }));
-    }
-    if (smartResult.companyName && !touched.companyName) {
-      setForm((prev) => ({ ...prev, companyName: String(smartResult.companyName!.value) }));
-    }
-    if (smartResult.companyAddress && !touched.companyAddress) {
-      setForm((prev) => ({ ...prev, companyAddress: String(smartResult.companyAddress!.value) }));
-    }
-    if (smartResult.mapLocation && !touched.mapLocation) {
-      setForm((prev) => ({ ...prev, mapLocation: String(smartResult.mapLocation!.value) }));
-    }
-    if (smartResult.workLocation && !touched.workLocation) {
-      setForm((prev) => ({ ...prev, workLocation: String(smartResult.workLocation!.value) }));
-    }
-    if (smartResult.jobDescription && !touched.jobDescription) {
-      setForm((prev) => ({ ...prev, jobDescription: String(smartResult.jobDescription!.value) }));
-    }
-    if (smartResult.currency && !touched.currency) {
+    if (smartResult.currency) {
       setCurrencyTouched(true);
     }
     setSmartDismissed(true);
+    toast.success("Smart Fill applied — review fields before submitting");
   }, [smartResult, touched]);
 
 
