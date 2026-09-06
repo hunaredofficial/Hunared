@@ -537,22 +537,22 @@ export default function PostJobPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 pb-8">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
           <Link href="/dashboard/jobs">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Post a Job</h1>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight">Post a Job</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             Your post will be reviewed before going live.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Job Details */}
         <Section title="Job Details">
           <Field label="Job Title *">
@@ -576,7 +576,7 @@ export default function PostJobPage() {
                 set("jobDescription", v, true);
                 scheduleSmartParse(form.jobTitle, v);
               }}
-              className="min-h-32 resize-y"
+              className="min-h-36 resize-y"
             />
           </Field>
 
@@ -595,8 +595,8 @@ export default function PostJobPage() {
             }}
           />
 
-          <div className="space-y-4">
-            <Field label="Job Categories *">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Job Categories *" className="sm:col-span-2">
               <MultiSelectChips
                 options={JOB_CATEGORIES}
                 value={form.categories}
@@ -613,21 +613,15 @@ export default function PostJobPage() {
                 searchPlaceholder="Search categories…"
                 label="Job categories"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Jobs appear in search for every selected category.
-              </p>
             </Field>
 
-            <Field label="Subcategory">
+            <Field label="Subcategory" className="sm:col-span-2">
               <Input
                 placeholder="e.g. NEBOSH, IOSH"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
             </Field>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <Field label="Country *">
               <Select
@@ -663,16 +657,12 @@ export default function PostJobPage() {
               />
             </Field>
 
-
             <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
                 placeholder="e.g. Project site, plant name, or area"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Work site name or area (shown in Quick Details on the job page). Separate from company location.
-              </p>
             </Field>
 
             <Field label="Employment Type *">
@@ -699,9 +689,6 @@ export default function PostJobPage() {
                   <SelectItem value="permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Temporary = fixed term. Permanent = ongoing role (Duration auto-fills).
-              </p>
             </Field>
 
             <Field label="Number of Positions (Optional)">
@@ -713,9 +700,6 @@ export default function PostJobPage() {
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Leave empty to show &quot;Not Specified&quot; on the job listing.
-              </p>
             </Field>
 
             <Field label="Duration *">
@@ -750,10 +734,6 @@ export default function PostJobPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Selecting any fixed term sets Employment Type to Temporary.
-                Permanent sets Employment Type to Permanent.
-              </p>
             </Field>
 
             <Field label="Close Listing Automatically">
@@ -779,9 +759,6 @@ export default function PostJobPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Optional. Leave as Never to keep the post open until you close it.
-              </p>
             </Field>
 
             <Field label="Salary Type *">
@@ -854,7 +831,7 @@ export default function PostJobPage() {
         {/* Company Details */}
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Company Name *" className="col-span-full">
+            <Field label="Company Name *" className="sm:col-span-2">
               <Input
                 placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
@@ -862,10 +839,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field
-              label="Company Phone"
-              className="col-span-full sm:col-span-1"
-            >
+            <Field label="Company Phone">
               <Input
                 type="tel"
                 placeholder="+966 1x xxx xxxx"
@@ -874,10 +848,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field
-              label="Company Email"
-              className="col-span-full sm:col-span-1"
-            >
+            <Field label="Company Email">
               <Input
                 type="email"
                 placeholder="hr@company.com"
@@ -886,11 +857,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <div className="col-span-full text-[10px] text-muted-foreground mt-1">
-              At least one contact method (Phone or Email) is required.
-            </div>
-
-            <Field label="Company Address (Optional)" className="col-span-full">
+            <Field label="Company Address (Optional)" className="sm:col-span-2">
               <Input
                 placeholder="Street, City, Country"
                 value={form.companyAddress}
@@ -898,21 +865,18 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Company Location Link (Optional)" className="col-span-full">
+            <Field label="Company Location Link (Optional)" className="sm:col-span-2">
               <Input
                 placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.mapLocation}
                 onChange={(e) => set("mapLocation", e.target.value)}
               />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Company office map link (shown under Company Contact on the job page). Different from Work Location.
-              </p>
             </Field>
           </div>
         </Section>
 
         {/* Bottom of form: profile contact visibility */}
-        <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4">
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
           <input
             id="showProfileContact"
             type="checkbox"
@@ -934,16 +898,18 @@ export default function PostJobPage() {
           </label>
         </div>
 
-        <Button
-          type="submit"
-          className="h-11 w-full sm:w-auto cursor-pointer"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : null}
-          Submit for Review
-        </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
+          <Button
+            type="submit"
+            className="h-11 w-full sm:w-auto min-w-[180px] cursor-pointer"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : null}
+            Submit for Review
+          </Button>
+        </div>
       </form>
     </div>
   );
@@ -957,11 +923,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-5 rounded-xl border border-border bg-card space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+    <div className="p-5 sm:p-6 rounded-xl border border-border bg-card space-y-5 shadow-sm">
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide border-b border-border/60 pb-2">
         {title}
       </h2>
-      {children}
+      <div className="space-y-4">{children}</div>
     </div>
   );
 }
