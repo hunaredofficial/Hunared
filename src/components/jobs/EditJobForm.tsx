@@ -369,14 +369,16 @@ export function EditJobForm({ job }: { job: Job }) {
                 value={form.duration || undefined}
                 onValueChange={(v: string | null) => {
                   if (!v) return;
-                  set("duration", v);
-                  // Any non-Permanent duration → Temporary employment type
-                  // Permanent duration → Permanent employment type
-                  if (v === "Permanent") {
-                    set("employmentType", "permanent");
-                  } else {
-                    set("employmentType", "temporary");
-                  }
+                  // Single state update: duration + employment type together
+                  // Any duration except "Permanent" → Employment Type = Temporary
+                  // "Permanent" duration → Employment Type = Permanent
+                  const nextEmp =
+                    v === "Permanent" ? "permanent" : "temporary";
+                  setForm((prev) => ({
+                    ...prev,
+                    duration: v,
+                    employmentType: nextEmp,
+                  }));
                 }}
               >
                 <SelectTrigger>
@@ -398,7 +400,7 @@ export function EditJobForm({ job }: { job: Job }) {
               <p className="text-[11px] text-muted-foreground mt-1">
                 {form.employmentType === "permanent"
                   ? "Locked to Permanent while Employment Type is Permanent."
-                  : "Any fixed term sets Employment Type to Temporary. Permanent sets it to Permanent."}
+                  : "Selecting any duration sets Employment Type to Temporary (Permanent duration → Permanent)."}
               </p>
             </Field>
 

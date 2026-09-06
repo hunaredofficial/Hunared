@@ -115,22 +115,21 @@ export default function PostJobPage() {
     }
   }, [geo.loading, geo.countryCode, geo.city, geo.isManual, touched.country, touched.city]);
 
-  // Suggest Temporary when duration implies fixed term (do not overwrite manual)
+  // Keep Employment Type in sync with Duration
+  // Any fixed-term duration → temporary; Permanent → permanent
   useEffect(() => {
-    if (touched.employmentType || !form.duration) return;
-    if ((TEMPORARY_DURATIONS as readonly string[]).includes(form.duration)) {
-      setForm((prev) => ({ ...prev, employmentType: "temporary" }));
-      return;
-    }
+    if (!form.duration) return;
     if (form.duration === "Permanent") {
-      setForm((prev) => ({ ...prev, employmentType: "permanent" }));
+      if (form.employmentType !== "permanent") {
+        setForm((prev) => ({ ...prev, employmentType: "permanent" }));
+      }
       return;
     }
-    const inferred = inferEmploymentType(form.duration, form.jobDescription);
-    if (inferred?.value) {
-      setForm((prev) => ({ ...prev, employmentType: inferred.value }));
+    // Any other duration (1 Month, 2 Months, … UnSpecified) → Temporary
+    if (form.employmentType !== "temporary") {
+      setForm((prev) => ({ ...prev, employmentType: "temporary" }));
     }
-  }, [form.duration, form.jobDescription, touched.employmentType]);
+  }, [form.duration]);
 
   // Auto-set currency from geo until the user manually changes it
   useEffect(() => {
@@ -607,14 +606,17 @@ export default function PostJobPage() {
                 value={form.duration || undefined}
                 onValueChange={(v: string | null) => {
                   if (!v) return;
-                  set("duration", v, true);
-                  // Any non-Permanent duration → Temporary employment type
-                  // Permanent duration → Permanent employment type
-                  if (v === "Permanent") {
-                    set("employmentType", "permanent", false);
-                  } else {
-                    set("employmentType", "temporary", false);
-                  }
+                  // Single state update: duration + employment type together
+                  // Any duration except "Permanent" → Employment Type = Temporary
+                  // "Permanent" duration → Employment Type = Permanent
+                  const nextEmp =
+                    v === "Permanent" ? "permanent" : "temporary";
+                  setForm((prev) => ({
+                    ...prev,
+                    duration: v,
+                    employmentType: nextEmp,
+                  }));
+                  markTouched("duration");
                 }}
               >
                 <SelectTrigger>
@@ -636,7 +638,7 @@ export default function PostJobPage() {
               <p className="text-[11px] text-muted-foreground mt-1">
                 {form.employmentType === "permanent"
                   ? "Locked to Permanent while Employment Type is Permanent."
-                  : "Any fixed term sets Employment Type to Temporary. Permanent sets it to Permanent."}
+                  : "Selecting any duration sets Employment Type to Temporary (Permanent duration → Permanent)."}
               </p>
             </Field>
 
