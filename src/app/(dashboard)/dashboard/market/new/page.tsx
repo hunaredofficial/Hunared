@@ -38,6 +38,23 @@ const CLOUDINARY_UPLOAD_PRESET =
 
 type ListingType = "standard" | "native" | "affiliate";
 
+/** Categories where Listing Type (native / affiliate) does not apply — force standard. */
+const HIDE_LISTING_TYPE_CATEGORIES = new Set([
+  "services",
+  "accommodation",
+  "lost_found",
+  "for_rent",
+  "property",
+  "vehicles",
+  "wanted",
+  "free_items",
+  "offers_deals",
+  "announcements",
+  "donations",
+  "community",
+  "education_training",
+]);
+
 const SUBCATEGORIES: Record<string, string[]> = {
   accommodation: [
     "Houses for Rent",
@@ -204,11 +221,7 @@ function NewListingForm() {
     category === "community";
 
   useEffect(() => {
-    if (
-      category === "services" ||
-      category === "accommodation" ||
-      category === "lost_found"
-    ) {
+    if (category && HIDE_LISTING_TYPE_CATEGORIES.has(category)) {
       setListingType("standard");
       setExternalLink("");
     }
@@ -520,7 +533,7 @@ function NewListingForm() {
             {/* Google Maps URL (Optional) */}
             <div className="col-span-full">
               <label className="text-sm font-medium block mb-1.5">
-                Location map link (Optional)
+                Work Location map link (Optional)
               </label>
               <input
                 value={mapsUrl}
@@ -585,10 +598,8 @@ function NewListingForm() {
               </div>
             </div>
 
-            {/* Listing Type */}
-            {category !== "services" &&
-              category !== "accommodation" &&
-              category !== "lost_found" && (
+            {/* Listing Type — hidden for rent, property, vehicles, wanted, free items, etc. */}
+            {category && !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
                 <div>
                   <label className="text-sm font-medium block mb-1.5">
                     Listing Type
@@ -613,7 +624,9 @@ function NewListingForm() {
                 </div>
               )}
 
-            {listingType === "affiliate" && (
+            {listingType === "affiliate" &&
+              category &&
+              !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
               <div>
                 <label className="text-sm font-medium block mb-1.5">
                   External Link / Affiliate URL{" "}

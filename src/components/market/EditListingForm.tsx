@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,23 @@ const CLOUDINARY_UPLOAD_PRESET =
   process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "";
 
 type ListingType = "standard" | "native" | "affiliate";
+
+/** Categories where Listing Type (native / affiliate) does not apply — force standard. */
+const HIDE_LISTING_TYPE_CATEGORIES = new Set([
+  "services",
+  "accommodation",
+  "lost_found",
+  "for_rent",
+  "property",
+  "vehicles",
+  "wanted",
+  "free_items",
+  "offers_deals",
+  "announcements",
+  "donations",
+  "community",
+  "education_training",
+]);
 
 async function uploadImageToCloudinary(
   file: File
@@ -90,6 +107,13 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (category && HIDE_LISTING_TYPE_CATEGORIES.has(category)) {
+      setListingType("standard");
+      setExternalLink("");
+    }
+  }, [category]);
 
   // ✅ Price is optional only for the "services" category
   const isPriceOptional =
@@ -437,7 +461,8 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             </div>
           </div>
 
-          {/* Listing type */}
+          {/* Listing type — hidden for rent, property, vehicles, wanted, free items, etc. */}
+          {category && !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
           <div>
             <label className="text-sm font-medium block mb-1.5">
               Listing Type
@@ -460,9 +485,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </SelectContent>
             </Select>
           </div>
+          )}
 
           {/* External link — shown only for affiliate type */}
-          {listingType === "affiliate" && (
+          {listingType === "affiliate" &&
+            category &&
+            !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
             <div>
               <label className="text-sm font-medium block mb-1.5">
                 External Link / Affiliate URL{" "}
