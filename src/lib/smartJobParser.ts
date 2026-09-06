@@ -663,8 +663,9 @@ function extractLabeledFields(raw: string): Record<string, string> {
       currentKey = m[1]
         .trim()
         .toLowerCase()
+        .replace(/[_./]+/g, " ")
         .replace(/\s+/g, " ")
-        .replace(/[._]+/g, " ");
+        .trim();
       const rest = (m[2] ?? "").trim();
       buf = rest ? [rest] : [];
     } else if (currentKey) {
@@ -675,23 +676,32 @@ function extractLabeledFields(raw: string): Record<string, string> {
   return out;
 }
 
+/** Normalize label keys for exact lookup (lowercase, collapse spaces/punct). */
+function normalizeLabelKey(k: string): string {
+  return k
+    .toLowerCase()
+    .replace(/[_./]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Exact label lookup only (no fuzzy short-key matches).
+ * Prevents "salary" from stealing "Salary Type" / "Salary / Rate" values.
+ */
 function labelGet(
   labels: Record<string, string>,
   ...keys: string[]
 ): string | undefined {
   for (const k of keys) {
-    const normalized = k.toLowerCase().replace(/\s+/g, " ");
-    const v = labels[normalized];
-    if (v && v.trim()) return v.trim();
-  }
-  // Fuzzy: key contained in label name or vice versa
-  for (const k of keys) {
-    const nk = k.toLowerCase().replace(/\s+/g, " ");
+    const nk = normalizeLabelKey(k);
+    // Direct
+    const direct = labels[nk] ?? labels[k.toLowerCase()];
+    if (direct && direct.trim()) return direct.trim();
+    // Match against normalized keys in the map
     for (const [lk, lv] of Object.entries(labels)) {
       if (!lv?.trim()) continue;
-      if (lk === nk || lk.includes(nk) || nk.includes(lk)) {
-        return lv.trim();
-      }
+      if (normalizeLabelKey(lk) === nk) return lv.trim();
     }
   }
   return undefined;
@@ -707,16 +717,22 @@ function normalizeDurationValue(raw: string): string | null {
   );
   if (exact) return exact;
 
-  const lower = t.toLowerCase().replace(/\s+/g, " ");
-  if (/^perm|indefinite|ongoing|full[- ]?time permanent/.test(lower)) {
+  const lower = t.toLowerCase().replace(/\s+/g, " ").replace(/-/g, " ");
+
+  if (
+    /\bpermanent\b|\bindefinite\b|\bongoing\b|full\s*time\s*permanent/.test(
+      lower
+    )
+  ) {
     return "Permanent";
   }
-  if (/un-?specified|not specified|n\/a|na\b/.test(lower)) return "UnSpecified";
-  if (/shutdown|shut\s*down/.test(lower)) return "Shutdown";
-  if (/long\s*term|long-term/.test(lower)) return "Long Term";
+  if (/\bun-?specified\b|\bnot specified\b|\bn\/a\b|\bna\b/.test(lower))
+    return "UnSpecified";
+  if (/\bshutdown\b|shut\s*down/.test(lower)) return "Shutdown";
+  if (/\blong\s*term\b/.test(lower)) return "Long Term";
 
-  // "3 months", "3 month", "03 Months"
-  const monthM = lower.match(/^(\d{1,2})\s*months?$/);
+  // "3 months", "3 month", "03 Months", "for 6 months", "6-month"
+  const monthM = lower.match(/(?:^|\b)(\d{1,2})\s*-?\s*months?\b/);
   if (monthM) {
     const n = parseInt(monthM[1], 10);
     const map: Record<number, string> = {
@@ -729,49 +745,67 @@ function normalizeDurationValue(raw: string): string | null {
     };
     if (map[n]) return map[n];
   }
-  if (/^1\s*year|12\s*months?$/.test(lower)) return "1 Year";
+  if (/(?:^|\b)(1|one)\s*year\b|\b12\s*months?\b/.test(lower)) return "1 Year";
 
-  // Partial contains
-  for (const d of DURATIONS) {
+  // Partial contains (longest first)
+  const sorted = [...DURATIONS].sort((a, b) => b.length - a.length);
+  for (const d of sorted) {
     if (lower.includes(d.toLowerCase())) return d;
   }
   return null;
 }
 
-/** Parse employment type from labeled text. */
+/** Parse employment type from labeled text → form values permanent|temporary. */
 function normalizeEmploymentType(
   raw: string
 ): "permanent" | "temporary" | null {
-  const lower = raw.trim().toLowerCase();
+  const lower = raw.trim().toLowerCase().replace(/\s+/g, " ");
   if (!lower) return null;
+  // Explicit temporary first (contract often means temp)
   if (
-    /permanent|full[- ]?time(?!\s*temp)|ongoing|indefinite/.test(lower) &&
-    !/temporary|contract|fixed/.test(lower)
-  ) {
-    return "permanent";
-  }
-  if (
-    /temporary|temp\b|contract|fixed[- ]term|project[- ]based|freelance/.test(
+    /\btemporary\b|\btemp\b|\bcontract\b|\bfixed\s*term\b|\bproject\b|\bfreelance\b|\bcasual\b/.test(
       lower
     )
   ) {
     return "temporary";
   }
-  if (lower === "permanent") return "permanent";
-  if (lower === "temporary") return "temporary";
+  if (
+    /\bpermanent\b|\bfull\s*time\b|\bongoing\b|\bindefinite\b|\bregular\b/.test(
+      lower
+    )
+  ) {
+    return "permanent";
+  }
   return null;
+}
+
+/** Map free-text salary type to Hourly | Monthly | Negotiable. */
+function normalizeSalaryType(raw: string): string | null {
+  const lower = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!lower) return null;
+  if (/\bhour|\bhr\b|\bhourly\b/.test(lower)) return "Hourly";
+  if (/\bmonth|\bmo\b|\bmonthly\b|\bsalary\b/.test(lower) && !/\bhour/.test(lower))
+    return "Monthly";
+  if (/\bnegot|\bdoe\b|discuss|competitive|after interview/.test(lower))
+    return "Negotiable";
+  const found = (SALARY_TYPES as readonly string[]).find(
+    (s) => s.toLowerCase() === lower
+  );
+  return found ?? null;
 }
 
 /** Extract a numeric salary amount from free text. */
 function extractSalaryAmount(raw: string): string | null {
   const t = raw.trim();
   if (!t) return null;
-  // "5000", "5,000", "SAR 5000", "25/hr"
+  // Pure number
+  if (/^\d{1,3}(?:,\d{3})*(?:\.\d+)?$/.test(t)) return t.replace(/,/g, "");
+  if (/^\d+(\.\d+)?$/.test(t)) return t;
+  // "SAR 18,000", "18000 SAR", "25/hr", "5000/month"
   const m = t.match(
-    /(?:^|[^\d])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*(?:\/|\s)?(?:hr|hour|mo|month)?/i
+    /(?:^|[^\d.])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*(?:\/?\s*(?:hr|hour|mo|month|sar|usd|aed|qar|kwd)?)?/i
   );
   if (m) return m[1].replace(/,/g, "");
-  if (/^\d+(\.\d+)?$/.test(t)) return t;
   return null;
 }
 
@@ -887,14 +921,15 @@ export function parseJobText(
     "monthly rate",
     "salary monthly"
   );
+  // Exact labels only — never bare "salary" / "rate" (avoids wrong field)
   const labeledSalaryRate = labelGet(
     labels,
     "salary / rate",
     "salary rate",
-    "salary",
-    "rate",
+    "salary/rate",
     "pay rate",
-    "compensation"
+    "compensation amount",
+    "salary amount"
   );
   const labeledNegotiable = labelGet(labels, "negotiable");
   const labeledCompany = labelGet(
@@ -1056,25 +1091,15 @@ export function parseJobText(
 
   let salaryType = salary.type;
   let salaryRate = salary.rate;
+
   if (labeledSalaryType) {
-    const st = labeledSalaryType.toLowerCase();
-    if (st.includes("hour"))
-      salaryType = { value: "Hourly", confidence: "high", label: "Hourly" };
-    else if (st.includes("month"))
-      salaryType = { value: "Monthly", confidence: "high", label: "Monthly" };
-    else if (st.includes("negot"))
+    const normalized = normalizeSalaryType(labeledSalaryType);
+    if (normalized) {
       salaryType = {
-        value: "Negotiable",
+        value: normalized,
         confidence: "high",
-        label: "Negotiable",
+        label: normalized,
       };
-    else {
-      // Exact match against SALARY_TYPES
-      const found = (SALARY_TYPES as readonly string[]).find(
-        (s) => s.toLowerCase() === st
-      );
-      if (found)
-        salaryType = { value: found, confidence: "high", label: found };
     }
   }
   if (labeledNegotiable && /^(yes|true|1|y)$/i.test(labeledNegotiable)) {
@@ -1085,28 +1110,34 @@ export function parseJobText(
     };
   }
   if (labeledHourly) {
-    const amt = extractSalaryAmount(labeledHourly) ?? labeledHourly;
+    const digits = labeledHourly.replace(/[^\d.]/g, "");
+    const amt =
+      extractSalaryAmount(labeledHourly) ?? (digits || labeledHourly);
     salaryRate = { value: amt, confidence: "high", label: amt };
-    if (!salaryType)
-      salaryType = { value: "Hourly", confidence: "high", label: "Hourly" };
+    salaryType = { value: "Hourly", confidence: "high", label: "Hourly" };
   }
   if (labeledMonthly) {
-    const amt = extractSalaryAmount(labeledMonthly) ?? labeledMonthly;
-    salaryRate = {
-      value: amt,
-      confidence: "high",
-      label: amt,
-    };
-    if (!salaryType || salaryType.value === "Hourly")
-      salaryType = { value: "Monthly", confidence: "high", label: "Monthly" };
+    const digits = labeledMonthly.replace(/[^\d.]/g, "");
+    const amt =
+      extractSalaryAmount(labeledMonthly) ?? (digits || labeledMonthly);
+    salaryRate = { value: amt, confidence: "high", label: amt };
+    salaryType = { value: "Monthly", confidence: "high", label: "Monthly" };
   }
-  // Generic "Salary / Rate: 5000" (when hourly/monthly labels not used)
-  if (labeledSalaryRate && !salaryRate) {
-    const amt = extractSalaryAmount(labeledSalaryRate) ?? labeledSalaryRate;
-    salaryRate = { value: amt, confidence: "high", label: amt };
-  } else if (labeledSalaryRate && salaryRate && salaryRate.confidence !== "high") {
-    const amt = extractSalaryAmount(labeledSalaryRate) ?? labeledSalaryRate;
-    salaryRate = { value: amt, confidence: "high", label: amt };
+  // Generic "Salary / Rate: 5000" or "SAR 18000"
+  if (labeledSalaryRate) {
+    const amt =
+      extractSalaryAmount(labeledSalaryRate) ??
+      (labeledSalaryRate.replace(/[^\d.]/g, "") || null);
+    if (amt) {
+      salaryRate = { value: amt, confidence: "high", label: amt };
+    } else if (!salaryRate) {
+      // Keep raw if no number found (user can edit)
+      salaryRate = {
+        value: labeledSalaryRate,
+        confidence: "medium",
+        label: labeledSalaryRate,
+      };
+    }
   }
 
   // Employment type: prefer explicit label, else duration, else text inference
@@ -1116,13 +1147,24 @@ export function parseJobText(
     if (emp) {
       employmentType = { value: emp, confidence: "high", label: emp };
     }
-  } else if (duration?.value === "Permanent") {
-    employmentType = { value: "permanent", confidence: "high", label: "permanent" };
-  } else if (
-    duration?.value &&
-    (TEMPORARY_DURATIONS as readonly string[]).includes(duration.value)
-  ) {
-    employmentType = { value: "temporary", confidence: "high", label: "temporary" };
+  }
+  // Sync from duration when employment not explicitly labeled
+  if (!labeledEmployment && duration?.value) {
+    if (duration.value === "Permanent") {
+      employmentType = {
+        value: "permanent",
+        confidence: "high",
+        label: "permanent",
+      };
+    } else if (
+      (TEMPORARY_DURATIONS as readonly string[]).includes(duration.value)
+    ) {
+      employmentType = {
+        value: "temporary",
+        confidence: "high",
+        label: "temporary",
+      };
+    }
   }
 
   let companyEmail = detectEmail(text);

@@ -221,23 +221,34 @@ export default function PostJobPage() {
         setForm((prev) => ({
           ...prev,
           duration: dur,
-          employmentType:
-            dur === "Permanent"
-              ? "permanent"
-              : prev.employmentType || "temporary",
+          employmentType: dur === "Permanent" ? "permanent" : "temporary",
         }));
         markTouched("duration");
         return;
       }
       if (key === "employmentType") {
-        const emp = String(field.value);
+        const emp = String(field.value).toLowerCase();
+        const normalized =
+          emp === "permanent" || emp === "temporary" ? emp : "temporary";
         setForm((prev) => ({
           ...prev,
-          employmentType: emp,
+          employmentType: normalized,
           duration:
-            emp === "permanent" ? "Permanent" : prev.duration === "Permanent" ? "" : prev.duration,
+            normalized === "permanent"
+              ? "Permanent"
+              : prev.duration === "Permanent"
+                ? ""
+                : prev.duration,
         }));
         markTouched("employmentType");
+        return;
+      }
+      if (key === "salaryType") {
+        set("salaryType", String(field.value), true);
+        return;
+      }
+      if (key === "salaryRate") {
+        set("salaryRate", String(field.value), true);
         return;
       }
       set(key as keyof JobForm, field.value as string, true);
@@ -284,26 +295,26 @@ export default function PostJobPage() {
       if (smartResult.currency && shouldApply("currency", smartResult.currency.confidence)) {
         next.currency = String(smartResult.currency.value);
       }
-      if (smartResult.salaryRate && shouldApply("salaryRate", smartResult.salaryRate.confidence)) {
-        next.salaryRate = String(smartResult.salaryRate.value);
-      }
-      if (smartResult.salaryType && shouldApply("salaryType", smartResult.salaryType.confidence)) {
+      // Always apply these when Smart Fill detected them (labeled paste)
+      if (smartResult.salaryType) {
         next.salaryType = String(smartResult.salaryType.value);
       }
-      if (smartResult.duration && shouldApply("duration", smartResult.duration.confidence)) {
+      if (smartResult.salaryRate) {
+        next.salaryRate = String(smartResult.salaryRate.value);
+      }
+      if (smartResult.duration) {
         next.duration = String(smartResult.duration.value);
       }
-      if (smartResult.employmentType && shouldApply("employmentType", smartResult.employmentType.confidence)) {
-        next.employmentType = String(smartResult.employmentType.value);
+      if (smartResult.employmentType) {
+        const emp = String(smartResult.employmentType.value).toLowerCase();
+        next.employmentType =
+          emp === "permanent" || emp === "temporary" ? emp : next.employmentType;
       }
-      // Duration drives employment type when duration was filled
+      // Duration drives employment type
       if (next.duration === "Permanent") {
         next.employmentType = "permanent";
-      } else if (next.duration && next.duration !== "Permanent") {
-        // Fixed-term durations → temporary
-        if (!next.employmentType || next.employmentType === "permanent") {
-          next.employmentType = "temporary";
-        }
+      } else if (next.duration) {
+        next.employmentType = "temporary";
       }
       if (smartResult.positions && shouldApply("positions", smartResult.positions.confidence)) {
         next.positions = String(smartResult.positions.value);
