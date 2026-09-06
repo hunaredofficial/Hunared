@@ -370,9 +370,11 @@ export function EditJobForm({ job }: { job: Job }) {
                 onValueChange={(v: string | null) => {
                   if (!v) return;
                   set("duration", v);
+                  // Any duration option auto-sets Employment Type:
+                  // Permanent → permanent; everything else → temporary
                   if (v === "Permanent") {
                     set("employmentType", "permanent");
-                  } else if ((TEMPORARY_DURATIONS as readonly string[]).includes(v)) {
+                  } else {
                     set("employmentType", "temporary");
                   }
                 }}
@@ -381,18 +383,16 @@ export function EditJobForm({ job }: { job: Job }) {
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(form.employmentType === "temporary"
-                    ? (TEMPORARY_DURATIONS as readonly string[])
-                    : form.employmentType === "permanent"
-                      ? (["Permanent"] as const)
-                      : (DURATIONS as readonly string[])
-                  ).map((d) => (
+                  {DURATIONS.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Choosing a fixed term sets Employment Type to Temporary. Permanent sets it to Permanent.
+              </p>
             </Field>
 
             <Field label="Salary Type *">

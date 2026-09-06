@@ -608,24 +608,12 @@ export default function PostJobPage() {
                 onValueChange={(v: string | null) => {
                   if (!v) return;
                   set("duration", v, true);
-                  // Auto job type from duration unless user already chose employment type
-                  if (!touched.employmentType) {
-                    if (v === "Permanent") {
-                      set("employmentType", "permanent", false);
-                    } else if (
-                      (TEMPORARY_DURATIONS as readonly string[]).includes(v)
-                    ) {
-                      set("employmentType", "temporary", false);
-                    }
+                  // Any duration option auto-sets Employment Type:
+                  // Permanent → permanent; everything else → temporary
+                  if (v === "Permanent") {
+                    set("employmentType", "permanent", false);
                   } else {
-                    // Keep employment type in sync when user picks duration
-                    if (v === "Permanent") {
-                      set("employmentType", "permanent", false);
-                    } else if (
-                      (TEMPORARY_DURATIONS as readonly string[]).includes(v)
-                    ) {
-                      set("employmentType", "temporary", false);
-                    }
+                    set("employmentType", "temporary", false);
                   }
                 }}
               >
@@ -633,18 +621,16 @@ export default function PostJobPage() {
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(form.employmentType === "temporary"
-                    ? (TEMPORARY_DURATIONS as readonly string[])
-                    : form.employmentType === "permanent"
-                      ? (["Permanent"] as const)
-                      : (DURATIONS as readonly string[])
-                  ).map((d) => (
+                  {DURATIONS.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Choosing a fixed term sets Employment Type to Temporary. Permanent sets it to Permanent.
+              </p>
             </Field>
 
             <Field label="Close Listing Automatically">
