@@ -1106,9 +1106,7 @@ export function parseJobText(
         confidence: "high",
         label: normalized,
       };
-    }
-    // If label present but not normalized, still try detectDuration on that phrase alone
-    else {
+    } else {
       const fromLabel = detectDuration(labeledDuration);
       if (fromLabel) {
         duration = { ...fromLabel, confidence: "high" };
@@ -1122,6 +1120,20 @@ export function parseJobText(
         confidence: duration.confidence,
         label: normalized,
       };
+    }
+  }
+  // Regex fallback on raw combined text if still missing
+  if (!duration) {
+    const dm = combined.match(/(?:^|\n)\s*Duration\s*:\s*([^\n\r]+)/i);
+    if (dm?.[1]?.trim()) {
+      const normalized = normalizeDurationValue(dm[1].trim());
+      if (normalized) {
+        duration = {
+          value: normalized,
+          confidence: "high",
+          label: normalized,
+        };
+      }
     }
   }
 
@@ -1184,17 +1196,32 @@ export function parseJobText(
       employmentType = { value: emp, confidence: "high", label: emp };
     }
   }
-  // Sync from duration when employment not explicitly labeled
-  if (!labeledEmployment && duration?.value) {
+  // Regex fallback for Employment Type label
+  if (!employmentType || employmentType.confidence !== "high") {
+    const em = combined.match(
+      /(?:^|\n)\s*Employment\s*Type\s*:\s*([^\n\r]+)/i
+    );
+    if (em?.[1]?.trim()) {
+      const emp = normalizeEmploymentType(em[1].trim());
+      if (emp) {
+        employmentType = { value: emp, confidence: "high", label: emp };
+      }
+    }
+  }
+  // Sync from duration when employment still not high-confidence labeled
+  if (duration?.value) {
     if (duration.value === "Permanent") {
-      employmentType = {
-        value: "permanent",
-        confidence: "high",
-        label: "permanent",
-      };
+      if (!employmentType || employmentType.confidence !== "high") {
+        employmentType = {
+          value: "permanent",
+          confidence: "high",
+          label: "permanent",
+        };
+      }
     } else if (
       (TEMPORARY_DURATIONS as readonly string[]).includes(duration.value)
     ) {
+      // Duration is a fixed term → Temporary (always safe)
       employmentType = {
         value: "temporary",
         confidence: "high",

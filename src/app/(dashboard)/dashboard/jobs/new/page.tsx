@@ -307,23 +307,72 @@ export default function PostJobPage() {
       if (smartResult.salaryRate) {
         next.salaryRate = String(smartResult.salaryRate.value);
       }
-      if (smartResult.duration) {
+
+      // --- Duration + Employment Type (robust) ---
+      // 1) Prefer smartResult
+      // 2) Fallback: re-parse current title+description so labels always win
+      let durationVal: string | null = null;
+      let employmentVal: string | null = null;
+
+      if (smartResult.duration?.value) {
         const raw = String(smartResult.duration.value);
-        const normalized = normalizeDurationValue(raw) ?? raw;
-        // Only set if it matches a real Duration option (Select needs exact value)
-        const valid = (DURATIONS as readonly string[]).includes(normalized)
-          ? normalized
-          : normalizeDurationValue(raw);
-        if (valid) {
-          next.duration = valid;
+        durationVal =
+          normalizeDurationValue(raw) ??
+          ((DURATIONS as readonly string[]).includes(raw) ? raw : null);
+      }
+      if (smartResult.employmentType?.value) {
+        const emp = String(smartResult.employmentType.value).toLowerCase().trim();
+        if (emp === "permanent" || emp === "temporary") employmentVal = emp;
+        else if (/\btemp|contract|fixed/.test(emp)) employmentVal = "temporary";
+        else if (/\bperm|full\s*time|ongoing/.test(emp)) employmentVal = "permanent";
+      }
+
+      // Fallback re-parse from the text the user actually pasted
+      if (!durationVal || !employmentVal) {
+        const fresh = parseJobText(next.jobTitle || prev.jobTitle, next.jobDescription || prev.jobDescription);
+        if (!durationVal && fresh.duration?.value) {
+          const raw = String(fresh.duration.value);
+          durationVal =
+            normalizeDurationValue(raw) ??
+            ((DURATIONS as readonly string[]).includes(raw) ? raw : null);
+        }
+        if (!employmentVal && fresh.employmentType?.value) {
+          const emp = String(fresh.employmentType.value).toLowerCase().trim();
+          if (emp === "permanent" || emp === "temporary") employmentVal = emp;
         }
       }
-      if (smartResult.employmentType) {
-        const emp = String(smartResult.employmentType.value).toLowerCase();
-        next.employmentType =
-          emp === "permanent" || emp === "temporary" ? emp : next.employmentType;
+
+      // Direct label scan as last resort (handles edge label formats)
+      if (!durationVal || !employmentVal) {
+        const blob = `${prev.jobTitle}\n${prev.jobDescription}`;
+        if (!durationVal) {
+          const dm = blob.match(
+            /(?:^|\n)\s*Duration\s*:\s*([^\n\r]+)/i
+          );
+          if (dm?.[1]) {
+            durationVal = normalizeDurationValue(dm[1].trim());
+          }
+        }
+        if (!employmentVal) {
+          const em = blob.match(
+            /(?:^|\n)\s*Employment\s*Type\s*:\s*([^\n\r]+)/i
+          );
+          if (em?.[1]) {
+            const raw = em[1].trim().toLowerCase();
+            if (/\btemp|contract|fixed/.test(raw)) employmentVal = "temporary";
+            else if (/\bperm|full\s*time|ongoing/.test(raw)) employmentVal = "permanent";
+            else if (raw === "temporary" || raw === "permanent") employmentVal = raw;
+          }
+        }
       }
-      // Duration drives employment type (must set temporary so Duration options unlock)
+
+      if (durationVal) {
+        next.duration = durationVal;
+      }
+      if (employmentVal) {
+        next.employmentType = employmentVal;
+      }
+      // Duration drives employment type when duration is known
       if (next.duration === "Permanent") {
         next.employmentType = "permanent";
       } else if (next.duration) {
@@ -628,6 +677,7 @@ export default function PostJobPage() {
 
             <Field label="Employment Type *">
               <Select
+                key={`emp-${form.employmentType || "empty"}`}
                 value={form.employmentType || undefined}
                 onValueChange={(v: string | null) => {
                   if (!v) return;
@@ -670,6 +720,7 @@ export default function PostJobPage() {
 
             <Field label="Duration *">
               <Select
+                key={`dur-${form.duration || "empty"}`}
                 value={form.duration || undefined}
                 onValueChange={(v: string | null) => {
                   if (!v) return;
