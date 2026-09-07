@@ -61,15 +61,24 @@ export default async function ListingDetailPage({
   let relatedListings: Listing[] = [];
   try {
     const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
+    // Same category — all matching approved open listings (cap 48 for performance)
     let q = supabase
       .from("marketplace_listings")
       .select("*")
       .eq("status", "approved")
       .neq("id", id)
+      .is("closed_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order("created_at", { ascending: false })
-      .limit(6);
-    if (listing.category) q = q.eq("category", listing.category);
-    const { data } = await q;
+      .limit(48);
+    if (listing.category) {
+      q = q.eq("category", listing.category);
+    }
+    const { data, error } = await q;
+    if (error) {
+      console.error("[market similar]", error.message);
+    }
     relatedListings = (data as Listing[]) ?? [];
   } catch {
     // non-fatal
@@ -279,7 +288,15 @@ export default async function ListingDetailPage({
 
         {relatedListings.length > 0 && (
           <div className="mt-10 space-y-4">
-            <h2 className="text-lg font-semibold">Similar listings</h2>
+            <h2 className="text-lg font-semibold">
+              Similar listings
+              {listing.category ? (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  in {LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ?? listing.category}
+                  {relatedListings.length > 0 ? ` · ${relatedListings.length}` : ""}
+                </span>
+              ) : null}
+            </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedListings.map((item) => {
                 const img =

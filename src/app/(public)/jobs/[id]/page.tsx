@@ -92,41 +92,60 @@ export default async function JobDetailPage({
 
   if (!job) notFound();
 
-  // Similar jobs (same category / country), exclude current
+  // Similar jobs — same category (and categories[] overlap), exclude current
   let relatedJobs: Pick<
     Job,
     "id" | "job_title" | "company_name" | "location" | "category" | "salary_rate" | "currency" | "salary_type" | "duration" | "positions" | "created_at"
   >[] = [];
   try {
     const supabase = createAdminClient();
+    const nowIso = new Date().toISOString();
+    const cat = job.category || null;
+    const multiCats = Array.isArray((job as { categories?: string[] | null }).categories)
+      ? ((job as { categories?: string[] | null }).categories ?? []).filter(Boolean)
+      : [];
+    const matchCats = Array.from(new Set([cat, ...multiCats].filter(Boolean) as string[]));
+
     let q = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
+        "id, job_title, company_name, location, category, categories, salary_rate, currency, salary_type, duration, positions, created_at"
       )
       .eq("status", "approved")
       .neq("id", id)
+      .is("closed_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order("created_at", { ascending: false })
-      .limit(6);
-    if (job.category) q = q.eq("category", job.category);
-    const { data: rel } = await q;
-    relatedJobs = (rel as typeof relatedJobs) ?? [];
-    if (relatedJobs.length < 3 && job.country) {
-      const { data: rel2 } = await supabase
-        .from("jobs")
-        .select(
-          "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
-        )
-        .eq("status", "approved")
-        .eq("country", job.country)
-        .neq("id", id)
-        .order("created_at", { ascending: false })
-        .limit(6);
-      const ids = new Set(relatedJobs.map((j) => j.id));
-      for (const j of rel2 ?? []) {
-        if (!ids.has(j.id)) relatedJobs.push(j as (typeof relatedJobs)[0]);
+      .limit(48);
+
+    if (matchCats.length >= 1) {
+      // Match primary category OR categories[] contains any of the job's categories
+      const parts = matchCats.flatMap((c) => {
+        const safe = c.replace(/"/g, '\\"');
+        return [`category.eq."${safe}"`, `categories.cs.{"${safe}"}`];
+      });
+      q = q.or(parts.join(","));
+    }
+
+    const { data: rel, error: relErr } = await q;
+    if (relErr) {
+      console.error("[job similar]", relErr.message);
+      // fallback: simple category eq
+      if (cat) {
+        const { data: fb } = await supabase
+          .from("jobs")
+          .select(
+            "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
+          )
+          .eq("status", "approved")
+          .eq("category", cat)
+          .neq("id", id)
+          .order("created_at", { ascending: false })
+          .limit(48);
+        relatedJobs = (fb as typeof relatedJobs) ?? [];
       }
-      relatedJobs = relatedJobs.slice(0, 6);
+    } else {
+      relatedJobs = (rel as typeof relatedJobs) ?? [];
     }
   } catch {
     // non-fatal
@@ -552,7 +571,15 @@ export default async function JobDetailPage({
         {/* Related / similar jobs */}
         {relatedJobs.length > 0 && (
           <div className="mt-10 space-y-4">
-            <h2 className="text-lg font-semibold">Similar jobs</h2>
+            <h2 className="text-lg font-semibold">
+              Similar jobs
+              {job.category ? (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  in {job.category}
+                  {relatedJobs.length > 0 ? ` · ${relatedJobs.length}` : ""}
+                </span>
+              ) : null}
+            </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedJobs.map((rj) => (
                 <Link
