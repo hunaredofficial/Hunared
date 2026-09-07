@@ -480,19 +480,6 @@ function NewListingForm() {
               </div>
             </div>
 
-            {/* Google Maps URL (Optional) */}
-            <div className="col-span-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Location Map Link (Optional)
-              </label>
-              <input
-                value={mapsUrl}
-                onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="https://maps.app.goo.gl/... or Google Maps link"
-                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
             {/* Price + Currency */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -601,6 +588,19 @@ function NewListingForm() {
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="+966 5XX XXX XXXX"
                 type="tel"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {/* Google Maps URL (Optional) */}
+            <div className="col-span-full">
+              <label className="text-sm font-medium block mb-1.5">
+                Location Map Link (Optional)
+              </label>
+              <input
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="https://maps.app.goo.gl/... or Google Maps link"
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>

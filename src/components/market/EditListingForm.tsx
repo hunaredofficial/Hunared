@@ -405,17 +405,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="sm:col-span-2">
-                <label className="text-sm font-medium block mb-1.5">
-                  Location Map Link (Optional)
-                </label>
-                <input
-                  value={mapsUrl}
-                  onChange={(e) => setMapsUrl(e.target.value)}
-                  placeholder="https://maps.app.goo.gl/..."
-                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
             </div>
           </div>
 
@@ -533,6 +522,19 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users
             </p>
+          </div>
+
+          {/* Location Map Link */}
+          <div>
+            <label className="text-sm font-medium block mb-1.5">
+              Location Map Link (Optional)
+            </label>
+            <input
+              value={mapsUrl}
+              onChange={(e) => setMapsUrl(e.target.value)}
+              placeholder="https://maps.app.goo.gl/..."
+              className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
 
           {/* Description */}
