@@ -105,10 +105,13 @@ export function EditListingForm({ listing }: { listing: Listing }) {
     listing.contact_phone ?? ""
   );
   const [listingType, setListingType] = useState<ListingType>(
-  const [expiration, setExpiration] = useState<ExpirationOptionValue>(
-    expiresAtToOption(listing.expires_at, listing.created_at)
-  );
     (listing.listing_type as ListingType) ?? "standard"
+  );
+  const [expiration, setExpiration] = useState<ExpirationOptionValue>(
+    expiresAtToOption(
+      (listing as { expires_at?: string | null }).expires_at ?? null,
+      (listing as { created_at?: string | null }).created_at ?? null
+    )
   );
   const [externalLink, setExternalLink] = useState(listing.external_link ?? "");
 
