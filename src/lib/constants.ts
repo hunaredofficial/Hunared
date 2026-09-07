@@ -725,15 +725,11 @@ export const LISTING_CATEGORIES = [
   { value: "vehicles", label: "Vehicles" },
   { value: "electronics", label: "Electronics" },
   { value: "home_furniture", label: "Home & Furniture" },
-  { value: "fashion_beauty", label: "Fashion & Beauty" },
+  { value: "personel_workwear", label: "Personal & Workwear" },
   { value: "mobiles_accessories", label: "Mobiles & Accessories" },
   { value: "tools_equipment", label: "Tools & Equipment" },
   { value: "industrial_materials", label: "Industrial & Materials" },
   { value: "pets_animals", label: "Pets & Animals" },
-  { value: "sports_outdoors", label: "Sports & Outdoors" },
-  { value: "kids_baby", label: "Kids & Baby" },
-  { value: "food_agriculture", label: "Food & Agriculture" },
-  { value: "health_medical", label: "Health & Medical" },
   { value: "wanted", label: "Wanted" },
   { value: "free_items", label: "Free Items" },
   { value: "lost_found", label: "Lost & Found" },
@@ -885,13 +881,13 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Other Electronics",
   ],
   home_furniture: [
+    "Home Appliances",
+    "Kitchen Appliances",
     "Sofas / Living Room",
     "Beds / Bedroom",
     "Tables / Dining",
     "Office Furniture",
     "Wardrobes / Storage",
-    "Home Appliances",
-    "Kitchen Appliances",
     "Refrigerators",
     "Washing Machines",
     "Air Conditioners",
@@ -902,29 +898,24 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Home Accessories",
   ],
   // Alias for older data that may use furniture_home
-  furniture_home: [
+  home_furniture: [
+    "Home Appliances",
+    "Kitchen Appliances",
     "Sofas / Living Room",
     "Beds / Bedroom",
     "Tables / Dining",
     "Office Furniture",
     "Wardrobes / Storage",
-    "Home Appliances",
-    "Kitchen Appliances",
     "Decor / Lighting",
     "Home Accessories",
   ],
-  fashion_beauty: [
-    "Men's Clothing",
-    "Women's Clothing",
-    "Kids Clothing",
+  Personel_Workwear: [
+    "Clothing",
     "Shoes",
     "Bags / Luggage",
     "Watches",
     "Jewelry",
-    "Sunglasses / Eyewear",
-    "Cosmetics / Makeup",
-    "Skincare / Perfume",
-    "Hair Care",
+    "PPE / Safety Gear",
     "Uniforms / Workwear",
   ],
   mobiles_accessories: [
@@ -969,8 +960,7 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Other Materials",
   ],
   pets_animals: [
-    "Dogs",
-    "Cats",
+    "Pets",
     "Birds",
     "Fish / Aquarium",
     "Livestock",
@@ -980,59 +970,12 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Adoption",
     "Other Animals",
   ],
-  sports_outdoors: [
-    "Gym / Fitness",
-    "Football / Team Sports",
-    "Cycling",
-    "Camping / Hiking",
-    "Water Sports",
-    "Fishing",
-    "Hunting",
-    "Sportswear",
-    "Bicycles",
-    "Outdoor Gear",
-    "Other Sports",
-  ],
-  kids_baby: [
-    "Baby Gear",
-    "Strollers / Car Seats",
-    "Toys",
-    "Kids Furniture",
-    "Kids Clothing",
-    "School Supplies",
-    "Nursery",
-    "Other Kids Items",
-  ],
-  food_agriculture: [
-    "Fresh Produce",
-    "Grocery / Packaged",
-    "Meat / Seafood",
-    "Dairy",
-    "Beverages",
-    "Restaurant Equipment",
-    "Farm Produce",
-    "Seeds / Fertilizer",
-    "Livestock Feed",
-    "Catering Supplies",
-    "Other Food",
-  ],
-  health_medical: [
-    "Medical Equipment",
-    "Mobility Aids",
-    "First Aid",
-    "Supplements / Vitamins",
-    "Personal Care",
-    "Lab / Diagnostic",
-    "Pharmacy Items",
-    "Other Health",
-  ],
   wanted: [
     "Item Wanted",
     "Service Wanted",
     "Property Wanted",
     "Vehicle Wanted",
     "Job / Contract Wanted",
-    "Roommate Wanted",
     "Other Wanted",
   ],
   free_items: [
@@ -1108,10 +1051,8 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Other Announcement",
   ],
   donations: [
-    "Clothes",
     "Food",
     "Furniture",
-    "Electronics",
     "Medical Supplies",
     "Books / School Items",
     "Equipment",
@@ -1125,7 +1066,6 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Local Group",
     "Neighborhood News",
     "Skill Share",
-    "Ride Share",
     "Other Community",
   ],
   education_training: [
@@ -1191,7 +1131,7 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   furniture_home:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  fashion_beauty:
+  personel_workwear:
     "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   mobiles_accessories:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -1201,14 +1141,6 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
   pets_animals:
     "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  sports_outdoors:
-    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  kids_baby:
-    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-  food_agriculture:
-    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
-  health_medical:
-    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
   wanted:
     "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
   free_items:
