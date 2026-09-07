@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
-import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import { LISTING_CATEGORIES, LISTING_CURRENCIES, getListingDefaultImage } from "@/lib/constants";
 import {
   EXPIRATION_OPTIONS,
   expiresAtToOption,
@@ -200,11 +200,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
     }
 
     // ✅ NEW: At least one image mandatory (kept + new)
-    const totalImageCount = keptImages.length + newFiles.length;
-    if (totalImageCount === 0) {
-      toast.error("Please keep or upload at least one image");
-      return;
-    }
+    // Photos optional
 
     setLoading(true);
     try {
@@ -219,7 +215,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         setUploading(false);
       }
 
-      const finalImageUrls = [...keptImages, ...uploadedUrls];
+      let finalImageUrls = [...keptImages, ...uploadedUrls];
+      if (finalImageUrls.length === 0) {
+        finalImageUrls = [getListingDefaultImage(category, null)];
+      }
 
       const res = await fetch(`/api/market/${listing.id}`, {
         method: "PUT",
@@ -268,9 +267,9 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Image gallery – now mandatory */}
           <div>
             <label className="text-sm font-medium block mb-1.5">
-              Photos <span className="text-destructive">*</span>{" "}
+              Photos{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                (required - up to 8)
+                (optional — up to 8; category image used if empty)
               </span>
             </label>
             <input

@@ -22,6 +22,7 @@ import {
   LISTING_CURRENCIES,
   LISTING_SUBCATEGORIES,
   RENTAL_PERIOD_OPTIONS,
+  getListingDefaultImage,
 } from "@/lib/constants";
 import {
   EXPIRATION_OPTIONS,
@@ -199,20 +200,20 @@ function NewListingForm() {
       toast.error("Please enter an external / affiliate URL");
       return;
     }
-    if (imageFiles.length === 0) {
-      toast.error("Please upload at least one image");
-      return;
-    }
+    // Photos optional — category default image used when none uploaded
 
     setLoading(true);
     try {
-      const imageUrls: string[] = [];
+      let imageUrls: string[] = [];
       setUploading(true);
       for (const file of imageFiles) {
         const uploaded = await uploadImageToCloudinary(file);
         imageUrls.push(uploaded.url);
       }
       setUploading(false);
+      if (imageUrls.length === 0) {
+        imageUrls = [getListingDefaultImage(category, subcategory)];
+      }
 
       const countryName =
         COUNTRIES.find((c) => c.code === country)?.name ?? country;
@@ -291,9 +292,9 @@ function NewListingForm() {
             {/* Photos */}
             <div>
               <label className="text-sm font-medium block mb-1.5">
-                Photos <span className="text-destructive">*</span>{" "}
+                Photos{" "}
                 <span className="text-muted-foreground text-xs font-normal">
-                  (required - up to 8)
+                  (optional — up to 8; category image used if empty)
                 </span>
               </label>
               <input
