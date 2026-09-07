@@ -165,23 +165,22 @@ export function MarketFilter({
     category === "for_sale" ||
     category === "vehicles" ||
     category === "electronics" ||
-    category === "furniture_home" ||
-    category === "home_furniture" ||
-    category === "mobiles_accessories";
+    category === "furniture_home";
   const showRental = category === "for_rent" || category === "accommodation";
   const showService = category === "services";
-  const showType =
-    availableSubs.length > 0 && !showCondition && !showRental && !showService;
+  const showType = availableSubs.length > 0 && !showCondition && !showRental && !showService;
 
-  // For for_sale, condition options mirror subcategories
+  // For for_sale, New/Used/Like New act as condition
   const conditionOptions =
     category === "for_sale"
-      ? (SUBCATEGORIES.for_sale ?? ["New", "Used", "Like New"])
+      ? ["New", "Used", "Like New"]
       : [];
 
+  // Rental Period filter: duration only (not Tools / Machinery / Equipment, etc.)
+  const RENTAL_PERIOD_OPTIONS = ["Daily", "Weekly", "Monthly", "Yearly"] as const;
   const rentalOptions =
     category === "for_rent"
-      ? (SUBCATEGORIES.for_rent ?? ["Daily", "Weekly", "Monthly", "Yearly"])
+      ? [...RENTAL_PERIOD_OPTIONS]
       : category === "accommodation"
         ? availableSubs
         : [];
