@@ -455,8 +455,6 @@ export const PROFESSIONS = [
   "Yard Supervisor",
 ] as const;
 
-export type JobCategory = (typeof JOB_CATEGORIES)[number];
-
 // Colors for categories; anything not listed falls back to "Others"
 export const CATEGORY_COLORS: Record<string, string> = {
   Accounting:
@@ -727,11 +725,15 @@ export const LISTING_CATEGORIES = [
   { value: "vehicles", label: "Vehicles" },
   { value: "electronics", label: "Electronics" },
   { value: "home_furniture", label: "Home & Furniture" },
-  { value: "personel_workwear", label: "Personal & Workwear" },
+  { value: "fashion_beauty", label: "Fashion & Beauty" },
   { value: "mobiles_accessories", label: "Mobiles & Accessories" },
   { value: "tools_equipment", label: "Tools & Equipment" },
   { value: "industrial_materials", label: "Industrial & Materials" },
   { value: "pets_animals", label: "Pets & Animals" },
+  { value: "sports_outdoors", label: "Sports & Outdoors" },
+  { value: "kids_baby", label: "Kids & Baby" },
+  { value: "food_agriculture", label: "Food & Agriculture" },
+  { value: "health_medical", label: "Health & Medical" },
   { value: "wanted", label: "Wanted" },
   { value: "free_items", label: "Free Items" },
   { value: "lost_found", label: "Lost & Found" },
@@ -759,7 +761,7 @@ export const RENTAL_PERIOD_OPTIONS = [
 
 /**
  * Subcategories for marketplace create form + browse filters.
- * Keys MUST match LISTING_CATEGORIES `value` fields exactly.
+ * Keys match LISTING_CATEGORIES values. Keep in sync across MarketFilter + new listing.
  */
 export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
   for_sale: [
@@ -782,6 +784,7 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Warehouses / Storage",
     "Other Rental",
   ],
+
   services: [
     "Electrical",
     "Mechanical",
@@ -882,13 +885,13 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Other Electronics",
   ],
   home_furniture: [
-    "Home Appliances",
-    "Kitchen Appliances",
     "Sofas / Living Room",
     "Beds / Bedroom",
     "Tables / Dining",
     "Office Furniture",
     "Wardrobes / Storage",
+    "Home Appliances",
+    "Kitchen Appliances",
     "Refrigerators",
     "Washing Machines",
     "Air Conditioners",
@@ -898,45 +901,30 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Garden / Outdoor",
     "Home Accessories",
   ],
-  // Legacy aliases
+  // Alias for older data that may use furniture_home
   furniture_home: [
-    "Home Appliances",
-    "Kitchen Appliances",
     "Sofas / Living Room",
     "Beds / Bedroom",
     "Tables / Dining",
     "Office Furniture",
     "Wardrobes / Storage",
+    "Home Appliances",
+    "Kitchen Appliances",
     "Decor / Lighting",
     "Home Accessories",
   ],
-  // Must match LISTING_CATEGORIES value "personel_workwear"
-  personel_workwear: [
-    "Clothing",
-    "Shoes",
-    "Bags / Luggage",
-    "Watches",
-    "Jewelry",
-    "PPE / Safety Gear",
-    "Uniforms / Workwear",
-  ],
-  // Legacy aliases for renamed category
   fashion_beauty: [
-    "Clothing",
+    "Men's Clothing",
+    "Women's Clothing",
+    "Kids Clothing",
     "Shoes",
     "Bags / Luggage",
     "Watches",
     "Jewelry",
-    "PPE / Safety Gear",
-    "Uniforms / Workwear",
-  ],
-  Personel_Workwear: [
-    "Clothing",
-    "Shoes",
-    "Bags / Luggage",
-    "Watches",
-    "Jewelry",
-    "PPE / Safety Gear",
+    "Sunglasses / Eyewear",
+    "Cosmetics / Makeup",
+    "Skincare / Perfume",
+    "Hair Care",
     "Uniforms / Workwear",
   ],
   mobiles_accessories: [
@@ -971,7 +959,6 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Steel / Metal",
     "Pipes / Fittings",
     "Electrical Materials",
-    "Instrumentation Materials",
     "Plumbing Materials",
     "Paint / Chemicals",
     "Insulation",
@@ -982,7 +969,8 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Other Materials",
   ],
   pets_animals: [
-    "Pets",
+    "Dogs",
+    "Cats",
     "Birds",
     "Fish / Aquarium",
     "Livestock",
@@ -992,12 +980,59 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Adoption",
     "Other Animals",
   ],
+  sports_outdoors: [
+    "Gym / Fitness",
+    "Football / Team Sports",
+    "Cycling",
+    "Camping / Hiking",
+    "Water Sports",
+    "Fishing",
+    "Hunting",
+    "Sportswear",
+    "Bicycles",
+    "Outdoor Gear",
+    "Other Sports",
+  ],
+  kids_baby: [
+    "Baby Gear",
+    "Strollers / Car Seats",
+    "Toys",
+    "Kids Furniture",
+    "Kids Clothing",
+    "School Supplies",
+    "Nursery",
+    "Other Kids Items",
+  ],
+  food_agriculture: [
+    "Fresh Produce",
+    "Grocery / Packaged",
+    "Meat / Seafood",
+    "Dairy",
+    "Beverages",
+    "Restaurant Equipment",
+    "Farm Produce",
+    "Seeds / Fertilizer",
+    "Livestock Feed",
+    "Catering Supplies",
+    "Other Food",
+  ],
+  health_medical: [
+    "Medical Equipment",
+    "Mobility Aids",
+    "First Aid",
+    "Supplements / Vitamins",
+    "Personal Care",
+    "Lab / Diagnostic",
+    "Pharmacy Items",
+    "Other Health",
+  ],
   wanted: [
     "Item Wanted",
     "Service Wanted",
     "Property Wanted",
     "Vehicle Wanted",
     "Job / Contract Wanted",
+    "Roommate Wanted",
     "Other Wanted",
   ],
   free_items: [
@@ -1073,8 +1108,10 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Other Announcement",
   ],
   donations: [
+    "Clothes",
     "Food",
     "Furniture",
+    "Electronics",
     "Medical Supplies",
     "Books / School Items",
     "Equipment",
@@ -1088,6 +1125,7 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Local Group",
     "Neighborhood News",
     "Skill Share",
+    "Ride Share",
     "Other Community",
   ],
   education_training: [
@@ -1129,6 +1167,8 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
 
 /**
  * Shared currency codes for Jobs + Marketplace.
+ * Prefer importing CURRENCIES from @/lib/currencies and mapping .code
+ * in new forms. This export stays for backward compatibility.
  */
 export const LISTING_CURRENCIES = CURRENCIES.map((c) => c.code);
 
@@ -1151,8 +1191,6 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   furniture_home:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  personel_workwear:
-    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   fashion_beauty:
     "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   mobiles_accessories:
@@ -1163,6 +1201,14 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
   pets_animals:
     "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  sports_outdoors:
+    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  kids_baby:
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  food_agriculture:
+    "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300",
+  health_medical:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
   wanted:
     "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
   free_items:
@@ -1187,4 +1233,98 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
   other: "bg-muted text-muted-foreground",
 };
-;
+
+/**
+ * Default cover images when a listing is posted without photos.
+ * Category-themed stock images (Unsplash). Overridden when the user uploads.
+ */
+export const LISTING_CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
+  for_sale:
+    "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80",
+  for_rent:
+    "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
+  services:
+    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
+  accommodation:
+    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
+  property:
+    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80",
+  vehicles:
+    "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80",
+  electronics:
+    "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=800&q=80",
+  home_furniture:
+    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+  furniture_home:
+    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+  personel_workwear:
+    "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80",
+  fashion_beauty:
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
+  mobiles_accessories:
+    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80",
+  tools_equipment:
+    "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=800&q=80",
+  industrial_materials:
+    "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80",
+  pets_animals:
+    "https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=800&q=80",
+  sports_outdoors:
+    "https://images.unsplash.com/photo-1461896836934-ffe607ba6851?auto=format&fit=crop&w=800&q=80",
+  kids_baby:
+    "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4f3?auto=format&fit=crop&w=800&q=80",
+  food_agriculture:
+    "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=800&q=80",
+  health_medical:
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
+  wanted:
+    "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80",
+  free_items:
+    "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=800&q=80",
+  lost_found:
+    "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+  events:
+    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
+  business_commercial:
+    "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
+  offers_deals:
+    "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=800&q=80",
+  announcements:
+    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+  donations:
+    "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=800&q=80",
+  community:
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80",
+  education_training:
+    "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80",
+  wholesale:
+    "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=80",
+  other:
+    "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80",
+};
+
+/** Resolve a category (and optional subcategory) default image URL. */
+export function getListingDefaultImage(
+  category: string,
+  subcategory?: string | null
+): string {
+  const sub = (subcategory || "").toLowerCase();
+  if (
+    sub.includes("phone") ||
+    sub.includes("mobile") ||
+    sub.includes("smartphone") ||
+    sub.includes("tablet")
+  ) {
+    return LISTING_CATEGORY_DEFAULT_IMAGES.mobiles_accessories;
+  }
+  if (sub.includes("laptop") || sub.includes("computer")) {
+    return LISTING_CATEGORY_DEFAULT_IMAGES.electronics;
+  }
+  if (sub.includes("car") || sub.includes("truck") || sub.includes("motorcycle")) {
+    return LISTING_CATEGORY_DEFAULT_IMAGES.vehicles;
+  }
+  return (
+    LISTING_CATEGORY_DEFAULT_IMAGES[category] ??
+    LISTING_CATEGORY_DEFAULT_IMAGES.other
+  );
+}

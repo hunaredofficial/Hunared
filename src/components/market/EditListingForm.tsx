@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
-import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import { LISTING_CATEGORIES, LISTING_CURRENCIES, getListingDefaultImage } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
 import type { Listing } from "@/types/database";
@@ -188,12 +188,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
       return;
     }
 
-    // ✅ NEW: At least one image mandatory (kept + new)
-    const totalImageCount = keptImages.length + newFiles.length;
-    if (totalImageCount === 0) {
-      toast.error("Please keep or upload at least one image");
-      return;
-    }
+    // Photos optional — category default used when none remain
 
     setLoading(true);
     try {
@@ -208,7 +203,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         setUploading(false);
       }
 
-      const finalImageUrls = [...keptImages, ...uploadedUrls];
+      let finalImageUrls = [...keptImages, ...uploadedUrls];
+      if (finalImageUrls.length === 0) {
+        finalImageUrls = [getListingDefaultImage(category, null)];
+      }
 
       const res = await fetch(`/api/market/${listing.id}`, {
         method: "PUT",
@@ -253,12 +251,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           <CardTitle className="text-base">Listing Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          {/* Image gallery – now mandatory */}
+          {/* Image gallery – optional */}
           <div>
             <label className="text-sm font-medium block mb-1.5">
-              Photos <span className="text-destructive">*</span>{" "}
+              Photos{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                (required - up to 8)
+                (optional — up to 8; category image used if empty)
               </span>
             </label>
             <input
@@ -405,6 +403,17 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium block mb-1.5">
+                  Location Map Link (Optional)
+                </label>
+                <input
+                  value={mapsUrl}
+                  onChange={(e) => setMapsUrl(e.target.value)}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
             </div>
           </div>
 
@@ -522,19 +531,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users
             </p>
-          </div>
-
-          {/* Location Map Link */}
-          <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Location Map Link (Optional)
-            </label>
-            <input
-              value={mapsUrl}
-              onChange={(e) => setMapsUrl(e.target.value)}
-              placeholder="https://maps.app.goo.gl/..."
-              className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
           </div>
 
           {/* Description */}

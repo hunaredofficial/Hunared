@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
+  getListingDefaultImage,
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
@@ -324,20 +325,21 @@ function ListingCard({ listing }: { listing: Listing }) {
 
   return (
     <div className="group flex flex-col rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden hover:ring-primary/40 hover:shadow-md transition-all duration-200">
-      {listing.image_url ? (
-        <div className="aspect-square w-full overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={listing.image_url}
-            alt={listing.title}
-            className="object-cover w-full h-full"
-          />
-        </div>
-      ) : (
-        <div className="aspect-square w-full bg-muted flex items-center justify-center">
-          <ShoppingBag className="h-10 w-10 text-muted-foreground/30" />
-        </div>
-      )}
+      {(() => {
+        const cover =
+          listing.image_url ||
+          getListingDefaultImage(listing.category, listing.subcategory);
+        return (
+          <div className="aspect-square w-full overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={cover}
+              alt={listing.title}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        );
+      })()}
 
       <div className="p-4 flex flex-col flex-1">
         <Badge className={`text-xs border-0 w-fit mb-2 ${colorClass}`}>

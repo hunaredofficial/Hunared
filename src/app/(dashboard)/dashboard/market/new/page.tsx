@@ -22,6 +22,7 @@ import {
   LISTING_CURRENCIES,
   LISTING_SUBCATEGORIES,
   RENTAL_PERIOD_OPTIONS,
+  getListingDefaultImage,
 } from "@/lib/constants";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { COUNTRIES } from "@/lib/countries";
@@ -60,10 +61,6 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "education_training",
   "events",
   "business_commercial",
-  "pets_animals",
-  "industrial_materials",
-  "tools_equipment",
-  "personel_workwear",
 ]);
 
 const SUBCATEGORIES = LISTING_SUBCATEGORIES;
@@ -194,19 +191,21 @@ function NewListingForm() {
       toast.error("Please enter an external / affiliate URL");
       return;
     }
-    if (imageFiles.length === 0) {
-      toast.error("Please upload at least one image");
-      return;
-    }
+    // Photos optional — category default image used when none uploaded
 
     setLoading(true);
     try {
-      const imageUrls: string[] = [];
+            let imageUrls: string[] = [];
       setUploading(true);
       for (const file of imageFiles) {
         const uploaded = await uploadImageToCloudinary(file);
         imageUrls.push(uploaded.url);
       }
+      // No user photos → category-themed default image
+      if (imageUrls.length === 0) {
+        imageUrls = [getListingDefaultImage(category, subcategory)];
+      }
+
       setUploading(false);
 
       const countryName =
@@ -285,9 +284,9 @@ function NewListingForm() {
             {/* Photos */}
             <div>
               <label className="text-sm font-medium block mb-1.5">
-                Photos <span className="text-destructive">*</span>{" "}
+                Photos{" "}
                 <span className="text-muted-foreground text-xs font-normal">
-                  (required - up to 8)
+                  (optional — up to 8; category image used if empty)
                 </span>
               </label>
               <input
@@ -480,6 +479,19 @@ function NewListingForm() {
               </div>
             </div>
 
+            {/* Google Maps URL (Optional) */}
+            <div className="col-span-full">
+              <label className="text-sm font-medium block mb-1.5">
+                Location Map Link (Optional)
+              </label>
+              <input
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="https://maps.app.goo.gl/... or Google Maps link"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
             {/* Price + Currency */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -588,19 +600,6 @@ function NewListingForm() {
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="+966 5XX XXX XXXX"
                 type="tel"
-                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
-            {/* Google Maps URL (Optional) */}
-            <div className="col-span-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Location Map Link (Optional)
-              </label>
-              <input
-                value={mapsUrl}
-                onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="https://maps.app.goo.gl/... or Google Maps link"
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
