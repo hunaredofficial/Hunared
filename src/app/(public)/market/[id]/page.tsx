@@ -120,8 +120,8 @@ export default async function ListingDetailPage({
 
       {/* Main grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* ── Left: Image gallery (7 cols, sticky) ── */}
-        <div className="lg:col-span-7">
+        {/* ── Left: Image gallery — sticky while details scroll; unsticks when grid ends (before Similar) ── */}
+        <div className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start z-0">
           <ListingGallery images={allImages} title={listing.title} />
         </div>
 
