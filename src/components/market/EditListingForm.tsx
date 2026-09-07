@@ -105,13 +105,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
     listing.contact_phone ?? ""
   );
   const [listingType, setListingType] = useState<ListingType>(
-    (listing.listing_type as ListingType) ?? "standard"
-  );
   const [expiration, setExpiration] = useState<ExpirationOptionValue>(
-    expiresAtToOption(
-      (listing as { expires_at?: string | null }).expires_at,
-      (listing as { created_at?: string | null }).created_at
-    )
+    expiresAtToOption(listing.expires_at, listing.created_at)
+  );
+    (listing.listing_type as ListingType) ?? "standard"
   );
   const [externalLink, setExternalLink] = useState(listing.external_link ?? "");
 
@@ -559,7 +556,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Never / Keep Open" />
+                <SelectValue placeholder="Never / Keep Open">
+                  {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
+                    "Never / Keep Open"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {EXPIRATION_OPTIONS.map((o) => (

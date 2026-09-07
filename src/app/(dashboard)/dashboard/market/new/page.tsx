@@ -624,7 +624,10 @@ function NewListingForm() {
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Never / Keep Open" />
+                  <SelectValue placeholder="Never / Keep Open">
+                    {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
+                      "Never / Keep Open"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {EXPIRATION_OPTIONS.map((o) => (
