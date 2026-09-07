@@ -121,7 +121,7 @@ export default async function ListingDetailPage({
       {/* Main grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* ── Left: Image gallery (7 cols, sticky) ── */}
-        <div className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start">
+        <div className="lg:col-span-7">
           <ListingGallery images={allImages} title={listing.title} />
         </div>
 
@@ -292,36 +292,42 @@ export default async function ListingDetailPage({
           </div>
         </div>
 
-        {/* Full-width similar section (must span all 12 cols inside the grid) */}
-        {relatedListings.length > 0 && (
-          <div className="lg:col-span-12 mt-6 space-y-4">
-            <h2 className="text-lg font-semibold">
-              Similar listings
-              {listing.category ? (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  in{" "}
-                  {LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
-                    listing.category}
-                  {` · ${relatedListings.length}`}
-                </span>
-              ) : null}
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedListings.map((item) => {
-                const img = item.image_urls?.[0] || item.image_url || null;
-                const itemCatLabel =
-                  LISTING_CATEGORIES.find((c) => c.value === item.category)?.label ??
-                  item.category;
-                const itemColor =
-                  LISTING_CATEGORY_COLORS[item.category] ??
-                  "bg-muted text-muted-foreground";
-                const loc = [item.city, item.country].filter(Boolean).join(", ") || item.location;
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/market/${item.id}`}
-                    className="group rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-md transition-all"
-                  >
+      </div>{/* end main detail grid */}
+
+      {relatedListings.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 pb-12 space-y-4">
+          <h2 className="text-lg font-semibold">
+            Similar listings
+            {listing.category ? (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                in{" "}
+                {LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
+                  listing.category}
+                {` · ${relatedListings.length}`}
+              </span>
+            ) : null}
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedListings.map((item) => {
+              const img = item.image_urls?.[0] || item.image_url || null;
+              const itemCatLabel =
+                LISTING_CATEGORIES.find((c) => c.value === item.category)?.label ??
+                item.category;
+              const itemColor =
+                LISTING_CATEGORY_COLORS[item.category] ??
+                "bg-muted text-muted-foreground";
+              const loc =
+                [item.city, item.country].filter(Boolean).join(", ") ||
+                item.location;
+              return (
+                <div
+                  key={item.id}
+                  className="group relative rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-md transition-all"
+                >
+                  <div className="absolute top-2 right-2 z-10">
+                    <SaveButton itemType="listing" itemId={item.id} size="sm" />
+                  </div>
+                  <Link href={`/market/${item.id}`} className="block">
                     {img ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -360,12 +366,12 @@ export default async function ListingDetailPage({
                       </p>
                     </div>
                   </Link>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

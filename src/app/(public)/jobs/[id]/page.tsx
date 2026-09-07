@@ -584,43 +584,47 @@ export default async function JobDetailPage({
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedJobs.map((rj) => (
-                <Link
+                <div
                   key={rj.id}
-                  href={`/jobs/${rj.id}`}
-                  className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors space-y-2"
+                  className="relative rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors space-y-2"
                 >
-                  {rj.category && (
-                    <Badge
-                      className={cn(
-                        "text-[10px]",
-                        CATEGORY_COLORS[rj.category] ?? CATEGORY_COLORS["Other"]
-                      )}
+                  <div className="absolute top-3 right-3 z-10">
+                    <SaveButton itemType="job" itemId={rj.id} size="sm" />
+                  </div>
+                  <Link href={`/jobs/${rj.id}`} className="block space-y-2 pr-8">
+                    {rj.category && (
+                      <Badge
+                        className={cn(
+                          "text-[10px]",
+                          CATEGORY_COLORS[rj.category] ?? CATEGORY_COLORS["Other"]
+                        )}
+                      >
+                        {rj.category}
+                      </Badge>
+                    )}
+                    <p className="font-semibold text-sm line-clamp-2">
+                      {rj.job_title}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {rj.company_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{rj.location}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Positions:{" "}
+                      {rj.positions != null ? rj.positions : "Not Specified"}
+                    </p>
+                    <p
+                      className="text-xs text-muted-foreground flex items-center gap-1"
+                      title={formatPostedExact(rj.created_at)}
                     >
-                      {rj.category}
-                    </Badge>
-                  )}
-                  <p className="font-semibold text-sm line-clamp-2">
-                    {rj.job_title}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {rj.company_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{rj.location}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Positions:{" "}
-                    {rj.positions != null ? rj.positions : "Not Specified"}
-                  </p>
-                  <p
-                    className="text-xs text-muted-foreground flex items-center gap-1"
-                    title={formatPostedExact(rj.created_at)}
-                  >
-                    <CalendarDays className="h-3 w-3 shrink-0" />
-                    {formatRelativePosted(rj.created_at).replace(/^Posted\s+/i, "")}
-                  </p>
-                </Link>
+                      <CalendarDays className="h-3 w-3 shrink-0" />
+                      {formatRelativePosted(rj.created_at).replace(/^Posted\s+/i, "")}
+                    </p>
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
