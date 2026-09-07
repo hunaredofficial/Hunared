@@ -455,6 +455,8 @@ export const PROFESSIONS = [
   "Yard Supervisor",
 ] as const;
 
+export type JobCategory = (typeof JOB_CATEGORIES)[number];
+
 // Colors for categories; anything not listed falls back to "Others"
 export const CATEGORY_COLORS: Record<string, string> = {
   Accounting:
@@ -757,7 +759,7 @@ export const RENTAL_PERIOD_OPTIONS = [
 
 /**
  * Subcategories for marketplace create form + browse filters.
- * Keys match LISTING_CATEGORIES values. Keep in sync across MarketFilter + new listing.
+ * Keys MUST match LISTING_CATEGORIES `value` fields exactly.
  */
 export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
   for_sale: [
@@ -780,7 +782,6 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Warehouses / Storage",
     "Other Rental",
   ],
-
   services: [
     "Electrical",
     "Mechanical",
@@ -897,8 +898,8 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Garden / Outdoor",
     "Home Accessories",
   ],
-  // Alias for older data that may use furniture_home
-  home_furniture: [
+  // Legacy aliases
+  furniture_home: [
     "Home Appliances",
     "Kitchen Appliances",
     "Sofas / Living Room",
@@ -908,6 +909,26 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Wardrobes / Storage",
     "Decor / Lighting",
     "Home Accessories",
+  ],
+  // Must match LISTING_CATEGORIES value "personel_workwear"
+  personel_workwear: [
+    "Clothing",
+    "Shoes",
+    "Bags / Luggage",
+    "Watches",
+    "Jewelry",
+    "PPE / Safety Gear",
+    "Uniforms / Workwear",
+  ],
+  // Legacy aliases for renamed category
+  fashion_beauty: [
+    "Clothing",
+    "Shoes",
+    "Bags / Luggage",
+    "Watches",
+    "Jewelry",
+    "PPE / Safety Gear",
+    "Uniforms / Workwear",
   ],
   Personel_Workwear: [
     "Clothing",
@@ -1107,8 +1128,6 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
 
 /**
  * Shared currency codes for Jobs + Marketplace.
- * Prefer importing CURRENCIES from @/lib/currencies and mapping .code
- * in new forms. This export stays for backward compatibility.
  */
 export const LISTING_CURRENCIES = CURRENCIES.map((c) => c.code);
 
@@ -1132,6 +1151,8 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
   furniture_home:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   personel_workwear:
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
+  fashion_beauty:
     "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   mobiles_accessories:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -1165,3 +1186,4 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-stone-100 text-stone-700 dark:bg-stone-800/60 dark:text-stone-300",
   other: "bg-muted text-muted-foreground",
 };
+;
