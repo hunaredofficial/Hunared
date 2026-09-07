@@ -107,7 +107,12 @@ export default async function MarketPage({
       .eq("status", "approved");
 
     if (category) query = query.eq("category", category as Listing["category"]);
-    if (subcategory) query = query.eq("subcategory", subcategory);
+    if (subcategory) {
+      // Exact match, or contains (e.g. rental period "Monthly" in "Tools · Monthly")
+      query = query.or(
+        `subcategory.eq.${subcategory},subcategory.ilike.%${subcategory}%`
+      );
+    }
     if (country) query = query.eq("country", country);
     if (city) query = query.ilike("city", `%${city}%`);
     if (search) query = query.ilike("title", `%${search}%`);

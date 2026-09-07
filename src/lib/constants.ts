@@ -750,6 +750,15 @@ export const LISTING_CATEGORIES = [
 
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number]["value"];
 
+/** Rental period options for For Rent listings (separate from type subcategory). */
+export const RENTAL_PERIOD_OPTIONS = [
+  "Hourly",
+  "Daily",
+  "Weekly",
+  "Monthly",
+  "Yearly",
+] as const;
+
 /**
  * Subcategories for marketplace create form + browse filters.
  * Keys match LISTING_CATEGORIES values. Keep in sync across MarketFilter + new listing.
@@ -764,10 +773,6 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Wholesale Lot",
   ],
   for_rent: [
-    "Daily",
-    "Weekly",
-    "Monthly",
-    "Yearly",
     "Tools",
     "Machinery",
     "Land Rental",
@@ -777,7 +782,9 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Industrial Equipment",
     "Construction Equipment",
     "Warehouses / Storage",
+    "Other Rental",
   ],
+
   services: [
     "Electrical",
     "Mechanical",

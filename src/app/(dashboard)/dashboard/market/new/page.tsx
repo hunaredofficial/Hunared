@@ -17,7 +17,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
-import { LISTING_CATEGORIES, LISTING_CURRENCIES, LISTING_SUBCATEGORIES } from "@/lib/constants";
+import {
+  LISTING_CATEGORIES,
+  LISTING_CURRENCIES,
+  LISTING_SUBCATEGORIES,
+  RENTAL_PERIOD_OPTIONS,
+} from "@/lib/constants";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { COUNTRIES } from "@/lib/countries";
 
@@ -91,6 +96,7 @@ function NewListingForm() {
   const [subcategory, setSubcategory] = useState(
     searchParams.get("subcategory") ?? ""
   );
+  const [rentalPeriod, setRentalPeriod] = useState("");
   const [country, setCountry] = useState("SA");
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
@@ -164,6 +170,10 @@ function NewListingForm() {
       toast.error("Please select a category");
       return;
     }
+    if (category === "for_rent" && !rentalPeriod) {
+      toast.error("Please select a rental period");
+      return;
+    }
     if (!isPriceOptional && !price.trim()) {
       toast.error("Price is required");
       return;
@@ -211,7 +221,12 @@ function NewListingForm() {
           price: price.trim() || "",
           currency,
           category,
-          subcategory: subcategory || undefined,
+          subcategory:
+            category === "for_rent"
+              ? [subcategory.trim(), rentalPeriod.trim()]
+                  .filter(Boolean)
+                  .join(" · ") || undefined
+              : subcategory || undefined,
           country: country || undefined,
           city: city.trim() || undefined,
           location: locationString,
@@ -344,6 +359,7 @@ function NewListingForm() {
                     if (v) {
                       setCategory(v);
                       setSubcategory("");
+                      setRentalPeriod("");
                     }
                   }}
                 >
@@ -389,6 +405,32 @@ function NewListingForm() {
                 </Select>
               </div>
             </div>
+
+            {/* Rental Period — For Rent only */}
+            {category === "for_rent" && (
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Rental Period <span className="text-destructive">*</span>
+                </label>
+                <Select
+                  value={rentalPeriod || undefined}
+                  onValueChange={(v: string | null) => {
+                    if (v) setRentalPeriod(v);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select rental period..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RENTAL_PERIOD_OPTIONS.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Country + City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

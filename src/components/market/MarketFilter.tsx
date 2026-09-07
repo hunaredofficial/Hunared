@@ -19,7 +19,11 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { COUNTRIES } from "@/lib/countries";
-import { LISTING_CATEGORIES, LISTING_SUBCATEGORIES } from "@/lib/constants";
+import {
+  LISTING_CATEGORIES,
+  LISTING_SUBCATEGORIES,
+  RENTAL_PERIOD_OPTIONS,
+} from "@/lib/constants";
 import { useGeo } from "@/components/providers/GeoProvider";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
@@ -176,8 +180,7 @@ export function MarketFilter({
       ? ["New", "Used", "Like New"]
       : [];
 
-  // Rental Period filter: duration only (not Tools / Machinery / Equipment, etc.)
-  const RENTAL_PERIOD_OPTIONS = ["Daily", "Weekly", "Monthly", "Yearly"] as const;
+  // Rental Period filter: Hourly–Yearly only (type items stay in Subcategory)
   const rentalOptions =
     category === "for_rent"
       ? [...RENTAL_PERIOD_OPTIONS]
