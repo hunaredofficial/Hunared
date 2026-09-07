@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
-import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import { LISTING_CATEGORIES, LISTING_CURRENCIES, LISTING_SUBCATEGORIES } from "@/lib/constants";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { COUNTRIES } from "@/lib/countries";
 
@@ -57,105 +57,7 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "business_commercial",
 ]);
 
-const SUBCATEGORIES: Record<string, string[]> = {
-  accommodation: [
-    "Houses for Rent",
-    "Apartments",
-    "Villas",
-    "Rooms",
-    "Bed Spaces",
-    "Commercial Property",
-    "Offices",
-    "Shops",
-    "Warehouses",
-    "Land",
-  ],
-  property: [
-    "Apartment",
-    "Villa",
-    "Land",
-    "Commercial",
-    "Office",
-    "Shop",
-    "Warehouse",
-  ],
-  vehicles: ["Cars", "Motorcycles", "Trucks", "Spare Parts", "Tires"],
-  electronics: [
-    "Mobile Phones",
-    "Laptops",
-    "Computers",
-    "Tablets",
-    "Watches",
-    "Printers",
-  ],
-  furniture_home: [
-    "Furniture",
-    "Appliances",
-    "Kitchen",
-    "Decor",
-    "Home Accessories",
-  ],
-  services: [
-    "Electrical",
-    "Mechanical",
-    "Plumbing",
-    "HVAC",
-    "Carpentry",
-    "Painting",
-    "Welding",
-    "IT Support",
-    "Web Development",
-    "Design",
-    "Cleaning",
-    "Security",
-    "Logistics",
-    "Transportation",
-    "Consulting",
-  ],
-  for_sale: ["New", "Used", "Like New"],
-  for_rent: ["Daily", "Weekly", "Monthly", "Yearly"],
-  lost_found: [
-    "Mobile Phones",
-    "Laptops",
-    "Tablets",
-    "Electronics",
-    "Documents",
-    "Passport",
-    "ID / Cards",
-    "Keys",
-    "Wallets",
-    "Bags / Luggage",
-    "Jewelry",
-    "Watches",
-    "Vehicles",
-    "Motorcycles",
-    "Bicycles",
-    "Pets",
-    "Personal Items",
-    "Missing Persons",
-    "Other",
-  ],
-  free_items: ["Furniture", "Electronics", "Clothes", "Other"],
-  wanted: ["Item Wanted", "Service Wanted", "Property Wanted"],
-  events: ["Workshop", "Meetup", "Conference", "Other"],
-  business_commercial: ["Office", "Shop", "Equipment", "Other"],
-  offers_deals: ["Discount", "Bundle", "Clearance"],
-  announcements: ["Public Notice", "Community Notice"],
-  donations: ["Clothes", "Food", "Equipment", "Other"],
-  community: ["Help Request", "Volunteer", "Other"],
-  education_training: ["Course", "Training", "Tutoring", "Certification"],
-  wholesale: ["Bulk Items", "Trade Supply"],
-  other: [
-    "Furniture",
-    "Home Appliances",
-    "Kitchen Equipment",
-    "Decor",
-    "Tools",
-    "Machinery",
-    "Safety Equipment",
-    "Construction Equipment",
-  ],
-};
+const SUBCATEGORIES = LISTING_SUBCATEGORIES;
 
 async function uploadImageToCloudinary(
   file: File
