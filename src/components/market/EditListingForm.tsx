@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
-import { LISTING_CATEGORIES, LISTING_CURRENCIES, getListingDefaultImage } from "@/lib/constants";
+import { LISTING_CATEGORIES, LISTING_CURRENCIES } from "@/lib/constants";
+import {
+  EXPIRATION_OPTIONS,
+  expiresAtToOption,
+  type ExpirationOptionValue,
+} from "@/lib/expiration";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
 import type { Listing } from "@/types/database";
@@ -57,11 +62,6 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "industrial_materials",
   "tools_equipment",
   "personel_workwear",
-  "personal_workwear",
-  "fashion_beauty",
-  "home_furniture",
-  "electronics",
-  "mobiles_accessories",
 ]);
 
 async function uploadImageToCloudinary(
@@ -105,6 +105,9 @@ export function EditListingForm({ listing }: { listing: Listing }) {
     listing.contact_phone ?? ""
   );
   const [listingType, setListingType] = useState<ListingType>(
+  const [expiration, setExpiration] = useState<ExpirationOptionValue>(
+    expiresAtToOption(listing.expires_at, listing.created_at)
+  );
     (listing.listing_type as ListingType) ?? "standard"
   );
   const [externalLink, setExternalLink] = useState(listing.external_link ?? "");
@@ -193,7 +196,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
       return;
     }
 
-    // Photos optional — category default used when none remain
+    // ✅ NEW: At least one image mandatory (kept + new)
+    const totalImageCount = keptImages.length + newFiles.length;
+    if (totalImageCount === 0) {
+      toast.error("Please keep or upload at least one image");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -208,10 +216,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         setUploading(false);
       }
 
-      let finalImageUrls = [...keptImages, ...uploadedUrls];
-      if (finalImageUrls.length === 0) {
-        finalImageUrls = [getListingDefaultImage(category, null)];
-      }
+      const finalImageUrls = [...keptImages, ...uploadedUrls];
 
       const res = await fetch(`/api/market/${listing.id}`, {
         method: "PUT",
@@ -233,6 +238,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           image_urls: finalImageUrls,
           listing_type: listingType,
           external_link: externalLink.trim() || undefined,
+          expiration,
         }),
       });
       const data = await res.json();
@@ -256,12 +262,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           <CardTitle className="text-base">Listing Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          {/* Image gallery – optional */}
+          {/* Image gallery – now mandatory */}
           <div>
             <label className="text-sm font-medium block mb-1.5">
-              Photos{" "}
+              Photos <span className="text-destructive">*</span>{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                (optional — up to 8; category image used if empty)
+                (required - up to 8)
               </span>
             </label>
             <input
@@ -535,6 +541,33 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             />
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users
+            </p>
+          </div>
+
+          {/* Auto-close */}
+          <div>
+            <label className="text-sm font-medium block mb-1.5">
+              Close Listing Automatically
+            </label>
+            <Select
+              value={expiration}
+              onValueChange={(v) => {
+                if (v) setExpiration(v as ExpirationOptionValue);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Never / Keep Open" />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPIRATION_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Optional. Leave as Never to keep the listing open until you close it.
             </p>
           </div>
 

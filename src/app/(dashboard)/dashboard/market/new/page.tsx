@@ -22,8 +22,11 @@ import {
   LISTING_CURRENCIES,
   LISTING_SUBCATEGORIES,
   RENTAL_PERIOD_OPTIONS,
-  getListingDefaultImage,
 } from "@/lib/constants";
+import {
+  EXPIRATION_OPTIONS,
+  type ExpirationOptionValue,
+} from "@/lib/expiration";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { COUNTRIES } from "@/lib/countries";
 
@@ -65,11 +68,6 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "industrial_materials",
   "tools_equipment",
   "personel_workwear",
-  "personal_workwear",
-  "fashion_beauty",
-  "home_furniture",
-  "electronics",
-  "mobiles_accessories",
 ]);
 
 const SUBCATEGORIES = LISTING_SUBCATEGORIES;
@@ -112,6 +110,7 @@ function NewListingForm() {
   const [mapsUrl, setMapsUrl] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [listingType, setListingType] = useState<ListingType>("standard");
+  const [expiration, setExpiration] = useState<ExpirationOptionValue>("never");
   const [externalLink, setExternalLink] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -200,21 +199,19 @@ function NewListingForm() {
       toast.error("Please enter an external / affiliate URL");
       return;
     }
-    // Photos optional — category default image used when none uploaded
+    if (imageFiles.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
 
     setLoading(true);
     try {
-            let imageUrls: string[] = [];
+      const imageUrls: string[] = [];
       setUploading(true);
       for (const file of imageFiles) {
         const uploaded = await uploadImageToCloudinary(file);
         imageUrls.push(uploaded.url);
       }
-      // No user photos → category-themed default image
-      if (imageUrls.length === 0) {
-        imageUrls = [getListingDefaultImage(category, subcategory)];
-      }
-
       setUploading(false);
 
       const countryName =
@@ -246,6 +243,7 @@ function NewListingForm() {
           image_urls: imageUrls,
           listing_type: listingType,
           external_link: externalLink.trim() || undefined,
+          expiration,
         }),
       });
 
@@ -293,9 +291,9 @@ function NewListingForm() {
             {/* Photos */}
             <div>
               <label className="text-sm font-medium block mb-1.5">
-                Photos{" "}
+                Photos <span className="text-destructive">*</span>{" "}
                 <span className="text-muted-foreground text-xs font-normal">
-                  (optional — up to 8; category image used if empty)
+                  (required - up to 8)
                 </span>
               </label>
               <input
@@ -350,52 +348,8 @@ function NewListingForm() {
                     ? "e.g. Lost iPhone near Riyadh Park"
                     : category === "services"
                     ? "e.g. Electrical Maintenance in Riyadh"
-                    : category === "for_rent"
-                    ? "e.g. Vehicle for Rent"
-                    : category === "property"
-                    ? "e.g. Apartment for Rent in Riyadh"
-                    : category === "vehicles"
-                    ? "e.g. Toyota Camry for Sale"
-                    : category === "electronics"
-                    ? "e.g. HP Laptop for Sale"
-                    : category === "home_furniture"
-                    ? "e.g. Refrigerator for Sale"
-                    : category === "personel_workwear"
-                    ? "e.g. Work Uniforms for Sale"
-                    : category === "mobiles_accessories"
-                    ? "e.g. Mobile Charger for Sale"
-                    : category === "tools_equipment"
-                    ? "e.g. Safety Tools for Sale"
-                    : category === "industrial_materials"
-                    ? "e.g. Industrial Machinery for Sale"
-                    : category === "pets_animals"
-                    ? "e.g. Pets for Sale"
-                    : category === "wanted"
-                    ? "e.g. Wanted: Samsung Galaxy"
-                    : category === "free_items"
-                    ? "e.g. Free Items in Riyadh"
-                    : category === "events"
-                    ? "e.g. Electrical Workshop in Riyadh"
-                    : category === "business_commercial"
-                    ? "e.g. Business for Sale in Riyadh"
-                    : category === "offers_deals"
-                    ? "e.g. Flash Sale on Electronics"
-                    : category === "announcements"
-                    ? "e.g. Public Announcement in Riyadh"
-                    : category === "donations"
-                    ? "e.g. Blood Donation Drive in Riyadh"
-                    : category === "community"
-                    ? "e.g. Social Gathering in Riyadh"
-                    : category === "education_training"
-                    ? "e.g. Training Courses in Riyadh"
-                    : category === "wholesale"
-                    ? "e.g. Bulk Orders in Riyadh"
-                    : category === "other"
-                    ? "e.g. Antique Items for Sale"
                     : category === "accommodation"
                     ? "e.g. 2-bedroom apartment in Riyadh"
-                    : category === "for_sale"
-                    ? "e.g. Samsung Mobile for Sale"
                     : "e.g. Samsung Mobile for Sale"
                 }
                 maxLength={100}
@@ -655,6 +609,34 @@ function NewListingForm() {
                 type="tel"
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
+            </div>
+
+
+            {/* Auto-close / expiration — same options as jobs */}
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Close Listing Automatically
+              </label>
+              <Select
+                value={expiration}
+                onValueChange={(v: string | null) => {
+                  if (v) setExpiration(v as ExpirationOptionValue);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Never / Keep Open" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional. Leave as Never to keep the listing open until you close it.
+              </p>
             </div>
 
             {/* Description */}

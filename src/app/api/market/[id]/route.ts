@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import type { ListingStatus, ListingCategory } from "@/types/database";
 import { LISTING_CATEGORIES } from "@/lib/constants";
+import { computeExpiresAt } from "@/lib/expiration";
 
 const VALID_CATEGORIES = LISTING_CATEGORIES.map((c) => c.value);
 
@@ -184,6 +185,17 @@ export async function PUT(
   const imageUrls = Array.isArray(body.image_urls) ? body.image_urls : [];
   const primaryImageUrl = imageUrls[0] ?? null;
 
+  let expiresAt: string | null = null;
+  if (body.expires_at) {
+    const d = new Date(body.expires_at);
+    if (Number.isNaN(d.getTime())) {
+      return NextResponse.json({ error: "Invalid expiration date" }, { status: 400 });
+    }
+    expiresAt = d.toISOString();
+  } else if (body.expiration) {
+    expiresAt = computeExpiresAt(body.expiration);
+  }
+
   // Determine target status: auto-approve or send back to pending review
   const autoApprove = await getAutoApproveSetting();
   const newStatus: ListingStatus = autoApprove ? "approved" : "pending";
@@ -204,6 +216,7 @@ export async function PUT(
       image_urls: imageUrls,
       listing_type: body.listing_type ?? "standard",
       external_link: body.external_link?.trim() || null,
+      expires_at: expiresAt,
       status: newStatus,
     })
     .eq("id", id)

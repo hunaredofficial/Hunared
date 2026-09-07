@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase";
 import { LISTING_CATEGORIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { ListingCategory, ListingStatus } from "@/types/database";
+import { computeExpiresAt } from "@/lib/expiration";
 
 const VALID_CATEGORIES = LISTING_CATEGORIES.map((c) => c.value);
 
@@ -79,6 +80,8 @@ export async function POST(req: Request) {
     image_urls?: string[];
     listing_type?: string;
     external_link?: string;
+    expiration?: string | null;
+    expires_at?: string | null;
   } = await req.json();
 
   if (!body.title?.trim()) {
@@ -116,6 +119,17 @@ export async function POST(req: Request) {
   const imageUrls = Array.isArray(body.image_urls) ? body.image_urls : [];
   const primaryImageUrl = imageUrls[0] ?? null;
 
+  let expiresAt: string | null = null;
+  if (body.expires_at) {
+    const d = new Date(body.expires_at);
+    if (Number.isNaN(d.getTime())) {
+      return NextResponse.json({ error: "Invalid expiration date" }, { status: 400 });
+    }
+    expiresAt = d.toISOString();
+  } else if (body.expiration) {
+    expiresAt = computeExpiresAt(body.expiration);
+  }
+
   const supabase = createAdminClient();
 
   // Determine target status: auto-approve or send to pending review
@@ -141,6 +155,7 @@ export async function POST(req: Request) {
       image_urls: imageUrls,
       listing_type: body.listing_type ?? "standard",
       external_link: body.external_link?.trim() || null,
+      expires_at: expiresAt,
       status: newStatus,
     })
     .select()
