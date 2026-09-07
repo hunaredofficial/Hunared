@@ -971,6 +971,7 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Steel / Metal",
     "Pipes / Fittings",
     "Electrical Materials",
+    "Instrumentation Materials",
     "Plumbing Materials",
     "Paint / Chemicals",
     "Insulation",
