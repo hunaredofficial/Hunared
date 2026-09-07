@@ -57,6 +57,11 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "industrial_materials",
   "tools_equipment",
   "personel_workwear",
+  "personal_workwear",
+  "fashion_beauty",
+  "home_furniture",
+  "electronics",
+  "mobiles_accessories",
 ]);
 
 async function uploadImageToCloudinary(

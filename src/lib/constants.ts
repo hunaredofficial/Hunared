@@ -725,15 +725,11 @@ export const LISTING_CATEGORIES = [
   { value: "vehicles", label: "Vehicles" },
   { value: "electronics", label: "Electronics" },
   { value: "home_furniture", label: "Home & Furniture" },
-  { value: "fashion_beauty", label: "Fashion & Beauty" },
+  { value: "personel_workwear", label: "Personal & Workwear" },
   { value: "mobiles_accessories", label: "Mobiles & Accessories" },
   { value: "tools_equipment", label: "Tools & Equipment" },
   { value: "industrial_materials", label: "Industrial & Materials" },
   { value: "pets_animals", label: "Pets & Animals" },
-  { value: "sports_outdoors", label: "Sports & Outdoors" },
-  { value: "kids_baby", label: "Kids & Baby" },
-  { value: "food_agriculture", label: "Food & Agriculture" },
-  { value: "health_medical", label: "Health & Medical" },
   { value: "wanted", label: "Wanted" },
   { value: "free_items", label: "Free Items" },
   { value: "lost_found", label: "Lost & Found" },
@@ -913,7 +909,29 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
     "Decor / Lighting",
     "Home Accessories",
   ],
+  // Matches LISTING_CATEGORIES value fashion_beauty
+  fashion_beauty: [
+    "Clothing",
+    "Shoes",
+    "Bags / Luggage",
+    "Watches",
+    "Jewelry",
+    "Sunglasses / Eyewear",
+    "PPE / Safety Gear",
+    "Uniforms / Workwear",
+  ],
+  // Aliases (legacy / renamed)
   personal_workwear: [
+    "Clothing",
+    "Shoes",
+    "Bags / Luggage",
+    "Watches",
+    "Jewelry",
+    "Sunglasses / Eyewear",
+    "PPE / Safety Gear",
+    "Uniforms / Workwear",
+  ],
+  personel_workwear: [
     "Clothing",
     "Shoes",
     "Bags / Luggage",
@@ -1138,6 +1156,8 @@ export const LISTING_CATEGORY_COLORS: Record<string, string> = {
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   furniture_home:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  personel_workwear:
+    "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   fashion_beauty:
     "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300",
   mobiles_accessories:

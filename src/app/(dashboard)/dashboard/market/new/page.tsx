@@ -61,6 +61,15 @@ const HIDE_LISTING_TYPE_CATEGORIES = new Set([
   "education_training",
   "events",
   "business_commercial",
+  "pets_animals",
+  "industrial_materials",
+  "tools_equipment",
+  "personel_workwear",
+  "personal_workwear",
+  "fashion_beauty",
+  "home_furniture",
+  "electronics",
+  "mobiles_accessories",
 ]);
 
 const SUBCATEGORIES = LISTING_SUBCATEGORIES;
