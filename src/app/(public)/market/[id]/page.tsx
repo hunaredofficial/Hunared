@@ -62,14 +62,12 @@ export default async function ListingDetailPage({
   try {
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
-    // Same category — all matching approved open listings (cap 48 for performance)
+    // Same category — approved listings (cap 48)
     let q = supabase
       .from("marketplace_listings")
       .select("*")
       .eq("status", "approved")
       .neq("id", id)
-      .is("closed_at", null)
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order("created_at", { ascending: false })
       .limit(48);
     if (listing.category) {
@@ -78,8 +76,16 @@ export default async function ListingDetailPage({
     const { data, error } = await q;
     if (error) {
       console.error("[market similar]", error.message);
+      relatedListings = [];
+    } else {
+      // Client-side filter for expiry if columns exist
+      relatedListings = ((data as Listing[]) ?? []).filter((item) => {
+        const row = item as Listing & { closed_at?: string | null; expires_at?: string | null };
+        if (row.closed_at) return false;
+        if (row.expires_at && new Date(row.expires_at).getTime() <= Date.now()) return false;
+        return true;
+      });
     }
-    relatedListings = (data as Listing[]) ?? [];
   } catch {
     // non-fatal
   }
@@ -286,43 +292,71 @@ export default async function ListingDetailPage({
           </div>
         </div>
 
+        {/* Full-width similar section (must span all 12 cols inside the grid) */}
         {relatedListings.length > 0 && (
-          <div className="mt-10 space-y-4">
+          <div className="lg:col-span-12 mt-6 space-y-4">
             <h2 className="text-lg font-semibold">
               Similar listings
               {listing.category ? (
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  in {LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ?? listing.category}
-                  {relatedListings.length > 0 ? ` · ${relatedListings.length}` : ""}
+                  in{" "}
+                  {LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
+                    listing.category}
+                  {` · ${relatedListings.length}`}
                 </span>
               ) : null}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {relatedListings.map((item) => {
-                const img =
-                  item.image_urls?.[0] || item.image_url || null;
+                const img = item.image_urls?.[0] || item.image_url || null;
+                const itemCatLabel =
+                  LISTING_CATEGORIES.find((c) => c.value === item.category)?.label ??
+                  item.category;
+                const itemColor =
+                  LISTING_CATEGORY_COLORS[item.category] ??
+                  "bg-muted text-muted-foreground";
+                const loc = [item.city, item.country].filter(Boolean).join(", ") || item.location;
                 return (
                   <Link
                     key={item.id}
                     href={`/market/${item.id}`}
-                    className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors"
+                    className="group rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-md transition-all"
                   >
                     {img ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={img}
-                        alt=""
-                        className="h-36 w-full object-cover"
+                        alt={item.title}
+                        className="h-40 w-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
                       />
                     ) : (
-                      <div className="h-36 w-full bg-muted" />
+                      <div className="h-40 w-full bg-muted" />
                     )}
-                    <div className="p-3 space-y-1">
-                      <p className="font-semibold text-sm line-clamp-2">
+                    <div className="p-3 space-y-1.5">
+                      <Badge className={`text-[10px] border-0 ${itemColor}`}>
+                        {itemCatLabel}
+                      </Badge>
+                      <p className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                         {item.title}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {item.category}
+                      {item.price != null && String(item.price).trim() !== "" && (
+                        <p className="text-sm font-semibold text-primary">
+                          {item.currency ? `${item.currency} ` : ""}
+                          {item.price}
+                        </p>
+                      )}
+                      {loc ? (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {loc}
+                        </p>
+                      ) : null}
+                      <p
+                        className="text-xs text-muted-foreground flex items-center gap-1"
+                        title={formatPostedExact(item.created_at)}
+                      >
+                        <CalendarDays className="h-3 w-3 shrink-0" />
+                        {formatRelativePosted(item.created_at).replace(/^Posted\s+/i, "")}
                       </p>
                     </div>
                   </Link>

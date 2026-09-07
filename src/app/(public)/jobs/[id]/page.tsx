@@ -2,10 +2,12 @@ import type { ReactNode } from "react";
 import { ShareButton } from "@/components/shared/ShareButton";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
+import { formatRelativePosted, formatPostedExact } from "@/lib/relativeDate";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   MapPin,
+  CalendarDays,
   Clock,
   DollarSign,
   Users,
@@ -610,6 +612,13 @@ export default async function JobDetailPage({
                   <p className="text-xs text-muted-foreground">
                     Positions:{" "}
                     {rj.positions != null ? rj.positions : "Not Specified"}
+                  </p>
+                  <p
+                    className="text-xs text-muted-foreground flex items-center gap-1"
+                    title={formatPostedExact(rj.created_at)}
+                  >
+                    <CalendarDays className="h-3 w-3 shrink-0" />
+                    {formatRelativePosted(rj.created_at).replace(/^Posted\s+/i, "")}
                   </p>
                 </Link>
               ))}
