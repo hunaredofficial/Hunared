@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { getSupabaseClient } from "@/lib/supabase";
 import type { AdPlacement } from "@/types/database";
 
@@ -56,23 +55,21 @@ export function AdSlot({ slotName, className = "" }: AdSlotProps) {
   if (!placement) return null;
 
   if (placement.ad_type === "custom") {
+    if (!placement.custom_image_url) return null;
     return (
       <a
-        href={placement.custom_redirect_url ?? "#"}
+        href={placement.custom_redirect_url || "#"}
         target="_blank"
         rel="noopener noreferrer sponsored"
-        className={`block w-full ${className}`}
+        className={`block w-full overflow-hidden rounded-lg border border-border/40 bg-muted/10 ${className}`}
       >
-        {placement.custom_image_url && (
-          <Image
-            src={placement.custom_image_url}
-            alt="Advertisement"
-            width={728}
-            height={90}
-            className="w-full h-auto object-contain rounded-lg"
-            unoptimized
-          />
-        )}
+        {/* plain img avoids next/image remote domain config issues */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={placement.custom_image_url}
+          alt="Advertisement"
+          className="w-full h-auto max-h-28 sm:max-h-32 object-contain mx-auto"
+        />
       </a>
     );
   }
