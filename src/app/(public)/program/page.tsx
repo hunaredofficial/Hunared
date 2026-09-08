@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Hunared Program — Education, Training & Career Development",
+  title: "Programs & Credentials",
   description:
     "Explore education programs, technical training, certifications, internships, scholarships, and career development opportunities with Hunared Program. Verify certificates and course credentials through official Hunared.org verification.",
 };

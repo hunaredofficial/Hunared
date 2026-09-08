@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Hunared",
+  title: "Privacy Policy",
   description:
     "Learn how Hunared collects, uses, stores, shares, and protects personal information across its global platform.",
 };

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Hunared",
+  title: "Terms of Service",
   description:
     "Read the Terms of Service governing access to and use of the Hunared global platform, including jobs, marketplace, services, properties, education, and community features.",
 };

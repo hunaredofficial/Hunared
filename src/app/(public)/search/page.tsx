@@ -3,7 +3,7 @@ import { SearchResultsView } from "@/components/search/SearchResultsView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Search | Hunared",
+  title: "Search",
   description:
     "Search jobs, candidates, property, marketplace listings, and learning resources across Hunared.",
 };

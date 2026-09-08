@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "About Us",
+  title: "About",
   description:
     "Hunared is a global careers and opportunity platform — jobs, talent, companies, marketplace, learning, and verified programs in one place for professionals and organizations worldwide.",
 };

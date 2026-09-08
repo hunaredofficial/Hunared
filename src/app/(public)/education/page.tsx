@@ -8,6 +8,14 @@ import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
 import { SaveButton } from "@/components/shared/SaveButton";
 import type { Article } from "@/types/database";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Learning",
+  description:
+    "Read career tips, safety & HSE guidance, engineering articles, and professional learning resources on Hunared.",
+};
+
 interface SearchParams {
   category?: string;
   page?: string;

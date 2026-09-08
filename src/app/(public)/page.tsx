@@ -9,7 +9,10 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Home — Global Jobs, Talent, Marketplace & Learning",
+  // absolute = tab shows only "Hunared" (skips "| Hunared" template)
+  title: {
+    absolute: "Hunared",
+  },
   description:
     "Hunared is a global platform for jobs, candidates, companies, marketplace, learning, and verified programs — find opportunity and grow your career in one place.",
 };

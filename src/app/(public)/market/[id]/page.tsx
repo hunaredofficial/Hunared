@@ -23,6 +23,34 @@ import { ListingGallery } from "@/components/market/ListingGallery";
 import { NativePurchaseSection } from "@/components/market/NativePurchaseSection";
 import { formatRelativePosted, formatPostedExact } from "@/lib/relativeDate";
 
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("marketplace_listings")
+      .select("title, category, location, price, currency")
+      .eq("id", id)
+      .maybeSingle();
+    if (data?.title) {
+      const loc = data.location ? ` · ${data.location}` : "";
+      return {
+        title: data.title,
+        description: `View ${data.title}${loc} on Hunared Marketplace.`,
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+  return { title: "Listing Details" };
+}
+
 export default async function ListingDetailPage({
   params,
 }: {

@@ -47,7 +47,7 @@ export async function generateMetadata({
   } catch {
     /* ignore */
   }
-  return { title: "Candidate Profile" };
+  return { title: "Candidate" };
 }
 
 const AVATAR_GRADIENTS = [

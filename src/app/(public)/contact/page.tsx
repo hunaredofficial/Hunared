@@ -4,7 +4,7 @@ import { ContactContent } from "@/components/contact/ContactContent";
 import { Mail } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Contact Us", 
+  title: "Contact", 
   description:
     "Get in touch with the Hunared team. We're here to help with questions, feedback, or partnership enquiries.",
 }; 

@@ -6,6 +6,14 @@ import { ShoppingBag, MapPin, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Marketplace",
+  description:
+    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
+};
+
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
 } from "@/lib/constants";

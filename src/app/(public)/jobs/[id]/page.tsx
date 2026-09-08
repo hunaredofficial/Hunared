@@ -30,6 +30,35 @@ import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import type { Job } from "@/types/database";
 
 
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("jobs")
+      .select("job_title, company_name, location, category")
+      .eq("id", id)
+      .maybeSingle();
+    if (data?.job_title) {
+      const company = data.company_name ? ` at ${data.company_name}` : "";
+      const loc = data.location ? ` · ${data.location}` : "";
+      return {
+        title: `${data.job_title}${company}`,
+        description: `Apply for ${data.job_title}${company}${loc} on Hunared.`,
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+  return { title: "Job Details" };
+}
+
 export default async function JobDetailPage({
   params,
 }: {
@@ -365,19 +394,7 @@ export default async function JobDetailPage({
                   <Detail
                     icon={<Tag className="h-4 w-4" />}
                     label="Employment"
-                    value={String(job.employment_type)
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
-                  />
-                )}
-                {(job as { experience_level?: string | null }).experience_level &&
-                  (job as { experience_level?: string | null }).experience_level !== "any" && (
-                  <Detail
-                    icon={<Tag className="h-4 w-4" />}
-                    label="Experience"
-                    value={String((job as { experience_level?: string | null }).experience_level)
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    value={job.employment_type}
                   />
                 )}
               </CardContent>

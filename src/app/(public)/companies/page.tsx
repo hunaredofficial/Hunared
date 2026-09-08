@@ -2,13 +2,13 @@ import { Metadata } from "next";
 import { CompaniesDirectory } from "@/components/companies/CompaniesDirectory";
 
 export const metadata: Metadata = {
-  title: "Companies Directory | Hunared",
+  title: "Companies",
   description:
-    "Discover companies, employers, contractors, service providers and organizations on Hunared. Search by industry, location, size and more.",
+    "Browse companies, employers, contractors, and service providers on Hunared. Search by industry, location, and size.",
   openGraph: {
-    title: "Companies Directory | Hunared",
+    title: "Companies | Hunared",
     description:
-      "Discover companies, employers, contractors, service providers and organizations on Hunared.",
+      "Browse companies, employers, contractors, and service providers on Hunared.",
   },
 };
 

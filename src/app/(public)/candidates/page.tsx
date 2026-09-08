@@ -7,6 +7,14 @@ import { CandidatesFilter } from "@/components/candidates/CandidatesFilter";
 import { COUNTRIES } from "@/lib/countries";
 import type { Profile } from "@/types/database";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Candidates",
+  description:
+    "Discover skilled professionals and job seekers on Hunared. Browse candidate profiles by profession, location, and availability.",
+};
+
 const AVATAR_GRADIENTS = [
   "from-blue-500 to-cyan-500",
   "from-violet-500 to-purple-500",
