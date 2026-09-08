@@ -113,10 +113,10 @@ export default async function JobDetailPage({
   if (!job) notFound();
 
   // Similar jobs — same category (and categories[] overlap), exclude current
-  let relatedJobs: Pick<
+  let relatedJobs: (Pick<
     Job,
     "id" | "job_title" | "company_name" | "location" | "category" | "salary_rate" | "currency" | "salary_type" | "duration" | "positions" | "created_at"
-  >[] = [];
+  > & { work_location?: string | null })[] = [];
   try {
     const supabase = createAdminClient();
     const nowIso = new Date().toISOString();
@@ -129,7 +129,7 @@ export default async function JobDetailPage({
     let q = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, category, categories, salary_rate, currency, salary_type, duration, positions, created_at"
+        "id, job_title, company_name, location, category, categories, salary_rate, currency, salary_type, duration, positions, created_at, work_location"
       )
       .eq("status", "approved")
       .neq("id", id)
@@ -155,7 +155,7 @@ export default async function JobDetailPage({
         const { data: fb } = await supabase
           .from("jobs")
           .select(
-            "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at"
+            "id, job_title, company_name, location, category, salary_rate, currency, salary_type, duration, positions, created_at, work_location"
           )
           .eq("status", "approved")
           .eq("category", cat)
@@ -637,10 +637,38 @@ export default async function JobDetailPage({
                     <p className="text-xs text-muted-foreground truncate">
                       {rj.company_name}
                     </p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{rj.location}</span>
-                    </p>
+                    {rj.location && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{rj.location}</span>
+                      </p>
+                    )}
+                    {(rj as { work_location?: string | null }).work_location && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3 shrink-0 opacity-70" />
+                        <span className="truncate">
+                          Work: {(rj as { work_location?: string | null }).work_location}
+                        </span>
+                      </p>
+                    )}
+                    {rj.duration && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3 shrink-0" />
+                        <span className="truncate">Duration: {rj.duration}</span>
+                      </p>
+                    )}
+                    {(rj.salary_rate || rj.salary_type) && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <DollarSign className="h-3 w-3 shrink-0" />
+                        <span className="truncate">
+                          {formatJobSalary(
+                            rj.salary_rate,
+                            rj.currency,
+                            rj.salary_type
+                          )}
+                        </span>
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Positions:{" "}
                       {rj.positions != null ? rj.positions : "Not Specified"}
