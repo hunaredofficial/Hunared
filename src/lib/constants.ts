@@ -456,14 +456,16 @@ export const PROFESSIONS = [
 ] as const;
 
 /**
- * Shorter labels for long category names on mobile/job cards.
- * DB value stays the same — only display is shortened.
+ * Short display labels for long category names on job cards (mobile-friendly).
+ * Database value is unchanged — only UI label is shorter.
  */
 export const CATEGORY_DISPLAY_LABELS: Record<string, string> = {
-  "Environmental Health & Safety": "Health & Safety",
+  "Environmental Health & Safety": "HSE",
 };
 
-export function getCategoryDisplayLabel(category: string | null | undefined): string {
+export function getCategoryDisplayLabel(
+  category: string | null | undefined
+): string {
   if (!category) return "";
   return CATEGORY_DISPLAY_LABELS[category] ?? category;
 }

@@ -70,7 +70,7 @@ export function Header() {
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
         "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
         scrolled
-          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border border-border/50 shadow-lg rounded-2xl overflow-hidden"
+          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border border-border/50 shadow-lg rounded-2xl"
           : "top-0 w-full max-w-full bg-background border-b border-border/40 rounded-none shadow-none"
       )}
     >
