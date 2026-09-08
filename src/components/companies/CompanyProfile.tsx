@@ -18,6 +18,8 @@ import {
   Calendar,
   Plus,
   Check,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -184,7 +186,7 @@ function getProfile(slug: string) {
 type Tab = "overview" | "jobs" | "services" | "about" | "locations" | "updates" | "reviews";
 
 export function CompanyProfile({ slug }: { slug: string }) {
-  const { isSignedIn, isLoaded: authLoaded } = useAuth();
+  const { isSignedIn, isLoaded: authLoaded, userId } = useAuth();
   const [tab, setTab] = useState<Tab>("overview");
   const [following, setFollowing] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -194,6 +196,8 @@ export function CompanyProfile({ slug }: { slug: string }) {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [deletingReview, setDeletingReview] = useState(false);
   const [liveReviews, setLiveReviews] = useState<any[] | null>(null);
   const [liveAvg, setLiveAvg] = useState<number | null>(null);
   const [liveCount, setLiveCount] = useState<number | null>(null);
@@ -204,6 +208,12 @@ export function CompanyProfile({ slug }: { slug: string }) {
 
   // Prefer live API; fall back to mock only if API fails
   const company = liveCompany ?? getProfile(slug);
+  const myReview =
+    isSignedIn && userId
+      ? (liveReviews ?? company.reviews ?? []).find(
+          (r: any) => r.reviewer_id === userId
+        )
+      : null;
 
   useEffect(() => setMounted(true), []);
 
@@ -319,6 +329,47 @@ export function CompanyProfile({ slug }: { slug: string }) {
   }
 
   
+    async function refreshReviewsList() {
+    try {
+      const listRes = await fetch(`/api/companies/${slug}/reviews`, {
+        credentials: "include",
+      });
+      if (listRes.ok) {
+        const list = await listRes.json();
+        if (list.reviews) setLiveReviews(list.reviews);
+        if (list.rating_avg != null) setLiveAvg(Number(list.rating_avg));
+        if (list.total != null) setLiveCount(Number(list.total));
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function startEditReview(r: any) {
+    setEditingReviewId(r.id);
+    setReviewRating(Number(r.rating) || 0);
+    setReviewTitle(r.title || "");
+    setReviewBody(r.body || "");
+    setReviewError("");
+    setReviewSuccess(false);
+    // scroll to form
+    if (typeof document !== "undefined") {
+      document.getElementById("write-review-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
+  function cancelEditReview() {
+    setEditingReviewId(null);
+    setReviewRating(0);
+    setReviewTitle("");
+    setReviewBody("");
+    setReviewError("");
+    setReviewSuccess(false);
+  }
+
   async function submitReview() {
     setReviewError("");
     setReviewSuccess(false);
@@ -336,8 +387,9 @@ export function CompanyProfile({ slug }: { slug: string }) {
     }
     setReviewSubmitting(true);
     try {
+      const method = editingReviewId ? "PATCH" : "POST";
       const res = await fetch(`/api/companies/${slug}/reviews`, {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
@@ -354,7 +406,9 @@ export function CompanyProfile({ slug }: { slug: string }) {
               ? "Please sign in to leave a review."
               : res.status === 404
                 ? "Review service is unavailable. Please try again later."
-                : "Could not submit review.")
+                : editingReviewId
+                  ? "Could not update review."
+                  : "Could not submit review.")
         );
         return;
       }
@@ -362,20 +416,51 @@ export function CompanyProfile({ slug }: { slug: string }) {
       setReviewTitle("");
       setReviewBody("");
       setReviewRating(0);
+      setEditingReviewId(null);
       if (data.rating_avg != null) setLiveAvg(data.rating_avg);
       if (data.reviews_count != null) setLiveCount(data.reviews_count);
-      // Refresh list
-      const listRes = await fetch(`/api/companies/${slug}/reviews`);
-      if (listRes.ok) {
-        const list = await listRes.json();
-        if (list.reviews) setLiveReviews(list.reviews);
-      } else if (data.review) {
-        setLiveReviews((prev) => [data.review, ...(prev || company.reviews || [])]);
-      }
+      await refreshReviewsList();
     } catch {
       setReviewError("Network error. Please try again.");
     } finally {
       setReviewSubmitting(false);
+    }
+  }
+
+  async function deleteReview() {
+    if (!isSignedIn || !userId) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Delete your review? This cannot be undone.")
+    ) {
+      return;
+    }
+    setDeletingReview(true);
+    setReviewError("");
+    try {
+      const res = await fetch(`/api/companies/${slug}/reviews`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setReviewError(
+          (data as { error?: string }).error || "Could not delete review."
+        );
+        return;
+      }
+      if (data.rating_avg != null) setLiveAvg(data.rating_avg);
+      if (data.reviews_count != null) setLiveCount(data.reviews_count);
+      setEditingReviewId(null);
+      setReviewRating(0);
+      setReviewTitle("");
+      setReviewBody("");
+      setReviewSuccess(false);
+      await refreshReviewsList();
+    } catch {
+      setReviewError("Network error. Please try again.");
+    } finally {
+      setDeletingReview(false);
     }
   }
 
@@ -788,8 +873,13 @@ export function CompanyProfile({ slug }: { slug: string }) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border bg-card/50 p-5 space-y-4">
-              <h3 className="font-semibold text-base">Write a review</h3>
+            <div
+              id="write-review-form"
+              className="rounded-xl border border-border bg-card/50 p-5 space-y-4"
+            >
+              <h3 className="font-semibold text-base">
+                {editingReviewId ? "Edit your review" : "Write a review"}
+              </h3>
               {!authLoaded ? (
                 <p className="text-sm text-muted-foreground">Loading…</p>
               ) : !isSignedIn ? (
@@ -802,6 +892,22 @@ export function CompanyProfile({ slug }: { slug: string }) {
                   </Link>{" "}
                   to rate and review this company.
                 </p>
+              ) : myReview && !editingReviewId ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    You already reviewed this company. You can edit or delete
+                    your review below.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-xl gap-1.5"
+                    onClick={() => startEditReview(myReview)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit your review
+                  </Button>
+                </div>
               ) : (
                 <>
                   <div>
@@ -864,14 +970,33 @@ export function CompanyProfile({ slug }: { slug: string }) {
                       Thank you — your review was submitted.
                     </p>
                   )}
-                  <Button
-                    type="button"
-                    disabled={reviewSubmitting}
-                    onClick={submitReview}
-                    className="rounded-xl"
-                  >
-                    {reviewSubmitting ? "Submitting…" : "Submit review"}
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      disabled={reviewSubmitting || deletingReview}
+                      onClick={submitReview}
+                      className="rounded-xl"
+                    >
+                      {reviewSubmitting
+                        ? editingReviewId
+                          ? "Updating…"
+                          : "Submitting…"
+                        : editingReviewId
+                          ? "Update review"
+                          : "Submit review"}
+                    </Button>
+                    {editingReviewId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={reviewSubmitting || deletingReview}
+                        onClick={cancelEditReview}
+                        className="rounded-xl"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -921,12 +1046,43 @@ export function CompanyProfile({ slug }: { slug: string }) {
                     <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
                       {r.body}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {r.date ||
-                        (r.created_at
-                          ? new Date(r.created_at).toLocaleDateString()
-                          : "")}
-                    </p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {r.date ||
+                          (r.created_at
+                            ? new Date(r.created_at).toLocaleDateString()
+                            : "")}
+                      </p>
+                      {isSignedIn &&
+                        userId &&
+                        r.reviewer_id &&
+                        r.reviewer_id === userId && (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1 text-xs"
+                              onClick={() => startEditReview(r)}
+                              disabled={deletingReview}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              Edit
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1 text-xs text-destructive hover:text-destructive"
+                              onClick={deleteReview}
+                              disabled={deletingReview}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              {deletingReview ? "Deleting…" : "Delete"}
+                            </Button>
+                          </div>
+                        )}
+                    </div>
                   </div>
                 ))}
               </div>

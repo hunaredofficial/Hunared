@@ -255,3 +255,190 @@ export async function POST(
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
+
+async function recomputeCompanyRating(supabase: ReturnType<typeof createAdminClient>, companyId: string) {
+  const { data: aggs } = await supabase
+    .from("company_reviews" as any)
+    .select("rating")
+    .eq("company_id", companyId);
+
+  const ratings = (aggs ?? []).map((r: any) => r.rating as number);
+  const count = ratings.length;
+  const avg =
+    count > 0
+      ? Math.round((ratings.reduce((a: number, b: number) => a + b, 0) / count) * 100) / 100
+      : 0;
+
+  await supabase
+    .from("companies" as any)
+    .update({ rating_avg: avg, reviews_count: count })
+    .eq("id", companyId);
+
+  return { avg, count };
+}
+
+/**
+ * PATCH /api/companies/[slug]/reviews
+ * Body: { rating, title?, body? } — updates the signed-in user's review
+ */
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Please sign in to edit your review." },
+        { status: 401 }
+      );
+    }
+
+    const { slug } = await ctx.params;
+    const company = await resolveCompanyId(slug);
+    if (!company) {
+      return NextResponse.json({ error: "Company not found." }, { status: 404 });
+    }
+
+    let body: { rating?: number; title?: string; body?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const rating = Number(body.rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return NextResponse.json(
+        { error: "Rating must be an integer from 1 to 5." },
+        { status: 400 }
+      );
+    }
+
+    const title = (body.title || "").trim().slice(0, 120) || null;
+    const text = (body.body || "").trim().slice(0, 2000);
+    if (!text || text.length < 10) {
+      return NextResponse.json(
+        { error: "Please write at least 10 characters for your review." },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: existing } = await supabase
+      .from("company_reviews" as any)
+      .select("id")
+      .eq("company_id", company.id)
+      .eq("reviewer_id", userId)
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "You have not reviewed this company yet." },
+        { status: 404 }
+      );
+    }
+
+    const { data: review, error } = await supabase
+      .from("company_reviews" as any)
+      .update({ rating, title, body: text })
+      .eq("id", (existing as any).id)
+      .eq("reviewer_id", userId)
+      .select("id, rating, title, body, created_at, reviewer_id")
+      .single();
+
+    if (error) {
+      console.error("[reviews PATCH]", error);
+      return NextResponse.json(
+        { error: error.message || "Could not update review." },
+        { status: 500 }
+      );
+    }
+
+    const { avg, count } = await recomputeCompanyRating(supabase, company.id);
+    const user = await currentUser();
+    const author =
+      user?.fullName ||
+      user?.firstName ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      "Member";
+
+    return NextResponse.json({
+      ok: true,
+      review: { ...review, author },
+      rating_avg: avg,
+      reviews_count: count,
+    });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/companies/[slug]/reviews
+ * Deletes the signed-in user's review for this company
+ */
+export async function DELETE(
+  _req: NextRequest,
+  ctx: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Please sign in to delete your review." },
+        { status: 401 }
+      );
+    }
+
+    const { slug } = await ctx.params;
+    const company = await resolveCompanyId(slug);
+    if (!company) {
+      return NextResponse.json({ error: "Company not found." }, { status: 404 });
+    }
+
+    const supabase = createAdminClient();
+
+    const { data: existing } = await supabase
+      .from("company_reviews" as any)
+      .select("id")
+      .eq("company_id", company.id)
+      .eq("reviewer_id", userId)
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "You have not reviewed this company yet." },
+        { status: 404 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("company_reviews" as any)
+      .delete()
+      .eq("id", (existing as any).id)
+      .eq("reviewer_id", userId);
+
+    if (error) {
+      console.error("[reviews DELETE]", error);
+      return NextResponse.json(
+        { error: error.message || "Could not delete review." },
+        { status: 500 }
+      );
+    }
+
+    const { avg, count } = await recomputeCompanyRating(supabase, company.id);
+
+    return NextResponse.json({
+      ok: true,
+      rating_avg: avg,
+      reviews_count: count,
+    });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
