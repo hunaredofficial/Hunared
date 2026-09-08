@@ -6,11 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  CATEGORY_COLORS,
-  JOB_CATEGORIES,
-  getCategoryDisplayLabel,
-} from "@/lib/constants";
+import { CATEGORY_COLORS, JOB_CATEGORIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
@@ -140,7 +136,7 @@ export default async function JobsPage({
     let query = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, country, city, employment_type, salary_rate, salary_type, currency, duration, category, positions, created_at",
+        "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, positions, created_at",
         { count: "exact" }
       )
       .eq("status", "approved");
@@ -178,10 +174,14 @@ export default async function JobsPage({
         rows = rows.filter((j) => matchesDurationFilter(j, durationFilter));
       }
 
-      // Experience level — jobs table has no dedicated column yet;
-      // soft-match on duration/employment heuristics when possible
+      // Experience level filter — prefer experience_level column when set
       if (experience) {
         rows = rows.filter((j) => {
+          const lvl = String(
+            (j as { experience_level?: string | null }).experience_level ?? ""
+          ).toLowerCase();
+          if (lvl) return lvl === experience.toLowerCase();
+          // Fallback for older jobs without the column value
           const emp = (j.employment_type ?? "").toLowerCase();
           const dur = (j.duration ?? "").toLowerCase();
           if (experience === "beginner") {
@@ -394,47 +394,40 @@ function JobCard({ job }: { job: Partial<Job> }) {
     (job.salary_type === "Negotiable" ? "Negotiable" : "") ||
     "";
 
-  // Long category names (esp. on mobile) must not stretch the card or crowd Save
-  const isLongCategory =
-    job.category === "Environmental Health & Safety";
-
   return (
-    <Card className="group hover:border-primary/40 hover:shadow-md transition-all duration-200 overflow-hidden">
-      <CardContent className="pt-5 pb-4 flex flex-col h-full min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap mb-3 min-w-0">
+    <Card className="group hover:border-primary/40 hover:shadow-md transition-all duration-200">
+      <CardContent className="pt-5 pb-4 flex flex-col h-full">
+        <div className="flex items-center gap-1.5 flex-wrap mb-3">
           {job.category && (
             <Badge
               className={cn(
-                "text-xs max-w-full truncate shrink min-w-0",
+                "text-xs",
                 CATEGORY_COLORS[job.category] ?? CATEGORY_COLORS["Other"]
               )}
-              title={job.category}
             >
-              {getCategoryDisplayLabel(job.category)}
+              {job.category}
             </Badge>
           )}
           {job.employment_type && job.employment_type !== "permanent" && (
-            <Badge variant="outline" className="text-xs capitalize shrink-0">
+            <Badge variant="outline" className="text-xs capitalize">
               {job.employment_type.replace("_", " ")}
             </Badge>
           )}
         </div>
 
-        <Link href={`/jobs/${job.id}`} className="group/title min-w-0">
-          <h3 className="font-semibold text-foreground group-hover/title:text-primary transition-colors leading-snug mb-1 break-words">
+        <Link href={`/jobs/${job.id}`} className="group/title">
+          <h3 className="font-semibold text-foreground group-hover/title:text-primary transition-colors leading-snug mb-1">
             {job.job_title}
           </h3>
         </Link>
 
-        <p className="text-sm text-muted-foreground mb-3 truncate">
-          {job.company_name}
-        </p>
+        <p className="text-sm text-muted-foreground mb-3">{job.company_name}</p>
 
-        <div className="space-y-1.5 text-xs text-muted-foreground flex-1 min-w-0">
+        <div className="space-y-1.5 text-xs text-muted-foreground flex-1">
           {job.location && (
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{job.location}</span>
+              {job.location}
             </div>
           )}
           {salaryLabel ? (
@@ -457,24 +450,16 @@ function JobCard({ job }: { job: Partial<Job> }) {
           )}
         </div>
 
-        {/* Footer: Save stays on the right and never overlaps category (category is top-only) */}
-        <div
-          className={cn(
-            "flex items-center justify-between mt-4 pt-3 border-t border-border gap-2 min-w-0",
-            isLongCategory && "flex-wrap sm:flex-nowrap"
-          )}
-        >
-          <span className="text-xs text-muted-foreground shrink-0">
-            {createdAt}
-          </span>
-          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border gap-2">
+          <span className="text-xs text-muted-foreground">{createdAt}</span>
+          <div className="flex items-center gap-1.5">
             {job.id && (
               <SaveButton itemType="job" itemId={job.id} size="sm" />
             )}
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 gap-1 text-xs hover:text-primary shrink-0"
+              className="h-7 gap-1 text-xs hover:text-primary"
               asChild
             >
               <Link href={`/jobs/${job.id}`}>

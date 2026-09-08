@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import {
   CURRENCIES,
@@ -48,6 +48,7 @@ interface JobForm {
   country: string;
   city: string;
   employmentType: string;
+  experienceLevel: string;
   duration: string;
   salaryType: string;
   salaryRate: string;
@@ -88,6 +89,7 @@ export default function PostJobPage() {
     country: "SA",
     city: "",
     employmentType: "",
+    experienceLevel: "any",
     duration: "",
     salaryType: "",
     salaryRate: "",
@@ -494,6 +496,10 @@ export default function PostJobPage() {
           country: form.country,
           city: form.city.trim() || null,
           employmentType: form.employmentType,
+          experienceLevel:
+            form.experienceLevel && form.experienceLevel !== "any"
+              ? form.experienceLevel
+              : null,
           duration: form.duration,
           salaryType: form.salaryType,
           // Always save rate when provided so cards can show the amount
@@ -689,6 +695,29 @@ export default function PostJobPage() {
                   <SelectItem value="permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
+            </Field>
+
+            <Field label="Experience Level (Optional)">
+              <Select
+                value={form.experienceLevel || "any"}
+                onValueChange={(v: string | null) => {
+                  if (v) set("experienceLevel", v, true);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPERIENCE_LEVELS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Default is Any. Leave as Any if not required.
+              </p>
             </Field>
 
             <Field label="Number of Positions (Optional)">

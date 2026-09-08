@@ -145,6 +145,17 @@ export const TEMPORARY_DURATIONS = [
 export const SALARY_TYPES = ["Hourly", "Monthly", "Negotiable"] as const;
 export type SalaryType = (typeof SALARY_TYPES)[number];
 
+/** Job experience level options (optional on post form; filter uses same values) */
+export const EXPERIENCE_LEVELS = [
+  { value: "any", label: "Any" },
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
+  { value: "expert", label: "Expert" },
+  { value: "master", label: "Master" },
+] as const;
+export type ExperienceLevel = (typeof EXPERIENCE_LEVELS)[number]["value"];
+
 export const PROFESSIONS = [
   "Accountant",
   "Accounting Officer",
@@ -455,10 +466,6 @@ export const PROFESSIONS = [
   "Yard Supervisor",
 ] as const;
 
-/**
- * Short display labels for long job category names on cards (mobile-friendly).
- * Database value is unchanged — only UI label is shorter.
- */
 export const CATEGORY_DISPLAY_LABELS: Record<string, string> = {
   "Environmental Health & Safety": "HSE",
 };
@@ -761,7 +768,6 @@ export const LISTING_CATEGORIES = [
 
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number]["value"];
 
-/** Example title placeholder per marketplace category */
 export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
   for_sale: "e.g. Samsung Galaxy S24 for Sale",
   for_rent: "e.g. Excavator for Rent – Daily Rate",
@@ -792,10 +798,7 @@ export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
 
 export function getListingTitlePlaceholder(category: string | null | undefined): string {
   if (!category) return "e.g. Enter a clear title for your listing";
-  return (
-    LISTING_TITLE_PLACEHOLDERS[category] ??
-    "e.g. Enter a clear title for your listing"
-  );
+  return LISTING_TITLE_PLACEHOLDERS[category] ?? "e.g. Enter a clear title for your listing";
 }
 
 /** Rental period options for For Rent listings (separate from type subcategory). */

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES } from "@/lib/constants";
+import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
 import type { Job } from "@/types/database";
@@ -29,6 +29,7 @@ interface JobForm {
   country: string;
   city: string;
   employmentType: string;
+  experienceLevel: string;
   duration: string;
   salaryType: string;
   salaryRate: string;
@@ -75,6 +76,8 @@ function jobToForm(job: Job): JobForm {
     country,
     city: city || "",
     employmentType: emp === "permanent" ? "permanent" : "temporary",
+    experienceLevel:
+      (job as { experience_level?: string | null }).experience_level || "any",
     duration: job.duration,
     salaryType: job.salary_type ?? "",
     salaryRate: job.salary_rate ?? "",
@@ -336,6 +339,29 @@ export function EditJobForm({ job }: { job: Job }) {
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
+            </Field>
+
+            <Field label="Experience Level (Optional)">
+              <Select
+                value={form.experienceLevel || "any"}
+                onValueChange={(v: string | null) => {
+                  if (v) set("experienceLevel", v);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPERIENCE_LEVELS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Default is Any. Leave as Any if not required.
+              </p>
             </Field>
 
             <Field label="Employment Type *">

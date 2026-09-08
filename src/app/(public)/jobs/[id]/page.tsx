@@ -365,7 +365,17 @@ export default async function JobDetailPage({
                   <Detail
                     icon={<Tag className="h-4 w-4" />}
                     label="Employment"
-                    value={job.employment_type
+                    value={String(job.employment_type)
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                  />
+                )}
+                {(job as { experience_level?: string | null }).experience_level &&
+                  (job as { experience_level?: string | null }).experience_level !== "any" && (
+                  <Detail
+                    icon={<Tag className="h-4 w-4" />}
+                    label="Experience"
+                    value={String((job as { experience_level?: string | null }).experience_level)
                       .replace(/_/g, " ")
                       .replace(/\b\w/g, (c) => c.toUpperCase())}
                   />

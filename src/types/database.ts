@@ -157,6 +157,7 @@ export interface Database {
           country: string | null;
           city: string | null;
           employment_type: EmploymentType;
+          experience_level: string | null;
           duration: string;
           salary_rate: string | null;
           salary_type: string | null;
@@ -188,6 +189,7 @@ export interface Database {
           country?: string | null;
           city?: string | null;
           employment_type?: EmploymentType;
+          experience_level?: string | null;
           duration: string;
           salary_rate?: string | null;
           salary_type?: string | null;
@@ -219,6 +221,7 @@ export interface Database {
           country?: string | null;
           city?: string | null;
           employment_type?: EmploymentType;
+          experience_level?: string | null;
           duration?: string;
           salary_rate?: string | null;
           salary_type?: string | null;

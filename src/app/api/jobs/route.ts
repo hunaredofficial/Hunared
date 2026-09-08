@@ -16,6 +16,7 @@ interface PostJobBody {
   country: string;
   city: string;
   employmentType: string;
+  experienceLevel?: string | null;
   duration: string;
   salaryType: string;
   salaryRate?: string | null;
@@ -208,6 +209,10 @@ export async function POST(req: Request) {
       country: body.country,
       city: body.city.trim(),
       employment_type: body.employmentType as EmploymentType,
+      experience_level:
+        body.experienceLevel && body.experienceLevel !== "any"
+          ? body.experienceLevel
+          : null,
       duration: body.duration,
       salary_type: body.salaryType,
       salary_rate: body.salaryRate?.trim() ?? null,
