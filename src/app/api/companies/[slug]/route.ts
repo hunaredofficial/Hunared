@@ -45,8 +45,21 @@ export async function GET(
     }
 
     // Map to public shape used by CompanyProfile
+    let logoUrl = data.logo_url ?? null;
+
+    // Fallback: use owner profile avatar when company has no logo
+    if (!logoUrl && data.owner_id) {
+      const { data: owner } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", data.owner_id)
+        .maybeSingle();
+      if (owner?.avatar_url) logoUrl = owner.avatar_url;
+    }
+
     const company = {
       ...data,
+      logo_url: logoUrl,
       public_email: data.email ?? null,
       public_phone: data.phone ?? null,
       is_verified: data.verification_status === "verified",

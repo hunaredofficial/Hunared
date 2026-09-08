@@ -226,7 +226,7 @@ export function CompanyProfile({ slug }: { slug: string }) {
         }
         const data = await res.json();
         if (!cancelled && data.company) {
-          setLiveCompany({
+          const mapped = {
             ...getProfile(slug),
             ...data.company,
             public_email: data.company.public_email ?? data.company.email ?? null,
@@ -252,7 +252,40 @@ export function CompanyProfile({ slug }: { slug: string }) {
                       },
                     ]
                   : [],
-          });
+          };
+
+          // Fallback logo from owner profile avatar when company.logo_url is empty
+          if (!mapped.logo_url && data.company.owner_id) {
+            try {
+              const pr = await fetch(
+                `/api/profile/${encodeURIComponent(data.company.owner_id)}`,
+                { credentials: "include" }
+              ).catch(() => null);
+              // profile public API may not exist — use company API enrichment below instead
+            } catch {
+              /* ignore */
+            }
+          }
+
+          setLiveCompany(mapped);
+
+          // Always load reviews list so they show after refresh
+          try {
+            const revRes = await fetch(
+              `/api/companies/${encodeURIComponent(slug)}/reviews`,
+              { credentials: "include" }
+            );
+            if (revRes.ok) {
+              const rev = await revRes.json();
+              if (!cancelled) {
+                if (Array.isArray(rev.reviews)) setLiveReviews(rev.reviews);
+                if (rev.rating_avg != null) setLiveAvg(Number(rev.rating_avg));
+                if (rev.total != null) setLiveCount(Number(rev.total));
+              }
+            }
+          } catch (e) {
+            console.error("[CompanyProfile] reviews fetch", e);
+          }
         }
       } catch (e) {
         console.error("[CompanyProfile] live fetch", e);
@@ -363,8 +396,17 @@ export function CompanyProfile({ slug }: { slug: string }) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 md:pb-10">
           <div className="flex flex-col md:flex-row gap-5 md:gap-6 items-start">
             {/* Logo */}
-            <div className="h-20 w-20 md:h-24 md:w-24 shrink-0 rounded-2xl bg-primary/10 border border-border flex items-center justify-center text-primary font-bold text-3xl shadow-sm">
-              {company.name.charAt(0)}
+            <div className="h-20 w-20 md:h-24 md:w-24 shrink-0 rounded-2xl bg-primary/10 border border-border flex items-center justify-center text-primary font-bold text-3xl shadow-sm overflow-hidden">
+              {company.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={company.logo_url}
+                  alt={company.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span>{company.name?.charAt(0) || "?"}</span>
+              )}
             </div>
 
             <div className="flex-1 min-w-0">
@@ -841,9 +883,25 @@ export function CompanyProfile({ slug }: { slug: string }) {
                     key={r.id}
                     className="rounded-xl border border-border p-4"
                   >
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">{r.author}</p>
-                      <div className="flex">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-9 w-9 shrink-0 rounded-full bg-primary/10 border border-border overflow-hidden flex items-center justify-center text-sm font-semibold text-primary">
+                          {r.avatar_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={r.avatar_url}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            (r.author || "M").charAt(0)
+                          )}
+                        </div>
+                        <p className="font-medium truncate">
+                          {r.author || "Member"}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
@@ -860,7 +918,7 @@ export function CompanyProfile({ slug }: { slug: string }) {
                     {r.title && (
                       <p className="font-medium text-sm mt-2">{r.title}</p>
                     )}
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
                       {r.body}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">

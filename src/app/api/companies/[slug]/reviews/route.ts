@@ -29,7 +29,12 @@ export async function GET(
     }
 
     const supabase = createAdminClient();
-    const { data, error } = await supabase
+
+    // Prefer join for author name; fall back to plain rows if join fails
+    let data: Record<string, unknown>[] | null = null;
+    let error: { message?: string } | null = null;
+
+    const joined = await supabase
       .from("company_reviews" as any)
       .select(
         "id, rating, title, body, helpful_count, created_at, reviewer_id, profiles:reviewer_id(full_name, avatar_url)"
@@ -38,19 +43,55 @@ export async function GET(
       .order("created_at", { ascending: false })
       .limit(50);
 
+    if (joined.error) {
+      console.warn("[reviews GET] join failed, plain select", joined.error.message);
+      const plain = await supabase
+        .from("company_reviews" as any)
+        .select("id, rating, title, body, helpful_count, created_at, reviewer_id")
+        .eq("company_id", company.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      data = (plain.data as Record<string, unknown>[] | null) ?? null;
+      error = plain.error;
+    } else {
+      data = (joined.data as Record<string, unknown>[] | null) ?? null;
+    }
+
     if (error) {
       console.error("[reviews GET]", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message || "Failed to load reviews" },
         { status: 500 }
       );
     }
 
+    // Optionally resolve author names for plain rows
+    const reviewerIds = [
+      ...new Set(
+        (data ?? [])
+          .map((r) => r.reviewer_id as string)
+          .filter(Boolean)
+      ),
+    ];
+    const nameById: Record<string, { full_name?: string; avatar_url?: string | null }> = {};
+    if (reviewerIds.length > 0 && data && data.some((r) => !r.profiles)) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", reviewerIds);
+      for (const pr of profiles ?? []) {
+        nameById[(pr as any).id] = {
+          full_name: (pr as any).full_name,
+          avatar_url: (pr as any).avatar_url,
+        };
+      }
+    }
+
     const reviews = (data ?? []).map((r: Record<string, unknown>) => {
-      const profile = r.profiles as
+      const profile = (r.profiles as
         | { full_name?: string; avatar_url?: string }
         | null
-        | undefined;
+        | undefined) || nameById[r.reviewer_id as string];
       return {
         id: r.id,
         rating: r.rating,
