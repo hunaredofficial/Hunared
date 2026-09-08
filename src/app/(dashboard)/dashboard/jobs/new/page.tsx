@@ -651,7 +651,7 @@ export default function PostJobPage() {
 
             <Field label="City *">
               <Input
-                placeholder="e.g. Dubai"
+                placeholder="e.g. Jubail"
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
               />
