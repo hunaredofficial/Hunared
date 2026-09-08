@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase";
 import { formatJobSalary } from "@/lib/currencies";
+import { getCategoryDisplayLabel } from "@/lib/constants";
 
 const CATEGORY_COLORS: Record<string, string> = {
  Accounting: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
@@ -142,11 +143,12 @@ export async function FeaturedJobsSection() {
                 <CardContent className="p-5 space-y-4">
                   {/* Category */}
                   <span
-                    className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full ${
+                    className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full max-w-full truncate ${
                       CATEGORY_COLORS[job.category] ?? "bg-muted text-muted-foreground"
                     }`}
+                    title={job.category}
                   >
-                    {job.category}
+                    {getCategoryDisplayLabel(job.category)}
                   </span>
 
                   {/* Title + Company */}

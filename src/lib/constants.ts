@@ -455,6 +455,19 @@ export const PROFESSIONS = [
   "Yard Supervisor",
 ] as const;
 
+/**
+ * Shorter labels for long category names on mobile/job cards.
+ * DB value stays the same — only display is shortened.
+ */
+export const CATEGORY_DISPLAY_LABELS: Record<string, string> = {
+  "Environmental Health & Safety": "Health & Safety",
+};
+
+export function getCategoryDisplayLabel(category: string | null | undefined): string {
+  if (!category) return "";
+  return CATEGORY_DISPLAY_LABELS[category] ?? category;
+}
+
 // Colors for categories; anything not listed falls back to "Others"
 export const CATEGORY_COLORS: Record<string, string> = {
   Accounting:

@@ -1,29 +1,66 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { MapPin, ChevronDown, RotateCcw } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
-import { useGeoDetection } from "@/hooks/useGeoDetection";
+import { useGeo } from "@/components/providers/GeoProvider";
 import { cn } from "@/lib/utils";
 
 export function LocationPicker({ className }: { className?: string }) {
-  const geo = useGeoDetection();
+  // Must use shared GeoProvider so header location updates filters / rest of app
+  const geo = useGeo();
   const [open, setOpen] = useState(false);
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
 
   useEffect(() => {
     if (!open) return;
     setCountry(geo.countryCode ?? "");
-    // Prefill city from detection or manual selection
     setCity(geo.city ?? "");
   }, [open, geo.countryCode, geo.city, geo.isManual]);
 
-  const cities = useMemo(
-    () => getCitiesForCountry(country),
-    [country]
-  );
+  // Position panel with fixed coords so it is never clipped by header/mobile overflow
+  useEffect(() => {
+    if (!open || !btnRef.current) return;
+
+    function place() {
+      const el = btnRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const panelW = 288; // w-72
+      const gap = 8;
+      let left = r.right - panelW;
+      if (left < 12) left = 12;
+      if (left + panelW > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - panelW - 12);
+      }
+      let top = r.bottom + gap;
+      // If not enough space below, open upward
+      if (top + 320 > window.innerHeight && r.top > 320) {
+        top = r.top - gap - 280;
+      }
+      setPanelStyle({
+        position: "fixed",
+        top,
+        left,
+        width: panelW,
+        zIndex: 100,
+      });
+    }
+
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
+
+  const cities = useMemo(() => getCitiesForCountry(country), [country]);
 
   function apply() {
     if (!country) return;
@@ -44,10 +81,16 @@ export function LocationPicker({ className }: { className?: string }) {
   return (
     <div className={cn("relative", className)}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors max-w-[180px] sm:max-w-[240px]"
         title="Your location"
+        aria-expanded={open}
+        aria-haspopup="dialog"
       >
         <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
         <span className="truncate">{label}</span>
@@ -57,11 +100,16 @@ export function LocationPicker({ className }: { className?: string }) {
       {open && (
         <>
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[90]"
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute right-0 top-full mt-2 z-50 w-72 rounded-xl border border-border bg-card p-4 shadow-xl space-y-3">
+          <div
+            style={panelStyle}
+            className="rounded-xl border border-border bg-card p-4 shadow-xl space-y-3"
+            role="dialog"
+            aria-label="Set your location"
+          >
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Your location
             </p>

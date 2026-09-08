@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CATEGORY_COLORS, JOB_CATEGORIES } from "@/lib/constants";
+import { CATEGORY_COLORS, JOB_CATEGORIES, getCategoryDisplayLabel } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
@@ -397,11 +397,12 @@ function JobCard({ job }: { job: Partial<Job> }) {
           {job.category && (
             <Badge
               className={cn(
-                "text-xs",
+                "text-xs max-w-full truncate",
                 CATEGORY_COLORS[job.category] ?? CATEGORY_COLORS["Other"]
               )}
+              title={job.category}
             >
-              {job.category}
+              {getCategoryDisplayLabel(job.category)}
             </Badge>
           )}
           {job.employment_type && job.employment_type !== "permanent" && (
