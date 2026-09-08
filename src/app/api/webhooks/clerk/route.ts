@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
-import { deleteCv } from "@/lib/storage";
+import { deleteUserData } from "@/lib/deleteUserData";
 import type { UserRole, Database } from "@/types/database";
 import { isOfficialAdminEmail } from "@/lib/adminEmails";
 
@@ -96,29 +96,13 @@ export async function POST(req: Request) {
     }
 
     case "user.deleted": {
-      // Clerk has deleted the user (e.g. from Clerk dashboard directly).
-      // Clean up Supabase profile row. CV cleanup should have happened
-      // via the admin "permanent delete" flow, but we do a safety cleanup here.
+      // Clerk deleted the user — remove all related app data.
       const { id } = event.data;
       if (!id) break;
-
-      // Fetch any CV path before deleting
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("cv_url")
-        .eq("id", id)
-        .single();
-
-      if (profile?.cv_url) {
-        // cv_url stores the storage path (not the signed URL)
-        try {
-          await deleteCv(profile.cv_url);
-        } catch (e) {
-          console.error("[Webhook] CV cleanup failed:", e);
-        }
+      const result = await deleteUserData(supabase, id);
+      if (result.errors.length) {
+        console.error("[Webhook] user.deleted cleanup:", result.errors);
       }
-
-      await supabase.from("profiles").delete().eq("id", id);
       break;
     }
 

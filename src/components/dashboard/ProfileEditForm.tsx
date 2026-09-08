@@ -36,6 +36,7 @@ export function ProfileEditForm({
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Account type (role) — personal | seeker | employer (Company)
   const [role, setRole] = useState<"personal" | "seeker" | "employer">(() => {
@@ -728,7 +729,7 @@ export function ProfileEditForm({
       <Button
         size="lg"
         className="h-11"
-        disabled={isLoading}
+        disabled={isLoading || isDeleting}
         onClick={handleSave}
       >
         {isLoading ? (
@@ -738,6 +739,71 @@ export function ProfileEditForm({
         )}
         Save Changes
       </Button>
+
+      {/* Danger zone — permanent account deletion */}
+      <div className="w-full p-5 rounded-xl border border-destructive/40 bg-destructive/5 space-y-3">
+        <div>
+          <p className="text-sm font-semibold text-destructive">Delete account</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Works for every account type (Personal, Candidate / Seeker, or Company).
+            Permanently removes your profile everywhere (Candidates and Companies),
+            plus all jobs, marketplace listings, articles, company page, reviews,
+            follows, saves, shares, orders, and subscriptions. This cannot be undone.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="destructive"
+          className="h-10"
+          disabled={isLoading || isDeleting}
+          onClick={async () => {
+            if (
+              !window.confirm(
+                "Delete your account permanently?\n\nThis removes your profile from Candidates and Companies, your company page, jobs, marketplace items, articles, reviews, and all related data — for Personal, Candidate, or Company accounts. This cannot be undone."
+              )
+            ) {
+              return;
+            }
+            if (
+              !window.confirm(
+                "Final confirmation: delete everything linked to this account?"
+              )
+            ) {
+              return;
+            }
+            setIsDeleting(true);
+            try {
+              const res = await fetch("/api/account/delete", {
+                method: "DELETE",
+                credentials: "include",
+              });
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                toast.error(
+                  (data as { error?: string }).error ||
+                    "Could not delete account."
+                );
+                return;
+              }
+              toast.success("Account deleted.");
+              // Full reload clears Clerk session client state
+              window.location.href = "/";
+            } catch {
+              toast.error("Network error. Please try again.");
+            } finally {
+              setIsDeleting(false);
+            }
+          }}
+        >
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Trash2 className="h-4 w-4 mr-2" />
+          )}
+          {isDeleting ? "Deleting…" : "Delete my account"}
+        </Button>
+      </div>
+
     </div>
   );
 }

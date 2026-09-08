@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
-import { deleteCv } from "@/lib/storage";
+import { deleteUserData } from "@/lib/deleteUserData";
 import type { UserRole } from "@/types/database";
 
 const VALID_ROLES: UserRole[] = ["seeker", "employer", "personal", "admin"];
@@ -78,25 +78,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("cv_url")
-    .eq("id", id)
-    .maybeSingle();
+  const result = await deleteUserData(supabase, id);
 
-  if (profile?.cv_url) {
-    try {
-      await deleteCv(profile.cv_url);
-    } catch (e) {
-      console.error("[admin/users DELETE] CV cleanup failed:", e);
-    }
+  if (result.errors.length) {
+    console.error("[admin/users DELETE] cleanup warnings:", result.errors);
   }
 
-  const { error } = await supabase.from("profiles").delete().eq("id", id);
-
-  if (error) {
-    console.error("[admin/users DELETE] Supabase error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  // profiles step must succeed
+  if (result.errors.some((e) => e.startsWith("profiles:"))) {
+    return NextResponse.json(
+      { error: "Could not delete user data", details: result.errors },
+      { status: 500 }
+    );
   }
 
   try {
@@ -106,5 +99,9 @@ export async function DELETE(
     console.error("[admin/users DELETE] Clerk deleteUser failed:", e);
   }
 
-  return NextResponse.json({ success: true, permanent: true });
+  return NextResponse.json({
+    success: true,
+    permanent: true,
+    warnings: result.errors.length ? result.errors : undefined,
+  });
 }
