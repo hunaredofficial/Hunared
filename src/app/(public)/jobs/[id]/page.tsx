@@ -365,7 +365,9 @@ export default async function JobDetailPage({
                   <Detail
                     icon={<Tag className="h-4 w-4" />}
                     label="Employment"
-                    value={job.employment_type}
+                    value={job.employment_type
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase())}
                   />
                 )}
               </CardContent>
