@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { formatMoney } from "@/lib/currencies";
 import { createAdminClient } from "@/lib/supabase";
@@ -6,14 +7,6 @@ import { ShoppingBag, MapPin, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Marketplace",
-  description:
-    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
-};
-
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
 } from "@/lib/constants";
@@ -21,6 +14,12 @@ import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
 import { MarketFilter } from "@/components/market/MarketFilter";
 import { formatRelativePosted } from "@/lib/relativeDate";
+
+export const metadata: Metadata = {
+  title: "Marketplace",
+  description:
+    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
+};
 
 interface SearchParams {
   category?: string;
