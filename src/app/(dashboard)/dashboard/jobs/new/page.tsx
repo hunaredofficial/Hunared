@@ -510,7 +510,7 @@ export default function PostJobPage() {
           mapLocation: form.mapLocation.trim() || null,
           // API expects officeLocationLink for the maps link field
           officeLocationLink: form.mapLocation.trim() || null,
-          showProfileContact: form.showProfileContact,
+          showProfileContact: false, // section removed from form
           expiration: form.expiration,
         }),
       });
@@ -875,28 +875,6 @@ export default function PostJobPage() {
           </div>
         </Section>
 
-        {/* Bottom of form: profile contact visibility */}
-        <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-          <input
-            id="showProfileContact"
-            type="checkbox"
-            checked={form.showProfileContact}
-            onChange={(e) => set("showProfileContact", e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-input"
-          />
-          <label
-            htmlFor="showProfileContact"
-            className="text-sm leading-snug cursor-pointer"
-          >
-            <span className="font-medium text-foreground">
-              Show my profile phone &amp; email on this job
-            </span>
-            <span className="block text-xs text-muted-foreground mt-0.5">
-              Uses the same contact details from your signup profile. If
-              unchecked, only your name appears under “Posted by”.
-            </span>
-          </label>
-        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
           <Button

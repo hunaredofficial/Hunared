@@ -192,7 +192,7 @@ export function EditJobForm({ job }: { job: Job }) {
           company_name: form.companyName.trim(),
           company_phone: form.companyPhone.trim() || null,
           company_email: form.companyEmail.trim() || null,
-          show_profile_contact: form.showProfileContact,
+          show_profile_contact: false, // section removed from form
           company_address: form.companyAddress.trim() || null,
           work_location: form.workLocation.trim() || null,
           office_location_link: form.officeLocationLink.trim() || null,
@@ -485,26 +485,6 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
           </div>
         </Section>
-<div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              id="showProfileContact"
-              type="checkbox"
-              checked={form.showProfileContact}
-              onChange={(e) => set("showProfileContact", e.target.checked)}
-              className="mt-1 h-4 w-4"
-            />
-            <span>
-              <span className="text-sm font-medium block">
-                Show my profile phone &amp; email on this job
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Uses contact details from your signup profile. If unchecked, only
-                your name appears under “Posted by”.
-              </span>
-            </span>
-          </label>
-        </div>
 
         <Button
           type="submit"
