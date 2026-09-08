@@ -643,35 +643,30 @@ export default async function JobDetailPage({
                         <span className="truncate">{rj.location}</span>
                       </p>
                     )}
-                    {(rj as { work_location?: string | null }).work_location && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3 shrink-0 opacity-70" />
-                        <span className="truncate">
-                          Work: {(rj as { work_location?: string | null }).work_location}
-                        </span>
-                      </p>
-                    )}
-                    {rj.duration && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3 shrink-0" />
-                        <span className="truncate">Duration: {rj.duration}</span>
-                      </p>
-                    )}
-                    {(rj.salary_rate || rj.salary_type) && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 shrink-0" />
-                        <span className="truncate">
-                          {formatJobSalary(
-                            rj.salary_rate,
-                            rj.currency,
-                            rj.salary_type
-                          )}
-                        </span>
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Positions:{" "}
-                      {rj.positions != null ? rj.positions : "Not Specified"}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3 shrink-0" />
+                      <span className="truncate">
+                        Duration:{" "}
+                        {rj.duration?.trim() ? rj.duration : "Not Specified"}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <DollarSign className="h-3 w-3 shrink-0" />
+                      <span className="truncate">
+                        Salary:{" "}
+                        {formatJobSalary(
+                          rj.salary_rate,
+                          rj.currency,
+                          rj.salary_type
+                        ) || "Not Specified"}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3 shrink-0" />
+                      <span className="truncate">
+                        Positions:{" "}
+                        {rj.positions != null ? rj.positions : "Not Specified"}
+                      </span>
                     </p>
                     <p
                       className="text-xs text-muted-foreground flex items-center gap-1"
