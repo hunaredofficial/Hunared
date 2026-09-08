@@ -1,70 +1,42 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { MapPin, ChevronDown, RotateCcw, Loader2 } from "lucide-react";
+import { MapPin, ChevronDown, RotateCcw } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
-import { getCitiesForCountry, matchCityToList } from "@/lib/cities";
-import { useGeo } from "@/components/providers/GeoProvider";
+import { getCitiesForCountry } from "@/lib/cities";
+import { useGeoDetection } from "@/hooks/useGeoDetection";
 import { cn } from "@/lib/utils";
 
 export function LocationPicker({ className }: { className?: string }) {
-  // Shared geo context (same state as rest of the site)
-  const geo = useGeo();
+  const geo = useGeoDetection();
   const [open, setOpen] = useState(false);
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
-  const [detecting, setDetecting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    const code = geo.countryCode ?? "";
-    setCountry(code);
-    // Map detected/manual city onto exact option in our list
-    const matched = matchCityToList(geo.city, code) || "";
-    setCity(matched);
+    setCountry(geo.countryCode ?? "");
+    // Prefill city from detection or manual selection
+    setCity(geo.city ?? "");
   }, [open, geo.countryCode, geo.city, geo.isManual]);
 
-  const cities = useMemo(() => getCitiesForCountry(country), [country]);
+  const cities = useMemo(
+    () => getCitiesForCountry(country),
+    [country]
+  );
 
   function apply() {
     if (!country) return;
     const c = COUNTRIES.find((x) => x.code === country);
-    const matchedCity = matchCityToList(city, country) || city || undefined;
     geo.setManualLocation({
       countryCode: country,
       countryName: c?.name ?? country,
-      city: matchedCity,
+      city: city || undefined,
     });
     setOpen(false);
   }
 
-  async function handleAuto() {
-    setDetecting(true);
-    try {
-      const detect =
-        geo.detectAccurateLocation ?? geo.clearManualLocation;
-      const detected = await detect();
-      if (!detected?.countryCode) return;
-
-      const match = COUNTRIES.find((x) => x.code === detected.countryCode);
-      const matchedCity =
-        matchCityToList(detected.city, detected.countryCode) || "";
-
-      // Save as the active location so header + site filters update
-      geo.setManualLocation({
-        countryCode: detected.countryCode,
-        countryName: match?.name ?? detected.countryName ?? detected.countryCode,
-        city: matchedCity || undefined,
-      });
-
-      setCountry(detected.countryCode);
-      setCity(matchedCity);
-      setOpen(false);
-    } finally {
-      setDetecting(false);
-    }
-  }
-
+  // Header: show COUNTRY only
   const label = geo.loading
     ? "Detecting…"
     : geo.countryName || geo.countryCode || "Set location";
@@ -75,11 +47,7 @@ export function LocationPicker({ className }: { className?: string }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors max-w-[180px] sm:max-w-[240px]"
-        title={
-          geo.city
-            ? `${geo.city}, ${geo.countryName || geo.countryCode || ""}`
-            : "Your location"
-        }
+        title="Your location"
       >
         <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
         <span className="truncate">{label}</span>
@@ -104,10 +72,8 @@ export function LocationPicker({ className }: { className?: string }) {
                 data-color-scheme="dark"
                 value={country}
                 onChange={(e) => {
-                  const code = e.target.value;
-                  setCountry(code);
-                  // Keep city only if it exists in the new country list
-                  setCity((prev) => matchCityToList(prev, code) || "");
+                  setCountry(e.target.value);
+                  setCity("");
                 }}
                 className="[color-scheme:dark] mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
               >
@@ -154,23 +120,36 @@ export function LocationPicker({ className }: { className?: string }) {
               <button
                 type="button"
                 onClick={apply}
-                disabled={!country || detecting}
+                disabled={!country}
                 className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
               >
                 Save
               </button>
               <button
                 type="button"
-                onClick={() => void handleAuto()}
-                disabled={detecting}
-                className="h-9 px-3 rounded-lg border border-border text-sm inline-flex items-center gap-1 hover:bg-muted disabled:opacity-50"
-                title="Detect country and city automatically (GPS + network)"
+                onClick={async () => {
+                  const detected = await geo.clearManualLocation();
+                  if (detected.countryCode) {
+                    const match = COUNTRIES.find(
+                      (x) => x.code === detected.countryCode
+                    );
+                    geo.setManualLocation({
+                      countryCode: detected.countryCode,
+                      countryName:
+                        match?.name ??
+                        detected.countryName ??
+                        detected.countryCode,
+                      city: detected.city ?? "",
+                    });
+                    setCountry(detected.countryCode);
+                    setCity(detected.city ?? "");
+                  }
+                  setOpen(false);
+                }}
+                className="h-9 px-3 rounded-lg border border-border text-sm inline-flex items-center gap-1 hover:bg-muted"
+                title="Detect country and city automatically"
               >
-                {detecting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RotateCcw className="h-3.5 w-3.5" />
-                )}
+                <RotateCcw className="h-3.5 w-3.5" />
                 Auto
               </button>
             </div>
@@ -178,13 +157,11 @@ export function LocationPicker({ className }: { className?: string }) {
             {geo.isManual && (
               <p className="text-[10px] text-muted-foreground">
                 Using your selected location
-                {geo.city ? ` · ${geo.city}` : ""}
               </p>
             )}
             {!geo.isManual && !geo.loading && geo.countryCode && (
               <p className="text-[10px] text-muted-foreground">
-                Auto-detected
-                {geo.city ? ` · ${geo.city}` : " country from your network"}
+                Country auto-detected from your network
               </p>
             )}
           </div>
