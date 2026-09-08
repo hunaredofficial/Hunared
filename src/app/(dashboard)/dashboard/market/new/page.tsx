@@ -131,14 +131,8 @@ function NewListingForm() {
   }, [geo.loading, geo.countryCode, currencyTouched]);
 
 
-  const isPriceOptional =
-    category === "services" ||
-    category === "free_items" ||
-    category === "wanted" ||
-    category === "lost_found" ||
-    category === "announcements" ||
-    category === "donations" ||
-    category === "community";
+  // Price is optional for every marketplace category
+  const isPriceOptional = true;
 
   useEffect(() => {
     if (category && HIDE_LISTING_TYPE_CATEGORIES.has(category)) {

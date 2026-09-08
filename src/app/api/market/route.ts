@@ -91,19 +91,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Description is required" }, { status: 400 });
   }
 
-  const isPriceOptional = [
-    "services",
-    "free_items",
-    "wanted",
-    "lost_found",
-    "announcements",
-    "donations",
-    "community",
-  ].includes(body.category ?? "");
-
-  if (!isPriceOptional && !body.price?.trim()) {
-    return NextResponse.json({ error: "Price is required" }, { status: 400 });
-  }
+  // Price is optional for every marketplace category
+  // (empty / blank price is allowed)
 
   if (!body.category || !VALID_CATEGORIES.includes(body.category as ListingCategory)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
