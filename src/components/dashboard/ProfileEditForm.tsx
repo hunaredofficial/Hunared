@@ -258,29 +258,6 @@ export function ProfileEditForm({
         </p>
       </div>
 
-      {(isSeeker || isEmployer) && (
-        <div className="w-full p-5 rounded-xl border border-border bg-card space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={listedPublicly}
-              onChange={(e) => setListedPublicly(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-input"
-            />
-            <span>
-              <span className="text-sm font-medium block">
-                {isEmployer
-                  ? "Show my company in the Companies directory"
-                  : "Show my profile in the Candidates section"}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Uncheck to hide your public profile. You can change this anytime.
-              </span>
-            </span>
-          </label>
-        </div>
-      )}
-
       {/* Avatar */}
       <div className="w-full flex items-center gap-5 p-5 rounded-xl border border-border bg-card">
         <div className="relative shrink-0">
@@ -720,6 +697,31 @@ export function ProfileEditForm({
               </p>
             </Field>
           </div>
+        </div>
+      )}
+
+      {/* Visibility — at bottom; checked by default (listed_publicly !== false) */}
+      {(isSeeker || isEmployer) && (
+        <div className="w-full p-5 rounded-xl border border-border bg-card space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={listedPublicly}
+              onChange={(e) => setListedPublicly(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-input"
+            />
+            <span>
+              <span className="text-sm font-medium block">
+                {isEmployer
+                  ? "Show my company in the Companies directory"
+                  : "Show my profile in the Candidates section"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Checked by default. Uncheck only if you want to hide your public
+                profile. You can change this anytime.
+              </span>
+            </span>
+          </label>
         </div>
       )}
 
