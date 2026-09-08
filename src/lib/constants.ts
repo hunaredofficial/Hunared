@@ -455,21 +455,6 @@ export const PROFESSIONS = [
   "Yard Supervisor",
 ] as const;
 
-/**
- * Short display labels for long category names on job cards (mobile-friendly).
- * Database value is unchanged — only UI label is shorter.
- */
-export const CATEGORY_DISPLAY_LABELS: Record<string, string> = {
-  "Environmental Health & Safety": "HSE",
-};
-
-export function getCategoryDisplayLabel(
-  category: string | null | undefined
-): string {
-  if (!category) return "";
-  return CATEGORY_DISPLAY_LABELS[category] ?? category;
-}
-
 // Colors for categories; anything not listed falls back to "Others"
 export const CATEGORY_COLORS: Record<string, string> = {
   Accounting:
@@ -760,6 +745,43 @@ export const LISTING_CATEGORIES = [
 ] as const;
 
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number]["value"];
+
+/** Example title placeholder per marketplace category */
+export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
+  for_sale: "e.g. Samsung Galaxy S24 for Sale",
+  for_rent: "e.g. Excavator for Rent – Daily Rate",
+  services: "e.g. Electrical Maintenance in Riyadh",
+  accommodation: "e.g. 2-bedroom apartment in Riyadh",
+  property: "e.g. Villa for Sale in Jeddah",
+  vehicles: "e.g. Toyota Camry 2022 – Excellent Condition",
+  electronics: "e.g. MacBook Pro 14-inch M3",
+  home_furniture: "e.g. Sofa Set – 7 Seater",
+  personel_workwear: "e.g. Safety Boots Size 42 – New",
+  mobiles_accessories: "e.g. iPhone 15 Pro Max 256GB",
+  tools_equipment: "e.g. Bosch Drill Kit – Barely Used",
+  industrial_materials: "e.g. Electrical Cables – Bulk Supply",
+  pets_animals: "e.g. Persian Cat – Vaccinated",
+  wanted: "e.g. Looking for 1BHK near Downtown",
+  free_items: "e.g. Free Office Chair – Pickup Only",
+  lost_found: "e.g. Lost iPhone near Riyadh Park",
+  events: "e.g. Networking Meetup – Riyadh 15 Sep",
+  business_commercial: "e.g. Shop Space for Lease – Al Khobar",
+  offers_deals: "e.g. 50% Off Summer Collection",
+  announcements: "e.g. Community Notice – Road Closure",
+  donations: "e.g. Donating Winter Clothes – Good Condition",
+  community: "e.g. Looking for Tennis Partner in Dammam",
+  education_training: "e.g. NEBOSH Course – Weekend Batch",
+  wholesale: "e.g. Wholesale LED Lights – Bulk Orders",
+  other: "e.g. Describe your listing in a short title",
+};
+
+export function getListingTitlePlaceholder(category: string | null | undefined): string {
+  if (!category) return "e.g. Enter a clear title for your listing";
+  return (
+    LISTING_TITLE_PLACEHOLDERS[category] ??
+    "e.g. Enter a clear title for your listing"
+  );
+}
 
 /** Rental period options for For Rent listings (separate from type subcategory). */
 export const RENTAL_PERIOD_OPTIONS = [

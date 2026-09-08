@@ -23,6 +23,7 @@ import {
   LISTING_SUBCATEGORIES,
   RENTAL_PERIOD_OPTIONS,
   getListingDefaultImage,
+  getListingTitlePlaceholder,
 } from "@/lib/constants";
 import {
   EXPIRATION_OPTIONS,
@@ -131,8 +132,14 @@ function NewListingForm() {
   }, [geo.loading, geo.countryCode, currencyTouched]);
 
 
-  // Price is optional for every marketplace category
-  const isPriceOptional = true;
+  const isPriceOptional =
+    category === "services" ||
+    category === "free_items" ||
+    category === "wanted" ||
+    category === "lost_found" ||
+    category === "announcements" ||
+    category === "donations" ||
+    category === "community";
 
   useEffect(() => {
     if (category && HIDE_LISTING_TYPE_CATEGORIES.has(category)) {
@@ -338,15 +345,7 @@ function NewListingForm() {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={
-                  category === "lost_found"
-                    ? "e.g. Lost iPhone near Riyadh Park"
-                    : category === "services"
-                    ? "e.g. Electrical Maintenance in Riyadh"
-                    : category === "accommodation"
-                    ? "e.g. 2-bedroom apartment in Riyadh"
-                    : "e.g. Samsung Mobile for Sale"
-                }
+                placeholder={getListingTitlePlaceholder(category)}
                 maxLength={100}
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />

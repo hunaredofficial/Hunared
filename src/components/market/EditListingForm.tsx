@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
-import { LISTING_CATEGORIES, LISTING_CURRENCIES, getListingDefaultImage } from "@/lib/constants";
+import {
+  LISTING_CATEGORIES,
+  LISTING_CURRENCIES,
+  getListingDefaultImage,
+  getListingTitlePlaceholder,
+} from "@/lib/constants";
 import {
   EXPIRATION_OPTIONS,
   expiresAtToOption,
@@ -132,8 +137,15 @@ export function EditListingForm({ listing }: { listing: Listing }) {
     }
   }, [category]);
 
-  // Price is optional for every marketplace category
-  const isPriceOptional = true;
+  // ✅ Price is optional only for the "services" category
+  const isPriceOptional =
+  category === "services" ||
+  category === "free_items" ||
+  category === "wanted" ||
+  category === "lost_found" ||
+  category === "announcements" ||
+  category === "donations" ||
+  category === "community";
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -334,7 +346,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. 2-bedroom apartment in Riyadh"
+              placeholder={getListingTitlePlaceholder(category)}
               maxLength={100}
               className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
