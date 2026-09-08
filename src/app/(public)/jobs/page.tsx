@@ -12,14 +12,6 @@ import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Jobs",
-  description:
-    "Browse global job openings on Hunared. Filter by category, location, duration, salary, and experience level.",
-};
-
 interface SearchParams {
   search?: string;
   category?: string;
@@ -144,7 +136,7 @@ export default async function JobsPage({
     let query = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, country, city, employment_type, salary_rate, salary_type, currency, duration, category, positions, created_at",
+        "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, positions, created_at",
         { count: "exact" }
       )
       .eq("status", "approved");
@@ -182,10 +174,14 @@ export default async function JobsPage({
         rows = rows.filter((j) => matchesDurationFilter(j, durationFilter));
       }
 
-      // Experience level — jobs table has no dedicated column yet;
-      // soft-match on duration/employment heuristics when possible
+      // Experience level filter — prefer experience_level column when set
       if (experience) {
         rows = rows.filter((j) => {
+          const lvl = String(
+            (j as { experience_level?: string | null }).experience_level ?? ""
+          ).toLowerCase();
+          if (lvl) return lvl === experience.toLowerCase();
+          // Fallback for older jobs without the column value
           const emp = (j.employment_type ?? "").toLowerCase();
           const dur = (j.duration ?? "").toLowerCase();
           if (experience === "beginner") {
@@ -412,9 +408,13 @@ function JobCard({ job }: { job: Partial<Job> }) {
               {job.category}
             </Badge>
           )}
-          {job.employment_type && job.employment_type !== "permanent" && (
-            <Badge variant="outline" className="text-xs capitalize">
-              {job.employment_type.replace("_", " ")}
+          {job.employment_type && (
+            <Badge variant="outline" className="text-xs">
+              {job.employment_type.toLowerCase() === "permanent"
+                ? "Permanent"
+                : job.employment_type.toLowerCase() === "temporary"
+                  ? "Temporary"
+                  : job.employment_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
             </Badge>
           )}
         </div>

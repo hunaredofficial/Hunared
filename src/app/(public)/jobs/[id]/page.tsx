@@ -30,33 +30,22 @@ import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import type { Job } from "@/types/database";
 
 
-import type { Metadata } from "next";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  try {
-    const supabase = createAdminClient();
-    const { data } = await supabase
-      .from("jobs")
-      .select("job_title, company_name, location, category")
-      .eq("id", id)
-      .maybeSingle();
-    if (data?.job_title) {
-      const company = data.company_name ? ` at ${data.company_name}` : "";
-      const loc = data.location ? ` · ${data.location}` : "";
-      return {
-        title: `${data.job_title}${company}`,
-        description: `Apply for ${data.job_title}${company}${loc} on Hunared.`,
-      };
-    }
-  } catch {
-    /* ignore */
-  }
-  return { title: "Job Details" };
+function formatEmploymentType(value: string | null | undefined): string {
+  if (!value) return "";
+  const v = value.toLowerCase().replace(/_/g, " ").trim();
+  if (v === "temporary") return "Temporary";
+  if (v === "permanent") return "Permanent";
+  // Title-case any other value
+  return v.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatExperienceLevel(value: string | null | undefined): string {
+  if (!value || value.toLowerCase() === "any") return "";
+  return value
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export default async function JobDetailPage({
@@ -394,7 +383,18 @@ export default async function JobDetailPage({
                   <Detail
                     icon={<Tag className="h-4 w-4" />}
                     label="Employment"
-                    value={job.employment_type}
+                    value={formatEmploymentType(job.employment_type)}
+                  />
+                )}
+                {formatExperienceLevel(
+                  (job as { experience_level?: string | null }).experience_level
+                ) && (
+                  <Detail
+                    icon={<Tag className="h-4 w-4" />}
+                    label="Experience Level"
+                    value={formatExperienceLevel(
+                      (job as { experience_level?: string | null }).experience_level
+                    )}
                   />
                 )}
               </CardContent>
