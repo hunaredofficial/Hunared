@@ -315,7 +315,14 @@ export function CompanyProfile({ slug }: { slug: string }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setReviewError(data.error || "Could not submit review.");
+        setReviewError(
+          (data as { error?: string }).error ||
+            (res.status === 401
+              ? "Please sign in to leave a review."
+              : res.status === 404
+                ? "Review service is unavailable. Please try again later."
+                : "Could not submit review.")
+        );
         return;
       }
       setReviewSuccess(true);
