@@ -21,6 +21,7 @@ import {
   LISTING_CATEGORIES,
   LISTING_CURRENCIES,
   LISTING_SUBCATEGORIES,
+  LISTING_CONDITION_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
   getListingDefaultImage,
   getListingTitlePlaceholder,
@@ -107,6 +108,7 @@ function NewListingForm() {
     searchParams.get("subcategory") ?? ""
   );
   const [rentalPeriod, setRentalPeriod] = useState("");
+  const [condition, setCondition] = useState("");
   const [country, setCountry] = useState("SA");
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
@@ -237,7 +239,11 @@ function NewListingForm() {
               ? [subcategory.trim(), rentalPeriod.trim()]
                   .filter(Boolean)
                   .join(" · ") || undefined
-              : subcategory || undefined,
+              : category === "for_sale"
+                ? [subcategory.trim(), condition.trim()]
+                    .filter(Boolean)
+                    .join(" · ") || undefined
+                : subcategory || undefined,
           country: country || undefined,
           city: city.trim() || undefined,
           location: locationString,
@@ -433,6 +439,35 @@ function NewListingForm() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {/* Condition — For Sale only */}
+            {category === "for_sale" && (
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Condition
+                </label>
+                <Select
+                  value={condition || undefined}
+                  onValueChange={(v: string | null) => {
+                    if (v) setCondition(v);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select condition..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LISTING_CONDITION_OPTIONS.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Optional — helps buyers filter by New, Used, Refurbished, etc.
+                </p>
               </div>
             )}
 
