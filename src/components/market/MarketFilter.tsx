@@ -22,6 +22,7 @@ import { COUNTRIES } from "@/lib/countries";
 import {
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
+  LISTING_CONDITION_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
 } from "@/lib/constants";
 import { useGeo } from "@/components/providers/GeoProvider";
@@ -164,21 +165,19 @@ export function MarketFilter({
 
   const availableSubs = category ? SUBCATEGORIES[category] ?? [] : [];
 
-  // Category-aware section visibility (only where real subcategory data exists)
-  const showCondition =
-    category === "for_sale" ||
-    category === "vehicles" ||
-    category === "electronics" ||
-    category === "furniture_home";
+  // Category-aware section visibility
+  // Condition = New/Used/etc. (separate from product Type subcategories)
+  const showCondition = category === "for_sale";
   const showRental = category === "for_rent" || category === "accommodation";
   const showService = category === "services";
-  const showType = availableSubs.length > 0 && !showCondition && !showRental && !showService;
+  // Type (product subcategories) for any category that has them, except rental/service special UIs
+  const showType =
+    availableSubs.length > 0 && !showRental && !showService;
 
-  // For for_sale, New/Used/Like New act as condition
-  const conditionOptions =
-    category === "for_sale"
-      ? ["New", "Used", "Like New"]
-      : [];
+  // Condition options live only in the Condition filter (not in subcategory lists)
+  const conditionOptions = showCondition
+    ? [...LISTING_CONDITION_OPTIONS]
+    : [];
 
   // Rental Period filter: Hourly–Yearly only (type items stay in Subcategory)
   const rentalOptions =
@@ -599,7 +598,7 @@ export function MarketFilter({
               ))}
             </Section>
 
-            {/* Type / Subcategory — when category has types */}
+            {/* Type / Subcategory — product types (For Sale, Vehicles, Electronics, …) */}
             {showType && (
               <Section
                 title="Type"
@@ -607,9 +606,25 @@ export function MarketFilter({
                 onToggle={() => toggleSection("type")}
               >
                 <RadioRow
-                  checked={!subcategory}
+                  checked={
+                    !subcategory ||
+                    (showCondition &&
+                      conditionOptions.includes(
+                        subcategory as (typeof LISTING_CONDITION_OPTIONS)[number]
+                      ))
+                  }
                   label="Any"
-                  onSelect={() => setSubcategory("")}
+                  onSelect={() => {
+                    // Clear only when current value is a product type (not a condition)
+                    if (
+                      !showCondition ||
+                      !conditionOptions.includes(
+                        subcategory as (typeof LISTING_CONDITION_OPTIONS)[number]
+                      )
+                    ) {
+                      setSubcategory("");
+                    }
+                  }}
                 />
                 {availableSubs.map((s) => (
                   <RadioRow
@@ -622,7 +637,7 @@ export function MarketFilter({
               </Section>
             )}
 
-            {/* Condition — only for_sale (New / Used / Like New stored as subcategory) */}
+            {/* Condition — For Sale only (New / Used / etc.; still filters via subcategory param) */}
             {showCondition && conditionOptions.length > 0 && (
               <Section
                 title="Condition"
@@ -630,34 +645,16 @@ export function MarketFilter({
                 onToggle={() => toggleSection("condition")}
               >
                 <RadioRow
-                  checked={!subcategory}
+                  checked={!subcategory || !conditionOptions.includes(subcategory as (typeof LISTING_CONDITION_OPTIONS)[number])}
                   label="Any"
-                  onSelect={() => setSubcategory("")}
+                  onSelect={() => {
+                    // Clear only if current selection is a condition value
+                    if (conditionOptions.includes(subcategory as (typeof LISTING_CONDITION_OPTIONS)[number])) {
+                      setSubcategory("");
+                    }
+                  }}
                 />
                 {conditionOptions.map((s) => (
-                  <RadioRow
-                    key={s}
-                    checked={subcategory === s}
-                    label={s}
-                    onSelect={() => setSubcategory(s)}
-                  />
-                ))}
-              </Section>
-            )}
-
-            {/* Vehicles / Electronics / Furniture type when not for_sale condition */}
-            {showCondition && category !== "for_sale" && availableSubs.length > 0 && (
-              <Section
-                title="Type"
-                open={!!openSections.type}
-                onToggle={() => toggleSection("type")}
-              >
-                <RadioRow
-                  checked={!subcategory}
-                  label="Any"
-                  onSelect={() => setSubcategory("")}
-                />
-                {availableSubs.map((s) => (
                   <RadioRow
                     key={s}
                     checked={subcategory === s}

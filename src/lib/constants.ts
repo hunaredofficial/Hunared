@@ -801,6 +801,16 @@ export function getListingTitlePlaceholder(category: string | null | undefined):
   return LISTING_TITLE_PLACEHOLDERS[category] ?? "e.g. Enter a clear title for your listing";
 }
 
+/** Condition options for For Sale (filter section only — not product subcategories). */
+export const LISTING_CONDITION_OPTIONS = [
+  "New",
+  "Used",
+  "Like New",
+  "Refurbished",
+  "Open Box",
+  "Wholesale Lot",
+] as const;
+
 /** Rental period options for For Rent listings (separate from type subcategory). */
 export const RENTAL_PERIOD_OPTIONS = [
   "Hourly",
@@ -816,12 +826,48 @@ export const RENTAL_PERIOD_OPTIONS = [
  */
 export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
   for_sale: [
-    "New",
-    "Used",
-    "Like New",
-    "Refurbished",
-    "Open Box",
-    "Wholesale Lot",
+    "Mobile Phones & Tablets",
+    "Computers, Laptops & IT",
+    "Electronics & Technology",
+    "TV, Audio, Video",
+    "Cameras & Photography",
+    "Home Appliances",
+    "Furniture & Home Decor",
+    "Kitchen & Dining",
+    "Garden, Outdoor & Patio",
+    "Vehicles & Auto Parts",
+    "Safety, PPE & Workwear",
+    "Motorcycles, Bicycles & Accessories",
+    "Clothing & Garments",
+    "Shoes & Footwear",
+    "Jewelry",
+    "Bags, Luggage & Travel",
+    "Watches & Accessories",
+    "Beauty & Personal Care",
+    "Baby, Kids & Maternity",
+    "Toys, Games & Hobbies",
+    "Sports, Fitness & Recreation",
+    "Books, Education & Media",
+    "Pet Supplies & Accessories",
+    "Tools, Hardware & DIY",
+    "Machinery & Equipment",
+    "Construction & Building Materials",
+    "Electrical & Instrumentation",
+    "Mechanical Equipment & Parts",
+    "Industrial & Commercial Equipment",
+    "Oil & Gas Equipment & Supplies",
+    "Agriculture, Farming & Gardening Equipment",
+    "Business & Office Supplies",
+    "Food, Grocery & Beverages",
+    "Art, Antiques & Collectibles",
+    "Handmade, Crafts & Custom Products",
+    "Real Estate, Land & Property",
+    "Tickets, Vouchers & Gift Cards",
+    "Gifts & Special Items",
+    "Wholesale & Bulk Lots",
+    "Clearance, Overstock & Liquidation",
+    "General Items",
+    "Other",
   ],
   for_rent: [
     "Tools",
