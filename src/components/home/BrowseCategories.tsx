@@ -24,8 +24,6 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "services", label: "Services", icon: Wrench },
 ];
 
-
-
 const LEARNING_CATEGORIES: { label: string; href: string }[] = [
   { label: "Career Tips", href: "/education?category=career_tips" },
   { label: "Engineering", href: "/education?category=engineering" },
@@ -36,7 +34,11 @@ const LEARNING_CATEGORIES: { label: string; href: string }[] = [
   },
 ];
 
-/** Marketplace groups — matches Post a Listing categories */
+/**
+ * Marketplace groups — aligned with current LISTING_CATEGORIES
+ * (home_furniture, personel_workwear, mobiles_accessories, tools_equipment,
+ *  industrial_materials, pets_animals, etc.)
+ */
 const MARKETPLACE_GROUPS: {
   group: string;
   items: { label: string; category: string }[];
@@ -56,8 +58,13 @@ const MARKETPLACE_GROUPS: {
     group: "Products",
     items: [
       { label: "Electronics", category: "electronics" },
-      { label: "Furniture & Home", category: "furniture_home" },
+      { label: "Mobiles & Accessories", category: "mobiles_accessories" },
+      { label: "Home & Furniture", category: "home_furniture" },
       { label: "Vehicles", category: "vehicles" },
+      { label: "Personal & Workwear", category: "personel_workwear" },
+      { label: "Tools & Equipment", category: "tools_equipment" },
+      { label: "Industrial & Materials", category: "industrial_materials" },
+      { label: "Pets & Animals", category: "pets_animals" },
       { label: "Other", category: "other" },
     ],
   },
@@ -113,7 +120,8 @@ const SERVICE_CATEGORIES: { label: string; category: string }[] = [
 ];
 
 export function BrowseCategories() {
-  const [tab, setTab] = useState<TabKey | null>(null);
+  // Default to Marketplace so the section is useful on first paint (matches live design)
+  const [tab, setTab] = useState<TabKey | null>("marketplace");
 
   return (
     <section
@@ -129,7 +137,10 @@ export function BrowseCategories() {
           <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             Explore
           </p>
-          <h2 id="browse-categories-heading" className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h2
+            id="browse-categories-heading"
+            className="text-2xl sm:text-3xl font-bold tracking-tight"
+          >
             Browse by categories
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
@@ -166,8 +177,16 @@ export function BrowseCategories() {
 
         {/* Careers */}
         {tab === "careers" && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 text-center">
+          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
+            <div className="flex justify-center">
+              <Link
+                href="/jobs"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                View all jobs →
+              </Link>
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
               Job categories
             </p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -184,8 +203,16 @@ export function BrowseCategories() {
 
         {/* Learning */}
         {tab === "learning" && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 text-center">
+          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
+            <div className="flex justify-center">
+              <Link
+                href="/education"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                View all articles →
+              </Link>
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
               Education hub
             </p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -199,7 +226,7 @@ export function BrowseCategories() {
 
         {/* Marketplace */}
         {tab === "marketplace" && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="flex justify-center">
               <Link
                 href="/market"
@@ -227,7 +254,7 @@ export function BrowseCategories() {
 
         {/* Property */}
         {tab === "property" && (
-          <div className="space-y-4">
+          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
             <div className="flex justify-center">
               <Link
                 href="/market?category=property"
@@ -314,7 +341,7 @@ function GroupCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-4 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors">
+    <div className="p-4 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors h-full">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
         {title}
       </p>
