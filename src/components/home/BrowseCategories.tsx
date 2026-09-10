@@ -61,7 +61,7 @@ const MARKETPLACE_GROUPS: {
       { label: "Mobiles & Accessories", category: "mobiles_accessories" },
       { label: "Home & Furniture", category: "home_furniture" },
       { label: "Vehicles", category: "vehicles" },
-      { label: "Fashion & Garments", category: "personel_workwear" },
+      { label: "Personal & Workwear", category: "personel_workwear" },
       { label: "Tools & Equipment", category: "tools_equipment" },
       { label: "Industrial & Materials", category: "industrial_materials" },
       { label: "Pets & Animals", category: "pets_animals" },

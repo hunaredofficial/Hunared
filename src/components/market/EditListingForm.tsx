@@ -138,14 +138,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
   }, [category]);
 
   // ✅ Price is optional only for the "services" category
-  const isPriceOptional =
-  category === "services" ||
-  category === "free_items" ||
-  category === "wanted" ||
-  category === "lost_found" ||
-  category === "announcements" ||
-  category === "donations" ||
-  category === "community";
+  const isPriceOptional = true;
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
