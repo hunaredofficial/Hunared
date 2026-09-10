@@ -34,11 +34,7 @@ const LEARNING_CATEGORIES: { label: string; href: string }[] = [
   },
 ];
 
-/**
- * Marketplace groups — aligned with current LISTING_CATEGORIES
- * (home_furniture, personel_workwear, mobiles_accessories, tools_equipment,
- *  industrial_materials, pets_animals, etc.)
- */
+/** Balanced marketplace groups — all live listing categories, even layout */
 const MARKETPLACE_GROUPS: {
   group: string;
   items: { label: string; category: string }[];
@@ -55,21 +51,26 @@ const MARKETPLACE_GROUPS: {
     ],
   },
   {
-    group: "Products",
+    group: "Electronics & Tech",
     items: [
       { label: "Electronics", category: "electronics" },
       { label: "Mobiles & Accessories", category: "mobiles_accessories" },
+      { label: "Tools & Equipment", category: "tools_equipment" },
+      { label: "Industrial & Materials", category: "industrial_materials" },
+      { label: "Health & Medical", category: "health_medical" },
+      { label: "Other", category: "other" },
+    ],
+  },
+  {
+    group: "Home & Vehicles",
+    items: [
       { label: "Home & Furniture", category: "home_furniture" },
       { label: "Vehicles", category: "vehicles" },
       { label: "Personal & Workwear", category: "personel_workwear" },
-      { label: "Tools & Equipment", category: "tools_equipment" },
-      { label: "Industrial & Materials", category: "industrial_materials" },
       { label: "Pets & Animals", category: "pets_animals" },
       { label: "Sports & Outdoors", category: "sports_outdoors" },
       { label: "Kids & Baby", category: "kids_baby" },
       { label: "Food & Agriculture", category: "food_agriculture" },
-      { label: "Health & Medical", category: "health_medical" },
-      { label: "Other", category: "other" },
     ],
   },
   {
@@ -78,6 +79,15 @@ const MARKETPLACE_GROUPS: {
       { label: "Business & Commercial", category: "business_commercial" },
       { label: "Services", category: "services" },
       { label: "Education & Training", category: "education_training" },
+    ],
+  },
+  {
+    group: "Property",
+    items: [
+      { label: "Accommodation", category: "accommodation" },
+      { label: "Property", category: "property" },
+      { label: "For Rent", category: "for_rent" },
+      { label: "For Sale", category: "for_sale" },
     ],
   },
   {
@@ -102,6 +112,7 @@ const PROPERTY_GROUPS: {
       { label: "Accommodation", category: "accommodation" },
       { label: "Property", category: "property" },
       { label: "For Rent", category: "for_rent" },
+      { label: "Rooms & Bed Spaces", category: "accommodation" },
     ],
   },
   {
@@ -109,22 +120,27 @@ const PROPERTY_GROUPS: {
     items: [
       { label: "For Sale", category: "for_sale" },
       { label: "Business & Commercial", category: "business_commercial" },
+      { label: "Land & Plots", category: "property" },
     ],
   },
 ];
 
-const SERVICE_CATEGORIES: { label: string; category: string }[] = [
-  { label: "Services", category: "services" },
+const SERVICE_CATEGORIES: { label: string; category: string; subcategory?: string }[] = [
+  { label: "Electrical & Power", category: "services", subcategory: "Electrical & Power Services" },
+  { label: "Mechanical", category: "services", subcategory: "Mechanical Services" },
+  { label: "Plumbing & Water", category: "services", subcategory: "Plumbing & Water Services" },
+  { label: "HVAC & Cooling", category: "services", subcategory: "HVAC, Cooling & Refrigeration" },
+  { label: "Construction & Civil", category: "services", subcategory: "Construction & Civil Works" },
+  { label: "Welding & Fabrication", category: "services", subcategory: "Welding, Fabrication & Metalwork" },
+  { label: "HSE & Safety", category: "services", subcategory: "HSE, Fire & Safety Services" },
+  { label: "IT & Technical Support", category: "services", subcategory: "IT, Computer & Technical Support" },
+  { label: "Cleaning & Facilities", category: "services", subcategory: "Cleaning, Housekeeping & Facility Services" },
   { label: "Education & Training", category: "education_training" },
-  { label: "Business & Commercial", category: "business_commercial" },
-  { label: "Offers & Deals", category: "offers_deals" },
-  { label: "Events", category: "events" },
-  { label: "Community", category: "community" },
-  { label: "Announcements", category: "announcements" },
+  { label: "Business Consulting", category: "services", subcategory: "Business, Management & Professional Consulting" },
+  { label: "All Services", category: "services" },
 ];
 
 export function BrowseCategories() {
-  // Default to Marketplace so the section is useful on first paint (matches live design)
   const [tab, setTab] = useState<TabKey | null>("marketplace");
 
   return (
@@ -228,7 +244,7 @@ export function BrowseCategories() {
           </div>
         )}
 
-        {/* Marketplace */}
+        {/* Marketplace — balanced 3-col grid */}
         {tab === "marketplace" && (
           <div className="space-y-5">
             <div className="flex justify-center">
@@ -239,12 +255,12 @@ export function BrowseCategories() {
                 View full marketplace →
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {MARKETPLACE_GROUPS.map(({ group, items }) => (
                 <GroupCard key={group} title={group}>
                   {items.map((item) => (
                     <CategoryChip
-                      key={item.category}
+                      key={`${group}-${item.category}-${item.label}`}
                       label={item.label}
                       small
                       href={`/market?category=${item.category}`}
@@ -298,9 +314,13 @@ export function BrowseCategories() {
             <div className="flex flex-wrap justify-center gap-2">
               {SERVICE_CATEGORIES.map((s) => (
                 <CategoryChip
-                  key={s.category}
+                  key={s.label}
                   label={s.label}
-                  href={`/market?category=${s.category}`}
+                  href={
+                    s.subcategory
+                      ? `/market?category=${s.category}&subcategory=${encodeURIComponent(s.subcategory)}`
+                      : `/market?category=${s.category}`
+                  }
                 />
               ))}
             </div>
@@ -345,11 +365,11 @@ function GroupCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-4 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors h-full">
+    <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors h-full min-h-[140px] flex flex-col">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
         {title}
       </p>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+      <div className="flex flex-wrap gap-1.5 content-start flex-1">{children}</div>
     </div>
   );
 }
