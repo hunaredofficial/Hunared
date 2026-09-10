@@ -745,7 +745,10 @@ function NewListingForm() {
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">
-                  Currency <span className="text-destructive">*</span>
+                  Currency{" "}
+                  <span className="text-muted-foreground text-xs font-normal">
+                    (optional)
+                  </span>
                 </label>
                 <Select
                   value={currency}
