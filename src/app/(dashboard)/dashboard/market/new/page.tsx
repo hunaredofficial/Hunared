@@ -3,7 +3,7 @@
 import { useGeo } from "@/components/providers/GeoProvider";
 import { CURRENCIES, currencyForCountry, currencyOptionLabel } from "@/lib/currencies";
 
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,15 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import {
+  parseListingText,
+  hasListingSuggestions,
+  type SmartListingParseResult,
+} from "@/lib/smartListingParser";
+import {
+  SmartListingFillPanel,
+  type SmartListingFieldKey,
+} from "@/components/market/SmartListingFill";
 import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import {
   LISTING_CATEGORIES,
@@ -113,6 +122,13 @@ function NewListingForm() {
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  // Smart Fill
+  const [smartStatus, setSmartStatus] = useState<"idle" | "analyzing" | "found" | "empty">("idle");
+  const [smartResult, setSmartResult] = useState<SmartListingParseResult | null>(null);
+  const [smartDismissed, setSmartDismissed] = useState(false);
+  const smartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const appliedSmart = useRef<Set<string>>(new Set());
+
   const [listingType, setListingType] = useState<ListingType>("standard");
   const [expiration, setExpiration] = useState<ExpirationOptionValue>("never");
   const [externalLink, setExternalLink] = useState("");
@@ -161,6 +177,101 @@ function NewListingForm() {
       URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
+  }
+
+
+  const runSmartAnalyze = useCallback((t: string, d: string) => {
+    if (smartTimer.current) clearTimeout(smartTimer.current);
+    const plain = (d || "").replace(/<[^>]+>/g, " ").trim();
+    if ((t || "").trim().length < 4 && plain.length < 8) {
+      setSmartStatus("idle");
+      setSmartResult(null);
+      return;
+    }
+    setSmartStatus("analyzing");
+    smartTimer.current = setTimeout(() => {
+      const result = parseListingText(t, d);
+      if (hasListingSuggestions(result)) {
+        setSmartResult(result);
+        setSmartStatus("found");
+        setSmartDismissed(false);
+      } else {
+        setSmartResult(null);
+        setSmartStatus("empty");
+      }
+    }, 450);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (smartTimer.current) clearTimeout(smartTimer.current);
+    };
+  }, []);
+
+  function applySmartField(key: SmartListingFieldKey) {
+    if (!smartResult) return;
+    const s = smartResult[key];
+    if (!s) return;
+    switch (key) {
+      case "category":
+        setCategory(s.value);
+        setSubcategory("");
+        setRentalPeriod("");
+        setCondition("");
+        break;
+      case "subcategory":
+        setSubcategory(s.value);
+        break;
+      case "condition":
+        setCondition(s.value);
+        break;
+      case "rentalPeriod":
+        setRentalPeriod(s.value);
+        break;
+      case "price":
+        setPrice(s.value);
+        break;
+      case "currency":
+        setCurrency(s.value);
+        setCurrencyTouched(true);
+        break;
+      case "country":
+        setCountry(s.value);
+        break;
+      case "city":
+        setCity(s.value);
+        break;
+      case "contactPhone":
+        setContactPhone(s.value);
+        break;
+      case "suggestedDescription":
+        setDescription(s.value);
+        break;
+    }
+    appliedSmart.current.add(key);
+    toast.success(`${key === "suggestedDescription" ? "Description" : key} applied`);
+  }
+
+  function applyAllSmart() {
+    if (!smartResult) return;
+    const order: SmartListingFieldKey[] = [
+      "category",
+      "subcategory",
+      "condition",
+      "rentalPeriod",
+      "price",
+      "currency",
+      "country",
+      "city",
+      "contactPhone",
+      "suggestedDescription",
+    ];
+    // Apply category first so subcategory is valid
+    for (const key of order) {
+      if (smartResult[key]) applySmartField(key);
+    }
+    setSmartDismissed(true);
+    toast.success("Smart Fill applied");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -344,12 +455,34 @@ function NewListingForm() {
               </label>
               <input
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setTitle(v);
+                  runSmartAnalyze(v, description);
+                }}
+                onBlur={() => runSmartAnalyze(title, description)}
                 placeholder={getListingTitlePlaceholder(category)}
                 maxLength={100}
                 className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Tip: include product type, brand, and city — Smart Fill can detect category & more.
+              </p>
             </div>
+
+            {/* Smart Fill */}
+            <SmartListingFillPanel
+              status={smartStatus}
+              result={smartResult}
+              dismissed={smartDismissed}
+              onApplyAll={applyAllSmart}
+              onApplyOne={applySmartField}
+              onDismiss={() => setSmartDismissed(true)}
+              onRefresh={() => {
+                setSmartDismissed(false);
+                runSmartAnalyze(title, description);
+              }}
+            />
 
             {/* Category + Subcategory */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -672,9 +805,15 @@ function NewListingForm() {
               </label>
               <RichTextEditor
                 value={description}
-                onChange={setDescription}
+                onChange={(v) => {
+                  setDescription(v);
+                  runSmartAnalyze(title, v);
+                }}
                 placeholder="Describe your listing in detail..."
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave short and use Smart Fill to suggest a structured description from the title.
+              </p>
             </div>
 
             <div className="flex gap-3 pt-2">
