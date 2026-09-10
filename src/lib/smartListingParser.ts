@@ -152,22 +152,35 @@ function scoreCategory(text: string): { value: string; score: number } | null {
   return best;
 }
 
+function normalizeWord(w: string): string {
+  const x = w.toLowerCase().trim();
+  if (x.endsWith("ies") && x.length > 4) return x.slice(0, -3) + "y";
+  if (x.endsWith("sses")) return x.slice(0, -2);
+  if (x.endsWith("s") && !x.endsWith("ss") && x.length > 3) return x.slice(0, -1);
+  return x;
+}
+
 function scoreSubcategory(category: string, text: string): { value: string; score: number } | null {
   const subs = LISTING_SUBCATEGORIES[category] ?? [];
   if (!subs.length) return null;
   const lower = text.toLowerCase();
+  const words = new Set(lower.split(/[^a-z0-9+]+/).filter(Boolean).map(normalizeWord));
   let best: { value: string; score: number } | null = null;
   for (const sub of subs) {
-    const tokens = sub.toLowerCase().split(/[&,/]| and /).map((s) => s.trim()).filter((s) => s.length > 2);
+    const subLower = sub.toLowerCase();
     let score = 0;
     // full phrase
-    if (lower.includes(sub.toLowerCase())) score += sub.length + 5;
+    if (lower.includes(subLower)) score += subLower.length + 8;
+    const tokens = subLower.split(/[&,/]| and /).map((s) => s.trim()).filter((s) => s.length > 2);
     for (const t of tokens) {
-      if (lower.includes(t)) score += t.length;
+      if (lower.includes(t)) score += t.length + 2;
+      const nt = normalizeWord(t);
+      if (words.has(nt)) score += nt.length + 3;
     }
-    // word overlap
-    for (const w of sub.toLowerCase().split(/\s+/)) {
-      if (w.length > 3 && lower.includes(w)) score += 2;
+    for (const w of subLower.split(/\s+/)) {
+      if (w.length <= 2) continue;
+      const nw = normalizeWord(w);
+      if (words.has(nw) || lower.includes(w)) score += 3;
     }
     if (score > 0 && (!best || score > best.score)) best = { value: sub, score };
   }
@@ -482,11 +495,26 @@ export function parseListingText(
 
   const catForSub = result.category?.value ?? "";
   if (catForSub) {
-    const subHit = scoreSubcategory(catForSub, text);
-    if (subHit && subHit.score >= 4) {
+    let subHit = scoreSubcategory(catForSub, text);
+    // Related categories share room/property words
+    if (!subHit || subHit.score < 5) {
+      const related: Record<string, string[]> = {
+        for_rent: ["accommodation", "property", "vehicles", "tools_equipment"],
+        accommodation: ["for_rent", "property"],
+        property: ["for_rent", "accommodation"],
+        for_sale: ["electronics", "mobiles_accessories", "vehicles", "home_furniture"],
+        electronics: ["mobiles_accessories", "for_sale"],
+        mobiles_accessories: ["electronics", "for_sale"],
+      };
+      for (const alt of related[catForSub] ?? []) {
+        const altHit = scoreSubcategory(alt, text);
+        if (altHit && (!subHit || altHit.score > subHit.score)) subHit = altHit;
+      }
+    }
+    if (subHit && subHit.score >= 3) {
       result.subcategory = {
         value: subHit.value,
-        confidence: confFromScore(subHit.score, 14, 7),
+        confidence: confFromScore(subHit.score, 10, 4),
       };
     }
   }
@@ -512,7 +540,7 @@ export function parseListingText(
       };
       result.subcategory = {
         value: best.sub,
-        confidence: confFromScore(best.score, 14, 7),
+        confidence: confFromScore(best.score, 10, 4),
       };
     }
   }

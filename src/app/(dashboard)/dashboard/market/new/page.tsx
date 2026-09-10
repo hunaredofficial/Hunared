@@ -190,26 +190,49 @@ function NewListingForm() {
       const result = parseListingText(t, "");
       const filled: string[] = [];
 
-      if (
+      const nextCategory =
         result.category &&
         (result.category.confidence === "high" || result.category.confidence === "medium") &&
         !userLocked.current.has("category")
-      ) {
-        setCategory(result.category.value);
-        filled.push(result.category.label || result.category.value);
-        // reset dependent fields when category auto-changes
-        if (!userLocked.current.has("subcategory")) setSubcategory("");
-        if (!userLocked.current.has("condition")) setCondition("");
-        if (!userLocked.current.has("rentalPeriod")) setRentalPeriod("");
+          ? result.category.value
+          : null;
+      const nextSubcategory =
+        result.subcategory &&
+        (result.subcategory.confidence === "high" ||
+          result.subcategory.confidence === "medium" ||
+          result.subcategory.confidence === "low") &&
+        !userLocked.current.has("subcategory")
+          ? result.subcategory.value
+          : null;
+
+      if (nextCategory) {
+        setCategory((prev) => {
+          if (prev !== nextCategory) {
+            // Category changed — clear dependent fields first
+            if (!userLocked.current.has("condition")) setCondition("");
+            if (!userLocked.current.has("rentalPeriod")) setRentalPeriod("");
+          }
+          return nextCategory;
+        });
+        filled.push(result.category!.label || nextCategory);
       }
 
-      if (
-        result.subcategory &&
-        (result.subcategory.confidence === "high" || result.subcategory.confidence === "medium") &&
-        !userLocked.current.has("subcategory")
-      ) {
-        setSubcategory(result.subcategory.value);
-        filled.push(result.subcategory.value);
+      // Defer subcategory so Select options exist for the new category
+      if (nextSubcategory) {
+        const subVal = nextSubcategory;
+        // Apply immediately and again after category options mount
+        setSubcategory(subVal);
+        filled.push(subVal);
+        window.setTimeout(() => {
+          if (!userLocked.current.has("subcategory")) {
+            setSubcategory(subVal);
+          }
+        }, 50);
+        window.setTimeout(() => {
+          if (!userLocked.current.has("subcategory")) {
+            setSubcategory(subVal);
+          }
+        }, 200);
       }
 
       if (
@@ -809,35 +832,6 @@ function NewListingForm() {
             </div>
 
 
-            {/* Auto-close / expiration — same options as jobs */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Close Listing Automatically
-              </label>
-              <Select
-                value={expiration}
-                onValueChange={(v: string | null) => {
-                  if (v) setExpiration(v as ExpirationOptionValue);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Never / Keep Open">
-                    {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
-                      "Never / Keep Open"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPIRATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Optional. Leave as Never to keep the listing open until you close it.
-              </p>
-            </div>
 
             {/* Description */}
             <div>
@@ -897,6 +891,37 @@ function NewListingForm() {
                   Fill title, category, subcategory & city — a full description is written for you automatically.
                 </p>
               )}
+            </div>
+
+
+            {/* Auto-close / expiration — same options as jobs */}
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Close Listing Automatically
+              </label>
+              <Select
+                value={expiration}
+                onValueChange={(v: string | null) => {
+                  if (v) setExpiration(v as ExpirationOptionValue);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Never / Keep Open">
+                    {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
+                      "Never / Keep Open"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional. Leave as Never to keep the listing open until you close it.
+              </p>
             </div>
 
             <div className="flex gap-3 pt-2">
