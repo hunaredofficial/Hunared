@@ -34,7 +34,11 @@ const LEARNING_CATEGORIES: { label: string; href: string }[] = [
   },
 ];
 
-/** Balanced marketplace groups — all live listing categories, even layout */
+/**
+ * MARKETPLACE only — products & classifieds.
+ * Home and Vehicles are separate groups (not merged).
+ * Property & Services live in their own tabs.
+ */
 const MARKETPLACE_GROUPS: {
   group: string;
   items: { label: string; category: string }[];
@@ -43,7 +47,6 @@ const MARKETPLACE_GROUPS: {
     group: "Buy & Sell",
     items: [
       { label: "For Sale", category: "for_sale" },
-      { label: "For Rent", category: "for_rent" },
       { label: "Offers & Deals", category: "offers_deals" },
       { label: "Wholesale", category: "wholesale" },
       { label: "Free Items", category: "free_items" },
@@ -58,36 +61,30 @@ const MARKETPLACE_GROUPS: {
       { label: "Tools & Equipment", category: "tools_equipment" },
       { label: "Industrial & Materials", category: "industrial_materials" },
       { label: "Health & Medical", category: "health_medical" },
-      { label: "Other", category: "other" },
     ],
   },
   {
-    group: "Home & Vehicles",
+    group: "Home & Living",
     items: [
       { label: "Home & Furniture", category: "home_furniture" },
-      { label: "Vehicles", category: "vehicles" },
       { label: "Personal & Workwear", category: "personel_workwear" },
-      { label: "Pets & Animals", category: "pets_animals" },
-      { label: "Sports & Outdoors", category: "sports_outdoors" },
       { label: "Kids & Baby", category: "kids_baby" },
       { label: "Food & Agriculture", category: "food_agriculture" },
     ],
   },
   {
-    group: "Business",
+    group: "Vehicles",
     items: [
-      { label: "Business & Commercial", category: "business_commercial" },
-      { label: "Services", category: "services" },
-      { label: "Education & Training", category: "education_training" },
+      { label: "Vehicles", category: "vehicles" },
+      { label: "For Rent (Equipment)", category: "for_rent" },
     ],
   },
   {
-    group: "Property",
+    group: "Pets & Lifestyle",
     items: [
-      { label: "Accommodation", category: "accommodation" },
-      { label: "Property", category: "property" },
-      { label: "For Rent", category: "for_rent" },
-      { label: "For Sale", category: "for_sale" },
+      { label: "Pets & Animals", category: "pets_animals" },
+      { label: "Sports & Outdoors", category: "sports_outdoors" },
+      { label: "Other", category: "other" },
     ],
   },
   {
@@ -102,43 +99,114 @@ const MARKETPLACE_GROUPS: {
   },
 ];
 
+/**
+ * PROPERTY tab — housing & real estate only (not mixed into Marketplace products)
+ */
 const PROPERTY_GROUPS: {
   group: string;
-  items: { label: string; category: string }[];
+  items: { label: string; category: string; subcategory?: string }[];
 }[] = [
   {
-    group: "Housing",
+    group: "Accommodation",
     items: [
       { label: "Accommodation", category: "accommodation" },
-      { label: "Property", category: "property" },
-      { label: "For Rent", category: "for_rent" },
-      { label: "Rooms & Bed Spaces", category: "accommodation" },
+      { label: "Apartments", category: "accommodation", subcategory: "Apartments" },
+      { label: "Rooms & Bed Spaces", category: "accommodation", subcategory: "Rooms" },
+      { label: "Shared Housing", category: "accommodation", subcategory: "Shared Housing" },
+      { label: "Staff / Worker Housing", category: "accommodation", subcategory: "Staff Accommodation" },
+      { label: "Hotels & Short Stays", category: "accommodation", subcategory: "Hotels & Short Stays" },
     ],
   },
   {
-    group: "Buy / Commercial",
+    group: "For Rent",
+    items: [
+      { label: "Residential Rentals", category: "for_rent", subcategory: "Residential Properties" },
+      { label: "Apartments", category: "for_rent", subcategory: "Apartments" },
+      { label: "Houses & Villas", category: "for_rent", subcategory: "Houses" },
+      { label: "Commercial Spaces", category: "for_rent", subcategory: "Commercial Properties" },
+      { label: "Offices & Shops", category: "for_rent", subcategory: "Offices" },
+      { label: "Warehouses", category: "for_rent", subcategory: "Warehouses" },
+    ],
+  },
+  {
+    group: "Real Estate",
+    items: [
+      { label: "Property", category: "property" },
+      { label: "Apartments", category: "property", subcategory: "Apartments" },
+      { label: "Villas & Houses", category: "property", subcategory: "Villas" },
+      { label: "Land & Plots", category: "property", subcategory: "Residential Plots" },
+      { label: "Commercial Buildings", category: "property", subcategory: "Commercial Buildings" },
+      { label: "Industrial", category: "property", subcategory: "Industrial Properties" },
+    ],
+  },
+  {
+    group: "Buy / Business",
     items: [
       { label: "For Sale", category: "for_sale" },
       { label: "Business & Commercial", category: "business_commercial" },
-      { label: "Land & Plots", category: "property" },
     ],
   },
 ];
 
-const SERVICE_CATEGORIES: { label: string; category: string; subcategory?: string }[] = [
-  { label: "Electrical & Power", category: "services", subcategory: "Electrical & Power Services" },
-  { label: "Mechanical", category: "services", subcategory: "Mechanical Services" },
-  { label: "Plumbing & Water", category: "services", subcategory: "Plumbing & Water Services" },
-  { label: "HVAC & Cooling", category: "services", subcategory: "HVAC, Cooling & Refrigeration" },
-  { label: "Construction & Civil", category: "services", subcategory: "Construction & Civil Works" },
-  { label: "Welding & Fabrication", category: "services", subcategory: "Welding, Fabrication & Metalwork" },
-  { label: "HSE & Safety", category: "services", subcategory: "HSE, Fire & Safety Services" },
-  { label: "IT & Technical Support", category: "services", subcategory: "IT, Computer & Technical Support" },
-  { label: "Cleaning & Facilities", category: "services", subcategory: "Cleaning, Housekeeping & Facility Services" },
-  { label: "Education & Training", category: "education_training" },
-  { label: "Business Consulting", category: "services", subcategory: "Business, Management & Professional Consulting" },
-  { label: "All Services", category: "services" },
+/**
+ * SERVICES tab — professional & trade services (own section, not mixed into products)
+ */
+const SERVICE_GROUPS: {
+  group: string;
+  items: { label: string; category: string; subcategory?: string }[];
+}[] = [
+  {
+    group: "Trades & Technical",
+    items: [
+      { label: "Electrical & Power", category: "services", subcategory: "Electrical & Power Services" },
+      { label: "Mechanical", category: "services", subcategory: "Mechanical Services" },
+      { label: "Plumbing & Water", category: "services", subcategory: "Plumbing & Water Services" },
+      { label: "HVAC & Cooling", category: "services", subcategory: "HVAC, Cooling & Refrigeration" },
+      { label: "Welding & Fabrication", category: "services", subcategory: "Welding, Fabrication & Metalwork" },
+      { label: "Construction & Civil", category: "services", subcategory: "Construction & Civil Works" },
+    ],
+  },
+  {
+    group: "Industrial & Safety",
+    items: [
+      { label: "Industrial Maintenance", category: "services", subcategory: "Industrial Maintenance & Engineering" },
+      { label: "Oil & Gas & Energy", category: "services", subcategory: "Oil & Gas & Energy Services" },
+      { label: "Instrumentation", category: "services", subcategory: "Instrumentation, Automation & Control" },
+      { label: "Inspection & Testing", category: "services", subcategory: "Inspection, Testing & Certification" },
+      { label: "HSE, Fire & Safety", category: "services", subcategory: "HSE, Fire & Safety Services" },
+      { label: "Scaffolding & Access", category: "services", subcategory: "Scaffolding & Access Services" },
+    ],
+  },
+  {
+    group: "IT & Professional",
+    items: [
+      { label: "IT & Tech Support", category: "services", subcategory: "IT, Computer & Technical Support" },
+      { label: "Web & Software", category: "services", subcategory: "Web, Software & App Development" },
+      { label: "Digital Marketing", category: "services", subcategory: "Digital Marketing, SEO & E-Commerce" },
+      { label: "Business Consulting", category: "services", subcategory: "Business, Management & Professional Consulting" },
+      { label: "Accounting & Legal", category: "services", subcategory: "Accounting, Finance & Legal Services" },
+      { label: "Education & Training", category: "education_training" },
+    ],
+  },
+  {
+    group: "Home & Lifestyle",
+    items: [
+      { label: "Cleaning & Facilities", category: "services", subcategory: "Cleaning, Housekeeping & Facility Services" },
+      { label: "Property Services", category: "services", subcategory: "Property & Real Estate Services" },
+      { label: "Automotive", category: "services", subcategory: "Automotive & Vehicle Services" },
+      { label: "Beauty & Wellness", category: "services", subcategory: "Beauty, Personal Care & Wellness" },
+      { label: "Events & Catering", category: "services", subcategory: "Events, Catering & Hospitality" },
+      { label: "All Services", category: "services" },
+    ],
+  },
 ];
+
+function marketHref(category: string, subcategory?: string) {
+  if (subcategory) {
+    return `/market?category=${category}&subcategory=${encodeURIComponent(subcategory)}`;
+  }
+  return `/market?category=${category}`;
+}
 
 export function BrowseCategories() {
   const [tab, setTab] = useState<TabKey | null>("marketplace");
@@ -190,22 +258,15 @@ export function BrowseCategories() {
         </div>
 
         {tab === null && (
-          <p className="text-center text-sm text-muted-foreground pt-1 pb-0">
+          <p className="text-center text-sm text-muted-foreground pt-1">
             Select a tab to view categories.
           </p>
         )}
 
         {/* Careers */}
         {tab === "careers" && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
-            <div className="flex justify-center">
-              <Link
-                href="/jobs"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                View all jobs →
-              </Link>
-            </div>
+          <Panel>
+            <PanelLink href="/jobs" label="View all jobs →" />
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
               Job categories
             </p>
@@ -218,20 +279,13 @@ export function BrowseCategories() {
                 />
               ))}
             </div>
-          </div>
+          </Panel>
         )}
 
         {/* Learning */}
         {tab === "learning" && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
-            <div className="flex justify-center">
-              <Link
-                href="/education"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                View all articles →
-              </Link>
-            </div>
+          <Panel>
+            <PanelLink href="/education" label="View all articles →" />
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
               Education hub
             </p>
@@ -241,19 +295,14 @@ export function BrowseCategories() {
               ))}
               <CategoryChip label="All articles" href="/education" />
             </div>
-          </div>
+          </Panel>
         )}
 
-        {/* Marketplace — balanced 3-col grid */}
+        {/* MARKETPLACE — products only; Home ≠ Vehicles */}
         {tab === "marketplace" && (
           <div className="space-y-5">
             <div className="flex justify-center">
-              <Link
-                href="/market"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                View full marketplace →
-              </Link>
+              <PanelLink href="/market" label="View full marketplace →" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {MARKETPLACE_GROUPS.map(({ group, items }) => (
@@ -263,7 +312,7 @@ export function BrowseCategories() {
                       key={`${group}-${item.category}-${item.label}`}
                       label={item.label}
                       small
-                      href={`/market?category=${item.category}`}
+                      href={marketHref(item.category)}
                     />
                   ))}
                 </GroupCard>
@@ -272,26 +321,24 @@ export function BrowseCategories() {
           </div>
         )}
 
-        {/* Property */}
+        {/* PROPERTY — own tab, housing & real estate */}
         {tab === "property" && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
+          <div className="space-y-5">
             <div className="flex justify-center">
-              <Link
+              <PanelLink
                 href="/market?category=property"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                View property listings →
-              </Link>
+                label="View property listings →"
+              />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {PROPERTY_GROUPS.map(({ group, items }) => (
                 <GroupCard key={group} title={group}>
                   {items.map((item) => (
                     <CategoryChip
-                      key={item.category + item.label}
+                      key={`${group}-${item.label}`}
                       label={item.label}
                       small
-                      href={`/market?category=${item.category}`}
+                      href={marketHref(item.category, item.subcategory)}
                     />
                   ))}
                 </GroupCard>
@@ -300,34 +347,52 @@ export function BrowseCategories() {
           </div>
         )}
 
-        {/* Services */}
+        {/* SERVICES — own tab, trades & professional */}
         {tab === "services" && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
+          <div className="space-y-5">
             <div className="flex justify-center">
-              <Link
+              <PanelLink
                 href="/market?category=services"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                View all services →
-              </Link>
+                label="View all services →"
+              />
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {SERVICE_CATEGORIES.map((s) => (
-                <CategoryChip
-                  key={s.label}
-                  label={s.label}
-                  href={
-                    s.subcategory
-                      ? `/market?category=${s.category}&subcategory=${encodeURIComponent(s.subcategory)}`
-                      : `/market?category=${s.category}`
-                  }
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {SERVICE_GROUPS.map(({ group, items }) => (
+                <GroupCard key={group} title={group}>
+                  {items.map((item) => (
+                    <CategoryChip
+                      key={`${group}-${item.label}`}
+                      label={item.label}
+                      small
+                      href={marketHref(item.category, item.subcategory)}
+                    />
+                  ))}
+                </GroupCard>
               ))}
             </div>
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 space-y-4">
+      {children}
+    </div>
+  );
+}
+
+function PanelLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="text-sm font-medium text-primary hover:underline inline-flex justify-center w-full sm:w-auto"
+    >
+      {label}
+    </Link>
   );
 }
 
@@ -365,7 +430,7 @@ function GroupCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors h-full min-h-[140px] flex flex-col">
+    <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors h-full min-h-[120px] flex flex-col">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
         {title}
       </p>
