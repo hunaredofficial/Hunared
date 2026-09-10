@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -39,6 +40,17 @@ export function RichTextEditor({
     },
   });
 
+  // Keep editor in sync when value is set from outside (Smart Fill, etc.)
+  useEffect(() => {
+    if (!editor) return;
+    const current = editor.getHTML();
+    const next = value || "";
+    const norm = (h: string) => (h === "<p></p>" ? "" : h);
+    if (norm(current) !== norm(next)) {
+      editor.commands.setContent(next, false);
+    }
+  }, [value, editor]);
+
   if (!editor) return null;
 
   const toolbarBtn =
@@ -51,7 +63,6 @@ export function RichTextEditor({
         className
       )}
     >
-      {/* Toolbar */}
       <div className="flex items-center gap-0.5 border-b border-input px-2 py-1.5">
         <button
           type="button"
@@ -88,10 +99,8 @@ export function RichTextEditor({
         </button>
       </div>
 
-      {/* Editor area */}
       <EditorContent editor={editor} />
 
-      {/* Placeholder styling via Tiptap's built-in class */}
       <style>{`
         .tiptap .is-editor-empty:first-child::before {
           content: attr(data-placeholder);

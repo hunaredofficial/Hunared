@@ -284,75 +284,170 @@ function confFromScore(score: number, high = 12, mid = 6): Confidence {
   return "low";
 }
 
-function buildDescription(
+export function buildDescription(
   title: string,
   category: string | undefined,
-  subcategory: string | undefined
+  subcategory: string | undefined,
+  extras?: {
+    city?: string;
+    condition?: string;
+    price?: string;
+    currency?: string;
+    rentalPeriod?: string;
+  }
 ): string {
-  const t = title.trim() || "This item";
+  const t = title.trim() || "This listing";
   const catLabel =
-    LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? category ?? "listing";
+    LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? category ?? "Marketplace";
   const sub = subcategory?.trim();
+  const city = extras?.city?.trim();
+  const condition = extras?.condition?.trim();
+  const price = extras?.price?.trim();
+  const currency = extras?.currency?.trim();
+  const rentalPeriod = extras?.rentalPeriod?.trim();
+
+  const locationLine = city
+    ? `<p><strong>Location:</strong> ${escapeHtml(city)}</p>`
+    : "";
+  const conditionLine = condition
+    ? `<p><strong>Condition:</strong> ${escapeHtml(condition)}</p>`
+    : "";
+  const priceLine =
+    price
+      ? `<p><strong>Price:</strong> ${escapeHtml(price)}${currency ? ` ${escapeHtml(currency)}` : ""}</p>`
+      : "";
+  const periodLine = rentalPeriod
+    ? `<p><strong>Rental period:</strong> ${escapeHtml(rentalPeriod)}</p>`
+    : "";
 
   if (category === "services") {
     return [
       `<p><strong>${escapeHtml(t)}</strong></p>`,
-      `<p>Professional ${escapeHtml(sub || catLabel)} available.</p>`,
+      `<p>Professional <em>${escapeHtml(sub || catLabel)}</em> service.</p>`,
+      locationLine,
+      priceLine,
+      `<p>What you can expect:</p>`,
       `<ul>`,
-      `<li>Experienced and reliable service</li>`,
-      `<li>Quality workmanship</li>`,
-      `<li>Contact for details, availability, and quotation</li>`,
+      `<li>Clear scope and honest communication</li>`,
+      `<li>Reliable scheduling and quality workmanship</li>`,
+      `<li>Quote available on request — share your requirements</li>`,
       `</ul>`,
-      `<p>Message via the listing contact options to discuss your requirements.</p>`,
-    ].join("");
+      `<p>Contact the provider through this listing for availability, pricing, and next steps.</p>`,
+    ]
+      .filter(Boolean)
+      .join("");
   }
 
   if (category === "for_rent" || category === "accommodation") {
     return [
       `<p><strong>${escapeHtml(t)}</strong></p>`,
-      `<p>${escapeHtml(sub || catLabel)} available for rent.</p>`,
+      `<p>${escapeHtml(sub || "Rental")} available for rent${city ? ` in <strong>${escapeHtml(city)}</strong>` : ""}.</p>`,
+      periodLine,
+      priceLine,
+      locationLine,
+      `<p>Details:</p>`,
       `<ul>`,
-      `<li>Please check availability and viewing times</li>`,
-      `<li>Terms and deposit as agreed with the owner</li>`,
-      `<li>Contact for more photos and details</li>`,
+      `<li>Suitable for serious enquiries only</li>`,
+      `<li>Viewing by appointment — contact to arrange</li>`,
+      `<li>Terms, deposit, and move-in date to be confirmed with the owner</li>`,
+      `<li>More photos and full specifications on request</li>`,
       `</ul>`,
-    ].join("");
+      `<p>Message via the contact options on this listing to check availability.</p>`,
+    ]
+      .filter(Boolean)
+      .join("");
+  }
+
+  if (category === "property") {
+    return [
+      `<p><strong>${escapeHtml(t)}</strong></p>`,
+      `<p>${escapeHtml(sub || "Property")} listing${city ? ` in <strong>${escapeHtml(city)}</strong>` : ""}.</p>`,
+      priceLine,
+      locationLine,
+      `<ul>`,
+      `<li>Contact for full specifications, documents, and viewing</li>`,
+      `<li>Serious buyers / investors only</li>`,
+      `</ul>`,
+    ]
+      .filter(Boolean)
+      .join("");
   }
 
   if (category === "wanted") {
     return [
       `<p><strong>${escapeHtml(t)}</strong></p>`,
-      `<p>Looking to buy: ${escapeHtml(sub || catLabel)}.</p>`,
-      `<p>Please contact with details, price, and condition if you have a match.</p>`,
-    ].join("");
+      `<p>Looking for: <em>${escapeHtml(sub || catLabel)}</em>${city ? ` in ${escapeHtml(city)}` : ""}.</p>`,
+      priceLine,
+      `<p>Please contact if you have a matching item. Include condition, price, and photos in your reply.</p>`,
+    ]
+      .filter(Boolean)
+      .join("");
   }
 
   if (category === "lost_found") {
     return [
       `<p><strong>${escapeHtml(t)}</strong></p>`,
-      `<p>Please contact if you have information. Provide location, date, and any identifying details when you reply.</p>`,
-    ].join("");
+      locationLine,
+      `<p>Please contact if you have information. When you reply, include:</p>`,
+      `<ul>`,
+      `<li>Where and when you saw it</li>`,
+      `<li>Any identifying details</li>`,
+      `<li>How we can reach you</li>`,
+      `</ul>`,
+      `<p>Thank you for helping the community.</p>`,
+    ]
+      .filter(Boolean)
+      .join("");
   }
 
   if (category === "free_items" || category === "donations") {
     return [
       `<p><strong>${escapeHtml(t)}</strong></p>`,
-      `<p>${escapeHtml(sub || catLabel)} — free for pickup / donation.</p>`,
-      `<p>Contact to arrange collection. Serious enquiries only.</p>`,
-    ].join("");
+      `<p>${escapeHtml(sub || catLabel)} — free for collection / donation${city ? ` (${escapeHtml(city)})` : ""}.</p>`,
+      conditionLine,
+      `<ul>`,
+      `<li>Pickup only unless otherwise agreed</li>`,
+      `<li>First serious contact preferred</li>`,
+      `</ul>`,
+      `<p>Contact to arrange collection time and location.</p>`,
+    ]
+      .filter(Boolean)
+      .join("");
   }
 
-  // Default product-style description
+  if (category === "education_training") {
+    return [
+      `<p><strong>${escapeHtml(t)}</strong></p>`,
+      `<p>${escapeHtml(sub || "Training / course")} opportunity.</p>`,
+      locationLine,
+      priceLine,
+      `<ul>`,
+      `<li>Contact for schedule, fees, and registration details</li>`,
+      `<li>Ask about prerequisites and certification outcomes</li>`,
+      `</ul>`,
+    ]
+      .filter(Boolean)
+      .join("");
+  }
+
+  // Default product / general listing
   return [
     `<p><strong>${escapeHtml(t)}</strong></p>`,
-    `<p>${escapeHtml(sub ? `${sub} · ` : "")}${escapeHtml(catLabel)}.</p>`,
+    `<p>${escapeHtml(sub ? `${sub} · ` : "")}${escapeHtml(catLabel)}${city ? ` — ${escapeHtml(city)}` : ""}.</p>`,
+    conditionLine,
+    priceLine,
+    locationLine,
+    `<p>Highlights:</p>`,
     `<ul>`,
-    `<li>Please read the title and contact for full specifications</li>`,
+    `<li>Please read the title carefully and ask for full specifications</li>`,
+    condition ? `<li>Condition stated as ${escapeHtml(condition)}</li>` : `<li>Condition details available on request</li>`,
     `<li>Inspection welcome where applicable</li>`,
     `<li>Serious buyers only</li>`,
     `</ul>`,
-    `<p>Contact the seller for price confirmation, location, and more photos.</p>`,
-  ].join("");
+    `<p>Contact the seller for confirmation, more photos, and handover details.</p>`,
+  ]
+    .filter(Boolean)
+    .join("");
 }
 
 function escapeHtml(s: string): string {
@@ -464,8 +559,14 @@ export function parseListingText(
     const cat = result.category?.value;
     const sub = result.subcategory?.value;
     result.suggestedDescription = {
-      value: buildDescription(title, cat, sub),
-      confidence: cat ? "medium" : "low",
+      value: buildDescription(title, cat, sub, {
+        city: result.city?.value,
+        condition: result.condition?.value,
+        price: result.price?.value,
+        currency: result.currency?.value,
+        rentalPeriod: result.rentalPeriod?.value,
+      }),
+      confidence: cat ? "high" : "medium",
     };
   }
 

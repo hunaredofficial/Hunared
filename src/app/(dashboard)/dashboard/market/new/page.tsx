@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import {
   parseListingText,
   hasListingSuggestions,
+  buildDescription,
   type SmartListingParseResult,
 } from "@/lib/smartListingParser";
 import {
@@ -244,12 +245,29 @@ function NewListingForm() {
       case "contactPhone":
         setContactPhone(s.value);
         break;
-      case "suggestedDescription":
-        setDescription(s.value);
+      case "suggestedDescription": {
+        // Rebuild a richer description from title + detected fields
+        const html =
+          buildDescription(
+            title,
+            smartResult.category?.value,
+            smartResult.subcategory?.value,
+            {
+              city: smartResult.city?.value,
+              condition: smartResult.condition?.value,
+              price: smartResult.price?.value,
+              currency: smartResult.currency?.value,
+              rentalPeriod: smartResult.rentalPeriod?.value,
+            }
+          ) || s.value;
+        setDescription(html);
         break;
+      }
     }
     appliedSmart.current.add(key);
-    toast.success(`${key === "suggestedDescription" ? "Description" : key} applied`);
+    toast.success(
+      key === "suggestedDescription" ? "Description applied" : "Applied"
+    );
   }
 
   function applyAllSmart() {
@@ -264,14 +282,27 @@ function NewListingForm() {
       "country",
       "city",
       "contactPhone",
-      "suggestedDescription",
     ];
-    // Apply category first so subcategory is valid
     for (const key of order) {
       if (smartResult[key]) applySmartField(key);
     }
+    // Always build best description last (even if suggestion was low confidence)
+    const html = buildDescription(
+      title,
+      smartResult.category?.value,
+      smartResult.subcategory?.value,
+      {
+        city: smartResult.city?.value,
+        condition: smartResult.condition?.value,
+        price: smartResult.price?.value,
+        currency: smartResult.currency?.value,
+        rentalPeriod: smartResult.rentalPeriod?.value,
+      }
+    );
+    setDescription(html);
+    appliedSmart.current.add("suggestedDescription");
     setSmartDismissed(true);
-    toast.success("Smart Fill applied");
+    toast.success("Smart Fill applied — description updated");
   }
 
   async function handleSubmit(e: React.FormEvent) {
