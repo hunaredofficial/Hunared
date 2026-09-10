@@ -1776,28 +1776,208 @@ export const LISTING_CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
 
 
 /**
- * Resolve a category (and optional subcategory) default image URL.
- * Always returns a product/place/object image — never people.
+ * Curated object/place/product Unsplash images — no people.
+ * Used when seller does not upload a photo.
+ */
+const KEYWORD_DEFAULT_IMAGES: { keys: string[]; url: string }[] = [
+  // Phones & mobiles
+  {
+    keys: ["iphone", "samsung", "smartphone", "mobile phone", "phone", "mobile", "android phone"],
+    url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["tablet", "ipad"],
+    url: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["charger", "power bank", "cable", "earbud", "earphone", "headphone", "airpod"],
+    url: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
+  },
+  // Computers
+  {
+    keys: ["laptop", "macbook", "notebook"],
+    url: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["desktop", "pc", "computer", "workstation", "monitor", "keyboard", "mouse", "ram", "graphics card"],
+    url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["printer", "scanner", "server", "router", "networking"],
+    url: "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=800&q=80",
+  },
+  // Cameras & AV
+  {
+    keys: ["camera", "photography", "dslr", "lens", "drone"],
+    url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["tv", "television", "speaker", "audio", "soundbar"],
+    url: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["gaming", "console", "playstation", "xbox", "nintendo"],
+    url: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&w=800&q=80",
+  },
+  // Vehicles
+  {
+    keys: ["suv", "4x4", "pickup", "truck", "lorry", "van", "bus"],
+    url: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["car", "sedan", "toyota", "honda", "bmw", "mercedes", "vehicle"],
+    url: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["motorcycle", "bike", "scooter", "bicycle", "ebike"],
+    url: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["tire", "tyre", "wheel", "spare part", "engine", "gearbox"],
+    url: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["boat", "marine", "yacht"],
+    url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+  },
+  // Furniture & home
+  {
+    keys: ["sofa", "couch", "living room"],
+    url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["bed", "mattress", "bedroom", "wardrobe"],
+    url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["table", "desk", "chair", "dining", "office furniture"],
+    url: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["refrigerator", "fridge", "freezer", "washing machine", "dryer", "dishwasher", "oven", "microwave", "appliance"],
+    url: "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["air conditioner", "ac ", "fan", "vacuum"],
+    url: "https://images.unsplash.com/photo-1631545806609-35e6d4f0f5b5?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["garden", "outdoor furniture", "bbq", "grill", "patio"],
+    url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80",
+  },
+  // Fashion / workwear (objects only — clothes on rack / flat lay style images)
+  {
+    keys: ["shoe", "boot", "footwear", "sneaker"],
+    url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["bag", "luggage", "handbag", "backpack"],
+    url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["watch", "jewelry", "jewellery", "ring", "necklace"],
+    url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["clothing", "garment", "uniform", "workwear", "ppe", "helmet", "safety"],
+    url: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80",
+  },
+  // Tools & industrial
+  {
+    keys: ["drill", "tool", "hammer", "wrench", "power tool"],
+    url: "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["generator", "compressor", "pump", "welder", "welding", "scaffold", "ladder", "forklift", "crane"],
+    url: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["cement", "steel", "pipe", "cable", "wire", "building material", "construction material", "industrial"],
+    url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
+  },
+  // Property / accommodation (empty interiors / exteriors — avoid crowds)
+  {
+    keys: ["apartment", "flat", "studio", "villa", "house", "room", "bed space", "accommodation"],
+    url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    keys: ["office", "shop", "warehouse", "factory", "land", "plot", "property", "building"],
+    url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80",
+  },
+  // Pets (animals only, no people)
+  {
+    keys: ["cat", "dog", "bird", "fish", "pet", "rabbit", "horse", "camel", "sheep", "goat", "poultry"],
+    url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80",
+  },
+  // Sports
+  {
+    keys: ["football", "soccer", "basketball", "cricket", "tennis", "golf", "fitness", "gym", "sport", "camping", "hiking"],
+    url: "https://images.unsplash.com/photo-1461896836934-ffe607ba6851?auto=format&fit=crop&w=800&q=80",
+  },
+  // Kids / baby gear (objects)
+  {
+    keys: ["stroller", "crib", "toy", "baby", "kids", "nursery", "car seat"],
+    url: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4f3?auto=format&fit=crop&w=800&q=80",
+  },
+  // Food / agriculture
+  {
+    keys: ["fruit", "vegetable", "food", "grocery", "rice", "date", "spice", "farm", "seed", "fertilizer"],
+    url: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=800&q=80",
+  },
+  // Health / medical equipment
+  {
+    keys: ["medical", "hospital", "wheelchair", "thermometer", "blood pressure", "lab", "dental", "first aid"],
+    url: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=800&q=80",
+  },
+  // Services / tools of trade
+  {
+    keys: ["electrical", "plumbing", "hvac", "hse", "security", "cctv", "cleaning", "consulting", "service"],
+    url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=800&q=80",
+  },
+  // Books / education
+  {
+    keys: ["book", "course", "training", "education", "certification", "study"],
+    url: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80",
+  },
+  // Documents / lost found
+  {
+    keys: ["document", "passport", "id ", "wallet", "key", "lost", "found"],
+    url: "https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=800&q=80",
+  },
+  // Business / wholesale
+  {
+    keys: ["wholesale", "bulk", "warehouse stock", "inventory", "business"],
+    url: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=80",
+  },
+];
+
+/**
+ * Resolve a default image from title + category + subcategory.
+ * Always returns a product / place / object image — never people.
  */
 export function getListingDefaultImage(
   category: string,
-  subcategory?: string | null
+  subcategory?: string | null,
+  title?: string | null
 ): string {
-  const sub = (subcategory || "").toLowerCase();
-  if (
-    sub.includes("phone") ||
-    sub.includes("mobile") ||
-    sub.includes("smartphone") ||
-    sub.includes("tablet")
-  ) {
-    return LISTING_CATEGORY_DEFAULT_IMAGES.mobiles_accessories;
+  const haystack = [title || "", subcategory || "", category || ""]
+    .join(" ")
+    .toLowerCase();
+
+  // Prefer longer / more specific keyword matches first
+  let bestUrl: string | null = null;
+  let bestLen = 0;
+  for (const entry of KEYWORD_DEFAULT_IMAGES) {
+    for (const key of entry.keys) {
+      if (haystack.includes(key) && key.length > bestLen) {
+        bestLen = key.length;
+        bestUrl = entry.url;
+      }
+    }
   }
-  if (sub.includes("laptop") || sub.includes("computer")) {
-    return LISTING_CATEGORY_DEFAULT_IMAGES.electronics;
-  }
-  if (sub.includes("car") || sub.includes("truck") || sub.includes("motorcycle")) {
-    return LISTING_CATEGORY_DEFAULT_IMAGES.vehicles;
-  }
+  if (bestUrl) return bestUrl;
+
+  // Category-level curated images (no people)
   return (
     LISTING_CATEGORY_DEFAULT_IMAGES[category] ??
     LISTING_CATEGORY_DEFAULT_IMAGES.other

@@ -215,7 +215,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
       let finalImageUrls = [...keptImages, ...uploadedUrls];
       if (finalImageUrls.length === 0) {
-        finalImageUrls = [getListingDefaultImage(category, null)];
+        finalImageUrls = [getListingDefaultImage(category, listing.subcategory, title.trim())];
       }
 
       const res = await fetch(`/api/market/${listing.id}`, {
@@ -267,7 +267,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <label className="text-sm font-medium block mb-1.5">
               Photos{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                (optional — up to 8; category image used if empty)
+                (optional — up to 8; auto image from title/category if empty)
               </span>
             </label>
             <input
