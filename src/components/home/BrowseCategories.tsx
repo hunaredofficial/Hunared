@@ -209,7 +209,7 @@ function marketHref(category: string, subcategory?: string) {
 }
 
 export function BrowseCategories() {
-  const [tab, setTab] = useState<TabKey | null>("marketplace");
+  const [tab, setTab] = useState<TabKey | null>(null);
 
   return (
     <section

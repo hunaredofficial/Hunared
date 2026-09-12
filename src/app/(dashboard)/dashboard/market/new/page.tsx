@@ -26,6 +26,7 @@ import {
   LISTING_CURRENCIES,
   LISTING_SUBCATEGORIES,
   LISTING_CONDITION_OPTIONS,
+  LOST_FOUND_STATUS_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
   getListingDefaultImage,
   getListingTitlePlaceholder,
@@ -113,6 +114,7 @@ function NewListingForm() {
   );
   const [rentalPeriod, setRentalPeriod] = useState("");
   const [condition, setCondition] = useState("");
+  const [lfStatus, setLfStatus] = useState(searchParams.get("status") === "found" ? "Found" : searchParams.get("status") === "lost" ? "Lost" : "");
   const [country, setCountry] = useState("SA");
   const [city, setCity] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
@@ -359,6 +361,10 @@ function NewListingForm() {
       toast.error("Please select a rental period");
       return;
     }
+    if (category === "lost_found" && !lfStatus) {
+      toast.error("Please select Lost or Found status");
+      return;
+    }
     if (!isPriceOptional && !price.trim()) {
       toast.error("Price is required");
       return;
@@ -415,7 +421,11 @@ function NewListingForm() {
                 ? [subcategory.trim(), condition.trim()]
                     .filter(Boolean)
                     .join(" · ") || undefined
-                : subcategory || undefined,
+                : category === "lost_found"
+                  ? [subcategory.trim(), lfStatus.trim()]
+                      .filter(Boolean)
+                      .join(" · ") || undefined
+                  : subcategory || undefined,
           country: country || undefined,
           city: city.trim() || undefined,
           location: locationString,
@@ -557,6 +567,7 @@ function NewListingForm() {
                       setSubcategory("");
                       setRentalPeriod("");
                       setCondition("");
+                      setLfStatus("");
                       userLocked.current.delete("subcategory");
                     }
                   }}
@@ -662,6 +673,35 @@ function NewListingForm() {
               </div>
             )}
 
+            {/* Lost / Found status — Lost & Found only */}
+            {category === "lost_found" && (
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Status <span className="text-destructive">*</span>
+                </label>
+                <Select
+                  value={lfStatus || undefined}
+                  onValueChange={(v: string | null) => {
+                    if (v) setLfStatus(v);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Lost or Found?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOST_FOUND_STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Required — is this item lost or found?
+                </p>
+              </div>
+            )}
+
             {/* Country + City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -745,10 +785,7 @@ function NewListingForm() {
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">
-                  Currency{" "}
-                  <span className="text-muted-foreground text-xs font-normal">
-                    (optional)
-                  </span>
+                  Currency{" "}<span className="text-muted-foreground text-xs font-normal">(optional)</span>
                 </label>
                 <Select
                   value={currency}

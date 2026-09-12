@@ -32,6 +32,8 @@ interface SearchParams {
   minPrice?: string;
   maxPrice?: string;
   posted?: string;
+  /** Lost & Found: "lost" | "found" */
+  status?: string;
 }
 
 /** Extract a numeric price for sorting/range. Free/blank/text → null. */
@@ -87,6 +89,7 @@ export default async function MarketPage({
   const minPrice = sp.minPrice ?? "";
   const maxPrice = sp.maxPrice ?? "";
   const posted = sp.posted ?? "";
+  const status = sp.status ?? "";
   const page = Math.max(1, parseInt(sp.page ?? "1", 10));
   const limit = 12;
   const from = (page - 1) * limit;
@@ -122,6 +125,14 @@ export default async function MarketPage({
         `subcategory.eq.${subcategory},subcategory.ilike.%${subcategory}%`
       );
     }
+    // Lost & Found status (lost|found) → match "· Lost" / "· Found" or exact in subcategory
+    if (status && category === "lost_found") {
+      const statusLabel = status.toLowerCase() === "found" ? "Found" : status.toLowerCase() === "lost" ? "Lost" : status;
+      query = query.or(
+        `subcategory.eq.${statusLabel},subcategory.ilike.%${statusLabel}%`
+      );
+    }
+
     if (country) query = query.eq("country", country);
     if (city) query = query.ilike("city", `%${city}%`);
     if (search) query = query.ilike("title", `%${search}%`);

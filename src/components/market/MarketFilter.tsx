@@ -23,6 +23,7 @@ import {
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
   LISTING_CONDITION_OPTIONS,
+  LOST_FOUND_STATUS_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
 } from "@/lib/constants";
 import { useGeo } from "@/components/providers/GeoProvider";
@@ -158,6 +159,7 @@ export function MarketFilter({
     condition: false,
     rental: false,
     service: false,
+    status: false,
   });
 
   const toggleSection = (key: string) =>
@@ -170,6 +172,7 @@ export function MarketFilter({
   const showCondition = category === "for_sale";
   const showRental = category === "for_rent" || category === "accommodation";
   const showService = category === "services";
+  const showStatus = category === "lost_found";
   // Type (product subcategories) for any category that has them, except rental/service special UIs
   const showType =
     availableSubs.length > 0 && !showRental && !showService;
@@ -598,6 +601,50 @@ export function MarketFilter({
               ))}
             </Section>
 
+
+            {/* Lost / Found status — Lost & Found only */}
+            {showStatus && (
+              <Section
+                title="Status"
+                open={!!openSections.status}
+                onToggle={() => toggleSection("status")}
+              >
+                <RadioRow
+                  checked={!subcategory || !["Lost", "Found"].some((s) => subcategory === s || subcategory.endsWith(" · " + s))}
+                  label="Any"
+                  onSelect={() => {
+                    // Clear status part if present
+                    if (subcategory === "Lost" || subcategory === "Found") {
+                      setSubcategory("");
+                    } else if (subcategory.includes(" · Lost")) {
+                      setSubcategory(subcategory.replace(" · Lost", ""));
+                    } else if (subcategory.includes(" · Found")) {
+                      setSubcategory(subcategory.replace(" · Found", ""));
+                    }
+                  }}
+                />
+                {(["Lost", "Found"] as const).map((s) => (
+                  <RadioRow
+                    key={s}
+                    checked={subcategory === s || subcategory.endsWith(" · " + s)}
+                    label={s}
+                    onSelect={() => {
+                      // Keep item type if present, swap status
+                      const base = subcategory
+                        .replace(" · Lost", "")
+                        .replace(" · Found", "")
+                        .trim();
+                      if (base && base !== "Lost" && base !== "Found") {
+                        setSubcategory(`${base} · ${s}`);
+                      } else {
+                        setSubcategory(s);
+                      }
+                    }}
+                  />
+                ))}
+              </Section>
+            )}
+
             {/* Type / Subcategory — product types (For Sale, Vehicles, Electronics, …) */}
             {showType && (
               <Section
@@ -629,9 +676,28 @@ export function MarketFilter({
                 {availableSubs.map((s) => (
                   <RadioRow
                     key={s}
-                    checked={subcategory === s}
+                    checked={
+                      subcategory === s ||
+                      subcategory.startsWith(s + " · ")
+                    }
                     label={s}
-                    onSelect={() => setSubcategory(s)}
+                    onSelect={() => {
+                      if (showStatus) {
+                        const status =
+                          subcategory.endsWith(" · Lost")
+                            ? "Lost"
+                            : subcategory.endsWith(" · Found")
+                              ? "Found"
+                              : subcategory === "Lost"
+                                ? "Lost"
+                                : subcategory === "Found"
+                                  ? "Found"
+                                  : "";
+                        setSubcategory(status ? `${s} · ${status}` : s);
+                      } else {
+                        setSubcategory(s);
+                      }
+                    }}
                   />
                 ))}
               </Section>
