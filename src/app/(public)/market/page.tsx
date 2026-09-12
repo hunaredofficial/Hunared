@@ -125,11 +125,17 @@ export default async function MarketPage({
         `subcategory.eq.${subcategory},subcategory.ilike.%${subcategory}%`
       );
     }
-    // Lost & Found status (lost|found) → match "· Lost" / "· Found" or exact in subcategory
-    if (status && category === "lost_found") {
-      const statusLabel = status.toLowerCase() === "found" ? "Found" : status.toLowerCase() === "lost" ? "Lost" : status;
+    // Lost & Found status (lost|found) → only show matching Lost or Found listings
+    if (status && (category === "lost_found" || category === "")) {
+      const statusLabel =
+        status.toLowerCase() === "found"
+          ? "Found"
+          : status.toLowerCase() === "lost"
+            ? "Lost"
+            : status;
+      // Match stored "Type · Lost/Found" in subcategory, or status word in title
       query = query.or(
-        `subcategory.eq.${statusLabel},subcategory.ilike.%${statusLabel}%`
+        `subcategory.eq.${statusLabel},subcategory.ilike.%${statusLabel}%,title.ilike.%${statusLabel}%`
       );
     }
 
@@ -233,6 +239,7 @@ export default async function MarketPage({
             defaultMinPrice={minPrice}
             defaultMaxPrice={maxPrice}
             defaultPosted={posted}
+            defaultStatus={status}
           />
         </div>
       </section>
@@ -244,6 +251,7 @@ export default async function MarketPage({
             {total} listing{total !== 1 ? "s" : ""} found
             {activeCat && ` in ${activeCat.label}`}
             {subcategory && ` › ${subcategory}`}
+            {status && ` › ${status === "lost" ? "Lost" : status === "found" ? "Found" : status}`}
             {activeCountry && ` · ${activeCountry.name}`}
             {city && ` · ${city}`}
             {search && ` matching "${search}"`}

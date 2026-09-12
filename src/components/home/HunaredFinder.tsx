@@ -472,24 +472,40 @@ export function HunaredFinder() {
                   variant="hero"
                 />
 
-                <div className="relative">
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    data-color-scheme="dark"
-                    className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStatus("")}
+                    className={`h-11 sm:h-12 rounded-xl text-sm font-medium border transition-colors ${
+                      status === ""
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-primary/15 bg-background/70 text-muted-foreground hover:border-primary/40"
+                    }`}
                   >
-                    {STATUS_OPTIONS.map((o) => (
-                      <option
-                        key={o.value || "all"}
-                        value={o.value}
-                        className="bg-background text-foreground"
-                      >
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus("lost")}
+                    className={`h-11 sm:h-12 rounded-xl text-sm font-medium border transition-colors ${
+                      status === "lost"
+                        ? "border-rose-500 bg-rose-500/15 text-rose-400"
+                        : "border-primary/15 bg-background/70 text-muted-foreground hover:border-rose-500/40"
+                    }`}
+                  >
+                    Lost
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus("found")}
+                    className={`h-11 sm:h-12 rounded-xl text-sm font-medium border transition-colors ${
+                      status === "found"
+                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        : "border-primary/15 bg-background/70 text-muted-foreground hover:border-emerald-500/40"
+                    }`}
+                  >
+                    Found
+                  </button>
                 </div>
               </div>
 

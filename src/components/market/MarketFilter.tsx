@@ -125,6 +125,7 @@ export function MarketFilter({
   defaultMinPrice = "",
   defaultMaxPrice = "",
   defaultPosted = "",
+  defaultStatus = "",
 }: {
   defaultSearch?: string;
   defaultCategory?: string;
@@ -135,6 +136,8 @@ export function MarketFilter({
   defaultMinPrice?: string;
   defaultMaxPrice?: string;
   defaultPosted?: string;
+  /** Lost & Found: "lost" | "found" */
+  defaultStatus?: string;
 }) {
   const router = useRouter();
   const geo = useGeo();
@@ -149,6 +152,7 @@ export function MarketFilter({
   const [maxPrice, setMaxPrice] = useState(defaultMaxPrice);
   const [posted, setPosted] = useState(defaultPosted);
   const [subcategory, setSubcategory] = useState(defaultSubcategory);
+  const [lfStatus, setLfStatus] = useState(defaultStatus);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -159,7 +163,7 @@ export function MarketFilter({
     condition: false,
     rental: false,
     service: false,
-    status: false,
+    status: true,
   });
 
   const toggleSection = (key: string) =>
@@ -201,6 +205,7 @@ export function MarketFilter({
       minPrice,
       maxPrice,
       posted,
+      status: lfStatus,
       ...overrides,
     };
     const params = new URLSearchParams();
@@ -213,6 +218,7 @@ export function MarketFilter({
     if (vals.minPrice.trim()) params.set("minPrice", vals.minPrice.trim());
     if (vals.maxPrice.trim()) params.set("maxPrice", vals.maxPrice.trim());
     if (vals.posted) params.set("posted", vals.posted);
+    if (vals.status) params.set("status", vals.status);
     return params;
   }
 
@@ -229,6 +235,7 @@ export function MarketFilter({
     setSearch("");
     setCategory("");
     setSubcategory("");
+    setLfStatus("");
     setCountry("");
     setCity("");
     setSort("");
@@ -274,6 +281,7 @@ export function MarketFilter({
     if (maxPrice) n++;
     if (posted) n++;
     if (subcategory) n++;
+    if (lfStatus) n++;
     return n;
   }, [sort, minPrice, maxPrice, posted, subcategory]);
 
@@ -325,7 +333,8 @@ export function MarketFilter({
               const v = e.target.value;
               setCategory(v);
               setSubcategory("");
-              applyQuick({ category: v, subcategory: "" });
+              setLfStatus("");
+              applyQuick({ category: v, subcategory: "", status: "" });
             }}
             className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[180px]"
           >
@@ -371,6 +380,36 @@ export function MarketFilter({
             ))}
           </select>
         </div>
+
+
+        {/* Lost / Found status — only when Lost & Found category */}
+        {category === "lost_found" && (
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">
+              Status
+            </label>
+            <select
+              data-color-scheme="dark"
+              value={lfStatus}
+              onChange={(e) => {
+                const v = e.target.value;
+                setLfStatus(v);
+                applyQuick({ status: v });
+              }}
+              className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer min-w-[120px]"
+            >
+              <option className="bg-background text-foreground" value="">
+                All status
+              </option>
+              <option className="bg-background text-foreground" value="lost">
+                Lost
+              </option>
+              <option className="bg-background text-foreground" value="found">
+                Found
+              </option>
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">
@@ -492,6 +531,21 @@ export function MarketFilter({
               </button>
             </Badge>
           )}
+          {lfStatus && (
+            <Badge variant="secondary" className="gap-1 text-xs">
+              {lfStatus === "lost" ? "Lost" : lfStatus === "found" ? "Found" : lfStatus}
+              <button
+                type="button"
+                onClick={() => {
+                  setLfStatus("");
+                  applyQuick({ status: "" });
+                }}
+                aria-label="Remove status"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
           {subcategory && (
             <Badge variant="secondary" className="gap-1 text-xs">
               {subcategory}
@@ -605,43 +659,25 @@ export function MarketFilter({
             {/* Lost / Found status — Lost & Found only */}
             {showStatus && (
               <Section
-                title="Status"
+                title="Status (Lost / Found)"
                 open={!!openSections.status}
                 onToggle={() => toggleSection("status")}
               >
                 <RadioRow
-                  checked={!subcategory || !["Lost", "Found"].some((s) => subcategory === s || subcategory.endsWith(" · " + s))}
+                  checked={!lfStatus}
                   label="Any"
-                  onSelect={() => {
-                    // Clear status part if present
-                    if (subcategory === "Lost" || subcategory === "Found") {
-                      setSubcategory("");
-                    } else if (subcategory.includes(" · Lost")) {
-                      setSubcategory(subcategory.replace(" · Lost", ""));
-                    } else if (subcategory.includes(" · Found")) {
-                      setSubcategory(subcategory.replace(" · Found", ""));
-                    }
-                  }}
+                  onSelect={() => setLfStatus("")}
                 />
-                {(["Lost", "Found"] as const).map((s) => (
-                  <RadioRow
-                    key={s}
-                    checked={subcategory === s || subcategory.endsWith(" · " + s)}
-                    label={s}
-                    onSelect={() => {
-                      // Keep item type if present, swap status
-                      const base = subcategory
-                        .replace(" · Lost", "")
-                        .replace(" · Found", "")
-                        .trim();
-                      if (base && base !== "Lost" && base !== "Found") {
-                        setSubcategory(`${base} · ${s}`);
-                      } else {
-                        setSubcategory(s);
-                      }
-                    }}
-                  />
-                ))}
+                <RadioRow
+                  checked={lfStatus === "lost"}
+                  label="Lost"
+                  onSelect={() => setLfStatus("lost")}
+                />
+                <RadioRow
+                  checked={lfStatus === "found"}
+                  label="Found"
+                  onSelect={() => setLfStatus("found")}
+                />
               </Section>
             )}
 
