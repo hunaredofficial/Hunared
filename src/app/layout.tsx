@@ -99,7 +99,7 @@ export default function RootLayout({
             attribute="class"
             defaultTheme="system"
             enableSystem
-            themes={["light", "dark", "high-contrast"]}
+            themes={["light", "dark", "contrast-white", "contrast-black"]}
             disableTransitionOnChange
           >
             <GeoProvider>

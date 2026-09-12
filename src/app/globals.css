@@ -4,7 +4,6 @@
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
-@custom-variant high-contrast (&:is(.high-contrast *));
 
 /* ─── Hunared Brand Tokens ─────────────────────────── */
 @theme inline {
@@ -316,10 +315,8 @@ datalist option {
 }
 
 
-/* ─── Daylight / High Contrast (outdoor sun readability) ─────────
-   Pure white surfaces, near-black text, strong borders.
-   Use when sunlight washes out the normal light theme. */
-.high-contrast {
+/* ─── High Contrast White (outdoor / sunlight) ───────────────── */
+.contrast-white {
   --background: #ffffff;
   --foreground: #000000;
   --card: #ffffff;
@@ -331,12 +328,12 @@ datalist option {
   --secondary: #f0f0f0;
   --secondary-foreground: #000000;
   --muted: #f5f5f5;
-  --muted-foreground: #1a1a1a;
+  --muted-foreground: #111111;
   --accent: #e8f0ff;
   --accent-foreground: #000000;
   --destructive: #b00000;
-  --border: #1a1a1a;
-  --input: #1a1a1a;
+  --border: #000000;
+  --input: #000000;
   --ring: #0033cc;
   --radius: 0.625rem;
 
@@ -352,43 +349,95 @@ datalist option {
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #e8f0ff;
   --sidebar-accent-foreground: #000000;
-  --sidebar-border: #1a1a1a;
+  --sidebar-border: #000000;
   --sidebar-ring: #0033cc;
 
   --brand-from: #0033cc;
   --brand-via: #0055ff;
   --brand-to: #0077cc;
-  --brand-glow: rgba(0, 51, 204, 0.18);
+  --brand-glow: rgba(0, 51, 204, 0.2);
   color-scheme: light;
 }
 
-.high-contrast body {
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Stronger borders & text under bright ambient light */
-.high-contrast .border,
-.high-contrast [class*="border-border"] {
-  border-color: #1a1a1a;
-}
-
-.high-contrast select option,
-.high-contrast datalist option {
+.contrast-white select option,
+.contrast-white datalist option {
   background-color: #ffffff;
   color: #000000;
 }
 
-.high-contrast .hunared-wordmark-text {
+.contrast-white .hunared-wordmark-text {
   background-image: linear-gradient(
     105deg,
     #6b5200 0%,
-    #8b6914 20%,
-    #b8860b 40%,
-    #d4af37 55%,
+    #8b6914 25%,
+    #b8860b 50%,
     #8b6914 100%
   );
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8))
-    drop-shadow(0 0 4px rgba(0, 0, 0, 0.15));
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9))
+    drop-shadow(0 0 3px rgba(0, 0, 0, 0.2));
+}
+
+/* ─── High Contrast Black (max contrast dark) ────────────────── */
+.contrast-black {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0a0a0a;
+  --card-foreground: #ffffff;
+  --popover: #0a0a0a;
+  --popover-foreground: #ffffff;
+  --primary: #4d7cff;
+  --primary-foreground: #000000;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ffffff;
+  --muted: #141414;
+  --muted-foreground: #e0e0e0;
+  --accent: #1a2744;
+  --accent-foreground: #ffffff;
+  --destructive: #ff4d4d;
+  --border: #ffffff;
+  --input: #ffffff;
+  --ring: #4d7cff;
+  --radius: 0.625rem;
+
+  --chart-1: #4d7cff;
+  --chart-2: #33ff99;
+  --chart-3: #ff6666;
+  --chart-4: #ffcc33;
+  --chart-5: #cc66ff;
+
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #4d7cff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1a2744;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #ffffff;
+  --sidebar-ring: #4d7cff;
+
+  --brand-from: #4d7cff;
+  --brand-via: #7aa2ff;
+  --brand-to: #33ccff;
+  --brand-glow: rgba(77, 124, 255, 0.35);
+  color-scheme: dark;
+}
+
+.contrast-black select option,
+.contrast-black datalist option {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.contrast-black .hunared-wordmark-text {
+  background-image: linear-gradient(
+    105deg,
+    #f5ba18 0%,
+    #ffe9a0 40%,
+    #ffffff 50%,
+    #f5ba18 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8))
+    drop-shadow(0 0 10px rgba(245, 186, 24, 0.45));
 }
 
