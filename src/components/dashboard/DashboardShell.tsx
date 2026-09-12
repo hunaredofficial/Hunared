@@ -3,14 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   User,
   Briefcase,
   Plus,
   Users,
-  Globe,
   Menu,
   ChevronRight,
   BookOpen,
@@ -19,8 +17,6 @@ import {
   PackageOpen,
   Megaphone,
   DatabaseBackup,
-  Sun,
-  Moon,
   Bookmark,
   Bell,
   BellRing,
@@ -28,6 +24,7 @@ import {
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import type { UserRole } from "@/types/database";
 
 interface NavItem {
@@ -203,24 +200,6 @@ function getNavItems(role: UserRole): NavItem[] {
   ];
 }
 
-function ThemeToggleButton() {
-  const { resolvedTheme, setTheme } = useTheme();
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-      aria-label="Toggle theme"
-    >
-      {resolvedTheme === "dark" ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
-    </button>
-  );
-}
-
 interface SidebarContentProps {
   role: UserRole;
   fullName: string;
@@ -273,7 +252,7 @@ function SidebarContent({
       </nav>
 
       <div className="border-t px-3 py-3 flex items-center justify-between gap-2">
-        <ThemeToggleButton />
+        <ThemeToggle />
         <UserButton afterSignOutUrl="/" />
       </div>
     </div>
@@ -319,7 +298,7 @@ export function DashboardShell({
         </button>
         <HunaredLogo className="h-6 w-auto" />
         <div className="ml-auto flex items-center gap-2">
-          <ThemeToggleButton />
+          <ThemeToggle />
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>

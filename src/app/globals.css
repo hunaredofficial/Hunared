@@ -4,6 +4,7 @@
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant high-contrast (&:is(.high-contrast *));
 
 /* ─── Hunared Brand Tokens ─────────────────────────── */
 @theme inline {
@@ -313,3 +314,81 @@ datalist option {
   background-color: var(--background);
   color: var(--foreground);
 }
+
+
+/* ─── Daylight / High Contrast (outdoor sun readability) ─────────
+   Pure white surfaces, near-black text, strong borders.
+   Use when sunlight washes out the normal light theme. */
+.high-contrast {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #0033cc;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0f0;
+  --secondary-foreground: #000000;
+  --muted: #f5f5f5;
+  --muted-foreground: #1a1a1a;
+  --accent: #e8f0ff;
+  --accent-foreground: #000000;
+  --destructive: #b00000;
+  --border: #1a1a1a;
+  --input: #1a1a1a;
+  --ring: #0033cc;
+  --radius: 0.625rem;
+
+  --chart-1: #0033cc;
+  --chart-2: #006600;
+  --chart-3: #990000;
+  --chart-4: #664400;
+  --chart-5: #660066;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #0033cc;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f0ff;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #1a1a1a;
+  --sidebar-ring: #0033cc;
+
+  --brand-from: #0033cc;
+  --brand-via: #0055ff;
+  --brand-to: #0077cc;
+  --brand-glow: rgba(0, 51, 204, 0.18);
+  color-scheme: light;
+}
+
+.high-contrast body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Stronger borders & text under bright ambient light */
+.high-contrast .border,
+.high-contrast [class*="border-border"] {
+  border-color: #1a1a1a;
+}
+
+.high-contrast select option,
+.high-contrast datalist option {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.high-contrast .hunared-wordmark-text {
+  background-image: linear-gradient(
+    105deg,
+    #6b5200 0%,
+    #8b6914 20%,
+    #b8860b 40%,
+    #d4af37 55%,
+    #8b6914 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8))
+    drop-shadow(0 0 4px rgba(0, 0, 0, 0.15));
+}
+
