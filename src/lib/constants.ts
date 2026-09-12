@@ -819,6 +819,13 @@ export const LISTING_CONDITION_OPTIONS = [
   "Wholesale Lot",
 ] as const;
 
+/** Lost & Found status (Lost / Found) — stored with item type in subcategory as "Type · Status". */
+export const LOST_FOUND_STATUS_OPTIONS = [
+  "Lost",
+  "Found",
+] as const;
+
+
 /** Rental period options for For Rent listings (separate from type subcategory). */
 export const RENTAL_PERIOD_OPTIONS = [
   "Hourly",
@@ -1779,14 +1786,7 @@ export const LISTING_CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
  * Curated object/place/product Unsplash images — no people.
  * Used when seller does not upload a photo.
  */
-const KEYWORD_DEFAULT_IMAGES: { keys: string[];
-
-/** Lost & Found status (Lost / Found) — stored with item type in subcategory as "Type · Status". */
-export const LOST_FOUND_STATUS_OPTIONS = [
-  "Lost",
-  "Found",
-] as const;
- url: string }[] = [
+const KEYWORD_DEFAULT_IMAGES: { keys: string[]; url: string }[] = [
   // Phones & mobiles
   {
     keys: ["iphone", "samsung", "smartphone", "mobile phone", "phone", "mobile", "android phone"],
