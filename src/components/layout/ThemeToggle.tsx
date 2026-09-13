@@ -1,49 +1,32 @@
 "use client";
 
-import { Circle, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-/** Cycle order on each click */
-const THEME_CYCLE = ["light", "dark", "contrast-white", "contrast-black"] as const;
+/** Only two themes: Light ↔ Dark */
+const THEME_CYCLE = ["light", "dark"] as const;
 type ThemeValue = (typeof THEME_CYCLE)[number];
 
 function nextTheme(current: string | undefined): ThemeValue {
-  const idx = THEME_CYCLE.indexOf(current as ThemeValue);
-  if (idx === -1) {
-    // system / unknown → start at light
-    return "light";
-  }
-  return THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+  // Map any high-contrast / system residual to the opposite of resolved feel
+  if (current === "dark" || current === "contrast-black") return "light";
+  return "dark";
 }
-
-function ThemeIcon({ theme }: { theme?: string }) {
-  if (theme === "contrast-white") {
-    return <Circle className="h-4 w-4 stroke-[2.5]" />;
-  }
-  if (theme === "contrast-black") {
-    return <Circle className="h-4 w-4 fill-current" />;
-  }
-  if (theme === "dark") {
-    return <Moon className="h-4 w-4" />;
-  }
-  return <Sun className="h-4 w-4" />;
-}
-
-const LABELS: Record<string, string> = {
-  light: "Light",
-  dark: "Dark",
-  "contrast-white": "Contrast White",
-  "contrast-black": "Contrast Black",
-  system: "Auto",
-};
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  // Migrate away from removed high-contrast themes once
+  useEffect(() => {
+    if (!mounted) return;
+    if (theme === "contrast-white") setTheme("light");
+    if (theme === "contrast-black") setTheme("dark");
+  }, [mounted, theme, setTheme]);
 
   if (!mounted) {
     return (
@@ -58,21 +41,14 @@ export function ThemeToggle() {
     );
   }
 
-  // If still on system, show icon for resolved theme; click locks to next in cycle
-  const displayTheme =
-    theme === "system" || !theme ? resolvedTheme ?? "light" : theme;
+  const isDark =
+    theme === "dark" ||
+    theme === "contrast-black" ||
+    ((theme === "system" || !theme) && resolvedTheme === "dark");
 
   const handleClick = () => {
-    const from =
-      theme === "system" || !theme
-        ? (resolvedTheme as string) || "light"
-        : theme;
-    setTheme(nextTheme(from));
+    setTheme(isDark ? "light" : "dark");
   };
-
-  const nextLabel = LABELS[nextTheme(
-    theme === "system" || !theme ? (resolvedTheme as string) || "light" : theme
-  )];
 
   return (
     <Button
@@ -80,10 +56,14 @@ export function ThemeToggle() {
       size="icon"
       className="w-9 h-9 transition-all duration-300 hover:bg-primary/10 cursor-pointer"
       onClick={handleClick}
-      aria-label={`Theme: ${LABELS[displayTheme] ?? displayTheme}. Click for ${nextLabel}`}
-      title={`Theme: ${LABELS[displayTheme] ?? displayTheme} → ${nextLabel}`}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ? "Light theme" : "Dark theme"}
     >
-      <ThemeIcon theme={displayTheme} />
+      {isDark ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
     </Button>
   );
 }

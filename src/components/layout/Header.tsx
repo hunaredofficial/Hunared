@@ -69,9 +69,12 @@ export function Header() {
       className={cn(
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
         "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        /* Gold line around header (brand gold) */
+        "border border-[#d4af37]/55",
+        "shadow-[0_0_0_1px_rgba(212,175,55,0.22),0_0_18px_rgba(245,186,24,0.12)]",
         scrolled
-          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border border-border/50 shadow-lg rounded-2xl"
-          : "top-0 w-full max-w-full bg-background border-b border-border/40 rounded-none shadow-none"
+          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 rounded-2xl shadow-lg"
+          : "top-0 w-full max-w-full bg-background/95 rounded-none border-x-0 border-t-0 rounded-b-none"
       )}
     >
       <div
@@ -80,7 +83,7 @@ export function Header() {
           scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
         )}
       >
-        <div className="flex h-16 items-center justify-between gap-2 min-w-0">
+        <div className="flex h-16 items-center justify-between gap-2 min-w-0 relative after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-[#d4af37]/50 after:to-transparent">
           {/* Logo – no wrapping Link to avoid nested <a> */}
           <div className="shrink-0 min-w-0 flex items-center self-center"><HunaredLogo size={scrolled ? "md" : "lg"} /></div>
 
