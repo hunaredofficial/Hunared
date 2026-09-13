@@ -24,31 +24,6 @@ const CATEGORIES = [
   { value: "hunared program", label: "Hunared Program" },
 ];
 
-/** Quick links → open related pages (not universal search) */
-const QUICK_LINKS: { label: string; href: string; accent?: boolean; external?: boolean }[] = [
-  { label: "Post an Ad", href: "/dashboard/market/new", accent: true },
-  { label: "Post a Job", href: "/dashboard/jobs/new", accent: true },
-  { label: "Jobs", href: "/jobs" },
-  { label: "Candidates", href: "/candidates" },
-  { label: "Companies", href: "/companies" },
-  { label: "Marketplace", href: "/market" },
-  { label: "For Sale", href: "/market?category=for_sale" },
-  { label: "For Rent", href: "/market?category=for_rent" },
-  { label: "Accommodation", href: "/market?category=accommodation" },
-  { label: "Property", href: "/market?category=property" },
-  { label: "Vehicles", href: "/market?category=vehicles" },
-  { label: "Electronics", href: "/market?category=electronics" },
-  { label: "Services", href: "/market?category=services" },
-  { label: "Home & Furniture", href: "/market?category=home_furniture" },
-  { label: "Lost & Found", href: "/market?category=lost_found" },
-  { label: "Wanted", href: "/market?category=wanted" },
-  { label: "Offers & Deals", href: "/market?category=offers_deals" },
-  { label: "Community", href: "/market?category=community" },
-  { label: "Learning", href: "/education" },
-  { label: "Courses", href: "https://hunared.org/courses", external: true },
-  { label: "Training & Certification", href: "https://hunared.org", external: true },
-  { label: "Program", href: "/program" },
-];
 
 export function HeroSection() {
   const router = useRouter();
@@ -82,13 +57,6 @@ export function HeroSection() {
     router.push(`/search?${params.toString()}`);
   }
 
-  function handleQuickLink(href: string, external?: boolean) {
-    if (external || href.startsWith("http://") || href.startsWith("https://")) {
-      window.open(href, "_blank", "noopener,noreferrer");
-      return;
-    }
-    router.push(href);
-  }
 
   return (
     <section className="relative min-h-[auto] sm:min-h-[82vh] flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-12">
@@ -215,63 +183,6 @@ export function HeroSection() {
           </button>
         </form>
 
-        {/* Quick links — softer tones matching site palette */}
-        <div className="mt-8 sm:mt-12">
-          <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/6 via-card to-[var(--brand-via)]/5 shadow-[0_0_32px_-16px_rgba(59,130,246,0.18)]">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgb(var(--brand-from)/0.1),transparent_55%)]"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -top-28 right-0 h-64 w-64 rounded-full bg-[var(--brand-from)] opacity-12 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-24 -left-12 h-52 w-52 rounded-full bg-[var(--brand-via)] opacity-10 blur-3xl"
-            />
-
-            <div className="relative px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-9">
-              <div className="mb-5 sm:mb-6 space-y-1.5">
-                <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-                  Start here
-                </p>
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-                  Quick Links
-                </h3>
-                <p className="text-sm text-muted-foreground max-w-xl">
-                  Post jobs, hire talent, list services, or learn — jump straight to the right place.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2.5 sm:gap-3 mb-5 sm:mb-6">
-                {QUICK_LINKS.filter((l) => l.accent).map((link) => (
-                  <button
-                    key={"accent-" + link.href + link.label}
-                    type="button"
-                    onClick={() => handleQuickLink(link.href, link.external)}
-                    className="inline-flex items-center justify-center gap-2 min-h-12 px-5 sm:px-6 rounded-full text-sm sm:text-base font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 ring-1 ring-primary/25 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
-                  >
-                    {link.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3">
-                {QUICK_LINKS.filter((l) => !l.accent).map((link) => (
-                  <button
-                    key={link.href + link.label}
-                    type="button"
-                    onClick={() => handleQuickLink(link.href, link.external)}
-                    className="group flex items-center justify-center min-h-[3.25rem] sm:min-h-[3.5rem] px-3 sm:px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-center leading-snug border border-primary/15 bg-background/70 backdrop-blur-sm text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary hover:shadow-md hover:shadow-primary/10 transition-all duration-200"
-                  >
-                    <span className="whitespace-normal break-words">{link.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
