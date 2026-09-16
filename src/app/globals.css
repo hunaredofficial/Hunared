@@ -57,102 +57,98 @@
   --color-brand-glow: var(--brand-glow);
 }
 
-/* ─── Light Mode — clean institutional / official ───────────── */
+/* ─── Light Mode — modern, clean, professional ──────────────── */
 :root {
-  /* Cool off-white canvas, deep slate text (WCAG-friendly) */
-  --background: oklch(0.985 0.004 250);
-  --foreground: oklch(0.22 0.02 255);
+  --background: oklch(0.99 0.003 250);
+  --foreground: oklch(0.2 0.025 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 255);
+  --card-foreground: oklch(0.2 0.025 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 255);
+  --popover-foreground: oklch(0.2 0.025 260);
 
-  /* Institutional navy-blue primary (government / trusted) */
-  --primary: oklch(0.38 0.12 255);
+  /* Modern professional blue */
+  --primary: oklch(0.5 0.18 255);
   --primary-foreground: oklch(0.99 0 0);
 
-  --secondary: oklch(0.955 0.01 250);
-  --secondary-foreground: oklch(0.28 0.03 255);
-  --muted: oklch(0.96 0.008 250);
-  --muted-foreground: oklch(0.48 0.02 255);
-  --accent: oklch(0.95 0.02 250);
-  --accent-foreground: oklch(0.28 0.03 255);
-  --destructive: oklch(0.5 0.2 25);
-  --border: oklch(0.9 0.01 250);
-  --input: oklch(0.9 0.01 250);
-  --ring: oklch(0.38 0.12 255);
-  --radius: 0.5rem;
+  --secondary: oklch(0.96 0.012 250);
+  --secondary-foreground: oklch(0.28 0.03 260);
+  --muted: oklch(0.965 0.008 250);
+  --muted-foreground: oklch(0.5 0.02 260);
+  --accent: oklch(0.96 0.02 250);
+  --accent-foreground: oklch(0.28 0.03 260);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.91 0.012 250);
+  --input: oklch(0.91 0.012 250);
+  --ring: oklch(0.5 0.18 255);
+  --radius: 0.625rem;
 
-  --chart-1: oklch(0.38 0.12 255);
-  --chart-2: oklch(0.5 0.1 200);
-  --chart-3: oklch(0.55 0.08 160);
-  --chart-4: oklch(0.65 0.1 85);
-  --chart-5: oklch(0.5 0.12 30);
+  --chart-1: oklch(0.5 0.18 255);
+  --chart-2: oklch(0.55 0.14 200);
+  --chart-3: oklch(0.6 0.12 160);
+  --chart-4: oklch(0.7 0.12 85);
+  --chart-5: oklch(0.58 0.16 30);
 
-  --sidebar: oklch(0.975 0.006 250);
-  --sidebar-foreground: oklch(0.22 0.02 255);
-  --sidebar-primary: oklch(0.38 0.12 255);
+  --sidebar: oklch(0.985 0.005 250);
+  --sidebar-foreground: oklch(0.2 0.025 260);
+  --sidebar-primary: oklch(0.5 0.18 255);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.015 250);
-  --sidebar-accent-foreground: oklch(0.28 0.03 255);
-  --sidebar-border: oklch(0.9 0.01 250);
-  --sidebar-ring: oklch(0.38 0.12 255);
+  --sidebar-accent: oklch(0.95 0.015 250);
+  --sidebar-accent-foreground: oklch(0.28 0.03 260);
+  --sidebar-border: oklch(0.91 0.012 250);
+  --sidebar-ring: oklch(0.5 0.18 255);
 
-  /* Restrained brand — navy + soft gold accent (no neon violet) */
-  --brand-from: #1e3a5f;
-  --brand-via: #2c5282;
-  --brand-to: #1a365d;
-  --brand-glow: rgba(30, 58, 95, 0.12);
+  --brand-from: #2563eb;
+  --brand-via: #3b82f6;
+  --brand-to: #1d4ed8;
+  --brand-glow: rgba(37, 99, 235, 0.14);
 
-  /* Official gold (borders / seals only) */
-  --official-gold: #b8860b;
-  --official-gold-soft: rgba(184, 134, 11, 0.35);
+  --official-gold: #c9a227;
+  --official-gold-soft: rgba(201, 162, 39, 0.3);
 }
 
-/* ─── Dark Mode — deep navy institutional ───────────────────── */
+/* ─── Dark Mode — modern deep slate ─────────────────────────── */
 .dark {
-  --background: oklch(0.16 0.02 255);
-  --foreground: oklch(0.95 0.01 250);
-  --card: oklch(0.2 0.022 255);
-  --card-foreground: oklch(0.95 0.01 250);
-  --popover: oklch(0.2 0.022 255);
-  --popover-foreground: oklch(0.95 0.01 250);
+  --background: oklch(0.15 0.018 260);
+  --foreground: oklch(0.96 0.008 250);
+  --card: oklch(0.19 0.02 260);
+  --card-foreground: oklch(0.96 0.008 250);
+  --popover: oklch(0.19 0.02 260);
+  --popover-foreground: oklch(0.96 0.008 250);
 
-  /* Clear but calm primary on dark */
-  --primary: oklch(0.68 0.12 250);
-  --primary-foreground: oklch(0.16 0.02 255);
+  --primary: oklch(0.65 0.17 255);
+  --primary-foreground: oklch(0.15 0.02 260);
 
-  --secondary: oklch(0.25 0.025 255);
-  --secondary-foreground: oklch(0.92 0.01 250);
-  --muted: oklch(0.24 0.02 255);
-  --muted-foreground: oklch(0.7 0.02 250);
-  --accent: oklch(0.26 0.03 255);
-  --accent-foreground: oklch(0.95 0.01 250);
+  --secondary: oklch(0.24 0.022 260);
+  --secondary-foreground: oklch(0.94 0.01 250);
+  --muted: oklch(0.23 0.018 260);
+  --muted-foreground: oklch(0.68 0.02 255);
+  --accent: oklch(0.25 0.025 260);
+  --accent-foreground: oklch(0.96 0.008 250);
   --destructive: oklch(0.62 0.2 25);
-  --border: oklch(0.95 0.01 250 / 12%);
-  --input: oklch(0.95 0.01 250 / 14%);
-  --ring: oklch(0.68 0.12 250);
-  --radius: 0.5rem;
+  --border: oklch(0.96 0.008 250 / 11%);
+  --input: oklch(0.96 0.008 250 / 13%);
+  --ring: oklch(0.65 0.17 255);
+  --radius: 0.625rem;
 
-  --chart-1: oklch(0.68 0.12 250);
-  --chart-2: oklch(0.65 0.1 200);
-  --chart-3: oklch(0.7 0.1 160);
-  --chart-4: oklch(0.72 0.1 90);
-  --chart-5: oklch(0.65 0.14 30);
+  --chart-1: oklch(0.65 0.17 255);
+  --chart-2: oklch(0.62 0.12 200);
+  --chart-3: oklch(0.68 0.12 160);
+  --chart-4: oklch(0.72 0.12 90);
+  --chart-5: oklch(0.64 0.15 30);
 
-  --sidebar: oklch(0.14 0.02 255);
-  --sidebar-foreground: oklch(0.95 0.01 250);
-  --sidebar-primary: oklch(0.68 0.12 250);
-  --sidebar-primary-foreground: oklch(0.16 0.02 255);
-  --sidebar-accent: oklch(0.24 0.025 255);
-  --sidebar-accent-foreground: oklch(0.95 0.01 250);
-  --sidebar-border: oklch(0.95 0.01 250 / 12%);
-  --sidebar-ring: oklch(0.68 0.12 250);
+  --sidebar: oklch(0.13 0.018 260);
+  --sidebar-foreground: oklch(0.96 0.008 250);
+  --sidebar-primary: oklch(0.65 0.17 255);
+  --sidebar-primary-foreground: oklch(0.15 0.02 260);
+  --sidebar-accent: oklch(0.23 0.02 260);
+  --sidebar-accent-foreground: oklch(0.96 0.008 250);
+  --sidebar-border: oklch(0.96 0.008 250 / 11%);
+  --sidebar-ring: oklch(0.65 0.17 255);
 
-  --brand-from: #3b6ea5;
-  --brand-via: #4a7ab5;
-  --brand-to: #2c5282;
-  --brand-glow: rgba(59, 110, 165, 0.18);
+  --brand-from: #3b82f6;
+  --brand-via: #60a5fa;
+  --brand-to: #2563eb;
+  --brand-glow: rgba(59, 130, 246, 0.2);
 
   --official-gold: #d4af37;
   --official-gold-soft: rgba(212, 175, 55, 0.28);
@@ -214,17 +210,16 @@
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-/* ── Hunared wordmark: gold metallic matching brand mark ── */
+/* ── Hunared wordmark: static gold (no animation) ── */
 .hunared-wordmark {
-  position: relative;
-  will-change: transform;
-  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  display: inline-block;
+  transition: opacity 0.2s ease;
 }
 
 .group\/logo:hover .hunared-wordmark,
 .group:hover .hunared-wordmark,
 a:hover .hunared-wordmark {
-  transform: scale(1.04);
+  opacity: 0.92;
 }
 
 .hunared-wordmark-text {
@@ -235,68 +230,51 @@ a:hover .hunared-wordmark {
   background-image: linear-gradient(
     105deg,
     #a67c00 0%,
-    #c9a227 12%,
-    #f5ba18 28%,
-    #ffe9a0 42%,
-    #ffffff 50%,
-    #f5ba18 62%,
-    #d4af37 78%,
+    #c9a227 20%,
+    #f5ba18 40%,
+    #ffe9a0 50%,
+    #f5ba18 60%,
+    #d4af37 80%,
     #b8860b 100%
   );
-  background-size: 240% 100%;
+  background-size: 100% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  animation: hunaredGoldShine 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: none;
   filter:
-    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45))
-    drop-shadow(0 0 10px rgba(245, 186, 24, 0.32));
-  will-change: background-position, filter;
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 4px rgba(245, 186, 24, 0.2));
 }
 
 .group\/logo:hover .hunared-wordmark-text,
 a:hover .hunared-wordmark-text {
   filter:
-    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5))
-    drop-shadow(0 0 16px rgba(245, 186, 24, 0.5));
-  animation-duration: 2.5s;
-}
-
-@keyframes hunaredGoldShine {
-  0% { background-position: 120% 50%; }
-  100% { background-position: -120% 50%; }
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 6px rgba(245, 186, 24, 0.28));
 }
 
 :root:not(.dark) .hunared-wordmark-text {
   background-image: linear-gradient(
     105deg,
     #8b6914 0%,
-    #b8860b 18%,
-    #d4af37 36%,
-    #f5e6a8 50%,
-    #ffffff 58%,
-    #e8c547 74%,
+    #b8860b 25%,
+    #d4af37 45%,
+    #f0d060 55%,
+    #d4af37 70%,
     #b8860b 100%
   );
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6))
-    drop-shadow(0 0 6px rgba(184, 134, 11, 0.2));
-}
-
-@media (max-width: 640px) {
-  .hunared-wordmark-text { animation-duration: 5.5s; }
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.5))
+    drop-shadow(0 0 3px rgba(184, 134, 11, 0.15));
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hunared-wordmark-text {
     animation: none;
-    background-image: linear-gradient(90deg, #f5ba18 0%, #ffe9a0 50%, #d4af37 100%);
-    background-size: 100% 100%;
   }
 }
-
-
 
 /* ─── Native select / datalist option colors (site-wide) ───
    Keep country/city dropdown panels consistent across hero,
