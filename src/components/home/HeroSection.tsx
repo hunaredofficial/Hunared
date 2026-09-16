@@ -63,8 +63,8 @@ export function HeroSection() {
       {/* Clean background like other sections */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/25" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[520px] w-[780px] rounded-full bg-[var(--brand-from)] opacity-[0.06] blur-[130px]" />
-        <div className="absolute bottom-1/4 right-1/5 h-[300px] w-[400px] rounded-full bg-[var(--brand-via)] opacity-[0.05] blur-[110px]" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[520px] w-[780px] rounded-full bg-muted opacity-20 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/5 h-[300px] w-[400px] rounded-full bg-muted opacity-15 blur-3xl" />
       </div>
 
       <div
@@ -76,7 +76,7 @@ export function HeroSection() {
         {/* Larger premium card — same language as CTA / Program */}
         <form
           onSubmit={handleSearch}
-          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border border-primary/20 brand-glow p-4 sm:p-7 md:p-9 lg:p-11 space-y-4 sm:space-y-5 md:space-y-6"
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-card border border-border  p-4 sm:p-7 md:p-9 lg:p-11 space-y-4 sm:space-y-5 md:space-y-6"
         >
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -top-12 -right-12 h-64 w-64 rounded-full bg-[var(--brand-from)] opacity-[0.06] blur-3xl" />
@@ -84,7 +84,7 @@ export function HeroSection() {
           </div>
 
           <div className="text-center space-y-2.5 sm:space-y-3">
-            <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold tracking-wide text-primary">
+            <span className="inline-flex items-center rounded-full border border-border bg-muted px-3.5 py-1 text-xs font-semibold tracking-wide text-primary">
               Universal Smart Search
             </span>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-bold tracking-tight leading-tight px-1">
@@ -104,7 +104,7 @@ export function HeroSection() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What are you looking for? Search here..."
-              className="w-full h-12 sm:h-16 md:h-[4.25rem] pl-11 sm:pl-14 pr-12 sm:pr-14 rounded-xl sm:rounded-2xl border border-primary/15 bg-background/70 text-foreground text-sm sm:text-base md:text-lg placeholder:text-muted-foreground/65 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/35 transition"
+              className="w-full h-12 sm:h-16 md:h-[4.25rem] pl-11 sm:pl-14 pr-12 sm:pr-14 rounded-xl sm:rounded-2xl border border-border bg-background/70 text-foreground text-sm sm:text-base md:text-lg placeholder:text-muted-foreground/65 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-foreground/20 transition"
               autoComplete="off"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -128,7 +128,7 @@ export function HeroSection() {
                   setCity("");
                 }}
                 data-color-scheme="dark"
-                className="w-full h-12 sm:h-13 pl-10 pr-9 rounded-xl border border-primary/15 bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
+                className="w-full h-12 sm:h-13 pl-10 pr-9 rounded-xl border border-border bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
               >
                 <option value="" className="bg-background text-foreground">
                   All Countries
@@ -162,7 +162,7 @@ export function HeroSection() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 data-color-scheme="dark"
-                className="w-full h-12 sm:h-13 pl-3.5 pr-9 rounded-xl border border-primary/15 bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
+                className="w-full h-12 sm:h-13 pl-3.5 pr-9 rounded-xl border border-border bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value} className="bg-background text-foreground">

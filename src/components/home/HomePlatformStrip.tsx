@@ -71,9 +71,9 @@ export function HomePlatformStrip() {
             <Link
               key={title}
               href={href}
-              className="group flex flex-col rounded-2xl border border-border/70 bg-card p-4 sm:p-5 hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-primary/5 transition-all duration-200"
+              className="group flex flex-col rounded-2xl border border-border/70 bg-card p-4 sm:p-5 hover:border-border/80 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-primary/5 transition-all duration-200"
             >
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/15">
+              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary group-hover:bg-primary/15">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="font-semibold text-sm sm:text-base mb-1 flex items-center gap-1">

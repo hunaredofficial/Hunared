@@ -219,7 +219,7 @@ export function BrowseCategories() {
       <div className="max-w-6xl mx-auto space-y-7 sm:space-y-8">
         {/* Header */}
         <div className="text-center space-y-2.5">
-          <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary mb-1">
+          <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-muted text-primary mb-1">
             <LayoutGrid className="h-5 w-5" />
           </div>
           <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
@@ -248,7 +248,7 @@ export function BrowseCategories() {
                 "flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-full transition-all duration-200",
                 tab === key
                   ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-[1.02]"
-                  : "bg-muted/80 text-muted-foreground hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"
+                  : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-primary border border-transparent hover:border-border"
               )}
             >
               <Icon className="h-4 w-4" />
@@ -430,7 +430,7 @@ function GroupCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card space-y-3 hover:border-primary/25 transition-colors h-full min-h-[120px] flex flex-col">
+    <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card space-y-3 hover:border-border transition-colors h-full min-h-[120px] flex flex-col">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
         {title}
       </p>

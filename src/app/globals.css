@@ -57,104 +57,103 @@
   --color-brand-glow: var(--brand-glow);
 }
 
-/* ─── Light Mode — enhanced modern professional ─────────────── */
+/* ─── Light Mode — Vercel / ChatGPT style clean ─────────────── */
 :root {
-  --background: oklch(0.992 0.004 250);
-  --foreground: oklch(0.18 0.03 260);
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 260);
+  --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 260);
+  --popover-foreground: oklch(0.145 0 0);
 
-  /* Stronger modern blue */
-  --primary: oklch(0.52 0.2 255);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Neutral primary (professional sites) */
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
 
-  --secondary: oklch(0.955 0.015 250);
-  --secondary-foreground: oklch(0.26 0.035 260);
-  --muted: oklch(0.96 0.01 250);
-  --muted-foreground: oklch(0.48 0.025 260);
-  --accent: oklch(0.955 0.025 250);
-  --accent-foreground: oklch(0.26 0.035 260);
-  --destructive: oklch(0.52 0.22 25);
-  --border: oklch(0.9 0.015 250);
-  --input: oklch(0.9 0.015 250);
-  --ring: oklch(0.52 0.2 255);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
 
-  --chart-1: oklch(0.52 0.2 255);
-  --chart-2: oklch(0.55 0.15 200);
-  --chart-3: oklch(0.58 0.13 165);
-  --chart-4: oklch(0.68 0.13 85);
-  --chart-5: oklch(0.55 0.17 30);
+  --chart-1: oklch(0.55 0.15 255);
+  --chart-2: oklch(0.6 0.12 160);
+  --chart-3: oklch(0.65 0.1 80);
+  --chart-4: oklch(0.5 0.12 30);
+  --chart-5: oklch(0.45 0.08 280);
 
-  --sidebar: oklch(0.985 0.006 250);
-  --sidebar-foreground: oklch(0.18 0.03 260);
-  --sidebar-primary: oklch(0.52 0.2 255);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.945 0.02 250);
-  --sidebar-accent-foreground: oklch(0.26 0.035 260);
-  --sidebar-border: oklch(0.9 0.015 250);
-  --sidebar-ring: oklch(0.52 0.2 255);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 
-  --brand-from: #1d4ed8;
-  --brand-via: #2563eb;
-  --brand-to: #3b82f6;
-  --brand-glow: rgba(37, 99, 235, 0.16);
+  --brand-from: #171717;
+  --brand-via: #404040;
+  --brand-to: #525252;
+  --brand-glow: transparent;
 
-  /* Solid gold for logo name */
   --logo-gold: #c9a227;
   --official-gold: #c9a227;
-  --official-gold-soft: rgba(201, 162, 39, 0.32);
+  --official-gold-soft: rgba(201, 162, 39, 0.25);
 }
 
-/* ─── Dark Mode — enhanced modern deep slate ────────────────── */
+/* ─── Dark Mode — clean near-black (Grok / Vercel) ──────────── */
 .dark {
-  --background: oklch(0.14 0.02 260);
-  --foreground: oklch(0.97 0.008 250);
-  --card: oklch(0.18 0.022 260);
-  --card-foreground: oklch(0.97 0.008 250);
-  --popover: oklch(0.18 0.022 260);
-  --popover-foreground: oklch(0.97 0.008 250);
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.155 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.155 0 0);
+  --popover-foreground: oklch(0.985 0 0);
 
-  --primary: oklch(0.68 0.18 255);
-  --primary-foreground: oklch(0.14 0.02 260);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.145 0 0);
 
-  --secondary: oklch(0.23 0.025 260);
-  --secondary-foreground: oklch(0.95 0.01 250);
-  --muted: oklch(0.22 0.02 260);
-  --muted-foreground: oklch(0.7 0.02 255);
-  --accent: oklch(0.24 0.03 260);
-  --accent-foreground: oklch(0.97 0.008 250);
-  --destructive: oklch(0.6 0.21 25);
-  --border: oklch(0.97 0.008 250 / 12%);
-  --input: oklch(0.97 0.008 250 / 14%);
-  --ring: oklch(0.68 0.18 255);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.6 0.2 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.45 0 0);
   --radius: 0.625rem;
 
-  --chart-1: oklch(0.68 0.18 255);
-  --chart-2: oklch(0.64 0.13 200);
-  --chart-3: oklch(0.7 0.12 160);
-  --chart-4: oklch(0.74 0.12 90);
-  --chart-5: oklch(0.65 0.16 30);
+  --chart-1: oklch(0.65 0.12 255);
+  --chart-2: oklch(0.65 0.1 160);
+  --chart-3: oklch(0.7 0.1 80);
+  --chart-4: oklch(0.6 0.12 30);
+  --chart-5: oklch(0.55 0.08 280);
 
-  --sidebar: oklch(0.12 0.02 260);
-  --sidebar-foreground: oklch(0.97 0.008 250);
-  --sidebar-primary: oklch(0.68 0.18 255);
-  --sidebar-primary-foreground: oklch(0.14 0.02 260);
-  --sidebar-accent: oklch(0.22 0.025 260);
-  --sidebar-accent-foreground: oklch(0.97 0.008 250);
-  --sidebar-border: oklch(0.97 0.008 250 / 12%);
-  --sidebar-ring: oklch(0.68 0.18 255);
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.22 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.45 0 0);
 
-  --brand-from: #3b82f6;
-  --brand-via: #60a5fa;
-  --brand-to: #2563eb;
-  --brand-glow: rgba(59, 130, 246, 0.22);
+  --brand-from: #fafafa;
+  --brand-via: #e5e5e5;
+  --brand-to: #a3a3a3;
+  --brand-glow: transparent;
 
   --logo-gold: #d4af37;
   --official-gold: #d4af37;
-  --official-gold-soft: rgba(212, 175, 55, 0.3);
+  --official-gold-soft: rgba(212, 175, 55, 0.25);
 }
 
 /* ─── Base Layer ─────────────────────────────────────────────── */
@@ -175,13 +174,12 @@
 @layer utilities {
   /* Solid white headings — no gradient, no animation (Jobs, Market, Companies, Sign-in, etc.) */
   .gradient-text {
+    /* solid text — no multi-color gradient */
     background: none;
-    background-image: none;
+    color: var(--foreground);
+    -webkit-text-fill-color: var(--foreground);
     -webkit-background-clip: unset;
     background-clip: unset;
-    -webkit-text-fill-color: #ffffff;
-    color: #ffffff;
-    animation: none;
   }
 
   /* Light mode: use dark foreground so titles stay readable */
@@ -203,7 +201,8 @@
   }
 
   .brand-glow {
-    box-shadow: 0 0 40px var(--brand-glow), 0 4px 24px oklch(0 0 0 / 8%);
+    /* disabled — clean professional UI, no glow */
+    box-shadow: none;
   }
 }
 

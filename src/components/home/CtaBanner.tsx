@@ -6,17 +6,17 @@ export function CtaBanner() {
   return (
     <section className="relative py-14 sm:py-18 md:py-20 px-4 sm:px-6">
       <div className="mx-auto max-w-5xl">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card px-6 py-12 sm:px-10 sm:py-14 md:px-14 md:py-16 text-center brand-glow">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card px-6 py-12 sm:px-10 sm:py-14 md:px-14 md:py-16 text-center ">
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-primary/25 blur-3xl"
+            className="pointer-events-none absolute -top-24 left-1/2 h-48 w-96 -translate-x-1/2 rounded-full bg-muted/40 blur-3xl opacity-40"
           />
           <div
             aria-hidden
             className="pointer-events-none absolute -bottom-20 -right-10 h-40 w-40 rounded-full bg-[var(--brand-via)] opacity-20 blur-3xl"
           />
 
-          <div className="relative mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+          <div className="relative mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3.5 py-1 text-xs font-semibold text-primary">
             <Sparkles className="h-3.5 w-3.5" />
             Free to join
           </div>

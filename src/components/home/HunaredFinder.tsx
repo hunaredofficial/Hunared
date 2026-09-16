@@ -355,25 +355,25 @@ export function HunaredFinder() {
         className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background"
       />
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card brand-glow shadow-[0_0_48px_-20px_rgba(59,130,246,0.25)]">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           {/* ambient */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[28rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
+            className="pointer-events-none absolute -top-24 left-1/2 h-56 w-[28rem] -translate-x-1/2 rounded-full bg-muted/40 blur-3xl opacity-40"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-28 -right-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl"
+            className="pointer-events-none absolute -bottom-28 -right-16 h-48 w-48 rounded-full bg-muted/30 blur-3xl opacity-30"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-rose-500/10 blur-3xl"
+            className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-muted/30 blur-3xl opacity-30"
           />
 
           <div className="relative p-5 sm:p-8 md:p-10 lg:p-12 space-y-7 sm:space-y-8">
             {/* Header */}
             <div className="text-center space-y-3 max-w-2xl mx-auto">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3.5 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 Community service
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
@@ -430,7 +430,7 @@ export function HunaredFinder() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Search lost or found items..."
-                  className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 rounded-2xl border border-primary/15 bg-background/70 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/35 transition"
+                  className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 rounded-2xl border border-border bg-background/70 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-ring/40 transition"
                   autoComplete="off"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -445,7 +445,7 @@ export function HunaredFinder() {
                     value={country}
                     onChange={(e) => handleCountryChange(e.target.value)}
                     data-color-scheme="dark"
-                    className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-xl border border-primary/15 bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
+                    className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-xl border border-border bg-background/70 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
                   >
                     <option value="" className="bg-background text-foreground">
                       All Countries
@@ -478,8 +478,8 @@ export function HunaredFinder() {
                     onClick={() => setStatus("")}
                     className={`h-11 sm:h-12 rounded-xl text-sm font-medium border transition-colors ${
                       status === ""
-                        ? "border-primary bg-primary/15 text-primary"
-                        : "border-primary/15 bg-background/70 text-muted-foreground hover:border-primary/40"
+                        ? "border-foreground/40 bg-muted text-foreground"
+                        : "border-border bg-background/70 text-muted-foreground hover:border-border/80"
                     }`}
                   >
                     All
@@ -489,8 +489,8 @@ export function HunaredFinder() {
                     onClick={() => setStatus("lost")}
                     className={`h-11 sm:h-12 rounded-xl text-sm font-medium border transition-colors ${
                       status === "lost"
-                        ? "border-rose-500 bg-rose-500/15 text-rose-400"
-                        : "border-primary/15 bg-background/70 text-muted-foreground hover:border-rose-500/40"
+                        ? "border-foreground/30 bg-muted text-foreground"
+                        : "border-border bg-background/70 text-muted-foreground hover:border-foreground/40"
                     }`}
                   >
                     Lost
@@ -500,8 +500,8 @@ export function HunaredFinder() {
                     onClick={() => setStatus("found")}
                     className={`h-11 sm:h-12 rounded-xl text-sm font-medium border transition-colors ${
                       status === "found"
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
-                        : "border-primary/15 bg-background/70 text-muted-foreground hover:border-emerald-500/40"
+                        ? "border-foreground/30 bg-muted text-foreground"
+                        : "border-border bg-background/70 text-muted-foreground hover:border-foreground/40"
                     }`}
                   >
                     Found
@@ -521,13 +521,13 @@ export function HunaredFinder() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
                 href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=lost`}
-                className="group flex items-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/15 px-4 py-3.5 transition-all hover:scale-[1.01]"
+                className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all hover:scale-[1.01]"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-md shadow-rose-500/30">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                   <AlertCircle className="h-5 w-5" />
                 </span>
                 <span className="text-left min-w-0">
-                  <span className="block text-sm font-semibold text-foreground group-hover:text-rose-400">
+                  <span className="block text-sm font-semibold text-foreground group-hover:text-foreground">
                     Report lost item
                   </span>
                   <span className="block text-[11px] text-muted-foreground">
@@ -537,13 +537,13 @@ export function HunaredFinder() {
               </Link>
               <Link
                 href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=found`}
-                className="group flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/15 px-4 py-3.5 transition-all hover:scale-[1.01]"
+                className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all hover:scale-[1.01]"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/30">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                   <CheckCircle2 className="h-5 w-5" />
                 </span>
                 <span className="text-left min-w-0">
-                  <span className="block text-sm font-semibold text-foreground group-hover:text-emerald-400">
+                  <span className="block text-sm font-semibold text-foreground group-hover:text-foreground">
                     Report found item
                   </span>
                   <span className="block text-[11px] text-muted-foreground">

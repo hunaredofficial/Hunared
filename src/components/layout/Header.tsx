@@ -79,7 +79,7 @@ export function Header() {
       {/* Thin official gold line under header */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--official-gold,#b8860b)] to-transparent opacity-70"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-border opacity-100"
       />
       <div
         className={cn(
@@ -127,7 +127,7 @@ export function Header() {
                     onClick={() => setOpenMega(isOpen ? null : item.label)}
                     className={cn(
                       "flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
-                      "hover:text-primary hover:bg-primary/8",
+                      "hover:text-primary hover:bg-muted",
                       pathname.startsWith(item.href)
                         ? "text-primary"
                         : "text-muted-foreground"
@@ -154,7 +154,7 @@ export function Header() {
                           key={sub.href}
                           href={sub.href}
                           role="menuitem"
-                          className="block px-3 py-2 text-sm rounded-lg text-foreground hover:bg-primary/8 hover:text-primary transition-colors"
+                          className="block px-3 py-2 text-sm rounded-lg text-foreground hover:bg-muted hover:text-primary transition-colors"
                         >
                           {sub.label}
                         </Link>
@@ -162,7 +162,7 @@ export function Header() {
                       <Link
                         href={item.href}
                         role="menuitem"
-                        className="block px-3 py-2 mt-1 text-sm font-semibold rounded-lg text-primary border-t border-border/60 hover:bg-primary/8 transition-colors"
+                        className="block px-3 py-2 mt-1 text-sm font-semibold rounded-lg text-primary border-t border-border/60 hover:bg-muted transition-colors"
                       >
                         View all {item.label} →
                       </Link>
@@ -274,7 +274,7 @@ export function Header() {
 
           <Link
             href="/post"
-            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-lg text-primary bg-primary/8 hover:bg-primary/15 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-lg text-primary bg-muted hover:bg-primary/15 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Post an Ad
@@ -289,8 +289,8 @@ export function Header() {
                   className={cn(
                     "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
                     pathname === item.href
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-primary hover:bg-primary/8"
+                      ? "text-primary bg-muted"
+                      : "text-muted-foreground hover:text-primary hover:bg-muted"
                   )}
                 >
                   {item.label}
@@ -299,7 +299,7 @@ export function Header() {
             }
             return (
               <details key={item.label} className="group">
-                <summary className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/8 cursor-pointer list-none">
+                <summary className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg text-muted-foreground hover:text-primary hover:bg-muted cursor-pointer list-none">
                   {item.label}
                   <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
                 </summary>
@@ -308,7 +308,7 @@ export function Header() {
                     <Link
                       key={sub.href}
                       href={sub.href}
-                      className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/8"
+                      className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-primary hover:bg-muted"
                     >
                       {sub.label}
                     </Link>

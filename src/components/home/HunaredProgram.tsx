@@ -30,14 +30,14 @@ export function HunaredProgram() {
   return (
     <section className="relative py-14 sm:py-16 md:py-20 px-4 sm:px-6">
       <div className="mx-auto max-w-6xl">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card brand-glow">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-[var(--brand-via)]/10"
           />
           <div className="relative grid gap-8 lg:grid-cols-2 p-6 sm:p-8 md:p-10 lg:p-12 items-center">
             <div className="space-y-4 sm:space-y-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold text-primary">
                 <GraduationCap className="h-3.5 w-3.5" />
                 Hunared Program
               </div>
@@ -69,7 +69,7 @@ export function HunaredProgram() {
                   key={title}
                   className="flex gap-3 sm:gap-4 rounded-2xl border border-border/70 bg-background/60 p-4 sm:p-5"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
