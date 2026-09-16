@@ -68,22 +68,26 @@ export function Header() {
     <header
       className={cn(
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
-        "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        /* Gold line around header (brand gold) */
-        "border border-[#d4af37]/55",
-        "shadow-[0_0_0_1px_rgba(212,175,55,0.22),0_0_18px_rgba(245,186,24,0.12)]",
+        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        /* Official: clean bar + restrained gold edge */
+        "border-b border-border/80 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/90",
         scrolled
-          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 rounded-2xl shadow-lg"
-          : "top-0 w-full max-w-full bg-background/95 rounded-none border-x-0 border-t-0 rounded-b-none"
+          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border shadow-md shadow-black/5 dark:shadow-black/30"
+          : "top-0 w-full max-w-full rounded-none shadow-none"
       )}
     >
+      {/* Thin official gold line under header */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--official-gold,#b8860b)] to-transparent opacity-70"
+      />
       <div
         className={cn(
           "mx-auto w-full px-3 sm:px-5 lg:px-6",
           scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
         )}
       >
-        <div className="flex h-16 items-center justify-between gap-2 min-w-0 relative after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-[#d4af37]/50 after:to-transparent">
+        <div className="flex h-16 items-center justify-between gap-2 min-w-0">
           {/* Logo – no wrapping Link to avoid nested <a> */}
           <div className="shrink-0 min-w-0 flex items-center self-center"><HunaredLogo size={scrolled ? "md" : "lg"} /></div>
 
@@ -101,9 +105,9 @@ export function Header() {
                     href={item.href}
                     className={cn(
                       "relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
-                      "hover:text-primary hover:bg-primary/8",
+                      "hover:text-foreground hover:bg-muted/80",
                       pathname === item.href
-                        ? "text-primary"
+                        ? "text-primary font-semibold"
                         : "text-muted-foreground"
                     )}
                   >
