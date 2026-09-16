@@ -28,16 +28,16 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 items-stretch">
             <a
               href="/jobs"
-              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.5rem] px-4 py-3.5 rounded-2xl text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-200 hover:scale-[1.015] active:scale-[0.99]"
+              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.5rem] px-4 py-3.5 rounded-2xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted/60 transition-colors duration-200"
             >
               <span>Browse Jobs</span>
-              <span className="text-[11px] font-normal opacity-90">
+              <span className="text-[11px] font-normal text-muted-foreground">
                 Employment opportunities
               </span>
             </a>
             <a
               href="/candidates"
-              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.5rem] px-4 py-3.5 rounded-2xl text-sm font-semibold border border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:scale-[1.015] active:scale-[0.99]"
+              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.5rem] px-4 py-3.5 rounded-2xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted/60 transition-colors duration-200"
             >
               <span>Find Candidates</span>
               <span className="text-[11px] font-normal text-muted-foreground">
@@ -46,7 +46,7 @@ export default function HomePage() {
             </a>
             <a
               href="/companies"
-              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.5rem] px-4 py-3.5 rounded-2xl text-sm font-semibold border border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 hover:scale-[1.015] active:scale-[0.99]"
+              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.5rem] px-4 py-3.5 rounded-2xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted/60 transition-colors duration-200"
             >
               <span>Explore Companies</span>
               <span className="text-[11px] font-normal text-muted-foreground">

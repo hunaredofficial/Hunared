@@ -102,8 +102,8 @@
   --brand-to: #525252;
   --brand-glow: transparent;
 
-  --logo-gold: #c9a227;
-  --official-gold: #c9a227;
+  --logo-gold: #e6b422;
+  --official-gold: #e6b422;
   --official-gold-soft: rgba(201, 162, 39, 0.25);
 }
 
@@ -151,8 +151,8 @@
   --brand-to: #a3a3a3;
   --brand-glow: transparent;
 
-  --logo-gold: #d4af37;
-  --official-gold: #d4af37;
+  --logo-gold: #f0c14b;
+  --official-gold: #f0c14b;
   --official-gold-soft: rgba(212, 175, 55, 0.25);
 }
 
@@ -228,15 +228,16 @@ a:hover .hunared-wordmark {
   position: relative;
   display: inline-block;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--logo-gold, #c9a227);
-  -webkit-text-fill-color: var(--logo-gold, #c9a227);
-  background: none;
-  background-image: none;
+  letter-spacing: -0.02em;
+  color: var(--logo-gold, #e6b422);
+  -webkit-text-fill-color: var(--logo-gold, #e6b422);
+  background: none !important;
+  background-image: none !important;
   -webkit-background-clip: unset;
   background-clip: unset;
-  animation: none;
-  filter: none;
+  animation: none !important;
+  filter: none !important;
+  text-shadow: none;
 }
 
 .group\/logo:hover .hunared-wordmark-text,
@@ -246,15 +247,15 @@ a:hover .hunared-wordmark-text {
 }
 
 :root:not(.dark) .hunared-wordmark-text {
-  color: var(--logo-gold, #c9a227);
-  -webkit-text-fill-color: var(--logo-gold, #c9a227);
+  color: var(--logo-gold, #e6b422);
+  -webkit-text-fill-color: var(--logo-gold, #e6b422);
   background-image: none;
   filter: none;
 }
 
 .dark .hunared-wordmark-text {
-  color: var(--logo-gold, #d4af37);
-  -webkit-text-fill-color: var(--logo-gold, #d4af37);
+  color: var(--logo-gold, #f0c14b);
+  -webkit-text-fill-color: var(--logo-gold, #f0c14b);
 }
 
 /* ─── Native select / datalist option colors (site-wide) ───
@@ -385,8 +386,8 @@ datalist option {
 }
 
 .contrast-black .hunared-wordmark-text {
-  color: #d4af37;
-  -webkit-text-fill-color: #d4af37;
+  color: #f0c14b;
+  -webkit-text-fill-color: #f0c14b;
   background-image: none;
   filter: none;
 }

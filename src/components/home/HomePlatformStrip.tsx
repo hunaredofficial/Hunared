@@ -58,7 +58,7 @@ export function HomePlatformStrip() {
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Everything you need in{" "}
-            <span className="gradient-text">one place</span>
+            one place
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
             Careers, talent, companies, marketplace, and learning — designed to
@@ -71,9 +71,9 @@ export function HomePlatformStrip() {
             <Link
               key={title}
               href={href}
-              className="group flex flex-col rounded-2xl border border-border/70 bg-card p-4 sm:p-5 hover:border-border/80 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-primary/5 transition-all duration-200"
+              className="group flex flex-col rounded-2xl border border-border/70 bg-card p-4 sm:p-5 hover:border-border/80 hover:bg-muted/50 transition-all duration-200"
             >
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary group-hover:bg-primary/15">
+              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-primary group-hover:bg-muted">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="font-semibold text-sm sm:text-base mb-1 flex items-center gap-1">

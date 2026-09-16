@@ -7,21 +7,18 @@ import {
   GraduationCap,
   ShoppingBag,
   Home,
-  Wrench,
   ChevronRight,
   LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES } from "@/lib/constants";
 
-type TabKey = "careers" | "learning" | "marketplace" | "property" | "services";
+type TabKey = "careers" | "learning" | "marketplace";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "careers", label: "Careers", icon: Briefcase },
   { key: "learning", label: "Learning Hub", icon: GraduationCap },
   { key: "marketplace", label: "Marketplace", icon: ShoppingBag },
-  { key: "property", label: "Property", icon: Home },
-  { key: "services", label: "Services", icon: Wrench },
 ];
 
 const LEARNING_CATEGORIES: { label: string; href: string }[] = [
@@ -34,14 +31,10 @@ const LEARNING_CATEGORIES: { label: string; href: string }[] = [
   },
 ];
 
-/**
- * MARKETPLACE only — products & classifieds.
- * Home and Vehicles are separate groups (not merged).
- * Property & Services live in their own tabs.
- */
+/** Marketplace groups — products, property, and services */
 const MARKETPLACE_GROUPS: {
   group: string;
-  items: { label: string; category: string }[];
+  items: { label: string; category: string; subcategory?: string }[];
 }[] = [
   {
     group: "Buy & Sell",
@@ -96,110 +89,32 @@ const MARKETPLACE_GROUPS: {
       { label: "Donations", category: "donations" },
       { label: "Community", category: "community" },
     ],
-  },
-];
-
-/**
- * PROPERTY tab — housing & real estate only (not mixed into Marketplace products)
- */
-const PROPERTY_GROUPS: {
-  group: string;
-  items: { label: string; category: string; subcategory?: string }[];
-}[] = [
+  },,
   {
-    group: "Accommodation",
+    group: "Property & Housing",
     items: [
       { label: "Accommodation", category: "accommodation" },
-      { label: "Apartments", category: "accommodation", subcategory: "Apartments" },
-      { label: "Rooms & Bed Spaces", category: "accommodation", subcategory: "Rooms" },
-      { label: "Shared Housing", category: "accommodation", subcategory: "Shared Housing" },
-      { label: "Staff / Worker Housing", category: "accommodation", subcategory: "Staff Accommodation" },
-      { label: "Hotels & Short Stays", category: "accommodation", subcategory: "Hotels & Short Stays" },
-    ],
-  },
-  {
-    group: "For Rent",
-    items: [
-      { label: "Residential Rentals", category: "for_rent", subcategory: "Residential Properties" },
-      { label: "Apartments", category: "for_rent", subcategory: "Apartments" },
-      { label: "Houses & Villas", category: "for_rent", subcategory: "Houses" },
-      { label: "Commercial Spaces", category: "for_rent", subcategory: "Commercial Properties" },
-      { label: "Offices & Shops", category: "for_rent", subcategory: "Offices" },
-      { label: "Warehouses", category: "for_rent", subcategory: "Warehouses" },
-    ],
-  },
-  {
-    group: "Real Estate",
-    items: [
       { label: "Property", category: "property" },
-      { label: "Apartments", category: "property", subcategory: "Apartments" },
-      { label: "Villas & Houses", category: "property", subcategory: "Villas" },
-      { label: "Land & Plots", category: "property", subcategory: "Residential Plots" },
-      { label: "Commercial Buildings", category: "property", subcategory: "Commercial Buildings" },
-      { label: "Industrial", category: "property", subcategory: "Industrial Properties" },
+      { label: "For Rent", category: "for_rent" },
     ],
   },
   {
-    group: "Buy / Business",
+    group: "Services",
     items: [
-      { label: "For Sale", category: "for_sale" },
-      { label: "Business & Commercial", category: "business_commercial" },
-    ],
-  },
-];
-
-/**
- * SERVICES tab — professional & trade services (own section, not mixed into products)
- */
-const SERVICE_GROUPS: {
-  group: string;
-  items: { label: string; category: string; subcategory?: string }[];
-}[] = [
-  {
-    group: "Trades & Technical",
-    items: [
+      { label: "All Services", category: "services" },
       { label: "Electrical & Power", category: "services", subcategory: "Electrical & Power Services" },
       { label: "Mechanical", category: "services", subcategory: "Mechanical Services" },
       { label: "Plumbing & Water", category: "services", subcategory: "Plumbing & Water Services" },
-      { label: "HVAC & Cooling", category: "services", subcategory: "HVAC, Cooling & Refrigeration" },
-      { label: "Welding & Fabrication", category: "services", subcategory: "Welding, Fabrication & Metalwork" },
       { label: "Construction & Civil", category: "services", subcategory: "Construction & Civil Works" },
-    ],
-  },
-  {
-    group: "Industrial & Safety",
-    items: [
-      { label: "Industrial Maintenance", category: "services", subcategory: "Industrial Maintenance & Engineering" },
-      { label: "Oil & Gas & Energy", category: "services", subcategory: "Oil & Gas & Energy Services" },
-      { label: "Instrumentation", category: "services", subcategory: "Instrumentation, Automation & Control" },
-      { label: "Inspection & Testing", category: "services", subcategory: "Inspection, Testing & Certification" },
-      { label: "HSE, Fire & Safety", category: "services", subcategory: "HSE, Fire & Safety Services" },
-      { label: "Scaffolding & Access", category: "services", subcategory: "Scaffolding & Access Services" },
-    ],
-  },
-  {
-    group: "IT & Professional",
-    items: [
-      { label: "IT & Tech Support", category: "services", subcategory: "IT, Computer & Technical Support" },
-      { label: "Web & Software", category: "services", subcategory: "Web, Software & App Development" },
-      { label: "Digital Marketing", category: "services", subcategory: "Digital Marketing, SEO & E-Commerce" },
-      { label: "Business Consulting", category: "services", subcategory: "Business, Management & Professional Consulting" },
-      { label: "Accounting & Legal", category: "services", subcategory: "Accounting, Finance & Legal Services" },
-      { label: "Education & Training", category: "education_training" },
-    ],
-  },
-  {
-    group: "Home & Lifestyle",
-    items: [
+      { label: "IT & Technical Support", category: "services", subcategory: "IT, Computer & Technical Support" },
       { label: "Cleaning & Facilities", category: "services", subcategory: "Cleaning, Housekeeping & Facility Services" },
-      { label: "Property Services", category: "services", subcategory: "Property & Real Estate Services" },
       { label: "Automotive", category: "services", subcategory: "Automotive & Vehicle Services" },
-      { label: "Beauty & Wellness", category: "services", subcategory: "Beauty, Personal Care & Wellness" },
-      { label: "Events & Catering", category: "services", subcategory: "Events, Catering & Hospitality" },
-      { label: "All Services", category: "services" },
+      { label: "Other Services", category: "services", subcategory: "Other Services" },
     ],
-  },
+  }
 ];
+
+
 
 function marketHref(category: string, subcategory?: string) {
   if (subcategory) {
@@ -232,8 +147,7 @@ export function BrowseCategories() {
             Browse by categories
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-            Jobs, learning, marketplace, property, and services — open a tab to
-            jump in.
+            Jobs, learning, and marketplace — open a tab to jump in.
           </p>
         </div>
 
@@ -312,58 +226,6 @@ export function BrowseCategories() {
                       key={`${group}-${item.category}-${item.label}`}
                       label={item.label}
                       small
-                      href={marketHref(item.category)}
-                    />
-                  ))}
-                </GroupCard>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* PROPERTY — own tab, housing & real estate */}
-        {tab === "property" && (
-          <div className="space-y-5">
-            <div className="flex justify-center">
-              <PanelLink
-                href="/market?category=property"
-                label="View property listings →"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {PROPERTY_GROUPS.map(({ group, items }) => (
-                <GroupCard key={group} title={group}>
-                  {items.map((item) => (
-                    <CategoryChip
-                      key={`${group}-${item.label}`}
-                      label={item.label}
-                      small
-                      href={marketHref(item.category, item.subcategory)}
-                    />
-                  ))}
-                </GroupCard>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* SERVICES — own tab, trades & professional */}
-        {tab === "services" && (
-          <div className="space-y-5">
-            <div className="flex justify-center">
-              <PanelLink
-                href="/market?category=services"
-                label="View all services →"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {SERVICE_GROUPS.map(({ group, items }) => (
-                <GroupCard key={group} title={group}>
-                  {items.map((item) => (
-                    <CategoryChip
-                      key={`${group}-${item.label}`}
-                      label={item.label}
-                      small
                       href={marketHref(item.category, item.subcategory)}
                     />
                   ))}
@@ -410,7 +272,7 @@ function CategoryChip({
       href={href}
       className={cn(
         "inline-flex items-center gap-1 rounded-full border border-border bg-card text-foreground",
-        "hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-colors",
+        "hover:border-border hover:text-primary hover:bg-muted transition-colors",
         small ? "px-2.5 py-1 text-xs" : "px-3.5 py-1.5 text-sm"
       )}
     >

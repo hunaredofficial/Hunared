@@ -177,7 +177,7 @@ export function HeroSection() {
           {/* Primary button — same as other sections */}
           <button
             type="submit"
-            className="w-full h-11 sm:h-13 md:h-14 rounded-full font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300 hover:scale-[1.015] active:scale-[0.99]"
+            className="w-full h-11 sm:h-13 md:h-14 rounded-full font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300  "
           >
             Search Everything
           </button>

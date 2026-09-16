@@ -511,7 +511,7 @@ export function HunaredFinder() {
 
               <button
                 type="submit"
-                className="w-full h-11 sm:h-12 rounded-full font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full h-11 sm:h-12 rounded-full font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200  "
               >
                 Search listings
               </button>
@@ -521,7 +521,7 @@ export function HunaredFinder() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
                 href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=lost`}
-                className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all hover:scale-[1.01]"
+                className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all "
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                   <AlertCircle className="h-5 w-5" />
@@ -537,7 +537,7 @@ export function HunaredFinder() {
               </Link>
               <Link
                 href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=found`}
-                className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all hover:scale-[1.01]"
+                className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all "
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                   <CheckCircle2 className="h-5 w-5" />
