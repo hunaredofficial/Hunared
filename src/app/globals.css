@@ -55,105 +55,114 @@
   --color-brand-via: var(--brand-via);
   --color-brand-to: var(--brand-to);
   --color-brand-glow: var(--brand-glow);
+  --color-logo-gold: var(--logo-gold);
+  --color-official-gold: var(--official-gold);
 }
 
-/* ─── Light Mode — Vercel / ChatGPT style clean ─────────────── */
+
+
+/* ─── Light Mode — premium global platform ──────────────────── */
 :root {
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Canvas: bright, clean, high trust */
+  --background: oklch(0.985 0.002 95);
+  --foreground: oklch(0.16 0.01 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.16 0.01 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.16 0.01 60);
 
-  /* Neutral primary (professional sites) */
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Primary actions: deep charcoal (Indeed/Amazon-style trust) */
+  --primary: oklch(0.2 0.01 60);
+  --primary-foreground: oklch(0.99 0 0);
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.55 0.2 25);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --secondary: oklch(0.96 0.005 95);
+  --secondary-foreground: oklch(0.25 0.01 60);
+  --muted: oklch(0.965 0.004 95);
+  --muted-foreground: oklch(0.48 0.015 60);
+  --accent: oklch(0.97 0.02 90);
+  --accent-foreground: oklch(0.25 0.02 70);
+  --destructive: oklch(0.52 0.2 25);
+  --border: oklch(0.9 0.008 90);
+  --input: oklch(0.9 0.008 90);
+  --ring: oklch(0.72 0.12 85);
   --radius: 0.625rem;
 
-  --chart-1: oklch(0.55 0.15 255);
-  --chart-2: oklch(0.6 0.12 160);
-  --chart-3: oklch(0.65 0.1 80);
-  --chart-4: oklch(0.5 0.12 30);
-  --chart-5: oklch(0.45 0.08 280);
+  --chart-1: oklch(0.55 0.12 85);
+  --chart-2: oklch(0.45 0.08 250);
+  --chart-3: oklch(0.55 0.1 160);
+  --chart-4: oklch(0.6 0.1 40);
+  --chart-5: oklch(0.5 0.08 300);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.98 0.003 95);
+  --sidebar-foreground: oklch(0.16 0.01 60);
+  --sidebar-primary: oklch(0.2 0.01 60);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.015 90);
+  --sidebar-accent-foreground: oklch(0.25 0.01 60);
+  --sidebar-border: oklch(0.9 0.008 90);
+  --sidebar-ring: oklch(0.72 0.12 85);
 
-  --brand-from: #171717;
-  --brand-via: #404040;
-  --brand-to: #525252;
+  /* Brand: charcoal + strategic gold */
+  --brand-from: #1a1a1a;
+  --brand-via: #333333;
+  --brand-to: #4a4a4a;
   --brand-glow: transparent;
 
+  /* Hunared gold — logo & selective accents only */
   --logo-gold: #e6b422;
   --official-gold: #e6b422;
-  --official-gold-soft: rgba(201, 162, 39, 0.25);
+  --official-gold-soft: rgba(230, 180, 34, 0.18);
+  --gold-muted: oklch(0.95 0.03 95);
 }
 
-/* ─── Dark Mode — clean near-black (Grok / Vercel) ──────────── */
+/* ─── Dark Mode — elegant charcoal platform ─────────────────── */
 .dark {
-  --background: oklch(0.12 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.155 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.155 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: oklch(0.13 0.005 60);
+  --foreground: oklch(0.97 0.005 95);
+  --card: oklch(0.17 0.006 60);
+  --card-foreground: oklch(0.97 0.005 95);
+  --popover: oklch(0.17 0.006 60);
+  --popover-foreground: oklch(0.97 0.005 95);
 
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.97 0.005 95);
+  --primary-foreground: oklch(0.15 0.01 60);
 
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.22 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.22 0.008 60);
+  --secondary-foreground: oklch(0.95 0.005 95);
+  --muted: oklch(0.21 0.008 60);
+  --muted-foreground: oklch(0.68 0.015 90);
+  --accent: oklch(0.24 0.02 85);
+  --accent-foreground: oklch(0.97 0.005 95);
   --destructive: oklch(0.6 0.2 25);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.45 0 0);
+  --ring: oklch(0.75 0.12 85);
   --radius: 0.625rem;
 
-  --chart-1: oklch(0.65 0.12 255);
-  --chart-2: oklch(0.65 0.1 160);
-  --chart-3: oklch(0.7 0.1 80);
-  --chart-4: oklch(0.6 0.12 30);
-  --chart-5: oklch(0.55 0.08 280);
+  --chart-1: oklch(0.75 0.12 85);
+  --chart-2: oklch(0.65 0.1 250);
+  --chart-3: oklch(0.7 0.1 160);
+  --chart-4: oklch(0.7 0.1 40);
+  --chart-5: oklch(0.6 0.08 300);
 
-  --sidebar: oklch(0.12 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.985 0 0);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.12 0.005 60);
+  --sidebar-foreground: oklch(0.97 0.005 95);
+  --sidebar-primary: oklch(0.97 0.005 95);
+  --sidebar-primary-foreground: oklch(0.15 0.01 60);
+  --sidebar-accent: oklch(0.22 0.015 85);
+  --sidebar-accent-foreground: oklch(0.97 0.005 95);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.45 0 0);
+  --sidebar-ring: oklch(0.75 0.12 85);
 
-  --brand-from: #fafafa;
+  --brand-from: #f5f5f5;
   --brand-via: #e5e5e5;
   --brand-to: #a3a3a3;
   --brand-glow: transparent;
 
   --logo-gold: #f0c14b;
   --official-gold: #f0c14b;
-  --official-gold-soft: rgba(212, 175, 55, 0.25);
+  --official-gold-soft: rgba(240, 193, 75, 0.2);
+  --gold-muted: oklch(0.25 0.04 90);
 }
 
 /* ─── Base Layer ─────────────────────────────────────────────── */
@@ -172,9 +181,32 @@
 
 /* ─── Gradient Text Utility ──────────────────────────────────── */
 @layer utilities {
+
+  /* Premium surface utilities */
+  .hunared-card {
+    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm;
+  }
+  .hunared-card-hover {
+    @apply transition-colors duration-200 hover:border-border hover:bg-muted/40;
+  }
+  .hunared-section {
+    @apply py-14 sm:py-16 md:py-20;
+  }
+  .hunared-container {
+    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+  .gold-accent {
+    color: var(--logo-gold);
+  }
+  .gold-border {
+    border-color: var(--official-gold-soft);
+  }
+  .gold-underline {
+    background: linear-gradient(90deg, transparent, var(--logo-gold), transparent);
+  }
+
   /* Solid white headings — no gradient, no animation (Jobs, Market, Companies, Sign-in, etc.) */
   .gradient-text {
-    /* solid text — no multi-color gradient */
     background: none;
     color: var(--foreground);
     -webkit-text-fill-color: var(--foreground);
@@ -201,7 +233,6 @@
   }
 
   .brand-glow {
-    /* disabled — clean professional UI, no glow */
     box-shadow: none;
   }
 }
@@ -212,50 +243,45 @@
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-/* ── Hunared wordmark: single solid gold color (no gradient) ── */
+/* ── Hunared wordmark: solid brand gold ── */
 .hunared-wordmark {
   display: inline-block;
   transition: opacity 0.15s ease;
 }
-
 .group\/logo:hover .hunared-wordmark,
 .group:hover .hunared-wordmark,
 a:hover .hunared-wordmark {
-  opacity: 0.9;
+  opacity: 0.92;
 }
-
 .hunared-wordmark-text {
   position: relative;
   display: inline-block;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--logo-gold, #e6b422);
-  -webkit-text-fill-color: var(--logo-gold, #e6b422);
+  color: var(--logo-gold, #e6b422) !important;
+  -webkit-text-fill-color: var(--logo-gold, #e6b422) !important;
   background: none !important;
   background-image: none !important;
-  -webkit-background-clip: unset;
-  background-clip: unset;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
   animation: none !important;
   filter: none !important;
-  text-shadow: none;
+  text-shadow: none !important;
 }
-
-.group\/logo:hover .hunared-wordmark-text,
-a:hover .hunared-wordmark-text {
-  filter: none;
-  opacity: 0.92;
-}
-
-:root:not(.dark) .hunared-wordmark-text {
-  color: var(--logo-gold, #e6b422);
-  -webkit-text-fill-color: var(--logo-gold, #e6b422);
-  background-image: none;
-  filter: none;
-}
-
 .dark .hunared-wordmark-text {
-  color: var(--logo-gold, #f0c14b);
-  -webkit-text-fill-color: var(--logo-gold, #f0c14b);
+  color: var(--logo-gold, #f0c14b) !important;
+  -webkit-text-fill-color: var(--logo-gold, #f0c14b) !important;
+}
+:root:not(.dark) .hunared-wordmark-text {
+  color: var(--logo-gold, #e6b422) !important;
+  -webkit-text-fill-color: var(--logo-gold, #e6b422) !important;
+}
+.contrast-white .hunared-wordmark-text,
+.contrast-black .hunared-wordmark-text {
+  color: var(--logo-gold) !important;
+  -webkit-text-fill-color: var(--logo-gold) !important;
+  background-image: none !important;
+  filter: none !important;
 }
 
 /* ─── Native select / datalist option colors (site-wide) ───

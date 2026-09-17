@@ -62,7 +62,8 @@ export function HeroSection() {
     <section className="relative min-h-[auto] sm:min-h-[82vh] flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-12">
       {/* Clean background like other sections */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/25" />
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-transparent" />
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[520px] w-[780px] rounded-full bg-muted opacity-20 blur-3xl" />
         <div className="absolute bottom-1/4 right-1/5 h-[300px] w-[400px] rounded-full bg-muted opacity-15 blur-3xl" />
       </div>
@@ -104,7 +105,7 @@ export function HeroSection() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What are you looking for? Search here..."
-              className="w-full h-12 sm:h-16 md:h-[4.25rem] pl-11 sm:pl-14 pr-12 sm:pr-14 rounded-xl sm:rounded-2xl border border-border bg-background/70 text-foreground text-sm sm:text-base md:text-lg placeholder:text-muted-foreground/65 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-foreground/20 transition"
+              className="w-full h-12 sm:h-16 md:h-[4.25rem] pl-11 sm:pl-14 pr-12 sm:pr-14 rounded-xl border border-border shadow-sm bg-card text-foreground text-sm sm:text-base md:text-lg placeholder:text-muted-foreground/65 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-foreground/20 transition"
               autoComplete="off"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -128,7 +129,7 @@ export function HeroSection() {
                   setCity("");
                 }}
                 data-color-scheme="dark"
-                className="w-full h-12 sm:h-13 pl-10 pr-9 rounded-xl border border-border bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
+                className="w-full h-12 sm:h-13 pl-10 pr-9 rounded-xl border border-border bg-card text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
               >
                 <option value="" className="bg-background text-foreground">
                   All Countries
@@ -162,7 +163,7 @@ export function HeroSection() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 data-color-scheme="dark"
-                className="w-full h-12 sm:h-13 pl-3.5 pr-9 rounded-xl border border-border bg-background/70 text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
+                className="w-full h-12 sm:h-13 pl-3.5 pr-9 rounded-xl border border-border bg-card text-sm sm:text-base text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-ring/40 cursor-pointer [color-scheme:dark]"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value} className="bg-background text-foreground">
@@ -177,7 +178,7 @@ export function HeroSection() {
           {/* Primary button — same as other sections */}
           <button
             type="submit"
-            className="w-full h-11 sm:h-13 md:h-14 rounded-full font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300  "
+            className="w-full h-12 sm:h-13 md:h-14 rounded-xl font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-colors duration-200"
           >
             Search Everything
           </button>

@@ -68,18 +68,17 @@ export function Header() {
     <header
       className={cn(
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
-        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        /* Official: clean bar + restrained gold edge */
-        "border-b border-border/80 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/90",
+        "transition-all duration-400 ease-out",
+        "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/90",
         scrolled
-          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border shadow-md shadow-black/5 dark:shadow-black/30"
-          : "top-0 w-full max-w-full rounded-none shadow-none"
+          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl rounded-2xl border border-border shadow-lg shadow-black/[0.06] dark:shadow-black/40"
+          : "top-0 w-full max-w-full rounded-none border-b border-border"
       )}
     >
-      {/* Thin official gold line under header */}
+      {/* Subtle gold brand line */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-border opacity-100"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--logo-gold,#e6b422)]/50 to-transparent"
       />
       <div
         className={cn(
@@ -104,16 +103,16 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
-                      "hover:text-foreground hover:bg-muted/80",
-                      pathname === item.href
-                        ? "text-primary font-semibold"
+                      "relative px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200",
+                      "hover:text-foreground hover:bg-muted/70",
+                      pathname === item.href || pathname.startsWith(item.href + "/")
+                        ? "text-foreground font-semibold"
                         : "text-muted-foreground"
                     )}
                   >
                     {item.label}
                     {pathname === item.href && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary" />
+                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-0.5 w-5 rounded-full bg-[var(--logo-gold,#e6b422)]" />
                     )}
                   </Link>
                 );
