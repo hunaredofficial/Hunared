@@ -43,7 +43,7 @@ export function Header() {
   const megaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -63,56 +63,51 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-
   return (
     <header
       className={cn(
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
-        "transition-all duration-400 ease-out",
-        "bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/90",
+        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
         scrolled
-          ? "top-3 sm:top-4 w-[min(96%,76rem)] max-w-7xl rounded-2xl border border-border shadow-lg shadow-black/[0.06] dark:shadow-black/40"
-          : "top-0 w-full max-w-full rounded-none border-b border-border"
+          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)]"
+          : "top-0 w-full max-w-full rounded-none border-b border-border/60 bg-background/95"
       )}
     >
-      {/* Subtle gold brand line */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--logo-gold,#e6b422)]/50 to-transparent"
-      />
       <div
         className={cn(
           "mx-auto w-full px-3 sm:px-5 lg:px-6",
           scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
         )}
       >
-        <div className="flex h-16 items-center justify-between gap-2 min-w-0">
-          {/* Logo – no wrapping Link to avoid nested <a> */}
-          <div className="shrink-0 min-w-0 flex items-center self-center"><HunaredLogo size={scrolled ? "md" : "lg"} /></div>
+        <div className="flex h-14 sm:h-15 items-center justify-between gap-2 min-w-0">
+          {/* Logo */}
+          <div className="shrink-0 min-w-0 flex items-center self-center">
+            <HunaredLogo size={scrolled ? "md" : "lg"} />
+          </div>
 
           {/* Desktop Nav */}
           <nav
             ref={megaRef}
-            className="hidden lg:flex items-center gap-1 relative"
+            className="hidden lg:flex items-center gap-0.5 relative"
             aria-label="Main navigation"
           >
             {NAV_ITEMS.map((item) => {
               if (item.type === "link") {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200",
-                      "hover:text-foreground hover:bg-muted/70",
-                      pathname === item.href || pathname.startsWith(item.href + "/")
-                        ? "text-foreground font-semibold"
-                        : "text-muted-foreground"
+                      "relative px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {item.label}
-                    {pathname === item.href && (
-                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-0.5 w-5 rounded-full bg-[var(--logo-gold,#e6b422)]" />
+                    {isActive && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-primary" />
                     )}
                   </Link>
                 );
@@ -125,11 +120,10 @@ export function Header() {
                     type="button"
                     onClick={() => setOpenMega(isOpen ? null : item.label)}
                     className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
-                      "hover:text-primary hover:bg-muted",
+                      "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
                       pathname.startsWith(item.href)
-                        ? "text-primary"
-                        : "text-muted-foreground"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
@@ -145,7 +139,7 @@ export function Header() {
 
                   {isOpen && (
                     <div
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-xl border border-border bg-card shadow-xl p-2 z-50"
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 rounded-lg border border-border bg-card shadow-lg p-1.5 z-50"
                       role="menu"
                     >
                       {item.items.map((sub) => (
@@ -153,7 +147,7 @@ export function Header() {
                           key={sub.href}
                           href={sub.href}
                           role="menuitem"
-                          className="block px-3 py-2 text-sm rounded-lg text-foreground hover:bg-muted hover:text-primary transition-colors"
+                          className="block px-3 py-2 text-sm rounded-md text-foreground hover:bg-muted transition-colors"
                         >
                           {sub.label}
                         </Link>
@@ -161,7 +155,7 @@ export function Header() {
                       <Link
                         href={item.href}
                         role="menuitem"
-                        className="block px-3 py-2 mt-1 text-sm font-semibold rounded-lg text-primary border-t border-border/60 hover:bg-muted transition-colors"
+                        className="block px-3 py-2 mt-0.5 text-sm font-semibold rounded-md text-primary border-t border-border/70 hover:bg-accent transition-colors"
                       >
                         View all {item.label} →
                       </Link>
@@ -174,7 +168,6 @@ export function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
-            {/* Location — desktop only when not scrolled (keeps compact header clean) */}
             <div
               className={cn(
                 "hidden md:block transition-all duration-300 overflow-hidden",
@@ -189,25 +182,25 @@ export function Header() {
             <Button
               size="sm"
               variant="outline"
-              className="hidden md:inline-flex"
+              className="hidden md:inline-flex h-8 text-[13px] font-medium border-border/80"
               asChild
             >
               <Link href="/post">
-                <Plus className="h-4 w-4 mr-1" />
+                <Plus className="h-3.5 w-3.5 mr-1" />
                 Post an Ad
               </Link>
             </Button>
 
             <ThemeToggle />
 
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-1.5">
               <Show when="signed-out">
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" className="h-8 text-[13px] font-medium" asChild>
                   <Link href="/sign-in">Sign In</Link>
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-3 sm:px-4 shrink-0"
+                  className="h-8 text-[13px] font-semibold px-3.5 shadow-sm"
                   asChild
                 >
                   <Link href="/register">Get Started</Link>
@@ -217,7 +210,7 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={cn("shrink-0", scrolled && "px-2")}
+                  className={cn("h-8 shrink-0", scrolled && "px-2")}
                   asChild
                 >
                   <Link href="/dashboard" className="inline-flex items-center">
@@ -248,11 +241,7 @@ export function Header() {
               aria-label="Toggle mobile menu"
               aria-expanded={mobileOpen}
             >
-              {mobileOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -265,15 +254,14 @@ export function Header() {
           mobileOpen ? "max-h-[34rem] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="glass border-t border-border/20 px-4 pt-3 pb-4 space-y-1 overflow-y-auto max-h-[30rem]">
-          {/* Location — mobile */}
+        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[30rem]">
           <div className="px-3 py-2">
             <LocationPicker />
           </div>
 
           <Link
             href="/post"
-            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-lg text-primary bg-muted hover:bg-primary/15 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-md text-primary bg-primary/10 hover:bg-primary/15 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Post an Ad
@@ -281,15 +269,16 @@ export function Header() {
 
           {NAV_ITEMS.map((item) => {
             if (item.type === "link") {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
-                    pathname === item.href
-                      ? "text-primary bg-muted"
-                      : "text-muted-foreground hover:text-primary hover:bg-muted"
+                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+                    isActive
+                      ? "text-foreground bg-muted"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
                   )}
                 >
                   {item.label}
@@ -298,7 +287,7 @@ export function Header() {
             }
             return (
               <details key={item.label} className="group">
-                <summary className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg text-muted-foreground hover:text-primary hover:bg-muted cursor-pointer list-none">
+                <summary className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 cursor-pointer list-none">
                   {item.label}
                   <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
                 </summary>
@@ -307,14 +296,14 @@ export function Header() {
                     <Link
                       key={sub.href}
                       href={sub.href}
-                      className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-primary hover:bg-muted"
+                      className="block px-3 py-2 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70"
                     >
                       {sub.label}
                     </Link>
                   ))}
                   <Link
                     href={item.href}
-                    className="block px-3 py-2 text-sm font-semibold rounded-lg text-primary"
+                    className="block px-3 py-2 text-sm font-semibold rounded-md text-primary"
                   >
                     View all {item.label} →
                   </Link>
@@ -323,12 +312,12 @@ export function Header() {
             );
           })}
 
-          <div className="flex gap-2 pt-2 border-t border-border/40">
+          <div className="flex gap-2 pt-3 border-t border-border/50">
             <Show when="signed-out">
               <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link href="/sign-in">Sign In</Link>
               </Button>
-              <Button size="sm" className="flex-1" asChild>
+              <Button size="sm" className="flex-1 font-semibold" asChild>
                 <Link href="/register">Get Started</Link>
               </Button>
             </Show>

@@ -5,9 +5,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Hunared Brand Tokens ─────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   HUNARED DESIGN SYSTEM — Premium Global Platform
+   Gold accent · Charcoal · Clean neutrals · Light + Dark
+   ═══════════════════════════════════════════════════════════════ */
+
 @theme inline {
-  /* shadcn semantic tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-poppins);
@@ -42,251 +45,292 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.55);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 1.85);
+  --radius-4xl: calc(var(--radius) * 2.2);
 
-  /* Brand gradient stops */
+  /* Brand tokens */
   --color-brand-from: var(--brand-from);
   --color-brand-via: var(--brand-via);
   --color-brand-to: var(--brand-to);
   --color-brand-glow: var(--brand-glow);
-  --color-logo-gold: var(--logo-gold);
-  --color-official-gold: var(--official-gold);
+
+  /* Semantic status */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
 }
 
-
-
-/* ─── Light Mode — premium global platform ──────────────────── */
+/* ─── Light Mode ─────────────────────────────────────────────── */
 :root {
-  /* Canvas: bright, clean, high trust */
-  --background: oklch(0.985 0.002 95);
-  --foreground: oklch(0.16 0.01 60);
+  /* Surfaces */
+  --background: oklch(0.988 0.003 95);
+  --foreground: oklch(0.18 0.012 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.01 60);
+  --card-foreground: oklch(0.18 0.012 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.01 60);
+  --popover-foreground: oklch(0.18 0.012 255);
 
-  /* Primary actions: deep charcoal (Indeed/Amazon-style trust) */
-  --primary: oklch(0.2 0.01 60);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Primary = Hunared Gold */
+  --primary: oklch(0.72 0.14 85);
+  --primary-foreground: oklch(0.18 0.02 85);
 
-  --secondary: oklch(0.96 0.005 95);
-  --secondary-foreground: oklch(0.25 0.01 60);
-  --muted: oklch(0.965 0.004 95);
-  --muted-foreground: oklch(0.48 0.015 60);
-  --accent: oklch(0.97 0.02 90);
-  --accent-foreground: oklch(0.25 0.02 70);
-  --destructive: oklch(0.52 0.2 25);
-  --border: oklch(0.9 0.008 90);
-  --input: oklch(0.9 0.008 90);
-  --ring: oklch(0.72 0.12 85);
-  --radius: 0.625rem;
+  /* Secondary & muted */
+  --secondary: oklch(0.955 0.008 95);
+  --secondary-foreground: oklch(0.22 0.012 255);
+  --muted: oklch(0.96 0.006 95);
+  --muted-foreground: oklch(0.48 0.015 255);
+  --accent: oklch(0.955 0.025 90);
+  --accent-foreground: oklch(0.22 0.02 85);
 
-  --chart-1: oklch(0.55 0.12 85);
-  --chart-2: oklch(0.45 0.08 250);
-  --chart-3: oklch(0.55 0.1 160);
-  --chart-4: oklch(0.6 0.1 40);
-  --chart-5: oklch(0.5 0.08 300);
+  /* Status */
+  --destructive: oklch(0.55 0.22 25);
+  --success: oklch(0.55 0.14 150);
+  --success-foreground: oklch(0.98 0.01 150);
+  --warning: oklch(0.72 0.15 75);
+  --warning-foreground: oklch(0.22 0.04 75);
+  --info: oklch(0.55 0.12 240);
+  --info-foreground: oklch(0.98 0.01 240);
 
-  --sidebar: oklch(0.98 0.003 95);
-  --sidebar-foreground: oklch(0.16 0.01 60);
-  --sidebar-primary: oklch(0.2 0.01 60);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.96 0.015 90);
-  --sidebar-accent-foreground: oklch(0.25 0.01 60);
-  --sidebar-border: oklch(0.9 0.008 90);
-  --sidebar-ring: oklch(0.72 0.12 85);
+  /* Borders & focus */
+  --border: oklch(0.90 0.008 95);
+  --input: oklch(0.90 0.008 95);
+  --ring: oklch(0.72 0.14 85);
 
-  /* Brand: charcoal + strategic gold */
-  --brand-from: #1a1a1a;
-  --brand-via: #333333;
-  --brand-to: #4a4a4a;
-  --brand-glow: transparent;
+  /* Radius — professional, not overly rounded */
+  --radius: 0.5rem;
 
-  /* Hunared gold — logo & selective accents only */
-  --logo-gold: #e6b422;
-  --official-gold: #e6b422;
-  --official-gold-soft: rgba(230, 180, 34, 0.18);
-  --gold-muted: oklch(0.95 0.03 95);
+  /* Charts */
+  --chart-1: oklch(0.72 0.14 85);
+  --chart-2: oklch(0.55 0.12 240);
+  --chart-3: oklch(0.55 0.14 150);
+  --chart-4: oklch(0.65 0.12 40);
+  --chart-5: oklch(0.50 0.10 300);
+
+  /* Sidebar */
+  --sidebar: oklch(0.975 0.004 95);
+  --sidebar-foreground: oklch(0.18 0.012 255);
+  --sidebar-primary: oklch(0.72 0.14 85);
+  --sidebar-primary-foreground: oklch(0.18 0.02 85);
+  --sidebar-accent: oklch(0.95 0.02 90);
+  --sidebar-accent-foreground: oklch(0.22 0.02 85);
+  --sidebar-border: oklch(0.90 0.008 95);
+  --sidebar-ring: oklch(0.72 0.14 85);
+
+  /* Brand gold continuum */
+  --brand-from: #c9a227;
+  --brand-via: #d4af37;
+  --brand-to: #e8c547;
+  --brand-glow: rgba(201, 162, 39, 0.18);
 }
 
-/* ─── Dark Mode — elegant charcoal platform ─────────────────── */
+/* ─── Dark Mode ──────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.13 0.005 60);
-  --foreground: oklch(0.97 0.005 95);
-  --card: oklch(0.17 0.006 60);
-  --card-foreground: oklch(0.97 0.005 95);
-  --popover: oklch(0.17 0.006 60);
-  --popover-foreground: oklch(0.97 0.005 95);
+  --background: oklch(0.145 0.012 255);
+  --foreground: oklch(0.96 0.006 95);
+  --card: oklch(0.18 0.014 255);
+  --card-foreground: oklch(0.96 0.006 95);
+  --popover: oklch(0.18 0.014 255);
+  --popover-foreground: oklch(0.96 0.006 95);
 
-  --primary: oklch(0.97 0.005 95);
-  --primary-foreground: oklch(0.15 0.01 60);
+  /* Gold stays warm and readable on dark */
+  --primary: oklch(0.78 0.14 85);
+  --primary-foreground: oklch(0.16 0.02 85);
 
-  --secondary: oklch(0.22 0.008 60);
-  --secondary-foreground: oklch(0.95 0.005 95);
-  --muted: oklch(0.21 0.008 60);
-  --muted-foreground: oklch(0.68 0.015 90);
-  --accent: oklch(0.24 0.02 85);
-  --accent-foreground: oklch(0.97 0.005 95);
-  --destructive: oklch(0.6 0.2 25);
+  --secondary: oklch(0.24 0.015 255);
+  --secondary-foreground: oklch(0.96 0.006 95);
+  --muted: oklch(0.24 0.012 255);
+  --muted-foreground: oklch(0.68 0.015 250);
+  --accent: oklch(0.26 0.03 85);
+  --accent-foreground: oklch(0.96 0.01 90);
+
+  --destructive: oklch(0.65 0.20 22);
+  --success: oklch(0.65 0.14 150);
+  --success-foreground: oklch(0.15 0.02 150);
+  --warning: oklch(0.78 0.14 80);
+  --warning-foreground: oklch(0.18 0.03 80);
+  --info: oklch(0.65 0.12 240);
+  --info-foreground: oklch(0.15 0.02 240);
+
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.75 0.12 85);
-  --radius: 0.625rem;
+  --ring: oklch(0.78 0.14 85);
 
-  --chart-1: oklch(0.75 0.12 85);
-  --chart-2: oklch(0.65 0.1 250);
-  --chart-3: oklch(0.7 0.1 160);
-  --chart-4: oklch(0.7 0.1 40);
-  --chart-5: oklch(0.6 0.08 300);
+  --chart-1: oklch(0.78 0.14 85);
+  --chart-2: oklch(0.65 0.12 240);
+  --chart-3: oklch(0.65 0.14 150);
+  --chart-4: oklch(0.72 0.12 40);
+  --chart-5: oklch(0.60 0.12 300);
 
-  --sidebar: oklch(0.12 0.005 60);
-  --sidebar-foreground: oklch(0.97 0.005 95);
-  --sidebar-primary: oklch(0.97 0.005 95);
-  --sidebar-primary-foreground: oklch(0.15 0.01 60);
-  --sidebar-accent: oklch(0.22 0.015 85);
-  --sidebar-accent-foreground: oklch(0.97 0.005 95);
+  --sidebar: oklch(0.16 0.014 255);
+  --sidebar-foreground: oklch(0.96 0.006 95);
+  --sidebar-primary: oklch(0.78 0.14 85);
+  --sidebar-primary-foreground: oklch(0.16 0.02 85);
+  --sidebar-accent: oklch(0.24 0.025 85);
+  --sidebar-accent-foreground: oklch(0.96 0.01 90);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.75 0.12 85);
+  --sidebar-ring: oklch(0.78 0.14 85);
 
-  --brand-from: #f5f5f5;
-  --brand-via: #e5e5e5;
-  --brand-to: #a3a3a3;
-  --brand-glow: transparent;
-
-  --logo-gold: #f0c14b;
-  --official-gold: #f0c14b;
-  --official-gold-soft: rgba(240, 193, 75, 0.2);
-  --gold-muted: oklch(0.25 0.04 90);
+  --brand-from: #d4af37;
+  --brand-via: #e8c547;
+  --brand-to: #f5d76e;
+  --brand-glow: rgba(212, 175, 55, 0.22);
 }
 
-/* ─── Base Layer ─────────────────────────────────────────────── */
+/* ─── Base ───────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
     @apply font-sans;
     scroll-behavior: smooth;
   }
+  /* Comfortable focus for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 
-/* ─── Gradient Text Utility ──────────────────────────────────── */
+/* ─── Utilities ──────────────────────────────────────────────── */
 @layer utilities {
-
-  /* Premium surface utilities */
-  .hunared-card {
-    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm;
-  }
-  .hunared-card-hover {
-    @apply transition-colors duration-200 hover:border-border hover:bg-muted/40;
-  }
-  .hunared-section {
-    @apply py-14 sm:py-16 md:py-20;
-  }
-  .hunared-container {
-    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
-  }
-  .gold-accent {
-    color: var(--logo-gold);
-  }
-  .gold-border {
-    border-color: var(--official-gold-soft);
-  }
-  .gold-underline {
-    background: linear-gradient(90deg, transparent, var(--logo-gold), transparent);
-  }
-
-  /* Solid white headings — no gradient, no animation (Jobs, Market, Companies, Sign-in, etc.) */
+  /* Clean solid headings (no gradient animation noise) */
   .gradient-text {
     background: none;
-    color: var(--foreground);
-    -webkit-text-fill-color: var(--foreground);
+    background-image: none;
     -webkit-background-clip: unset;
     background-clip: unset;
-  }
-
-  /* Light mode: use dark foreground so titles stay readable */
-  :root:not(.dark) .gradient-text {
-    -webkit-text-fill-color: hsl(var(--foreground));
-    color: hsl(var(--foreground));
+    -webkit-text-fill-color: currentColor;
+    color: inherit;
+    animation: none;
   }
 
   .glass {
-    background: oklch(1 0 0 / 70%);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-bottom: 1px solid oklch(0.88 0.015 264 / 60%);
+    background: oklch(1 0 0 / 78%);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border-bottom: 1px solid oklch(0.90 0.008 95 / 70%);
   }
 
   .dark .glass {
-    background: oklch(0.1 0.015 260 / 75%);
+    background: oklch(0.145 0.012 255 / 82%);
     border-bottom: 1px solid oklch(1 0 0 / 8%);
   }
 
   .brand-glow {
-    box-shadow: none;
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary) 22%, transparent),
+      0 4px 24px var(--brand-glow);
+  }
+
+  /* Subtle professional card elevation */
+  .card-elevated {
+    box-shadow:
+      0 1px 2px oklch(0 0 0 / 4%),
+      0 4px 12px oklch(0 0 0 / 4%);
+  }
+
+  .dark .card-elevated {
+    box-shadow:
+      0 1px 2px oklch(0 0 0 / 20%),
+      0 4px 16px oklch(0 0 0 / 25%);
   }
 }
 
-/* ─── Keyframes ──────────────────────────────────────────────── */
-@keyframes gradient-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-/* ── Hunared wordmark: solid brand gold ── */
+/* ─── Wordmark (preserve metallic gold identity) ─────────────── */
 .hunared-wordmark {
-  display: inline-block;
-  transition: opacity 0.15s ease;
+  position: relative;
+  will-change: transform;
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .group\/logo:hover .hunared-wordmark,
 .group:hover .hunared-wordmark,
 a:hover .hunared-wordmark {
-  opacity: 0.92;
+  transform: scale(1.03);
 }
+
 .hunared-wordmark-text {
   position: relative;
   display: inline-block;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--logo-gold, #e6b422) !important;
-  -webkit-text-fill-color: var(--logo-gold, #e6b422) !important;
-  background: none !important;
-  background-image: none !important;
-  -webkit-background-clip: unset !important;
-  background-clip: unset !important;
-  animation: none !important;
-  filter: none !important;
-  text-shadow: none !important;
-}
-.dark .hunared-wordmark-text {
-  color: var(--logo-gold, #f0c14b) !important;
-  -webkit-text-fill-color: var(--logo-gold, #f0c14b) !important;
-}
-:root:not(.dark) .hunared-wordmark-text {
-  color: var(--logo-gold, #e6b422) !important;
-  -webkit-text-fill-color: var(--logo-gold, #e6b422) !important;
-}
-.contrast-white .hunared-wordmark-text,
-.contrast-black .hunared-wordmark-text {
-  color: var(--logo-gold) !important;
-  -webkit-text-fill-color: var(--logo-gold) !important;
-  background-image: none !important;
-  filter: none !important;
+  letter-spacing: -0.03em;
+  background-image: linear-gradient(
+    105deg,
+    #a67c00 0%,
+    #c9a227 14%,
+    #f5ba18 30%,
+    #ffe9a0 44%,
+    #ffffff 52%,
+    #f5ba18 64%,
+    #d4af37 80%,
+    #b8860b 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hunaredGoldShine 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 8px rgba(245, 186, 24, 0.28));
+  will-change: background-position, filter;
 }
 
-/* ─── Native select / datalist option colors (site-wide) ───
-   Keep country/city dropdown panels consistent across hero,
-   jobs, companies, marketplace, finder, search, etc. */
+.group\/logo:hover .hunared-wordmark-text,
+a:hover .hunared-wordmark-text {
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45))
+    drop-shadow(0 0 14px rgba(245, 186, 24, 0.45));
+  animation-duration: 2.6s;
+}
+
+@keyframes hunaredGoldShine {
+  0%   { background-position: 120% 50%; }
+  100% { background-position: -120% 50%; }
+}
+
+:root:not(.dark) .hunared-wordmark-text {
+  background-image: linear-gradient(
+    105deg,
+    #8b6914 0%,
+    #b8860b 16%,
+    #d4af37 34%,
+    #f5e6a8 50%,
+    #ffffff 56%,
+    #e8c547 72%,
+    #b8860b 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55))
+    drop-shadow(0 0 5px rgba(184, 134, 11, 0.18));
+}
+
+@media (max-width: 640px) {
+  .hunared-wordmark-text { animation-duration: 5.5s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hunared-wordmark-text {
+    animation: none;
+    background-image: linear-gradient(90deg, #f5ba18 0%, #ffe9a0 50%, #d4af37 100%);
+    background-size: 100% 100%;
+  }
+}
+
+/* ─── Native select / option colors (site-wide consistency) ─── */
 .dark select,
 .dark input[list],
 select[data-color-scheme="dark"],
@@ -294,74 +338,13 @@ input[data-color-scheme="dark"] {
   color-scheme: dark;
 }
 
-.dark select option,
-.dark datalist option,
 select option,
 datalist option {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
 }
 
-/* Light mode still readable */
-:root:not(.dark) select option,
-:root:not(.dark) datalist option {
-  background-color: var(--background);
-  color: var(--foreground);
-}
-
-
-/* ─── High Contrast White (outdoor / sunlight) ───────────────── */
-.contrast-white {
-  --background: #ffffff;
-  --foreground: #000000;
-  --card: #ffffff;
-  --card-foreground: #000000;
-  --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #0033cc;
-  --primary-foreground: #ffffff;
-  --secondary: #f0f0f0;
-  --secondary-foreground: #000000;
-  --muted: #f5f5f5;
-  --muted-foreground: #111111;
-  --accent: #e8f0ff;
-  --accent-foreground: #000000;
-  --destructive: #b00000;
-  --border: #000000;
-  --input: #000000;
-  --ring: #0033cc;
-  --radius: 0.625rem;
-
-  --chart-1: #0033cc;
-  --chart-2: #006600;
-  --chart-3: #990000;
-  --chart-4: #664400;
-  --chart-5: #660066;
-
-  --sidebar: #ffffff;
-  --sidebar-foreground: #000000;
-  --sidebar-primary: #0033cc;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8f0ff;
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #000000;
-  --sidebar-ring: #0033cc;
-
-  --brand-from: #0033cc;
-  --brand-via: #0055ff;
-  --brand-to: #0077cc;
-  --brand-glow: rgba(0, 51, 204, 0.2);
-  color-scheme: light;
-}
-
-.contrast-white select option,
-.contrast-white datalist option {
-  background-color: #ffffff;
-  color: #000000;
-}
-
-
-/* ─── High Contrast Black (max contrast dark) ────────────────── */
+/* High-contrast mode support (existing feature) */
 .contrast-black {
   --background: #000000;
   --foreground: #ffffff;
@@ -369,39 +352,30 @@ datalist option {
   --card-foreground: #ffffff;
   --popover: #0a0a0a;
   --popover-foreground: #ffffff;
-  --primary: #4d7cff;
-  --primary-foreground: #000000;
+  --primary: #e8c547;
+  --primary-foreground: #0a0a0a;
   --secondary: #1a1a1a;
   --secondary-foreground: #ffffff;
   --muted: #141414;
   --muted-foreground: #e0e0e0;
-  --accent: #1a2744;
+  --accent: #1f1a0a;
   --accent-foreground: #ffffff;
   --destructive: #ff4d4d;
-  --border: #ffffff;
-  --input: #ffffff;
-  --ring: #4d7cff;
-  --radius: 0.625rem;
-
-  --chart-1: #4d7cff;
-  --chart-2: #33ff99;
-  --chart-3: #ff6666;
-  --chart-4: #ffcc33;
-  --chart-5: #cc66ff;
-
+  --border: #2a2a2a;
+  --input: #2a2a2a;
+  --ring: #e8c547;
   --sidebar: #000000;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #4d7cff;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #1a2744;
+  --sidebar-primary: #e8c547;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1f1a0a;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #ffffff;
-  --sidebar-ring: #4d7cff;
-
-  --brand-from: #4d7cff;
-  --brand-via: #7aa2ff;
-  --brand-to: #33ccff;
-  --brand-glow: rgba(77, 124, 255, 0.35);
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #e8c547;
+  --brand-from: #d4af37;
+  --brand-via: #e8c547;
+  --brand-to: #f5d76e;
+  --brand-glow: rgba(232, 197, 71, 0.35);
   color-scheme: dark;
 }
 
@@ -412,10 +386,14 @@ datalist option {
 }
 
 .contrast-black .hunared-wordmark-text {
-  color: #f0c14b;
-  -webkit-text-fill-color: #f0c14b;
-  background-image: none;
-  filter: none;
+  background-image: linear-gradient(
+    105deg,
+    #f5ba18 0%,
+    #ffe9a0 40%,
+    #ffffff 50%,
+    #f5ba18 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8))
+    drop-shadow(0 0 10px rgba(245, 186, 24, 0.45));
 }
-
-
