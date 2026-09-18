@@ -9,6 +9,24 @@ import {
   LayoutDashboard,
   ChevronDown,
   Plus,
+  Briefcase,
+  Users,
+  Building2,
+  ShoppingBag,
+  BookOpen,
+  GraduationCap,
+  Search,
+  MapPin,
+  Globe,
+  Wrench,
+  Home,
+  Car,
+  Laptop,
+  Sofa,
+  Tag,
+  Gift,
+  Calendar,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,21 +36,146 @@ import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton } from "@clerk/nextjs";
 
 type SimpleLink = { type: "link"; href: string; label: string };
+type MegaItem = { label: string; href: string; desc?: string; icon?: React.ComponentType<{ className?: string }> };
 type MegaGroup = {
   type: "mega";
   label: string;
   href: string;
-  items: { label: string; href: string }[];
+  columns?: { title: string; items: MegaItem[] }[];
+  items?: MegaItem[];
 };
 type NavItem = SimpleLink | MegaGroup;
 
 const NAV_ITEMS: NavItem[] = [
-  { type: "link", href: "/jobs", label: "Jobs" },
-  { type: "link", href: "/candidates", label: "Candidates" },
-  { type: "link", href: "/companies", label: "Companies" },
-  { type: "link", href: "/market", label: "Marketplace" },
-  { type: "link", href: "/education", label: "Learning" },
-  { type: "link", href: "/program", label: "Program" },
+  {
+    type: "mega",
+    label: "Jobs",
+    href: "/jobs",
+    columns: [
+      {
+        title: "Explore",
+        items: [
+          { label: "Browse Jobs", href: "/jobs", desc: "All open roles" },
+          { label: "Remote Jobs", href: "/jobs?remote=true", desc: "Work from anywhere" },
+          { label: "Temporary / One-Day", href: "/jobs?employment=Temporary", desc: "Short-term work" },
+        ],
+      },
+      {
+        title: "By focus",
+        items: [
+          { label: "Jobs by Country", href: "/jobs", desc: "Filter by location" },
+          { label: "Jobs by Industry", href: "/jobs", desc: "Oil & Gas, Engineering…" },
+          { label: "Post a Job", href: "/dashboard/jobs/new", desc: "Hire talent" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "mega",
+    label: "Candidates",
+    href: "/candidates",
+    columns: [
+      {
+        title: "Talent",
+        items: [
+          { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
+          { label: "Candidate Directory", href: "/candidates", desc: "Browse profiles" },
+          { label: "By Skill / Profession", href: "/candidates", desc: "Filter by expertise" },
+        ],
+      },
+      {
+        title: "Actions",
+        items: [
+          { label: "By Country", href: "/candidates", desc: "Local & global talent" },
+          { label: "Available for Hire", href: "/candidates?hire=true", desc: "Open to opportunities" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "mega",
+    label: "Companies",
+    href: "/companies",
+    columns: [
+      {
+        title: "Directory",
+        items: [
+          { label: "Company Directory", href: "/companies", desc: "Explore organizations" },
+          { label: "By Industry", href: "/companies", desc: "Oil & Gas, Construction…" },
+          { label: "By Country", href: "/companies", desc: "Regional employers" },
+        ],
+      },
+      {
+        title: "Services",
+        items: [
+          { label: "Company Services", href: "/companies", desc: "What they offer" },
+          { label: "Create Company Profile", href: "/register", desc: "Get listed" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "mega",
+    label: "Marketplace",
+    href: "/market",
+    columns: [
+      {
+        title: "Buy & Sell",
+        items: [
+          { label: "For Sale", href: "/market?type=for_sale", icon: Tag },
+          { label: "For Rent", href: "/market?type=for_rent", icon: Home },
+          { label: "Services", href: "/market?type=services", icon: Wrench },
+          { label: "Property", href: "/market?type=property", icon: Building2 },
+          { label: "Vehicles", href: "/market?type=vehicles", icon: Car },
+          { label: "Electronics", href: "/market?type=electronics", icon: Laptop },
+        ],
+      },
+      {
+        title: "More",
+        items: [
+          { label: "Home & Furniture", href: "/market?type=home_furniture", icon: Sofa },
+          { label: "Wanted", href: "/market?type=wanted", icon: Search },
+          { label: "Free Items", href: "/market?type=free", icon: Gift },
+          { label: "Offers & Deals", href: "/market?type=offers", icon: Tag },
+          { label: "Events", href: "/market?type=events", icon: Calendar },
+          { label: "Community", href: "/market?type=community", icon: Users },
+        ],
+      },
+    ],
+  },
+  {
+    type: "mega",
+    label: "Learning",
+    href: "/education",
+    columns: [
+      {
+        title: "Knowledge Hub",
+        items: [
+          { label: "Career Tips", href: "/education?category=career_tips", desc: "Grow your career" },
+          { label: "Engineering", href: "/education?category=engineering", desc: "Technical guides" },
+          { label: "HSE / Safety", href: "/education?category=safety_hse", desc: "Safety standards" },
+          { label: "Professional Development", href: "/education", desc: "Skills & soft skills" },
+          { label: "All Articles", href: "/education", desc: "Browse the hub" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "mega",
+    label: "Program",
+    href: "/program",
+    columns: [
+      {
+        title: "Hunared Programs",
+        items: [
+          { label: "Training & Certifications", href: "/program", desc: "Active pathways" },
+          { label: "Verify Credentials", href: "https://hunared.org", desc: "Official verification" },
+          { label: "Scholarships & Internships", href: "/program", desc: "Coming pathways" },
+          { label: "Career Development", href: "/program", desc: "Future programs" },
+        ],
+      },
+    ],
+  },
 ];
 
 export function Header() {
@@ -114,14 +257,16 @@ export function Header() {
               }
 
               const isOpen = openMega === item.label;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <div key={item.label} className="relative">
                   <button
                     type="button"
                     onClick={() => setOpenMega(isOpen ? null : item.label)}
+                    onMouseEnter={() => setOpenMega(item.label)}
                     className={cn(
                       "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
-                      pathname.startsWith(item.href)
+                      isActive || isOpen
                         ? "text-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     )}
@@ -139,23 +284,68 @@ export function Header() {
 
                   {isOpen && (
                     <div
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 rounded-lg border border-border bg-card shadow-lg p-1.5 z-50"
+                      className={cn(
+                        "absolute top-full mt-2 rounded-xl border border-border bg-card shadow-xl p-3 z-50",
+                        item.columns && item.columns.length > 1
+                          ? "left-1/2 -translate-x-1/2 w-[min(92vw,28rem)]"
+                          : "left-0 w-64"
+                      )}
                       role="menu"
+                      onMouseLeave={() => setOpenMega(null)}
                     >
-                      {item.items.map((sub) => (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          role="menuitem"
-                          className="block px-3 py-2 text-sm rounded-md text-foreground hover:bg-muted transition-colors"
+                      {item.columns ? (
+                        <div
+                          className={cn(
+                            "grid gap-4",
+                            item.columns.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                          )}
                         >
-                          {sub.label}
-                        </Link>
-                      ))}
+                          {item.columns.map((col) => (
+                            <div key={col.title} className="space-y-1">
+                              <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {col.title}
+                              </p>
+                              {col.items.map((sub) => (
+                                <Link
+                                  key={sub.href + sub.label}
+                                  href={sub.href}
+                                  role="menuitem"
+                                  className="flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+                                >
+                                  {sub.icon && (
+                                    <sub.icon className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                                  )}
+                                  <span className="min-w-0">
+                                    <span className="font-medium block leading-tight">
+                                      {sub.label}
+                                    </span>
+                                    {sub.desc && (
+                                      <span className="text-[11px] text-muted-foreground leading-snug block mt-0.5">
+                                        {sub.desc}
+                                      </span>
+                                    )}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        item.items?.map((sub) => (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            role="menuitem"
+                            className="block px-3 py-2 text-sm rounded-md text-foreground hover:bg-muted transition-colors"
+                          >
+                            {sub.label}
+                          </Link>
+                        ))
+                      )}
                       <Link
                         href={item.href}
                         role="menuitem"
-                        className="block px-3 py-2 mt-0.5 text-sm font-semibold rounded-md text-primary border-t border-border/70 hover:bg-accent transition-colors"
+                        className="block px-2.5 py-2 mt-2 text-sm font-semibold rounded-lg text-primary border-t border-border/70 hover:bg-accent transition-colors"
                       >
                         View all {item.label} →
                       </Link>
@@ -251,10 +441,10 @@ export function Header() {
       <div
         className={cn(
           "lg:hidden overflow-hidden transition-all duration-300 ease-in-out",
-          mobileOpen ? "max-h-[34rem] opacity-100" : "max-h-0 opacity-0"
+          mobileOpen ? "max-h-[40rem] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[30rem]">
+        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[36rem]">
           <div className="px-3 py-2">
             <LocationPicker />
           </div>
@@ -292,9 +482,12 @@ export function Header() {
                   <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
                 </summary>
                 <div className="pl-4 space-y-0.5 pb-1">
-                  {item.items.map((sub) => (
+                  {(item.columns
+                    ? item.columns.flatMap((c) => c.items)
+                    : item.items || []
+                  ).map((sub) => (
                     <Link
-                      key={sub.href}
+                      key={sub.href + sub.label}
                       href={sub.href}
                       className="block px-3 py-2 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70"
                     >

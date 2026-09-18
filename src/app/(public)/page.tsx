@@ -1,15 +1,17 @@
 import { HeroSection } from "@/components/home/HeroSection";
+import { UserPathSection } from "@/components/home/UserPathSection";
+import { HomePlatformStrip } from "@/components/home/HomePlatformStrip";
 import { BrowseCategories } from "@/components/home/BrowseCategories";
 import { HunaredProgram } from "@/components/home/HunaredProgram";
 import { HunaredFinder } from "@/components/home/HunaredFinder";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { TrustSafety } from "@/components/home/TrustSafety";
 import { CtaBanner } from "@/components/home/CtaBanner";
-import { HomePlatformStrip } from "@/components/home/HomePlatformStrip";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  // absolute = tab shows only "Hunared" (skips "| Hunared" template)
   title: {
     absolute: "Hunared",
   },
@@ -20,51 +22,31 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="flex flex-col">
+      {/* 1. Hero + Universal Smart Search */}
       <HeroSection />
 
-      {/* Primary shortcuts — centered under hero/quick links */}
-      <section className="relative z-10 py-6 sm:py-8 px-4 sm:px-6">
-        <div className="mx-auto max-w-3xl sm:max-w-4xl">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 items-stretch">
-            <a
-              href="/jobs"
-              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.75rem] px-4 py-3.5 rounded-xl text-sm font-semibold border border-border bg-card text-foreground shadow-sm hover:bg-muted/50 hover:border-border transition-colors duration-200"
-            >
-              <span>Browse Jobs</span>
-              <span className="text-[11px] font-normal text-muted-foreground">
-                Employment opportunities
-              </span>
-            </a>
-            <a
-              href="/candidates"
-              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.75rem] px-4 py-3.5 rounded-xl text-sm font-semibold border border-border bg-card text-foreground shadow-sm hover:bg-muted/50 hover:border-border transition-colors duration-200"
-            >
-              <span>Find Candidates</span>
-              <span className="text-[11px] font-normal text-muted-foreground">
-                Discover talent
-              </span>
-            </a>
-            <a
-              href="/companies"
-              className="w-full inline-flex flex-col items-center justify-center gap-1 min-h-[3.75rem] px-4 py-3.5 rounded-xl text-sm font-semibold border border-border bg-card text-foreground shadow-sm hover:bg-muted/50 hover:border-border transition-colors duration-200"
-            >
-              <span>Explore Companies</span>
-              <span className="text-[11px] font-normal text-muted-foreground">
-                Employers & organizations
-              </span>
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* 2. Clear user paths — What are you looking for? */}
+      <UserPathSection />
 
+      {/* 3. Platform overview strip */}
       <HomePlatformStrip />
 
+      {/* 4. Browse by categories (Jobs / Learning / Marketplace) */}
       <BrowseCategories />
 
+      {/* 5. Programs */}
       <HunaredProgram />
 
+      {/* 6. Hunared Finder (Lost & Found) */}
       <HunaredFinder />
 
+      {/* 7. How it works */}
+      <HowItWorks />
+
+      {/* 8. Trust & safety */}
+      <TrustSafety />
+
+      {/* 9. Final CTA */}
       <CtaBanner />
     </div>
   );
