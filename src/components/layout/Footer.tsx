@@ -5,37 +5,35 @@ import { Separator } from "@/components/ui/separator";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 
 const FOOTER_LINKS = {
-  Hunared: [
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
-    { href: "/about", label: "Our Mission" },
-  ],
-  Opportunities: [
+  Explore: [
     { href: "/jobs", label: "Jobs" },
-    { href: "/candidates", label: "Candidates" },
+    { href: "/candidates", label: "Talent" },
     { href: "/companies", label: "Companies" },
     { href: "/market", label: "Marketplace" },
+    { href: "/education", label: "Learning" },
   ],
-  Learn: [
-    { href: "/education", label: "Learning Hub" },
-    { href: "/education?category=career_tips", label: "Career Tips" },
-    { href: "/education?category=engineering", label: "Engineering" },
-    { href: "/education?category=safety_hse", label: "HSE / Safety" },
+  Discover: [
+    { href: "/market?type=services", label: "Services" },
+    { href: "/market?type=property", label: "Property" },
+    { href: "/market?type=accommodation", label: "Accommodation" },
+    { href: "/market?type=vehicles", label: "Vehicles" },
+  ],
+  Community: [
+    { href: "/finder", label: "Hunared Finder" },
+    { href: "/market?type=community", label: "Community" },
+    { href: "/market?type=events", label: "Events" },
   ],
   Programs: [
     { href: "/program", label: "Training & Programs" },
     { href: "https://hunared.org", label: "Verify Credentials" },
-    { href: "/program", label: "Certifications" },
   ],
-  Community: [
-    { href: "/market?type=lost_found", label: "Hunared Finder" },
-    { href: "/market?type=community", label: "Community" },
-    { href: "/market?type=events", label: "Events" },
+  Company: [
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
   ],
-  Support: [
-    { href: "/contact", label: "Help & Contact" },
-    { href: "/terms", label: "Terms" },
+  Legal: [
     { href: "/privacy", label: "Privacy" },
+    { href: "/terms", label: "Terms" },
   ],
 };
 
@@ -48,21 +46,15 @@ const SOCIAL_LINKS = [
 export function Footer() {
   return (
     <footer className="bg-card border-t border-border">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-14 md:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-8 lg:gap-6">
-          {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2 space-y-4 pr-2">
-            <Link
-              href="/"
-              className="inline-flex items-center shrink-0"
-              aria-label="Hunared home"
-            >
+            <Link href="/" className="inline-flex items-center shrink-0" aria-label="Hunared home">
               <HunaredLogo size="md" asLink={false} />
             </Link>
-
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-              Everything you need. One platform. Jobs, talent, companies,
-              marketplace, learning, and programs — global and professional.
+              Hunared is a global platform connecting people, jobs, businesses,
+              services, marketplace opportunities and learning in one place.
             </p>
             <div className="flex gap-2.5">
               {SOCIAL_LINKS.map(({ href, label, name }) => (
@@ -80,12 +72,9 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([category, links]) => (
             <div key={category} className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
-                {category}
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground">{category}</h3>
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.href + link.label}>
@@ -110,7 +99,7 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Hunared. All rights reserved.</p>
           <p className="text-center sm:text-right">
-            Global professional opportunity platform
+            Global platform for work, talent, business & opportunity
           </p>
         </div>
       </div>

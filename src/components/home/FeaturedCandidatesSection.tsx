@@ -34,10 +34,10 @@ export async function FeaturedCandidatesSection() {
         <div className="text-center space-y-3 mb-12">
           <p className="text-sm font-semibold text-primary uppercase tracking-wider">Talent</p>
           <h2 className="text-3xl sm:text-4xl font-bold">
-            <span className="gradient-text">Our Candidates</span>
+            Discover professionals
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Skilled expat professionals ready for their next international assignment.
+            Professionals building profiles and open to opportunities.
           </p>
         </div>
 

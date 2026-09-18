@@ -9,15 +9,7 @@ import {
   LayoutDashboard,
   ChevronDown,
   Plus,
-  Briefcase,
-  Users,
-  Building2,
-  ShoppingBag,
-  BookOpen,
-  GraduationCap,
   Search,
-  MapPin,
-  Globe,
   Wrench,
   Home,
   Car,
@@ -26,7 +18,9 @@ import {
   Tag,
   Gift,
   Calendar,
-  Megaphone,
+  Users,
+  Building2,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,17 +29,22 @@ import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton } from "@clerk/nextjs";
 
-type SimpleLink = { type: "link"; href: string; label: string };
-type MegaItem = { label: string; href: string; desc?: string; icon?: React.ComponentType<{ className?: string }> };
+type MegaItem = {
+  label: string;
+  href: string;
+  desc?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+};
 type MegaGroup = {
   type: "mega";
   label: string;
   href: string;
   columns?: { title: string; items: MegaItem[] }[];
-  items?: MegaItem[];
 };
+type SimpleLink = { type: "link"; href: string; label: string };
 type NavItem = SimpleLink | MegaGroup;
 
+/** Primary nav — keep lean. Programs + Finder under More. */
 const NAV_ITEMS: NavItem[] = [
   {
     type: "mega",
@@ -57,11 +56,11 @@ const NAV_ITEMS: NavItem[] = [
         items: [
           { label: "Browse Jobs", href: "/jobs", desc: "All open roles" },
           { label: "Remote Jobs", href: "/jobs?remote=true", desc: "Work from anywhere" },
-          { label: "Temporary / One-Day", href: "/jobs?employment=Temporary", desc: "Short-term work" },
+          { label: "Temporary Work", href: "/jobs?employment=Temporary", desc: "Short-term roles" },
         ],
       },
       {
-        title: "By focus",
+        title: "Actions",
         items: [
           { label: "Jobs by Country", href: "/jobs", desc: "Filter by location" },
           { label: "Jobs by Industry", href: "/jobs", desc: "Oil & Gas, Engineering…" },
@@ -72,20 +71,14 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     type: "mega",
-    label: "Candidates",
+    label: "Talent",
     href: "/candidates",
     columns: [
       {
-        title: "Talent",
+        title: "Professionals",
         items: [
           { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
-          { label: "Candidate Directory", href: "/candidates", desc: "Browse profiles" },
-          { label: "By Skill / Profession", href: "/candidates", desc: "Filter by expertise" },
-        ],
-      },
-      {
-        title: "Actions",
-        items: [
+          { label: "By Skill", href: "/candidates", desc: "Filter by expertise" },
           { label: "By Country", href: "/candidates", desc: "Local & global talent" },
           { label: "Available for Hire", href: "/candidates?hire=true", desc: "Open to opportunities" },
         ],
@@ -101,14 +94,8 @@ const NAV_ITEMS: NavItem[] = [
         title: "Directory",
         items: [
           { label: "Company Directory", href: "/companies", desc: "Explore organizations" },
-          { label: "By Industry", href: "/companies", desc: "Oil & Gas, Construction…" },
+          { label: "By Industry", href: "/companies", desc: "Sectors & services" },
           { label: "By Country", href: "/companies", desc: "Regional employers" },
-        ],
-      },
-      {
-        title: "Services",
-        items: [
-          { label: "Company Services", href: "/companies", desc: "What they offer" },
           { label: "Create Company Profile", href: "/register", desc: "Get listed" },
         ],
       },
@@ -136,9 +123,9 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Home & Furniture", href: "/market?type=home_furniture", icon: Sofa },
           { label: "Wanted", href: "/market?type=wanted", icon: Search },
           { label: "Free Items", href: "/market?type=free", icon: Gift },
-          { label: "Offers & Deals", href: "/market?type=offers", icon: Tag },
           { label: "Events", href: "/market?type=events", icon: Calendar },
           { label: "Community", href: "/market?type=community", icon: Users },
+          { label: "All listings", href: "/market", icon: Tag },
         ],
       },
     ],
@@ -154,7 +141,6 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Career Tips", href: "/education?category=career_tips", desc: "Grow your career" },
           { label: "Engineering", href: "/education?category=engineering", desc: "Technical guides" },
           { label: "HSE / Safety", href: "/education?category=safety_hse", desc: "Safety standards" },
-          { label: "Professional Development", href: "/education", desc: "Skills & soft skills" },
           { label: "All Articles", href: "/education", desc: "Browse the hub" },
         ],
       },
@@ -162,16 +148,17 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     type: "mega",
-    label: "Program",
+    label: "More",
     href: "/program",
     columns: [
       {
-        title: "Hunared Programs",
+        title: "Programs & community",
         items: [
-          { label: "Training & Certifications", href: "/program", desc: "Active pathways" },
+          { label: "Programs & Training", href: "/program", desc: "Credentials & pathways" },
           { label: "Verify Credentials", href: "https://hunared.org", desc: "Official verification" },
-          { label: "Scholarships & Internships", href: "/program", desc: "Coming pathways" },
-          { label: "Career Development", href: "/program", desc: "Future programs" },
+          { label: "Hunared Finder", href: "/finder", desc: "Lost & found community" },
+          { label: "About Hunared", href: "/about", desc: "Our mission" },
+          { label: "Contact", href: "/contact", desc: "Help & support" },
         ],
       },
     ],
@@ -223,12 +210,10 @@ export function Header() {
         )}
       >
         <div className="flex h-14 sm:h-15 items-center justify-between gap-2 min-w-0">
-          {/* Logo */}
           <div className="shrink-0 min-w-0 flex items-center self-center">
             <HunaredLogo size={scrolled ? "md" : "lg"} />
           </div>
 
-          {/* Desktop Nav */}
           <nav
             ref={megaRef}
             className="hidden lg:flex items-center gap-0.5 relative"
@@ -236,7 +221,8 @@ export function Header() {
           >
             {NAV_ITEMS.map((item) => {
               if (item.type === "link") {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                const isActive =
+                  pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.href}
@@ -257,7 +243,15 @@ export function Header() {
               }
 
               const isOpen = openMega === item.label;
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(item.href + "/") ||
+                (item.label === "More" &&
+                  (pathname.startsWith("/program") ||
+                    pathname.startsWith("/finder") ||
+                    pathname.startsWith("/about") ||
+                    pathname.startsWith("/contact")));
+
               return (
                 <div key={item.label} className="relative">
                   <button
@@ -273,7 +267,14 @@ export function Header() {
                     aria-expanded={isOpen}
                     aria-haspopup="true"
                   >
-                    {item.label}
+                    {item.label === "More" ? (
+                      <>
+                        <MoreHorizontal className="h-3.5 w-3.5 lg:hidden" />
+                        <span>More</span>
+                      </>
+                    ) : (
+                      item.label
+                    )}
                     <ChevronDown
                       className={cn(
                         "h-3.5 w-3.5 transition-transform duration-200",
@@ -293,7 +294,7 @@ export function Header() {
                       role="menu"
                       onMouseLeave={() => setOpenMega(null)}
                     >
-                      {item.columns ? (
+                      {item.columns && (
                         <div
                           className={cn(
                             "grid gap-4",
@@ -311,6 +312,9 @@ export function Header() {
                                   href={sub.href}
                                   role="menuitem"
                                   className="flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+                                  {...(sub.href.startsWith("http")
+                                    ? { target: "_blank", rel: "noopener noreferrer" }
+                                    : {})}
                                 >
                                   {sub.icon && (
                                     <sub.icon className="h-4 w-4 mt-0.5 text-primary shrink-0" />
@@ -330,25 +334,16 @@ export function Header() {
                             </div>
                           ))}
                         </div>
-                      ) : (
-                        item.items?.map((sub) => (
-                          <Link
-                            key={sub.href}
-                            href={sub.href}
-                            role="menuitem"
-                            className="block px-3 py-2 text-sm rounded-md text-foreground hover:bg-muted transition-colors"
-                          >
-                            {sub.label}
-                          </Link>
-                        ))
                       )}
-                      <Link
-                        href={item.href}
-                        role="menuitem"
-                        className="block px-2.5 py-2 mt-2 text-sm font-semibold rounded-lg text-primary border-t border-border/70 hover:bg-accent transition-colors"
-                      >
-                        View all {item.label} →
-                      </Link>
+                      {item.label !== "More" && (
+                        <Link
+                          href={item.href}
+                          role="menuitem"
+                          className="block px-2.5 py-2 mt-2 text-sm font-semibold rounded-lg text-primary border-t border-border/70 hover:bg-accent transition-colors"
+                        >
+                          View all {item.label} →
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>
@@ -356,7 +351,6 @@ export function Header() {
             })}
           </nav>
 
-          {/* Right Actions */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
             <div
               className={cn(
@@ -377,7 +371,7 @@ export function Header() {
             >
               <Link href="/post">
                 <Plus className="h-3.5 w-3.5 mr-1" />
-                Post an Ad
+                Post
               </Link>
             </Button>
 
@@ -385,7 +379,12 @@ export function Header() {
 
             <div className="hidden lg:flex items-center gap-1.5">
               <Show when="signed-out">
-                <Button variant="ghost" size="sm" className="h-8 text-[13px] font-medium" asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-[13px] font-medium"
+                  asChild
+                >
                   <Link href="/sign-in">Sign In</Link>
                 </Button>
                 <Button
@@ -405,7 +404,9 @@ export function Header() {
                 >
                   <Link href="/dashboard" className="inline-flex items-center">
                     <LayoutDashboard className="h-4 w-4 sm:mr-1.5" />
-                    <span className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}>
+                    <span
+                      className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}
+                    >
                       Dashboard
                     </span>
                   </Link>
@@ -437,14 +438,14 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile */}
       <div
         className={cn(
           "lg:hidden overflow-hidden transition-all duration-300 ease-in-out",
-          mobileOpen ? "max-h-[40rem] opacity-100" : "max-h-0 opacity-0"
+          mobileOpen ? "max-h-[42rem] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[36rem]">
+        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[38rem]">
           <div className="px-3 py-2">
             <LocationPicker />
           </div>
@@ -454,12 +455,13 @@ export function Header() {
             className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-md text-primary bg-primary/10 hover:bg-primary/15 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Post an Ad
+            Post
           </Link>
 
           {NAV_ITEMS.map((item) => {
             if (item.type === "link") {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}
@@ -484,22 +486,27 @@ export function Header() {
                 <div className="pl-4 space-y-0.5 pb-1">
                   {(item.columns
                     ? item.columns.flatMap((c) => c.items)
-                    : item.items || []
+                    : []
                   ).map((sub) => (
                     <Link
                       key={sub.href + sub.label}
                       href={sub.href}
                       className="block px-3 py-2 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                      {...(sub.href.startsWith("http")
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
                     >
                       {sub.label}
                     </Link>
                   ))}
-                  <Link
-                    href={item.href}
-                    className="block px-3 py-2 text-sm font-semibold rounded-md text-primary"
-                  >
-                    View all {item.label} →
-                  </Link>
+                  {item.label !== "More" && (
+                    <Link
+                      href={item.href}
+                      className="block px-3 py-2 text-sm font-semibold rounded-md text-primary"
+                    >
+                      View all {item.label} →
+                    </Link>
+                  )}
                 </div>
               </details>
             );

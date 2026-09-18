@@ -12,15 +12,21 @@ import { cn } from "@/lib/utils";
 const CATEGORIES = [
   { value: "", label: "All Categories" },
   { value: "jobs", label: "Jobs" },
-  { value: "candidates", label: "Candidates" },
+  { value: "candidates", label: "Talent" },
   { value: "companies", label: "Companies" },
   { value: "marketplace", label: "Marketplace" },
   { value: "services", label: "Services" },
-  { value: "learning Hub", label: "Learning Hub" },
+  { value: "learning Hub", label: "Learning" },
+  { value: "properties", label: "Property" },
   { value: "accommodation", label: "Accommodation" },
-  { value: "properties", label: "Properties" },
-  { value: "hunared finder", label: "Hunared Finder" },
-  { value: "hunared program", label: "Hunared Program" },
+];
+
+const POPULAR = [
+  { q: "Instrument Technician", href: "/search?q=Instrument+Technician&category=jobs" },
+  { q: "HSE Officer", href: "/search?q=HSE+Officer&category=jobs" },
+  { q: "Software Engineer", href: "/search?q=Software+Engineer&category=jobs" },
+  { q: "Apartment for Rent", href: "/search?q=Apartment&category=marketplace" },
+  { q: "Electrical Services", href: "/search?q=Electrical+Services&category=services" },
 ];
 
 export function HeroSection() {
@@ -53,11 +59,10 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative min-h-[auto] sm:min-h-[72vh] flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-12">
-      {/* Subtle professional background */}
+    <section className="relative min-h-[auto] sm:min-h-[70vh] flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/25" />
-        <div className="absolute top-[16%] left-1/2 -translate-x-1/2 h-[400px] w-[640px] rounded-full bg-primary opacity-[0.045] blur-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
+        <div className="absolute top-[14%] left-1/2 -translate-x-1/2 h-[380px] w-[620px] rounded-full bg-primary opacity-[0.04] blur-[110px]" />
       </div>
 
       <div
@@ -68,46 +73,38 @@ export function HeroSection() {
       >
         <form
           onSubmit={handleSearch}
-          className="relative overflow-hidden rounded-2xl bg-card border border-border brand-glow p-5 sm:p-7 md:p-9 space-y-5 sm:space-y-6"
+          className="relative overflow-hidden rounded-2xl bg-card border border-border brand-glow p-5 sm:p-7 md:p-8 space-y-5"
         >
-          {/* Header */}
-          <div className="text-center space-y-2.5 sm:space-y-3">
-            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-[11px] sm:text-xs font-semibold tracking-wide text-primary uppercase">
-              Universal Smart Search
+          <div className="text-center space-y-2.5">
+            <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/8 px-3 py-0.5 text-[11px] sm:text-xs font-semibold tracking-wide text-primary uppercase">
+              Universal Search
             </span>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.55rem] font-bold tracking-tight leading-[1.15] text-foreground">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-bold tracking-tight leading-[1.15] text-foreground">
               Find work. Find talent.{" "}
               <span className="text-primary">Find opportunity.</span>
             </h1>
             <p className="text-sm sm:text-[15px] text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Jobs, professionals, companies, marketplace, services and learning
-              — all in one global platform.
+              Jobs, professionals, companies, services and marketplace — one
+              global platform.
             </p>
           </div>
 
-          {/* Main search input */}
           <div className="relative">
             <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground pointer-events-none" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Job title, skill, company, product, or article…"
-              className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 rounded-xl border border-border bg-background text-foreground text-sm sm:text-base placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition"
+              placeholder="Job title, skill, company, product, or service…"
+              className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 rounded-xl border border-border bg-background text-foreground text-sm sm:text-base placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/40 transition"
               autoComplete="off"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <VoiceSearchButton
-                onResult={(t) => {
-                  setQuery(t);
-                }}
-              />
+              <VoiceSearchButton onResult={(t) => setQuery(t)} />
             </div>
           </div>
 
-          {/* Filters */}
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
-            {/* Country */}
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
               <select
@@ -117,7 +114,7 @@ export function HeroSection() {
                   setCity("");
                 }}
                 data-color-scheme="dark"
-                className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/35 cursor-pointer [color-scheme:dark]"
+                className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
               >
                 <option value="" className="bg-background text-foreground">
                   All Countries
@@ -135,7 +132,6 @@ export function HeroSection() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
 
-            {/* City */}
             <CityCombobox
               id="hero-city"
               country={country}
@@ -145,13 +141,12 @@ export function HeroSection() {
               variant="hero"
             />
 
-            {/* Category */}
             <div className="relative">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 data-color-scheme="dark"
-                className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/35 cursor-pointer [color-scheme:dark]"
+                className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
               >
                 {CATEGORIES.map((c) => (
                   <option
@@ -167,28 +162,22 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Primary CTA */}
           <button
             type="submit"
             className="w-full h-11 sm:h-12 rounded-lg font-semibold text-sm sm:text-[15px] text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.99]"
           >
-            Search Everything
+            Search
           </button>
 
-          {/* Secondary path chips */}
-          <div className="flex flex-wrap justify-center gap-2 pt-0.5">
-            {[
-              { href: "/jobs", label: "Find Jobs" },
-              { href: "/candidates", label: "Find Talent" },
-              { href: "/market", label: "Explore Marketplace" },
-              { href: "/education", label: "Learning Hub" },
-            ].map((item) => (
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-0.5">
+            <span className="text-[11px] text-muted-foreground mr-0.5">Popular:</span>
+            {POPULAR.map((item) => (
               <a
-                key={item.href}
+                key={item.q}
                 href={item.href}
-                className="inline-flex items-center rounded-full border border-border/80 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                className="inline-flex items-center rounded-full border border-border/80 bg-background/80 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors"
               >
-                {item.label}
+                {item.q}
               </a>
             ))}
           </div>

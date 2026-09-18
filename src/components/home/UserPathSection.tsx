@@ -13,79 +13,76 @@ const PATHS = [
   {
     icon: Briefcase,
     title: "Find a Job",
-    text: "Search global employment opportunities and apply with confidence.",
+    text: "Discover employment opportunities worldwide.",
     href: "/jobs",
     cta: "Browse jobs",
   },
   {
     icon: Users,
     title: "Find Talent",
-    text: "Discover professionals and candidates ready for your next role.",
+    text: "Connect with professionals ready to work.",
     href: "/candidates",
-    cta: "View candidates",
+    cta: "View talent",
   },
   {
     icon: Building2,
     title: "Find a Company",
-    text: "Explore organizations, services, and partners worldwide.",
+    text: "Explore organizations and partners.",
     href: "/companies",
     cta: "Explore companies",
   },
   {
     icon: ShoppingBag,
-    title: "Buy & Sell",
-    text: "Marketplace for products, services, property, and more.",
+    title: "Marketplace",
+    text: "Buy, sell, rent, and find services.",
     href: "/market",
     cta: "Open marketplace",
   },
   {
     icon: BookOpen,
     title: "Learn & Grow",
-    text: "Career guides, HSE, engineering, and professional skills.",
+    text: "Career, engineering, HSE, and skills.",
     href: "/education",
-    cta: "Visit learning hub",
+    cta: "Learning hub",
   },
 ];
 
 export function UserPathSection() {
   return (
-    <section className="relative py-12 sm:py-16 md:py-20">
+    <section className="relative py-10 sm:py-14 md:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 sm:mb-10 space-y-2">
-          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+        <div className="text-center mb-7 sm:mb-9 space-y-1.5">
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Get started
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            What are you looking for?
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            What do you want to do?
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
-            Choose a path. Everything you need is on one global platform.
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {PATHS.map(({ icon: Icon, title, text, href, cta }) => (
             <Link
               key={title}
               href={href}
               className={cn(
-                "group flex flex-col rounded-2xl border border-border/80 bg-card p-5 sm:p-6",
-                "hover:border-primary/40 hover:shadow-md hover:shadow-primary/5",
+                "group flex flex-col rounded-xl border border-border/80 bg-card p-4 sm:p-5",
+                "hover:border-primary/35 hover:shadow-sm",
                 "transition-all duration-200"
               )}
             >
-              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
                 <Icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-base text-foreground mb-1.5">
+              <h3 className="font-semibold text-sm sm:text-base text-foreground mb-1">
                 {title}
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed flex-1 mb-4">
+              <p className="text-xs text-muted-foreground leading-relaxed flex-1 mb-3">
                 {text}
               </p>
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
                 {cta}
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Link>
           ))}

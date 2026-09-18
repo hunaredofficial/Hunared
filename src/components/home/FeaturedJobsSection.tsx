@@ -125,10 +125,10 @@ export async function FeaturedJobsSection() {
         <div className="text-center space-y-3 mb-12">
           <p className="text-sm font-semibold text-primary uppercase tracking-wider">Opportunities</p>
           <h2 className="text-3xl sm:text-4xl font-bold">
-            <span className="gradient-text">Featured Jobs</span>
+            Featured Jobs
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Top-reviewed opportunities handpicked for expat professionals this week.
+            Latest approved opportunities on the platform.
           </p>
         </div>
 
