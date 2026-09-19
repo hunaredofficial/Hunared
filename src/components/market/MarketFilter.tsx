@@ -26,6 +26,7 @@ import {
   LOST_FOUND_STATUS_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
 } from "@/lib/constants";
+import { useGeo } from "@/components/providers/GeoProvider";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
@@ -139,6 +140,8 @@ export function MarketFilter({
   defaultStatus?: string;
 }) {
   const router = useRouter();
+  const geo = useGeo();
+
   const [search, setSearch] = useState(defaultSearch);
   const [category, setCategory] = useState(defaultCategory);
   const [country, setCountry] = useState(defaultCountry);
@@ -243,8 +246,20 @@ export function MarketFilter({
     setSheetOpen(false);
   }
 
-  // Soft geo preference only — NEVER auto-navigate marketplace to IP country.
-  // That was showing 0 listings for users outside inventory regions.
+  // Auto country only; city stays All Cities
+  useEffect(() => {
+    if (geo.loading) return;
+    if (defaultCountry || defaultCity) return;
+    if (!geo.countryCode) return;
+
+    setCountry(geo.countryCode);
+    const params = buildParams({
+      country: geo.countryCode,
+      city: "",
+    });
+    router.replace(`/market?${params.toString()}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.loading, geo.countryCode]);
 
   // Reset subcategory when category changes away from current
   useEffect(() => {

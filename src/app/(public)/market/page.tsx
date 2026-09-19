@@ -259,35 +259,12 @@ export default async function MarketPage({
         )}
 
         {listings.length === 0 ? (
-          <div className="mx-auto max-w-lg text-center py-16 px-4">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <ShoppingBag className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              {country || city
-                ? "No listings in this location"
-                : "No marketplace listings yet"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              {country
-                ? "Try showing all countries or another region. Inventory is still growing worldwide."
-                : "Be the first to list a product, service, property, or vehicle — or broaden your search."}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {(country || city) && (
-                <Button asChild>
-                  <Link href="/market">Show all countries</Link>
-                </Button>
-              )}
-              {hasFilters && (
-                <Button variant="outline" asChild>
-                  <Link href="/market">Clear filters</Link>
-                </Button>
-              )}
-              <Button variant="outline" asChild>
-                <Link href="/post">Post a listing</Link>
-              </Button>
-            </div>
+          <div className="text-center py-20">
+            <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-muted-foreground text-lg">No listings found.</p>
+            <Button variant="outline" className="mt-4" asChild>
+              <Link href="/dashboard/market/new">Post the first listing</Link>
+            </Button>
           </div>
         ) : (
           <>

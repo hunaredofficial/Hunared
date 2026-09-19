@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, ChevronDown } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
+import { useGeo } from "@/components/providers/GeoProvider";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,8 @@ const POPULAR = [
 
 export function HeroSection() {
   const router = useRouter();
+  const geo = useGeo();
+
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -40,8 +43,10 @@ export function HeroSection() {
     setMounted(true);
   }, []);
 
-  // Country defaults to All countries so first search discovers global inventory.
-  // Header LocationPicker remains available for users who opt in to a location.
+  useEffect(() => {
+    if (geo.loading) return;
+    if (!country && geo.countryCode) setCountry(geo.countryCode);
+  }, [geo.loading, geo.countryCode, country]);
 
   function handleSearch(e?: FormEvent) {
     e?.preventDefault();

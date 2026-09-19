@@ -24,8 +24,9 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { COUNTRIES } from "@/lib/countries";
+import { useGeo } from "@/components/providers/GeoProvider";
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
@@ -157,6 +158,8 @@ export function JobsFilter({
   categories: string[];
 }) {
   const router = useRouter();
+  const geo = useGeo();
+
   const [search, setSearch] = useState(defaultSearch);
   const [category, setCategory] = useState(defaultCategory);
   const [country, setCountry] = useState(defaultCountry);
@@ -256,9 +259,18 @@ export function JobsFilter({
     setSheetOpen(false);
   };
 
-  // Soft geo preference only — NEVER hard-filter browse results by IP.
-  // Hard geo defaults were zeroing out Jobs when inventory is regional (e.g. SA).
-  // Location stays "All countries" until the user explicitly chooses one.
+  // Auto-fill country only; city stays All Cities
+  useEffect(() => {
+    if (geo.loading) return;
+    if (defaultCountry || defaultCity) return;
+    if (!geo.countryCode) return;
+    setCountry(geo.countryCode);
+    applyQuick({
+      country: geo.countryCode,
+      city: "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.loading, geo.countryCode]);
 
   const activeAdvancedCount = useMemo(() => {
     let n = 0;

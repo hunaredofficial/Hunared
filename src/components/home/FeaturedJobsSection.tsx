@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createAdminClient } from "@/lib/supabase";
 import { formatJobSalary } from "@/lib/currencies";
 import { getCategoryDisplayLabel } from "@/lib/constants";
-import { formatRelativePosted } from "@/lib/relativeDate";
 
 const CATEGORY_COLORS: Record<string, string> = {
  Accounting: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
@@ -114,7 +113,7 @@ export async function FeaturedJobsSection() {
   const supabase = createAdminClient();
   const { data: jobs } = await supabase
     .from("jobs")
-    .select("id, job_title, company_name, location, salary_rate, salary_type, currency, duration, category, created_at")
+    .select("id, job_title, company_name, location, salary_rate, salary_type, currency, duration, category")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(6);
@@ -173,17 +172,10 @@ export async function FeaturedJobsSection() {
                       <DollarSign className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                       {formatJobSalary(job.salary_rate, job.currency, job.salary_type) || job.salary_rate || 'To Be Discuss'}
                     </span>
-                    {job.duration ? (
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-primary/60 shrink-0" />
-                        {job.duration}
-                      </span>
-                    ) : null}
-                    {job.created_at ? (
-                      <span className="text-xs text-muted-foreground">
-                        {formatRelativePosted(job.created_at)}
-                      </span>
-                    ) : null}
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                      {job.duration}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">

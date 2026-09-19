@@ -11,8 +11,6 @@ import { COUNTRIES } from "@/lib/countries";
 import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
-import { formatRelativePosted } from "@/lib/relativeDate";
-import { isExpired, remainingLabel } from "@/lib/expiration";
 
 interface SearchParams {
   search?: string;
@@ -138,7 +136,7 @@ export default async function JobsPage({
     let query = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, positions, created_at, expires_at",
+        "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, positions, created_at",
         { count: "exact" }
       )
       .eq("status", "approved");
@@ -307,40 +305,13 @@ export default async function JobsPage({
         )}
 
         {jobs.length === 0 ? (
-          <div className="mx-auto max-w-lg text-center py-16 px-4">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <MapPin className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              {country || city
-                ? "No matching jobs in this location"
-                : "No matching jobs yet"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              {country
-                ? "Most current openings are in other markets. Broaden the location or clear filters to see all approved opportunities."
-                : "Try a different keyword, category, or check back soon. Employers post new roles regularly."}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {(country || city) && (
-                <Button asChild>
-                  <Link href="/jobs">Show all countries</Link>
-                </Button>
-              )}
-              {country !== "SA" && (
-                <Button variant="outline" asChild>
-                  <Link href="/jobs?country=SA">View Saudi Arabia jobs</Link>
-                </Button>
-              )}
-              {hasFilters && (
-                <Button variant="outline" asChild>
-                  <Link href="/jobs">Clear filters</Link>
-                </Button>
-              )}
-              <Button variant="ghost" asChild>
-                <Link href="/post">Post a job</Link>
+          <div className="text-center py-20">
+            <p className="text-muted-foreground text-lg">No jobs found.</p>
+            {hasFilters && (
+              <Button variant="outline" className="mt-4" asChild>
+                <Link href="/jobs">Clear filters</Link>
               </Button>
-            </div>
+            )}
           </div>
         ) : (
           <>
@@ -410,9 +381,12 @@ export default async function JobsPage({
 }
 
 function JobCard({ job }: { job: Partial<Job> }) {
-  const postedLabel = formatRelativePosted(job.created_at) || "";
-  const expired = isExpired((job as { expires_at?: string | null }).expires_at);
-  const expiryLabel = remainingLabel((job as { expires_at?: string | null }).expires_at);
+  const createdAt = job.created_at
+    ? new Date(job.created_at).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+      })
+    : "";
 
   const salaryLabel =
     formatJobSalary(job.salary_rate, job.currency, job.salary_type) ||
@@ -441,11 +415,6 @@ function JobCard({ job }: { job: Partial<Job> }) {
                 : job.employment_type.toLowerCase() === "temporary"
                   ? "Temporary"
                   : job.employment_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-            </Badge>
-          )}
-          {expired && (
-            <Badge variant="destructive" className="text-xs">
-              Expired
             </Badge>
           )}
         </div>
@@ -486,22 +455,7 @@ function JobCard({ job }: { job: Partial<Job> }) {
         </div>
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-border gap-2">
-          <div className="flex flex-col gap-0.5 min-w-0">
-            {postedLabel ? (
-              <span className="text-xs text-muted-foreground truncate">{postedLabel}</span>
-            ) : null}
-            {expiryLabel ? (
-              <span
-                className={
-                  expired
-                    ? "text-[11px] font-medium text-destructive"
-                    : "text-[11px] text-muted-foreground"
-                }
-              >
-                {expiryLabel}
-              </span>
-            ) : null}
-          </div>
+          <span className="text-xs text-muted-foreground">{createdAt}</span>
           <div className="flex items-center gap-1.5">
             {job.id && (
               <SaveButton itemType="job" itemId={job.id} size="sm" />
