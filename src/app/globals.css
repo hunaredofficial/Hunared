@@ -132,17 +132,9 @@
   --brand-to: #3b82f6;
   --brand-glow: rgba(37, 99, 235, 0.16);
 
-  /* Premium gold — badges / verified / featured ONLY */
+  /* Premium gold — badges / verified only */
   --premium: oklch(0.75 0.12 85);
   --premium-foreground: oklch(0.22 0.04 85);
-
-  /* Explicit brand anchors (reference hex) */
-  --navy-deep: #071A33;
-  --navy: #0B1F3A;
-  --blue: #155EEF;
-  --blue-bright: #2563EB;
-  --emerald: #12B76A;
-  --teal: #0E9384;
 }
 
 /* ─── Dark Mode ──────────────────────────────────────────────── */
@@ -261,17 +253,19 @@
   }
 }
 
-/* ─── Wordmark — professional navy / blue (not gold) ─────────── */
+/* ─── Wordmark (logo identity until full logo redesign) ────────
+   Kept metallic for brand mark continuity; UI primary is blue.
+   ───────────────────────────────────────────────────────────── */
 .hunared-wordmark {
   position: relative;
   will-change: transform;
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .group\/logo:hover .hunared-wordmark,
 .group:hover .hunared-wordmark,
 a:hover .hunared-wordmark {
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
 .hunared-wordmark-text {
@@ -281,120 +275,66 @@ a:hover .hunared-wordmark {
   letter-spacing: -0.03em;
   background-image: linear-gradient(
     105deg,
-    #071A33 0%,
-    #0B1F3A 22%,
-    #155EEF 55%,
-    #2563EB 78%,
-    #0B1F3A 100%
+    #a67c00 0%,
+    #c9a227 14%,
+    #f5ba18 30%,
+    #ffe9a0 44%,
+    #ffffff 52%,
+    #f5ba18 64%,
+    #d4af37 80%,
+    #b8860b 100%
   );
-  background-size: 200% 100%;
+  background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(11, 31, 58, 0.06));
+  animation: hunaredGoldShine 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 8px rgba(245, 186, 24, 0.28));
+  will-change: background-position, filter;
 }
 
 .group\/logo:hover .hunared-wordmark-text,
 a:hover .hunared-wordmark-text {
-  background-position: 100% 50%;
-  transition: background-position 400ms ease;
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45))
+    drop-shadow(0 0 14px rgba(245, 186, 24, 0.45));
+  animation-duration: 2.6s;
 }
 
-.dark .hunared-wordmark-text {
+@keyframes hunaredGoldShine {
+  0%   { background-position: 120% 50%; }
+  100% { background-position: -120% 50%; }
+}
+
+:root:not(.dark) .hunared-wordmark-text {
   background-image: linear-gradient(
     105deg,
-    #93C5FD 0%,
-    #60A5FA 35%,
-    #FFFFFF 55%,
-    #3B82F6 100%
+    #8b6914 0%,
+    #b8860b 16%,
+    #d4af37 34%,
+    #f5e6a8 50%,
+    #ffffff 56%,
+    #e8c547 72%,
+    #b8860b 100%
   );
-  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.25));
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55))
+    drop-shadow(0 0 5px rgba(184, 134, 11, 0.18));
+}
+
+@media (max-width: 640px) {
+  .hunared-wordmark-text { animation-duration: 5.5s; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hunared-wordmark-text {
-    background-image: none;
-    -webkit-text-fill-color: #0B1F3A;
-    color: #0B1F3A;
+    animation: none;
+    background-image: linear-gradient(90deg, #f5ba18 0%, #ffe9a0 50%, #d4af37 100%);
+    background-size: 100% 100%;
   }
-  .dark .hunared-wordmark-text {
-    -webkit-text-fill-color: #93C5FD;
-    color: #93C5FD;
-  }
-}
-
-/* ─── Motion system ─────────────────────────────────────────── */
-:root {
-  --motion-fast: 150ms;
-  --motion-normal: 240ms;
-  --motion-emphasis: 380ms;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes hunared-fade-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes hunared-skeleton {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
-}
-
-.animate-fade-up {
-  animation: hunared-fade-up var(--motion-emphasis) var(--ease-out) both;
-}
-
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--muted) 0%,
-    color-mix(in oklch, var(--muted) 40%, white) 50%,
-    var(--muted) 100%
-  );
-  background-size: 200% 100%;
-  animation: hunared-skeleton 1.4s var(--ease-in-out) infinite;
-}
-
-.card-interactive {
-  transition:
-    transform var(--motion-normal) var(--ease-out),
-    box-shadow var(--motion-normal) var(--ease-out),
-    border-color var(--motion-fast) ease;
-}
-
-.card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 1px 2px oklch(0.2 0.02 255 / 4%),
-    0 8px 24px oklch(0.2 0.04 255 / 8%);
-}
-
-.btn-press:active {
-  transform: scale(0.98);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-fade-up,
-  .skeleton-shimmer,
-  .card-interactive,
-  .card-interactive:hover {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
-}
-
-/* ─── Section rhythm helpers ────────────────────────────────── */
-.section-navy {
-  background: linear-gradient(165deg, #071A33 0%, #0B1F3A 55%, #0B2447 100%);
-  color: #F8FAFC;
-}
-
-.section-navy .text-muted-on-navy {
-  color: rgba(248, 250, 252, 0.72);
 }
 
 /* ─── Native select / option colors ─────────────────────────── */
@@ -455,8 +395,14 @@ datalist option {
 }
 
 .contrast-black .hunared-wordmark-text {
-  background-image: none;
-  -webkit-text-fill-color: #93C5FD;
-  color: #93C5FD;
-  filter: none;
+  background-image: linear-gradient(
+    105deg,
+    #f5ba18 0%,
+    #ffe9a0 40%,
+    #ffffff 50%,
+    #f5ba18 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8))
+    drop-shadow(0 0 10px rgba(245, 186, 24, 0.45));
 }
