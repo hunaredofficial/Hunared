@@ -133,13 +133,30 @@ export default async function CandidatesPage({
         )}
 
         {candidates.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground text-lg">No candidates found.</p>
-            {hasFilters && (
-              <Button variant="outline" className="mt-4" asChild>
-                <Link href="/candidates">Clear filters</Link>
+          <div className="mx-auto max-w-lg text-center py-16 px-4">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              {hasFilters
+                ? "No professionals match these filters"
+                : "Talent profiles are still growing"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              {hasFilters
+                ? "Remove filters or broaden location to discover more professionals. Invite skilled talent to join Hunared."
+                : "Professionals can create a free profile to be discovered by employers worldwide."}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {hasFilters && (
+                <Button asChild>
+                  <Link href="/candidates">Clear filters</Link>
+                </Button>
+              )}
+              <Button variant="outline" asChild>
+                <Link href="/register">Create talent profile</Link>
               </Button>
-            )}
+              <Button variant="ghost" asChild>
+                <Link href="/jobs">Browse jobs</Link>
+              </Button>
+            </div>
           </div>
         ) : (
           <>
