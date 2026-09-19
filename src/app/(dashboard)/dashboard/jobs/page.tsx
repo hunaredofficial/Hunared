@@ -57,7 +57,7 @@ export default async function MyJobsPage() {
             <Briefcase className="h-10 w-10 text-muted-foreground/40 mb-3" />
             <h2 className="text-lg font-semibold">No job posts yet</h2>
             <p className="text-muted-foreground text-sm mt-1 mb-5">
-              Post your first job to start hiring expat professionals.
+              Post your first job to start hiring professionals.
             </p>
             <Button asChild>
               <Link href="/dashboard/jobs/new">

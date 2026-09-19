@@ -16,6 +16,7 @@ const PATHS = [
     text: "Discover employment opportunities worldwide.",
     href: "/jobs",
     cta: "Browse jobs",
+    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/15",
   },
   {
     icon: Users,
@@ -23,6 +24,7 @@ const PATHS = [
     text: "Connect with professionals ready to work.",
     href: "/candidates",
     cta: "View talent",
+    accent: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-500/15",
   },
   {
     icon: Building2,
@@ -30,6 +32,7 @@ const PATHS = [
     text: "Explore organizations and partners.",
     href: "/companies",
     cta: "Explore companies",
+    accent: "bg-slate-500/10 text-slate-700 dark:text-slate-300 group-hover:bg-slate-500/15",
   },
   {
     icon: ShoppingBag,
@@ -37,6 +40,7 @@ const PATHS = [
     text: "Buy, sell, rent, and find services.",
     href: "/market",
     cta: "Open marketplace",
+    accent: "bg-teal-500/10 text-teal-700 dark:text-teal-400 group-hover:bg-teal-500/15",
   },
   {
     icon: BookOpen,
@@ -44,6 +48,7 @@ const PATHS = [
     text: "Career, engineering, HSE, and skills.",
     href: "/education",
     cta: "Learning hub",
+    accent: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 group-hover:bg-emerald-500/15",
   },
 ];
 
@@ -61,17 +66,21 @@ export function UserPathSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {PATHS.map(({ icon: Icon, title, text, href, cta }) => (
+          {PATHS.map(({ icon: Icon, title, text, href, cta, accent }) => (
             <Link
               key={title}
               href={href}
               className={cn(
                 "group flex flex-col rounded-xl border border-border/80 bg-card p-4 sm:p-5",
-                "hover:border-primary/35 hover:shadow-sm",
-                "transition-all duration-200"
+                "card-interactive hover:border-primary/35"
               )}
             >
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+              <div
+                className={cn(
+                  "mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                  accent
+                )}
+              >
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="font-semibold text-sm sm:text-base text-foreground mb-1">

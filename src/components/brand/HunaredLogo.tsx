@@ -19,11 +19,44 @@ const WORDMARK_CLASS: Record<Size, string> = {
   xl: "text-[30px] sm:text-[34px]",
 };
 
-const MARK_SRC = "/assets/logos/hunared-mark.png?v=20260905";
-
 /**
- * Hunared brand mark (gold H, gold border, black field) + refined metallic wordmark.
+ * Hunared brand mark — navy field + blue H geometry.
+ * Wordmark uses professional navy→blue gradient (not gold).
  */
+function MarkIcon({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="relative z-[1] h-full w-full"
+      aria-hidden
+    >
+      <rect width="40" height="40" rx="9" fill="#0B1F3A" />
+      <rect
+        x="1.25"
+        y="1.25"
+        width="37.5"
+        height="37.5"
+        rx="7.75"
+        stroke="#155EEF"
+        strokeOpacity="0.55"
+        strokeWidth="1.5"
+      />
+      <path d="M12 11.5V28.5" stroke="#60A5FA" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M28 11.5V28.5" stroke="#60A5FA" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M12 20H28" stroke="#155EEF" strokeWidth="3.2" strokeLinecap="round" />
+      <circle cx="12" cy="11.5" r="2.1" fill="#93C5FD" />
+      <circle cx="28" cy="11.5" r="2.1" fill="#93C5FD" />
+      <circle cx="12" cy="28.5" r="2.1" fill="#93C5FD" />
+      <circle cx="28" cy="28.5" r="2.1" fill="#93C5FD" />
+      <circle cx="20" cy="20" r="2.4" fill="#12B76A" />
+    </svg>
+  );
+}
+
 export function HunaredLogo({
   href = "/",
   size = "md",
@@ -51,34 +84,20 @@ export function HunaredLogo({
       {showIcon && (
         <span
           className={cn(
-            "relative shrink-0 transition-transform duration-400 ease-out",
-            "group-hover/logo:scale-[1.06]"
+            "relative shrink-0 transition-transform duration-300 ease-out",
+            "group-hover/logo:scale-[1.04]"
           )}
           style={{ width: px, height: px }}
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-[-12%] rounded-[22%] opacity-35 blur-[8px] transition-all duration-400 group-hover/logo:opacity-60 group-hover/logo:blur-[10px]"
+            className="pointer-events-none absolute inset-[-14%] rounded-[22%] opacity-40 blur-[9px] transition-opacity duration-300 group-hover/logo:opacity-70"
             style={{
               background:
-                "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.55) 0%, transparent 70%)",
+                "radial-gradient(circle at 50% 45%, rgba(21, 94, 239, 0.55) 0%, transparent 70%)",
             }}
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={MARK_SRC}
-            alt=""
-            width={px}
-            height={px}
-            className={cn(
-              "relative z-[1] h-full w-full object-contain rounded-[18%]",
-              "drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]",
-              "transition-[filter] duration-400",
-              "group-hover/logo:drop-shadow-[0_2px_10px_rgba(212,175,55,0.4)]"
-            )}
-            style={{ width: px, height: px }}
-            decoding="async"
-          />
+          <MarkIcon size={px} />
         </span>
       )}
 
@@ -86,11 +105,13 @@ export function HunaredLogo({
         <span
           className={cn(
             "hunared-wordmark relative inline-block leading-none select-none",
-            "transition-transform duration-400 ease-out group-hover/logo:translate-x-[1.5px]",
+            "transition-transform duration-300 ease-out group-hover/logo:translate-x-[1px]",
             WORDMARK_CLASS[size]
           )}
         >
-          <span className="hunared-wordmark-text font-semibold tracking-tight">Hunared</span>
+          <span className="hunared-wordmark-text font-extrabold tracking-tight">
+            Hunared
+          </span>
         </span>
       )}
     </span>

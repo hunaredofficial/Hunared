@@ -70,7 +70,7 @@ export default async function EducationPage({
             </h1>
           </div>
           <p className="text-muted-foreground max-w-xl">
-            Expert articles on safety, engineering, and career development — written by and for expat professionals.
+            Expert articles on safety, engineering, and career development — written for global professionals.
           </p>
 
           {/* Category tabs */}

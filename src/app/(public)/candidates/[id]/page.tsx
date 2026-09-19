@@ -227,7 +227,7 @@ export default async function CandidateDetailPage({
                   <h2 className="font-semibold text-foreground">About</h2>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  {candidate.full_name} is a dedicated expat professional
+                  {candidate.full_name} is a dedicated professional
                   {candidate.profession
                     ? ` specialising in ${candidate.profession}`
                     : ""}

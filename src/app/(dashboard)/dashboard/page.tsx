@@ -268,7 +268,7 @@ function SeekerDashboard({
             icon={<SearchIcon className="h-5 w-5 text-blue-600" />}
             iconBg="bg-blue-100 dark:bg-blue-900/30"
             title="Browse Jobs"
-            desc="Discover thousands of expat opportunities"
+            desc="Discover opportunities worldwide"
           />
           <ActionCard
             href="/dashboard/profile"
@@ -282,7 +282,7 @@ function SeekerDashboard({
             icon={<Users className="h-5 w-5 text-emerald-600" />}
             iconBg="bg-emerald-100 dark:bg-emerald-900/30"
             title="Browse Candidates"
-            desc="Connect with expat professionals"
+            desc="Connect with skilled professionals"
           />
           <ActionCard
             href="/dashboard/market"
@@ -428,14 +428,14 @@ function EmployerDashboard({
             icon={<Plus className="h-5 w-5 text-blue-600" />}
             iconBg="bg-blue-100 dark:bg-blue-900/30"
             title="Post a New Job"
-            desc="Reach thousands of expat professionals"
+            desc="Reach professionals worldwide"
           />
           <ActionCard
             href="/candidates"
             icon={<Users className="h-5 w-5 text-violet-600" />}
             iconBg="bg-violet-100 dark:bg-violet-900/30"
             title="Browse Candidates"
-            desc="Find skilled expat talent"
+            desc="Find skilled talent"
           />
           <ActionCard
             href="/dashboard/market"

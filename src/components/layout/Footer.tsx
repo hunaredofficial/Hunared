@@ -34,6 +34,7 @@ const FOOTER_LINKS = {
   Legal: [
     { href: "/privacy", label: "Privacy" },
     { href: "/terms", label: "Terms" },
+    { href: "/about#safety", label: "Safety" },
   ],
 };
 
@@ -45,16 +46,19 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="bg-card border-t border-border">
+    <footer className="section-navy border-t border-white/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-8 lg:gap-6">
           <div className="col-span-2 sm:col-span-3 lg:col-span-2 space-y-4 pr-2">
             <Link href="/" className="inline-flex items-center shrink-0" aria-label="Hunared home">
               <HunaredLogo size="md" asLink={false} />
             </Link>
-            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+            <p className="text-sm text-muted-on-navy max-w-xs leading-relaxed">
               Hunared is a global platform connecting people, jobs, businesses,
               services, marketplace opportunities and learning in one place.
+            </p>
+            <p className="text-xs font-medium text-blue-300/90 tracking-wide">
+              Everything You Need. One Platform.
             </p>
             <div className="flex gap-2.5">
               {SOCIAL_LINKS.map(({ href, label, name }) => (
@@ -64,7 +68,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={name}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground text-xs font-bold hover:text-primary hover:border-primary/50 hover:bg-primary/8 transition-colors duration-200"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 text-white/70 text-xs font-bold hover:text-white hover:border-blue-400/50 hover:bg-white/10 transition-colors duration-200"
                 >
                   {label}
                 </a>
@@ -74,13 +78,13 @@ export function Footer() {
 
           {Object.entries(FOOTER_LINKS).map(([category, links]) => (
             <div key={category} className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">{category}</h3>
+              <h3 className="text-sm font-semibold text-white">{category}</h3>
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+                      className="text-sm text-white/65 hover:text-blue-300 transition-colors duration-200"
                       {...(link.href.startsWith("http")
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
@@ -94,9 +98,9 @@ export function Footer() {
           ))}
         </div>
 
-        <Separator className="my-8 sm:my-10" />
+        <Separator className="my-8 sm:my-10 bg-white/10" />
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <p>© {new Date().getFullYear()} Hunared. All rights reserved.</p>
           <p className="text-center sm:text-right">
             Global platform for work, talent, business & opportunity
