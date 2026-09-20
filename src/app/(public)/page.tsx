@@ -1,7 +1,5 @@
 import { HeroSection } from "@/components/home/HeroSection";
 import { UserPathSection } from "@/components/home/UserPathSection";
-import { FeaturedJobsSection } from "@/components/home/FeaturedJobsSection";
-import { FeaturedCandidatesSection } from "@/components/home/FeaturedCandidatesSection";
 import { MarketplacePreview } from "@/components/home/MarketplacePreview";
 import { LearningPreview } from "@/components/home/LearningPreview";
 import { HunaredProgram } from "@/components/home/HunaredProgram";
@@ -21,9 +19,10 @@ export const metadata: Metadata = {
 };
 
 /**
- * Homepage architecture (v2):
- * Hero + Search → Paths → Jobs → Talent → Marketplace → Learning → Programs
+ * Homepage architecture:
+ * Hero + Search → Paths → Marketplace → Learning → Programs
  * → How it works → Trust → CTA
+ * Featured Jobs & Talent removed from home (browse via nav).
  * Finder is NOT on the homepage (standalone /finder).
  */
 export default function HomePage() {
@@ -31,8 +30,6 @@ export default function HomePage() {
     <div className="flex flex-col">
       <HeroSection />
       <UserPathSection />
-      <FeaturedJobsSection />
-      <FeaturedCandidatesSection />
       <MarketplacePreview />
       <LearningPreview />
       <HunaredProgram />

@@ -22,7 +22,7 @@ const WORDMARK_CLASS: Record<Size, string> = {
 const MARK_SRC = "/assets/logos/hunared-mark.png?v=20260905";
 
 /**
- * Hunared brand mark (gold H, gold border, black field) + refined metallic wordmark.
+ * Hunared brand mark (gold H, gold border, black field) + solid gold wordmark matching the mark.
  */
 export function HunaredLogo({
   href = "/",
