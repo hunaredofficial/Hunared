@@ -1,7 +1,7 @@
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import Link from "next/link";
-import { MapPin, Clock, DollarSign, Users, ArrowRight } from "lucide-react";
+import { MapPin, Clock, DollarSign, Users, ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,12 @@ import { COUNTRIES } from "@/lib/countries";
 import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
+import { auth } from "@clerk/nextjs/server";
+import {
+  rankByPersonalization,
+  scoreJob,
+  type PersonalizationProfile,
+} from "@/lib/personalization";
 
 interface SearchParams {
   search?: string;
@@ -116,6 +122,42 @@ export default async function JobsPage({
   const limit = 12;
   const from = (page - 1) * limit;
 
+  // Signed-in personalization (profile + saved activity)
+  let profile: PersonalizationProfile | null = null;
+  let savedJobIds = new Set<string>();
+  let isPersonalized = false;
+  try {
+    const { userId } = await auth();
+    if (userId) {
+      const supabaseAuth = createAdminClient();
+      const { data: prof } = await supabaseAuth
+        .from("profiles")
+        .select("job_interests, profession, country, city, skill_level, location")
+        .eq("id", userId)
+        .maybeSingle();
+      if (prof) {
+        profile = prof;
+        isPersonalized = true;
+      }
+      // Recent saved jobs for activity signal
+      const { data: saved } = await supabaseAuth
+        .from("saved_items")
+        .select("item_id")
+        .eq("user_id", userId)
+        .eq("item_type", "job")
+        .limit(50);
+      if (saved?.length) {
+        savedJobIds = new Set(saved.map((s) => s.item_id));
+      }
+    }
+  } catch {
+    // Auth / DB optional — fall back to non-personalized
+  }
+
+  // Personalization forces in-memory ranking when user is signed in and no explicit sort
+  const usePersonalSort =
+    isPersonalized && !sort && !dateOrder;
+
   const needsInMemory =
     sort === "comp_asc" ||
     sort === "comp_desc" ||
@@ -124,9 +166,10 @@ export default async function JobsPage({
     !!durationFilter ||
     !!posted ||
     !!experience ||
-    dateOrder === "oldest";
+    dateOrder === "oldest" ||
+    usePersonalSort;
 
-  let jobs: Partial<Job>[] = [];
+  let jobs: (Partial<Job> & { _matchScore?: number })[] = [];
   let total = 0;
   const categories: string[] = [...JOB_CATEGORIES];
 
@@ -136,7 +179,7 @@ export default async function JobsPage({
     let query = supabase
       .from("jobs")
       .select(
-        "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, positions, created_at",
+        "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, categories, positions, created_at",
         { count: "exact" }
       )
       .eq("status", "approved");
@@ -230,8 +273,17 @@ export default async function JobsPage({
         );
       }
 
-      total = rows.length;
-      jobs = rows.slice(from, from + limit);
+      // Personalization: rank by profile match when signed in
+      if (usePersonalSort && profile) {
+        const ranked = rankByPersonalization(rows, (j) =>
+          scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
+        );
+        total = ranked.length;
+        jobs = ranked.slice(from, from + limit);
+      } else {
+        total = rows.length;
+        jobs = rows.slice(from, from + limit);
+      }
     } else {
       // DB-side order
       const ascending = dateOrder === "oldest";
@@ -274,6 +326,12 @@ export default async function JobsPage({
             {total > 0
               ? `${total.toLocaleString()} opportunit${total !== 1 ? "ies" : "y"} across the globe`
               : "Find your next international opportunity"}
+            {isPersonalized && usePersonalSort && (
+              <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
+                <Sparkles className="h-3.5 w-3.5" />
+                Personalized for you
+              </span>
+            )}
           </p>
           <JobsFilter
             defaultSearch={search}
@@ -380,7 +438,11 @@ export default async function JobsPage({
   );
 }
 
-function JobCard({ job }: { job: Partial<Job> }) {
+function JobCard({
+  job,
+}: {
+  job: Partial<Job> & { _matchScore?: number };
+}) {
   const createdAt = job.created_at
     ? new Date(job.created_at).toLocaleDateString("en-GB", {
         day: "numeric",
@@ -394,10 +456,23 @@ function JobCard({ job }: { job: Partial<Job> }) {
     (job.salary_type === "Negotiable" ? "Negotiable" : "") ||
     "";
 
+  const isRecommended = (job._matchScore ?? 0) >= 25;
+
   return (
-    <Card className="group hover:border-primary/40 hover:shadow-md transition-all duration-200">
+    <Card
+      className={cn(
+        "group hover:border-primary/40 hover:shadow-md transition-all duration-200",
+        isRecommended && "surface-recommended"
+      )}
+    >
       <CardContent className="pt-5 pb-4 flex flex-col h-full">
         <div className="flex items-center gap-1.5 flex-wrap mb-3">
+          {isRecommended && (
+            <Badge className="text-xs bg-primary/15 text-primary border-primary/25 gap-1">
+              <Sparkles className="h-3 w-3" />
+              For you
+            </Badge>
+          )}
           {job.category && (
             <Badge
               className={cn(

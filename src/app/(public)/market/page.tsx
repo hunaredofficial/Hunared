@@ -3,7 +3,7 @@ import { SaveButton } from "@/components/shared/SaveButton";
 import { formatMoney } from "@/lib/currencies";
 import { createAdminClient } from "@/lib/supabase";
 import Link from "next/link";
-import { ShoppingBag, MapPin, ArrowRight } from "lucide-react";
+import { ShoppingBag, MapPin, ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,13 @@ import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
 import { MarketFilter } from "@/components/market/MarketFilter";
 import { formatRelativePosted } from "@/lib/relativeDate";
+import { auth } from "@clerk/nextjs/server";
+import {
+  rankByPersonalization,
+  scoreListing,
+  type PersonalizationProfile,
+} from "@/lib/personalization";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Marketplace",
@@ -94,19 +101,53 @@ export default async function MarketPage({
   const limit = 12;
   const from = (page - 1) * limit;
 
+  // Signed-in personalization
+  let profile: PersonalizationProfile | null = null;
+  let savedListingIds = new Set<string>();
+  let isPersonalized = false;
+  try {
+    const { userId } = await auth();
+    if (userId) {
+      const supabaseAuth = createAdminClient();
+      const { data: prof } = await supabaseAuth
+        .from("profiles")
+        .select("job_interests, profession, country, city, skill_level, location")
+        .eq("id", userId)
+        .maybeSingle();
+      if (prof) {
+        profile = prof;
+        isPersonalized = true;
+      }
+      const { data: saved } = await supabaseAuth
+        .from("saved_items")
+        .select("item_id")
+        .eq("user_id", userId)
+        .eq("item_type", "listing")
+        .limit(50);
+      if (saved?.length) {
+        savedListingIds = new Set(saved.map((s) => s.item_id));
+      }
+    }
+  } catch {
+    // optional
+  }
+
   const minNum = minPrice ? Number(minPrice) : null;
   const maxNum = maxPrice ? Number(maxPrice) : null;
   const hasPriceRange =
     (minNum != null && Number.isFinite(minNum)) ||
     (maxNum != null && Number.isFinite(maxNum));
 
+  const usePersonalSort = isPersonalized && !sort;
+
   const needsInMemory =
     sort === "price_asc" ||
     sort === "price_desc" ||
     sort === "oldest" ||
-    hasPriceRange;
+    hasPriceRange ||
+    usePersonalSort;
 
-  let listings: Listing[] = [];
+  let listings: (Listing & { _matchScore?: number })[] = [];
   let total = 0;
 
   try {
@@ -194,8 +235,16 @@ export default async function MarketPage({
         );
       }
 
-      total = rows.length;
-      listings = rows.slice(from, from + limit);
+      if (usePersonalSort && profile) {
+        const ranked = rankByPersonalization(rows, (row) =>
+          scoreListing(row, profile, savedListingIds)
+        );
+        total = ranked.length;
+        listings = ranked.slice(from, from + limit);
+      } else {
+        total = rows.length;
+        listings = rows.slice(from, from + limit);
+      }
     } else {
       const ascending = sort === "oldest";
       query = query
@@ -227,6 +276,12 @@ export default async function MarketPage({
           <p className="text-muted-foreground max-w-xl">
             Buy, sell, and find services worldwide - property, vehicles,
             electronics, services, and more.
+            {isPersonalized && usePersonalSort && (
+              <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
+                <Sparkles className="h-3.5 w-3.5" />
+                Personalized for you
+              </span>
+            )}
           </p>
 
           <MarketFilter
@@ -342,7 +397,7 @@ export default async function MarketPage({
   );
 }
 
-function ListingCard({ listing }: { listing: Listing }) {
+function ListingCard({ listing }: { listing: Listing & { _matchScore?: number } }) {
   const catLabel =
     LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
     listing.category;
@@ -350,8 +405,13 @@ function ListingCard({ listing }: { listing: Listing }) {
     LISTING_CATEGORY_COLORS[listing.category] ??
     "bg-muted text-muted-foreground";
 
+  const isRecommended = (listing._matchScore ?? 0) >= 20;
+
   return (
-    <div className="group flex flex-col rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden hover:ring-primary/40 hover:shadow-md transition-all duration-200">
+    <div className={cn(
+      "group flex flex-col rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden hover:ring-primary/40 hover:shadow-md transition-all duration-200",
+      isRecommended && "surface-recommended"
+    )}>
       {listing.image_url ? (
         <div className="aspect-square w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -368,9 +428,17 @@ function ListingCard({ listing }: { listing: Listing }) {
       )}
 
       <div className="p-4 flex flex-col flex-1">
-        <Badge className={`text-xs border-0 w-fit mb-2 ${colorClass}`}>
-          {catLabel}
-        </Badge>
+        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+          {isRecommended && (
+            <Badge className="text-xs bg-primary/15 text-primary border-primary/25 gap-1">
+              <Sparkles className="h-3 w-3" />
+              For you
+            </Badge>
+          )}
+          <Badge className={`text-xs border-0 w-fit ${colorClass}`}>
+            {catLabel}
+          </Badge>
+        </div>
 
         <h3 className="font-semibold text-sm leading-snug mb-1 group-hover:text-primary transition-colors line-clamp-2">
           <Link href={`/market/${listing.id}`}>{listing.title}</Link>
