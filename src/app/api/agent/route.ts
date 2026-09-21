@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseUserMessage } from "@/lib/agent/engine";
+import {
+  parseUserMessage,
+  type ConversationContext,
+  type AgentAction,
+} from "@/lib/agent/engine";
 import { auth } from "@clerk/nextjs/server";
 
 /**
  * Hunared Agent API
- * - Always runs secure rule-based intent parser (maps to real routes)
- * - Optional: if OPENAI_API_KEY is set, refine the reply message (not privileged actions)
- * - Never executes irreversible writes from this endpoint
+ * - Secure rule-based intent → real platform routes
+ * - Conversation context for follow-ups (“only temporary”, “in Khobar”)
+ * - Optional OPENAI_API_KEY polishes the message only (never invents write actions)
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const message = String((body as { message?: string }).message || "").slice(0, 2000);
+    const message = String((body as { message?: string }).message || "").slice(
+      0,
+      2000
+    );
     const path = String((body as { path?: string }).path || "");
+    const ctx = (body as { context?: ConversationContext }).context;
+
     if (!message.trim()) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
 
-    // Auth context (optional — read-only awareness)
     let userId: string | null = null;
     try {
       const a = await auth();
@@ -26,20 +34,30 @@ export async function POST(req: NextRequest) {
       userId = null;
     }
 
-    const action = parseUserMessage(message, { path });
+    const action: AgentAction = parseUserMessage(message, { path }, ctx);
 
-    // Soft personalization note only — no data leakage
-    if (userId && (action.intent === "saved" || action.intent === "profile")) {
-      // already points to dashboard routes which enforce auth
-    } else if (!userId && (action.intent === "saved" || action.intent === "profile" || action.intent === "post")) {
-      action.href = "/sign-in";
+    // Gate private routes
+    const privateIntents = new Set([
+      "saved",
+      "profile",
+      "cv",
+      "post_job",
+      "post_listing",
+      "dashboard",
+      "notifications",
+      "subscriptions",
+    ]);
+    if (!userId && privateIntents.has(action.intent)) {
+      action.href = `/sign-in?redirect_url=${encodeURIComponent(action.href || "/dashboard")}`;
       action.message =
-        action.message + " Sign in is required — I’ll take you to sign in first.";
+        (action.message || "") +
+        " You need to sign in first — I’ll take you there.";
+      action.autoNavigate = true;
     }
 
-    // Optional LLM polish (message only)
+    // Optional LLM message polish only
     const key = process.env.OPENAI_API_KEY;
-    if (key && action.intent !== "unknown") {
+    if (key && action.intent !== "unknown" && action.intent !== "clarify") {
       try {
         const r = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -49,17 +67,17 @@ export async function POST(req: NextRequest) {
           },
           body: JSON.stringify({
             model: process.env.OPENAI_AGENT_MODEL || "gpt-4o-mini",
-            temperature: 0.3,
-            max_tokens: 180,
+            temperature: 0.25,
+            max_tokens: 160,
             messages: [
               {
                 role: "system",
                 content:
-                  "You are Hunared Agent. Rewrite the assistant message to be clear, short, and professional. Do not invent features. Do not claim an action completed. Keep under 60 words.",
+                  "You are Hunared Agent on hunared.com. Rewrite the assistant message to be clear, confident, and short (max 50 words). Do not invent features. Do not say the action is already completed. Keep the meaning.",
               },
               {
                 role: "user",
-                content: `User said: ${message}\nPlanned action: ${action.label}\nDraft: ${action.message}`,
+                content: `User: ${message}\nAction: ${action.label}\nDraft: ${action.message}`,
               },
             ],
           }),
@@ -70,19 +88,26 @@ export async function POST(req: NextRequest) {
           if (polished) action.message = polished;
         }
       } catch {
-        // keep rule-based message
+        /* keep rule-based */
       }
     }
+
+    const nextContext: ConversationContext = {
+      lastIntent: action.intent,
+      lastEntities: action.entities,
+      lastHref: action.href,
+    };
 
     return NextResponse.json({
       ok: true,
       action,
+      context: nextContext,
       authenticated: Boolean(userId),
     });
   } catch (e) {
     console.error("[agent]", e);
     return NextResponse.json(
-      { error: "Agent temporarily unavailable" },
+      { error: "Agent temporarily unavailable. Please try again." },
       { status: 500 }
     );
   }
