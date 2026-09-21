@@ -342,9 +342,10 @@ export default async function JobDetailPage({
                             href={wl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline break-all"
+                            className="inline-flex items-center gap-1.5 mt-0.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                           >
-                            Open work location on Google Maps
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            View on Google Maps
                           </a>
                         </div>
                       </div>
@@ -460,9 +461,10 @@ export default async function JobDetailPage({
                             href={link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline break-all"
+                            className="inline-flex items-center gap-1.5 mt-0.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                           >
-                            Open company location on Google Maps
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            View on Google Maps
                           </a>
                         ) : officeAddr ? (
                           <p className="text-sm text-foreground break-words">

@@ -295,13 +295,14 @@ export function MarketFilter({
 
   return (
     <div className="mt-6 space-y-3">
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[180px]">
+      <div className="flex flex-wrap gap-2.5 sm:gap-3 items-end">
+        {/* Larger search field */}
+        <div className="flex-[2] min-w-[240px] sm:min-w-[280px]">
           <label className="text-xs text-muted-foreground mb-1 block">
             Search
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -309,9 +310,9 @@ export function MarketFilter({
                 if (e.key === "Enter") applyQuick();
               }}
               placeholder="Search listings..."
-              className="w-full pl-9 pr-10 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-11 pl-10 pr-11 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <VoiceSearchButton
                 size="sm"
                 onResult={(t) => {
@@ -336,7 +337,7 @@ export function MarketFilter({
               setLfStatus("");
               applyQuick({ category: v, subcategory: "", status: "" });
             }}
-            className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[180px]"
+            className="[color-scheme:dark] h-11 text-sm rounded-lg border border-input bg-background px-2.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[160px]"
           >
             <option className="bg-background text-foreground" value="">All categories</option>
             {LISTING_CATEGORIES.map((c) => (
@@ -360,7 +361,7 @@ export function MarketFilter({
               setSubcategory(v);
               applyQuick({ subcategory: v });
             }}
-            className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="[color-scheme:dark] h-11 text-sm rounded-lg border border-input bg-background px-2.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[170px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option className="bg-background text-foreground" value="">
               {!category
@@ -396,7 +397,7 @@ export function MarketFilter({
                 setLfStatus(v);
                 applyQuick({ status: v });
               }}
-              className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer min-w-[120px]"
+              className="[color-scheme:dark] h-11 text-sm rounded-lg border border-input bg-background px-2.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer min-w-[110px]"
             >
               <option className="bg-background text-foreground" value="">
                 All status
@@ -411,7 +412,8 @@ export function MarketFilter({
           </div>
         )}
 
-        <div>
+        {/* Smaller country & city fields */}
+        <div className="w-[130px] sm:w-[140px]">
           <label className="text-xs text-muted-foreground mb-1 block">
             Country
           </label>
@@ -423,7 +425,7 @@ export function MarketFilter({
               setCity("");
               applyQuick({ country: v, city: "" });
             }}
-            className="[color-scheme:dark] text-sm rounded-md border border-input bg-background px-2 py-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[200px]"
+            className="[color-scheme:dark] w-full h-11 text-sm rounded-lg border border-input bg-background px-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
           >
             <option className="bg-background text-foreground" value="">All countries</option>
             {COUNTRIES.map((c) => (
@@ -434,14 +436,14 @@ export function MarketFilter({
           </select>
         </div>
 
-        <div>
+        <div className="w-[120px] sm:w-[130px]">
           <label className="text-xs text-muted-foreground mb-1 block">City</label>
           <CityCombobox
             id="market-city"
             country={country}
             value={city}
             onChange={setCity}
-            className="w-40"
+            className="w-full"
             size="sm"
             variant="select"
           />

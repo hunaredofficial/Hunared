@@ -44,7 +44,7 @@ type MegaGroup = {
 type SimpleLink = { type: "link"; href: string; label: string };
 type NavItem = SimpleLink | MegaGroup;
 
-/** Primary nav — keep lean. Programs + Finder under More. */
+/** Primary nav — links match live page filters (category, employmentType, available). */
 const NAV_ITEMS: NavItem[] = [
   {
     type: "mega",
@@ -55,15 +55,15 @@ const NAV_ITEMS: NavItem[] = [
         title: "Explore",
         items: [
           { label: "Browse Jobs", href: "/jobs", desc: "All open roles" },
-          { label: "Remote Jobs", href: "/jobs?remote=true", desc: "Work from anywhere" },
-          { label: "Temporary Work", href: "/jobs?employment=Temporary", desc: "Short-term roles" },
+          { label: "Permanent Roles", href: "/jobs?employmentType=permanent", desc: "Full-time positions" },
+          { label: "Temporary Work", href: "/jobs?employmentType=temporary", desc: "Short-term roles" },
         ],
       },
       {
         title: "Actions",
         items: [
-          { label: "Jobs by Country", href: "/jobs", desc: "Filter by location" },
-          { label: "Jobs by Industry", href: "/jobs", desc: "Oil & Gas, Engineering…" },
+          { label: "Jobs by Category", href: "/jobs", desc: "Filter on the board" },
+          { label: "Jobs by Location", href: "/jobs", desc: "Country & city filters" },
           { label: "Post a Job", href: "/dashboard/jobs/new", desc: "Hire talent" },
         ],
       },
@@ -78,9 +78,9 @@ const NAV_ITEMS: NavItem[] = [
         title: "Professionals",
         items: [
           { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
-          { label: "By Skill", href: "/candidates", desc: "Filter by expertise" },
-          { label: "By Country", href: "/candidates", desc: "Local & global talent" },
-          { label: "Available for Hire", href: "/candidates?hire=true", desc: "Open to opportunities" },
+          { label: "Available for Hire", href: "/candidates?available=yes", desc: "Open to opportunities" },
+          { label: "By Location", href: "/candidates", desc: "Country & city filters" },
+          { label: "Browse All Talent", href: "/candidates", desc: "Full directory" },
         ],
       },
     ],
@@ -109,22 +109,22 @@ const NAV_ITEMS: NavItem[] = [
       {
         title: "Buy & Sell",
         items: [
-          { label: "For Sale", href: "/market?type=for_sale", icon: Tag },
-          { label: "For Rent", href: "/market?type=for_rent", icon: Home },
-          { label: "Services", href: "/market?type=services", icon: Wrench },
-          { label: "Property", href: "/market?type=property", icon: Building2 },
-          { label: "Vehicles", href: "/market?type=vehicles", icon: Car },
-          { label: "Electronics", href: "/market?type=electronics", icon: Laptop },
+          { label: "For Sale", href: "/market?category=for_sale", icon: Tag },
+          { label: "For Rent", href: "/market?category=for_rent", icon: Home },
+          { label: "Services", href: "/market?category=services", icon: Wrench },
+          { label: "Property", href: "/market?category=property", icon: Building2 },
+          { label: "Vehicles", href: "/market?category=vehicles", icon: Car },
+          { label: "Electronics", href: "/market?category=electronics", icon: Laptop },
         ],
       },
       {
         title: "More",
         items: [
-          { label: "Home & Furniture", href: "/market?type=home_furniture", icon: Sofa },
-          { label: "Wanted", href: "/market?type=wanted", icon: Search },
-          { label: "Free Items", href: "/market?type=free", icon: Gift },
-          { label: "Events", href: "/market?type=events", icon: Calendar },
-          { label: "Community", href: "/market?type=community", icon: Users },
+          { label: "Home & Furniture", href: "/market?category=home_furniture", icon: Sofa },
+          { label: "Wanted", href: "/market?category=wanted", icon: Search },
+          { label: "Free Items", href: "/market?category=free_items", icon: Gift },
+          { label: "Events", href: "/market?category=events", icon: Calendar },
+          { label: "Community", href: "/market?category=community", icon: Users },
           { label: "All listings", href: "/market", icon: Tag },
         ],
       },

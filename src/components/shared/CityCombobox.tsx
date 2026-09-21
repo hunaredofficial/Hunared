@@ -1,13 +1,14 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getCitiesForCountry } from "@/lib/cities";
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MapPin, Search, X } from "lucide-react";
 
 /**
- * City field: type any city name + suggestions from country list.
+ * City field: type any city name + full scrollable suggestions from country list.
  * Empty value = All Cities.
- * `variant="select"` matches country Select / native select styling.
+ * Shows the entire cities list in a custom dropdown (not limited browser datalist).
  */
 export function CityCombobox({
   country,
@@ -32,7 +33,31 @@ export function CityCombobox({
   const cities = getCitiesForCountry(
     !country || country === "all" ? "" : country
   );
-  const listId = `${id}-list`;
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value || "");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    setQuery(value || "");
+  }, [value]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery(value || "");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [value]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return cities;
+    return cities.filter((c) => c.toLowerCase().includes(q));
+  }, [cities, query]);
 
   const height =
     size === "lg" ? "h-12 sm:h-13" : size === "sm" ? "h-9" : "h-10";
@@ -42,28 +67,138 @@ export function CityCombobox({
       ? "rounded-xl border border-primary/15 bg-background/70 text-sm sm:text-base text-foreground focus:ring-primary/30 [color-scheme:dark]"
       : "rounded-md border border-input bg-background text-sm text-foreground focus:ring-ring [color-scheme:dark]";
 
+  function commit(city: string) {
+    onChange(city);
+    setQuery(city);
+    setOpen(false);
+  }
+
+  function clear() {
+    onChange("");
+    setQuery("");
+    setOpen(true);
+  }
+
   return (
-    <div className={cn("relative", className)}>
-      <input
-        list={listId}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="All Cities"
-        autoComplete="off"
-        data-color-scheme="dark"
-        className={cn(
-          "w-full pl-3 pr-8 appearance-none focus:outline-none focus:ring-2 cursor-text",
-          height,
-          baseStyle,
-          inputClassName
-        )}
-      />
-      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none opacity-50" />
-      <datalist id={listId}>
-        {cities.map((c) => (
-          <option key={c} value={c} className="bg-background text-foreground" />
-        ))}
-      </datalist>
+    <div className={cn("relative", className)} ref={rootRef}>
+      <div className="relative">
+        <input
+          id={id}
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (filtered.length === 1) {
+                commit(filtered[0]);
+              } else if (query.trim()) {
+                commit(query.trim());
+              } else {
+                commit("");
+              }
+            }
+            if (e.key === "Escape") {
+              setOpen(false);
+              setQuery(value || "");
+            }
+          }}
+          placeholder="All Cities"
+          autoComplete="off"
+          data-color-scheme="dark"
+          className={cn(
+            "w-full pl-3 pr-14 appearance-none focus:outline-none focus:ring-2 cursor-text",
+            height,
+            baseStyle,
+            inputClassName
+          )}
+        />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+          {query ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                clear();
+              }}
+              className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+              aria-label="Clear city"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted-foreground pointer-events-none opacity-50 transition-transform",
+              open && "rotate-180"
+            )}
+          />
+        </div>
+      </div>
+
+      {open && (
+        <div
+          className={cn(
+            "absolute z-50 mt-1 w-full min-w-[200px] max-h-[280px] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
+            "animate-in fade-in-0 zoom-in-95 duration-100"
+          )}
+        >
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border/60 text-xs text-muted-foreground">
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">
+              {country && country !== "all"
+                ? `${filtered.length} of ${cities.length} cities`
+                : cities.length
+                  ? `${filtered.length} cities`
+                  : "Type any city name"}
+            </span>
+          </div>
+          <ul
+            ref={listRef}
+            className="max-h-[230px] overflow-y-auto overscroll-contain py-1"
+            role="listbox"
+          >
+            <li>
+              <button
+                type="button"
+                role="option"
+                onClick={() => commit("")}
+                className={cn(
+                  "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center gap-2",
+                  !value && "bg-accent/50 text-foreground font-medium"
+                )}
+              >
+                <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                All Cities
+              </button>
+            </li>
+            {filtered.length === 0 ? (
+              <li className="px-3 py-3 text-sm text-muted-foreground">
+                No match — press Enter to use “{query.trim()}”
+              </li>
+            ) : (
+              filtered.map((c) => (
+                <li key={c}>
+                  <button
+                    type="button"
+                    role="option"
+                    onClick={() => commit(c)}
+                    className={cn(
+                      "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
+                      value === c && "bg-accent/50 font-medium text-foreground"
+                    )}
+                  >
+                    {c}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

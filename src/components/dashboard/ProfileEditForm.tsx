@@ -740,68 +740,88 @@ export function ProfileEditForm({
         Save Changes
       </Button>
 
-      {/* Danger zone — permanent account deletion */}
-      <div className="w-full p-5 rounded-xl border border-destructive/40 bg-destructive/5 space-y-3">
-        <div>
-          <p className="text-sm font-semibold text-destructive">Delete account</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Works for every account type (Personal, Candidate / Seeker, or Company).
-            Permanently removes your profile everywhere (Candidates and Companies),
-            plus all jobs, marketplace listings, articles, company page, reviews,
-            follows, saves, shares, orders, and subscriptions. This cannot be undone.
-          </p>
+      {/* ─── Danger Zone (separated) ─────────────────────────────── */}
+      <div className="w-full mt-10 pt-8 border-t border-border/80 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-destructive/15 text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </span>
+          <h3 className="text-sm font-semibold tracking-wide text-destructive uppercase">
+            Danger Zone
+          </h3>
         </div>
-        <Button
-          type="button"
-          variant="destructive"
-          className="h-10"
-          disabled={isLoading || isDeleting}
-          onClick={async () => {
-            if (
-              !window.confirm(
-                "Delete your account permanently?\n\nThis removes your profile from Candidates and Companies, your company page, jobs, marketplace items, articles, reviews, and all related data — for Personal, Candidate, or Company accounts. This cannot be undone."
-              )
-            ) {
-              return;
-            }
-            if (
-              !window.confirm(
-                "Final confirmation: delete everything linked to this account?"
-              )
-            ) {
-              return;
-            }
-            setIsDeleting(true);
-            try {
-              const res = await fetch("/api/account/delete", {
-                method: "DELETE",
-                credentials: "include",
-              });
-              const data = await res.json().catch(() => ({}));
-              if (!res.ok) {
-                toast.error(
-                  (data as { error?: string }).error ||
-                    "Could not delete account."
-                );
+
+        <div className="w-full p-5 sm:p-6 rounded-xl border border-destructive/50 bg-destructive/5 space-y-4">
+          <div className="space-y-2">
+            <p className="text-base font-semibold text-destructive">
+              Permanently Delete Account?
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              This will permanently delete your account and all associated data,
+              including profiles, jobs, listings, articles, reviews, saves,
+              follows, shares, orders, and subscriptions.
+            </p>
+            <p className="text-sm font-medium text-destructive/90">
+              This action cannot be undone or recovered.
+            </p>
+            <p className="text-xs text-muted-foreground pt-1">
+              Applies to every account type (Personal, Candidate / Seeker, or
+              Company). Your public profile is removed from Candidates and
+              Companies directories, and your company page is deleted if you have
+              one.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="destructive"
+            className="h-10"
+            disabled={isLoading || isDeleting}
+            onClick={async () => {
+              if (
+                !window.confirm(
+                  "Permanently Delete Account?\n\nThis will permanently delete your account and all associated data, including profiles, jobs, listings, articles, reviews, saves, follows, shares, orders, and subscriptions.\n\nThis action cannot be undone or recovered."
+                )
+              ) {
                 return;
               }
-              toast.success("Account deleted.");
-              // Full reload clears Clerk session client state
-              window.location.href = "/";
-            } catch {
-              toast.error("Network error. Please try again.");
-            } finally {
-              setIsDeleting(false);
-            }
-          }}
-        >
-          {isDeleting ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Trash2 className="h-4 w-4 mr-2" />
-          )}
-          {isDeleting ? "Deleting…" : "Delete my account"}
-        </Button>
+              if (
+                !window.confirm(
+                  "Final confirmation: permanently delete everything linked to this account? This cannot be undone."
+                )
+              ) {
+                return;
+              }
+              setIsDeleting(true);
+              try {
+                const res = await fetch("/api/account/delete", {
+                  method: "DELETE",
+                  credentials: "include",
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  toast.error(
+                    (data as { error?: string }).error ||
+                      "Could not delete account."
+                  );
+                  return;
+                }
+                toast.success("Account deleted.");
+                window.location.href = "/";
+              } catch {
+                toast.error("Network error. Please try again.");
+              } finally {
+                setIsDeleting(false);
+              }
+            }}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            {isDeleting ? "Deleting…" : "Delete my account"}
+          </Button>
+        </div>
       </div>
 
     </div>
