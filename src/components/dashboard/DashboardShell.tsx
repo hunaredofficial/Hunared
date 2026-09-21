@@ -20,12 +20,12 @@ import {
   Bookmark,
   Bell,
   BellRing,
+  FileText,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { HunaredAgent } from "@/components/agent/HunaredAgent";
 import type { UserRole } from "@/types/database";
 
 interface NavItem {
@@ -58,6 +58,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/profile",
         label: "Company Profile",
         icon: <User className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/cv",
+        label: "CV Builder",
+        icon: <FileText className="h-4 w-4" />,
       },
       {
         href: "/candidates",
@@ -156,6 +161,11 @@ function getNavItems(role: UserRole): NavItem[] {
       href: "/dashboard/profile",
       label: "My Profile",
       icon: <User className="h-4 w-4" />,
+    },
+    {
+      href: "/dashboard/cv",
+      label: "CV Builder",
+      icon: <FileText className="h-4 w-4" />,
     },
     {
       href: "/jobs",
@@ -326,7 +336,6 @@ export function DashboardShell({
       {/* Main content */}
       <main className="md:pl-64">
         <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 pb-12 max-w-[90rem] mx-auto w-full">{children}</div>
-      <HunaredAgent />
       </main>
     </div>
   );
