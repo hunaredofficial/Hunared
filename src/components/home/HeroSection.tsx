@@ -21,7 +21,6 @@ const CATEGORIES = [
   { value: "accommodation", label: "Accommodation" },
 ];
 
-/** Full popular pool — rotated so the 5 chips change over time / by day */
 const POPULAR_POOL = [
   { q: "Instrument Technician", href: "/search?q=Instrument+Technician&category=jobs" },
   { q: "HSE Officer", href: "/search?q=HSE+Officer&category=jobs" },
@@ -123,7 +122,7 @@ export function HeroSection() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Job title, skill, company, product, or service…"
+              placeholder="What are you looking for? Search here…"
               className="w-full h-14 sm:h-16 pl-12 sm:pl-14 pr-14 rounded-2xl border border-border bg-background text-foreground text-base sm:text-lg placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/40 transition shadow-sm"
               autoComplete="off"
             />
@@ -132,7 +131,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3 relative z-20">
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
               <select
@@ -192,7 +191,7 @@ export function HeroSection() {
 
           <button
             type="submit"
-            className="w-full h-12 sm:h-13 rounded-xl font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.99]"
+            className="w-full h-12 sm:h-13 rounded-xl font-semibold text-sm sm:text-base text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.99] relative z-0"
           >
             Search
           </button>

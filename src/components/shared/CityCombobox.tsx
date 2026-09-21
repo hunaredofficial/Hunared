@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getCitiesForCountry } from "@/lib/cities";
 import { cn } from "@/lib/utils";
 import { ChevronDown, MapPin, Search, X } from "lucide-react";
@@ -8,7 +8,7 @@ import { ChevronDown, MapPin, Search, X } from "lucide-react";
 /**
  * City field: type any city name + full scrollable suggestions from country list.
  * Empty value = All Cities.
- * Shows the entire cities list in a custom dropdown (not limited browser datalist).
+ * Dropdown opens upward when there is not enough space below (e.g. hero form).
  */
 export function CityCombobox({
   country,
@@ -27,7 +27,6 @@ export function CityCombobox({
   inputClassName?: string;
   id?: string;
   size?: "sm" | "md" | "lg";
-  /** select = match country dropdown colors; hero = primary-tinted hero style */
   variant?: "select" | "hero";
 }) {
   const cities = getCitiesForCountry(
@@ -35,6 +34,7 @@ export function CityCombobox({
   );
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value || "");
+  const [openUp, setOpenUp] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -52,6 +52,15 @@ export function CityCombobox({
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [value]);
+
+  useLayoutEffect(() => {
+    if (!open || !rootRef.current) return;
+    const rect = rootRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    // Prefer up when less than ~300px below or more space above
+    setOpenUp(spaceBelow < 300 && spaceAbove > spaceBelow);
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -142,8 +151,8 @@ export function CityCombobox({
       {open && (
         <div
           className={cn(
-            "absolute z-50 mt-1 w-full min-w-[200px] max-h-[280px] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
-            "animate-in fade-in-0 zoom-in-95 duration-100"
+            "absolute z-[100] w-full min-w-[200px] max-h-[280px] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl",
+            openUp ? "bottom-full mb-1" : "top-full mt-1"
           )}
         >
           <div className="flex items-center gap-2 px-3 py-2 border-b border-border/60 text-xs text-muted-foreground">

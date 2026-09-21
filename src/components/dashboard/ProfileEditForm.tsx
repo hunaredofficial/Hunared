@@ -750,7 +750,6 @@ export function ProfileEditForm({
             Danger Zone
           </h3>
         </div>
-
         <div className="w-full p-5 sm:p-6 rounded-xl border border-destructive/50 bg-destructive/5 space-y-4">
           <div className="space-y-2">
             <p className="text-base font-semibold text-destructive">

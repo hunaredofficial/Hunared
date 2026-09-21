@@ -296,7 +296,6 @@ export function MarketFilter({
   return (
     <div className="mt-6 space-y-3">
       <div className="flex flex-wrap gap-2.5 sm:gap-3 items-end">
-        {/* Larger search field */}
         <div className="flex-[2] min-w-[240px] sm:min-w-[280px]">
           <label className="text-xs text-muted-foreground mb-1 block">
             Search
@@ -383,7 +382,6 @@ export function MarketFilter({
         </div>
 
 
-        {/* Lost / Found status — only when Lost & Found category */}
         {category === "lost_found" && (
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">
@@ -412,7 +410,6 @@ export function MarketFilter({
           </div>
         )}
 
-        {/* Smaller country & city fields */}
         <div className="w-[130px] sm:w-[140px]">
           <label className="text-xs text-muted-foreground mb-1 block">
             Country

@@ -25,6 +25,7 @@ import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { HunaredAgent } from "@/components/agent/HunaredAgent";
 import type { UserRole } from "@/types/database";
 
 interface NavItem {
@@ -325,6 +326,7 @@ export function DashboardShell({
       {/* Main content */}
       <main className="md:pl-64">
         <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 pb-12 max-w-[90rem] mx-auto w-full">{children}</div>
+      <HunaredAgent />
       </main>
     </div>
   );

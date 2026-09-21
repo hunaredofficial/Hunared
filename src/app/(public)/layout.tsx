@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { HunaredAgent } from "@/components/agent/HunaredAgent";
 import { AdSlot } from "@/components/ads/AdSlot";
 
 export default function PublicLayout({
@@ -18,6 +19,7 @@ export default function PublicLayout({
       <main className="flex-1">{children}</main>
       <Footer />
       <ScrollToTop />
+      <HunaredAgent />
     </div>
   );
 }
