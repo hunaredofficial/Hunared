@@ -216,7 +216,7 @@ export function Header() {
 
           <nav
             ref={megaRef}
-            className="hidden lg:flex items-center gap-0.5 relative"
+            className="hidden lg:flex items-center gap-0.5 relative min-w-0 flex-1 justify-center max-w-[42rem] xl:max-w-none"
             aria-label="Main navigation"
           >
             {NAV_ITEMS.map((item) => {
@@ -351,7 +351,7 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0">
             {/* Compact universal search */}
             <form
               action="/search"
@@ -367,7 +367,7 @@ export function Header() {
                   "h-8 rounded-md border border-border/80 bg-background/80 pl-8 pr-3 text-[13px]",
                   "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary/40",
                   "transition-all duration-300",
-                  scrolled ? "w-32 lg:w-40" : "w-36 lg:w-44"
+                  scrolled ? "w-28 lg:w-36" : "w-32 lg:w-40"
                 )}
                 aria-label="Search Hunared"
               />
@@ -375,10 +375,10 @@ export function Header() {
 
             <div
               className={cn(
-                "hidden xl:block transition-all duration-300 overflow-hidden",
+                "hidden 2xl:block transition-all duration-300 overflow-hidden",
                 scrolled
                   ? "max-w-0 opacity-0 pointer-events-none scale-95"
-                  : "max-w-[12rem] opacity-100"
+                  : "max-w-[11rem] opacity-100"
               )}
             >
               <LocationPicker />
@@ -423,11 +423,9 @@ export function Header() {
                   className={cn("h-8 shrink-0", scrolled && "px-2")}
                   asChild
                 >
-                  <Link href="/dashboard" className="inline-flex items-center">
-                    <LayoutDashboard className="h-4 w-4 sm:mr-1.5" />
-                    <span
-                      className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}
-                    >
+                  <Link href="/dashboard" className="inline-flex items-center gap-1.5" aria-label="Dashboard">
+                    <LayoutDashboard className="h-4 w-4 shrink-0" />
+                    <span className="hidden 2xl:inline text-[13px] font-medium">
                       Dashboard
                     </span>
                   </Link>

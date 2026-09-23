@@ -409,7 +409,7 @@ export default async function JobsPage({
               </div>
             ) : (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                   {jobs.map((job) => (
                     <JobCard key={job.id} job={job} />
                   ))}
@@ -495,91 +495,111 @@ function JobCard({
 
   const isRecommended = (job._matchScore ?? 0) >= 25;
 
+  const empLabel = job.employment_type
+    ? job.employment_type.toLowerCase() === "permanent"
+      ? "Permanent"
+      : job.employment_type.toLowerCase() === "temporary"
+        ? "Temporary"
+        : job.employment_type
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
+
   return (
     <Card
       className={cn(
-        "group hover:border-primary/40 hover:shadow-md transition-all duration-200",
-        isRecommended && "surface-recommended"
+        "group relative overflow-hidden border-border/80 bg-card",
+        "hover:border-primary/45 hover:shadow-md hover:shadow-primary/5",
+        "transition-all duration-200",
+        isRecommended && "ring-1 ring-primary/25 border-primary/30"
       )}
     >
-      <CardContent className="pt-3.5 pb-3 px-0 flex flex-col h-full">
-        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+      <CardContent className="p-4 flex flex-col h-full gap-3">
+        {/* Top: badges */}
+        <div className="flex items-center gap-1.5 flex-wrap min-h-[1.25rem]">
           {isRecommended && (
-            <Badge className="text-xs bg-primary/15 text-primary border-primary/25 gap-1">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold tracking-wide">
               <Sparkles className="h-3 w-3" />
               For you
-            </Badge>
+            </span>
           )}
           {job.category && (
-            <Badge
+            <span
               className={cn(
-                "text-xs",
+                "inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
                 CATEGORY_COLORS[job.category] ?? CATEGORY_COLORS["Other"]
               )}
             >
               {job.category}
-            </Badge>
+            </span>
           )}
-          {job.employment_type && (
-            <Badge variant="outline" className="text-xs">
-              {job.employment_type.toLowerCase() === "permanent"
-                ? "Permanent"
-                : job.employment_type.toLowerCase() === "temporary"
-                  ? "Temporary"
-                  : job.employment_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-            </Badge>
+          {empLabel && (
+            <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              {empLabel}
+            </span>
           )}
         </div>
 
-        <Link href={`/jobs/${job.id}`} className="group/title">
-          <h3 className="font-semibold text-foreground group-hover/title:text-primary transition-colors leading-snug mb-1">
-            {job.job_title}
-          </h3>
-        </Link>
+        {/* Title + company */}
+        <div className="space-y-1">
+          <Link href={`/jobs/${job.id}`} className="block">
+            <h3 className="text-[15px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
+              {job.job_title}
+            </h3>
+          </Link>
+          {job.company_name && (
+            <p className="text-sm text-muted-foreground truncate">
+              {job.company_name}
+            </p>
+          )}
+        </div>
 
-        <p className="text-sm text-muted-foreground mb-2">{job.company_name}</p>
-
-        <div className="space-y-1.5 text-xs text-muted-foreground flex-1">
+        {/* Meta row — compact chips */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
           {job.location && (
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              {job.location}
-            </div>
+            <span className="inline-flex items-center gap-1 min-w-0">
+              <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              <span className="truncate max-w-[11rem]">{job.location}</span>
+            </span>
           )}
           {salaryLabel ? (
-            <div className="flex items-center gap-1.5">
-              <DollarSign className="h-3.5 w-3.5 shrink-0" />
+            <span className="inline-flex items-center gap-1 font-medium text-foreground/90">
+              <DollarSign className="h-3.5 w-3.5 shrink-0 text-primary/80" />
               {salaryLabel}
-            </div>
+            </span>
           ) : null}
           {job.duration && (
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 shrink-0 opacity-70" />
               {job.duration}
-            </div>
+            </span>
           )}
-          {job.positions && (
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              {job.positions} position{job.positions !== 1 ? "s" : ""}
-            </div>
+          {job.positions != null && Number(job.positions) > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Users className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              {job.positions} open
+            </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border gap-2">
-          <span className="text-xs text-muted-foreground">{createdAt}</span>
-          <div className="flex items-center gap-1.5">
+        {/* Footer */}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3 border-t border-border/60">
+          <span className="text-[11px] text-muted-foreground tabular-nums">
+            {createdAt}
+          </span>
+          <div className="flex items-center gap-1">
             {job.id && (
               <SaveButton itemType="job" itemId={job.id} size="sm" />
             )}
             <Button
               size="sm"
-              variant="ghost"
-              className="h-7 gap-1 text-xs hover:text-primary"
+              variant="secondary"
+              className="h-7 px-2.5 text-xs font-medium"
               asChild
             >
               <Link href={`/jobs/${job.id}`}>
-                View <ArrowRight className="h-3 w-3" />
+                View
+                <ArrowRight className="h-3 w-3 ml-1 opacity-70" />
               </Link>
             </Button>
           </div>
@@ -588,6 +608,7 @@ function JobCard({
     </Card>
   );
 }
+
 
 function buildParams(p: {
   search: string;
