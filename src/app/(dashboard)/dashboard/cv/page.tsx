@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { CvBuilder } from "@/components/cv/CvBuilder";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase";
 
 export const metadata = {
   title: "CV Builder | Hunared",
@@ -24,8 +24,12 @@ export default async function CvPage() {
     skills?: string | null;
     languages?: string | null;
   } = {
-    fullName: user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(" "),
-    email: user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress,
+    fullName:
+      user?.fullName ||
+      [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+    email:
+      user?.primaryEmailAddress?.emailAddress ||
+      user?.emailAddresses?.[0]?.emailAddress,
   };
 
   try {
@@ -61,7 +65,7 @@ export default async function CvPage() {
       };
     }
   } catch {
-    /* profile optional */
+    /* profile optional — builder still works */
   }
 
   return (
