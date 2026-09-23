@@ -80,21 +80,21 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-border last:border-b-0">
+    <div className="border-b border-border/60 last:border-0">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:text-primary transition-colors"
+        className="flex w-full items-center justify-between py-2.5 text-left text-sm font-medium hover:text-primary transition-colors"
       >
         {title}
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
+            "h-3.5 w-3.5 text-muted-foreground transition-transform",
             open && "rotate-180"
           )}
         />
       </button>
-      {open && <div className="pb-3 space-y-1.5">{children}</div>}
+      {open && <div className="pb-3 space-y-0.5">{children}</div>}
     </div>
   );
 }
@@ -113,7 +113,7 @@ function RadioRow({
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-left transition-colors",
+        "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-left transition-colors",
         checked
           ? "bg-primary/10 text-primary font-medium"
           : "hover:bg-muted text-foreground"
@@ -144,6 +144,7 @@ export function JobsFilter({
   defaultDateOrder = "",
   defaultExperience = "",
   categories,
+  variant = "bar",
 }: {
   defaultSearch: string;
   defaultCategory: string;
@@ -156,6 +157,8 @@ export function JobsFilter({
   defaultDateOrder?: string;
   defaultExperience?: string;
   categories: string[];
+  /** "bar" = horizontal top bar + sheet (default). "sidebar" = vertical sticky panel. */
+  variant?: "bar" | "sidebar";
 }) {
   const router = useRouter();
   const geo = useGeo();
@@ -165,7 +168,6 @@ export function JobsFilter({
   const [country, setCountry] = useState(defaultCountry);
   const [city, setCity] = useState(defaultCity);
 
-  // Advanced filter state (sheet)
   const [compSort, setCompSort] = useState<CompSort>(
     (defaultSort as CompSort) || ""
   );
@@ -178,6 +180,8 @@ export function JobsFilter({
   const [experience, setExperience] = useState(defaultExperience);
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    category: true,
+    location: true,
     compensation: true,
     payout: false,
     duration: false,
@@ -216,7 +220,7 @@ export function JobsFilter({
       if (vals.posted) params.set("posted", vals.posted);
       if (vals.dateOrder) params.set("dateOrder", vals.dateOrder);
       if (vals.experience) params.set("experience", vals.experience);
-      return params;
+      return params.toString();
     },
     [
       search,
@@ -234,13 +238,14 @@ export function JobsFilter({
 
   const applyQuick = useCallback(
     (overrides: Record<string, string> = {}) => {
-      router.push(`/jobs?${buildParams(overrides).toString()}`);
+      const q = buildParams(overrides);
+      router.push(q ? `/jobs?${q}` : "/jobs");
     },
-    [router, buildParams]
+    [buildParams, router]
   );
 
-  const applyAdvanced = () => {
-    router.push(`/jobs?${buildParams().toString()}`);
+  const applyAll = () => {
+    applyQuick();
     setSheetOpen(false);
   };
 
@@ -259,18 +264,38 @@ export function JobsFilter({
     setSheetOpen(false);
   };
 
-  // Auto-fill country only; city stays All Cities
+  // Sync from URL defaults when they change (back/forward)
   useEffect(() => {
-    if (geo.loading) return;
-    if (defaultCountry || defaultCity) return;
-    if (!geo.countryCode) return;
-    setCountry(geo.countryCode);
-    applyQuick({
-      country: geo.countryCode,
-      city: "",
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.loading, geo.countryCode]);
+    setSearch(defaultSearch);
+    setCategory(defaultCategory);
+    setCountry(defaultCountry);
+    setCity(defaultCity);
+    setCompSort((defaultSort as CompSort) || "");
+    setPayout(defaultPayout);
+    setDuration(defaultDuration);
+    setPosted(defaultPosted);
+    setDateOrder((defaultDateOrder as DateOrder) || "");
+    setExperience(defaultExperience);
+  }, [
+    defaultSearch,
+    defaultCategory,
+    defaultCountry,
+    defaultCity,
+    defaultSort,
+    defaultPayout,
+    defaultDuration,
+    defaultPosted,
+    defaultDateOrder,
+    defaultExperience,
+  ]);
+
+  // Geo auto-fill country once
+  useEffect(() => {
+    if (geo.loading || country || defaultCountry) return;
+    if (geo.countryCode) {
+      setCountry(geo.countryCode);
+    }
+  }, [geo.loading, geo.countryCode, country, defaultCountry]);
 
   const activeAdvancedCount = useMemo(() => {
     let n = 0;
@@ -291,6 +316,342 @@ export function JobsFilter({
     activeAdvancedCount > 0
   );
 
+  const advancedSections = (
+    <>
+      <Section
+        title="Compensation"
+        open={!!openSections.compensation}
+        onToggle={() => toggleSection("compensation")}
+      >
+        <RadioRow
+          checked={compSort === ""}
+          label="Default"
+          onSelect={() => setCompSort("")}
+        />
+        <RadioRow
+          checked={compSort === "comp_asc"}
+          label="Low to High"
+          onSelect={() => setCompSort("comp_asc")}
+        />
+        <RadioRow
+          checked={compSort === "comp_desc"}
+          label="High to Low"
+          onSelect={() => setCompSort("comp_desc")}
+        />
+      </Section>
+
+      <Section
+        title="Payout / Pay Frequency"
+        open={!!openSections.payout}
+        onToggle={() => toggleSection("payout")}
+      >
+        {PAYOUT_OPTIONS.map((o) => (
+          <RadioRow
+            key={o.value || "any"}
+            checked={payout === o.value}
+            label={o.label}
+            onSelect={() => setPayout(o.value)}
+          />
+        ))}
+      </Section>
+
+      <Section
+        title="Job Duration"
+        open={!!openSections.duration}
+        onToggle={() => toggleSection("duration")}
+      >
+        {DURATION_OPTIONS.map((o) => (
+          <RadioRow
+            key={o.value || "any"}
+            checked={duration === o.value}
+            label={o.label}
+            onSelect={() => setDuration(o.value)}
+          />
+        ))}
+      </Section>
+
+      <Section
+        title="Date Posted"
+        open={!!openSections.date}
+        onToggle={() => toggleSection("date")}
+      >
+        <p className="text-xs text-muted-foreground px-2 mb-1">Posted within</p>
+        {DATE_POSTED_OPTIONS.map((o) => (
+          <RadioRow
+            key={o.value || "any"}
+            checked={posted === o.value}
+            label={o.label}
+            onSelect={() => setPosted(o.value)}
+          />
+        ))}
+        <p className="text-xs text-muted-foreground px-2 mt-2 mb-1">Sort by date</p>
+        <RadioRow
+          checked={dateOrder === ""}
+          label="Default"
+          onSelect={() => setDateOrder("")}
+        />
+        <RadioRow
+          checked={dateOrder === "newest"}
+          label="Newest First"
+          onSelect={() => setDateOrder("newest")}
+        />
+        <RadioRow
+          checked={dateOrder === "oldest"}
+          label="Oldest First"
+          onSelect={() => setDateOrder("oldest")}
+        />
+      </Section>
+
+      <Section
+        title="Experience Level"
+        open={!!openSections.experience}
+        onToggle={() => toggleSection("experience")}
+      >
+        {EXPERIENCE_OPTIONS.map((o) => (
+          <RadioRow
+            key={o.value || "any"}
+            checked={experience === o.value}
+            label={o.label}
+            onSelect={() => setExperience(o.value)}
+          />
+        ))}
+      </Section>
+    </>
+  );
+
+  const activeChips = hasAnyFilter && (
+    <div className="flex flex-wrap gap-1.5">
+      {search && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          “{search}”
+          <button type="button" onClick={() => { setSearch(""); applyQuick({ search: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {category && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {category}
+          <button type="button" onClick={() => { setCategory(""); applyQuick({ category: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {country && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {COUNTRIES.find((c) => c.code === country)?.name ?? country}
+          <button type="button" onClick={() => { setCountry(""); setCity(""); applyQuick({ country: "", city: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {city && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {city}
+          <button type="button" onClick={() => { setCity(""); applyQuick({ city: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {compSort && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {compSort === "comp_asc" ? "Pay ↑" : "Pay ↓"}
+          <button type="button" onClick={() => { setCompSort(""); applyQuick({ sort: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {payout && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          Payout: {payout === "After Interview" ? "Negotiable" : payout}
+          <button type="button" onClick={() => { setPayout(""); applyQuick({ payout: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {duration && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {DURATION_OPTIONS.find((d) => d.value === duration)?.label ?? duration}
+          <button type="button" onClick={() => { setDuration(""); applyQuick({ duration: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {posted && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {DATE_POSTED_OPTIONS.find((d) => d.value === posted)?.label ?? posted}
+          <button type="button" onClick={() => { setPosted(""); applyQuick({ posted: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {dateOrder === "newest" && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          Newest
+          <button type="button" onClick={() => { setDateOrder(""); applyQuick({ dateOrder: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {dateOrder === "oldest" && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          Oldest
+          <button type="button" onClick={() => { setDateOrder(""); applyQuick({ dateOrder: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {experience && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {EXPERIENCE_OPTIONS.find((e) => e.value === experience)?.label ?? experience}
+          <button type="button" onClick={() => { setExperience(""); applyQuick({ experience: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {hasAnyFilter && (
+        <button
+          type="button"
+          onClick={clearAll}
+          className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2"
+        >
+          Clear all
+        </button>
+      )}
+    </div>
+  );
+
+  /* ─── SIDEBAR VARIANT ─────────────────────────────────────── */
+  if (variant === "sidebar") {
+    return (
+      <div className="rounded-lg border border-border bg-card p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Filters</h2>
+          {hasAnyFilter && (
+            <button
+              type="button"
+              onClick={clearAll}
+              className="text-xs text-muted-foreground hover:text-primary"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search jobs..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyQuick();
+            }}
+            className="pl-8 pr-9 h-9 text-sm"
+          />
+          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            <VoiceSearchButton
+              size="sm"
+              onResult={(t) => {
+                setSearch(t);
+                applyQuick({ search: t });
+              }}
+            />
+          </div>
+        </div>
+
+        <Section
+          title="Category"
+          open={!!openSections.category}
+          onToggle={() => toggleSection("category")}
+        >
+          <Select
+            value={category}
+            onValueChange={(v: string | null) => {
+              const val = v ?? "";
+              setCategory(val);
+              applyQuick({ category: val });
+            }}
+          >
+            <SelectTrigger className="w-full h-9 text-sm cursor-pointer">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent className="bg-background text-foreground border-border">
+              <SelectItem value="" className="cursor-pointer">
+                All categories
+              </SelectItem>
+              {Array.from(new Set(categories)).map((c) => (
+                <SelectItem key={c} value={c} className="cursor-pointer">
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Section>
+
+        <Section
+          title="Location"
+          open={!!openSections.location}
+          onToggle={() => toggleSection("location")}
+        >
+          <div className="space-y-2">
+            <Select
+              value={country}
+              onValueChange={(v: string | null) => {
+                const val = v ?? "";
+                setCountry(val);
+                setCity("");
+                applyQuick({ country: val, city: "" });
+              }}
+            >
+              <SelectTrigger className="w-full h-9 text-sm cursor-pointer">
+                <SelectValue placeholder="All countries">
+                  {country
+                    ? COUNTRIES.find((c) => c.code === country)?.name ?? country
+                    : "All countries"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-background text-foreground border-border">
+                <SelectItem value="" className="cursor-pointer">
+                  All countries
+                </SelectItem>
+                {COUNTRIES.map((c) => (
+                  <SelectItem key={c.code} value={c.code} className="cursor-pointer">
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <CityCombobox
+              id="jobs-city-sidebar"
+              country={country}
+              value={city}
+              onChange={(v) => {
+                setCity(v);
+                applyQuick({ city: v });
+              }}
+              className="w-full"
+              size="sm"
+              variant="select"
+            />
+          </div>
+        </Section>
+
+        {advancedSections}
+
+        <div className="pt-1 flex gap-2">
+          <Button size="sm" className="flex-1" onClick={applyAll}>
+            Apply
+          </Button>
+        </div>
+
+        {activeChips}
+      </div>
+    );
+  }
+
+  /* ─── BAR VARIANT (default — horizontal + sheet) ──────────── */
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
@@ -377,7 +738,6 @@ export function JobsFilter({
           variant="select"
         />
 
-        {/* Advanced Filters — replaces simple Rate dropdown */}
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <Button
             type="button"
@@ -405,126 +765,23 @@ export function JobsFilter({
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-4">
-              <Section
-                title="Compensation"
-                open={!!openSections.compensation}
-                onToggle={() => toggleSection("compensation")}
-              >
-                <RadioRow
-                  checked={compSort === ""}
-                  label="Default"
-                  onSelect={() => setCompSort("")}
-                />
-                <RadioRow
-                  checked={compSort === "comp_asc"}
-                  label="Low to High"
-                  onSelect={() => setCompSort("comp_asc")}
-                />
-                <RadioRow
-                  checked={compSort === "comp_desc"}
-                  label="High to Low"
-                  onSelect={() => setCompSort("comp_desc")}
-                />
-              </Section>
-
-              <Section
-                title="Payout / Pay Frequency"
-                open={!!openSections.payout}
-                onToggle={() => toggleSection("payout")}
-              >
-                {PAYOUT_OPTIONS.map((o) => (
-                  <RadioRow
-                    key={o.value || "any"}
-                    checked={payout === o.value}
-                    label={o.label}
-                    onSelect={() => setPayout(o.value)}
-                  />
-                ))}
-              </Section>
-
-              <Section
-                title="Job Duration"
-                open={!!openSections.duration}
-                onToggle={() => toggleSection("duration")}
-              >
-                {DURATION_OPTIONS.map((o) => (
-                  <RadioRow
-                    key={o.value || "any"}
-                    checked={duration === o.value}
-                    label={o.label}
-                    onSelect={() => setDuration(o.value)}
-                  />
-                ))}
-              </Section>
-
-              <Section
-                title="Date Posted"
-                open={!!openSections.date}
-                onToggle={() => toggleSection("date")}
-              >
-                <p className="text-xs text-muted-foreground px-2 mb-1">
-                  Posted within
-                </p>
-                {DATE_POSTED_OPTIONS.map((o) => (
-                  <RadioRow
-                    key={o.value || "any"}
-                    checked={posted === o.value}
-                    label={o.label}
-                    onSelect={() => setPosted(o.value)}
-                  />
-                ))}
-                <p className="text-xs text-muted-foreground px-2 mt-3 mb-1">
-                  Sort by date
-                </p>
-                <RadioRow
-                  checked={dateOrder === ""}
-                  label="Default"
-                  onSelect={() => setDateOrder("")}
-                />
-                <RadioRow
-                  checked={dateOrder === "newest"}
-                  label="Newest First"
-                  onSelect={() => setDateOrder("newest")}
-                />
-                <RadioRow
-                  checked={dateOrder === "oldest"}
-                  label="Oldest First"
-                  onSelect={() => setDateOrder("oldest")}
-                />
-              </Section>
-
-              <Section
-                title="Experience Level"
-                open={!!openSections.experience}
-                onToggle={() => toggleSection("experience")}
-              >
-                {EXPERIENCE_OPTIONS.map((o) => (
-                  <RadioRow
-                    key={o.value || "any"}
-                    checked={experience === o.value}
-                    label={o.label}
-                    onSelect={() => setExperience(o.value)}
-                  />
-                ))}
-              </Section>
+              {advancedSections}
             </div>
 
             <SheetFooter className="border-t px-4 py-3 flex-row gap-2 sm:justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearAll}
-                className="gap-1"
-              >
-                <X className="h-3.5 w-3.5" />
+              <Button type="button" variant="ghost" size="sm" onClick={clearAll}>
                 Clear all
               </Button>
               <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setSheetOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSheetOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="button" size="sm" onClick={applyAdvanced}>
+                <Button type="button" size="sm" onClick={applyAll}>
                   Apply filters
                 </Button>
               </div>
@@ -533,93 +790,28 @@ export function JobsFilter({
         </Sheet>
 
         <Button
+          type="button"
           variant="outline"
+          className="cursor-pointer"
           onClick={() => applyQuick()}
-          className="sm:w-auto cursor-pointer"
         >
           Search
         </Button>
 
         {hasAnyFilter && (
           <Button
+            type="button"
             variant="ghost"
+            size="sm"
             onClick={clearAll}
-            className="sm:w-auto cursor-pointer"
+            className="text-muted-foreground"
           >
             Clear
           </Button>
         )}
       </div>
 
-      {/* Active advanced filter chips */}
-      {activeAdvancedCount > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {compSort === "comp_asc" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Compensation: Low → High
-              <button type="button" onClick={() => { setCompSort(""); applyQuick({ sort: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {compSort === "comp_desc" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Compensation: High → Low
-              <button type="button" onClick={() => { setCompSort(""); applyQuick({ sort: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {payout && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Payout: {payout === "After Interview" ? "Negotiable" : payout}
-              <button type="button" onClick={() => { setPayout(""); applyQuick({ payout: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {duration && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Duration: {DURATION_OPTIONS.find((d) => d.value === duration)?.label ?? duration}
-              <button type="button" onClick={() => { setDuration(""); applyQuick({ duration: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {posted && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Posted: {DATE_POSTED_OPTIONS.find((d) => d.value === posted)?.label ?? posted}
-              <button type="button" onClick={() => { setPosted(""); applyQuick({ posted: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {dateOrder === "newest" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Newest First
-              <button type="button" onClick={() => { setDateOrder(""); applyQuick({ dateOrder: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {dateOrder === "oldest" && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Oldest First
-              <button type="button" onClick={() => { setDateOrder(""); applyQuick({ dateOrder: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {experience && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Experience: {EXPERIENCE_OPTIONS.find((e) => e.value === experience)?.label ?? experience}
-              <button type="button" onClick={() => { setExperience(""); applyQuick({ experience: "" }); }} aria-label="Remove">
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-        </div>
-      )}
+      {activeChips}
     </div>
   );
 }

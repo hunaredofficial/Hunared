@@ -316,124 +316,161 @@ export default async function JobsPage({
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            <span className="gradient-text">Job Board</span>
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            {total > 0
-              ? `${total.toLocaleString()} opportunit${total !== 1 ? "ies" : "y"} across the globe`
-              : "Find your next international opportunity"}
-            {isPersonalized && usePersonalSort && (
-              <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
-                <Sparkles className="h-3.5 w-3.5" />
-                Personalized for you
-              </span>
-            )}
-          </p>
-          <JobsFilter
-            defaultSearch={search}
-            defaultCategory={category}
-            defaultCountry={country}
-            defaultCity={city}
-            defaultSort={sort}
-            defaultPayout={payout}
-            defaultDuration={durationFilter}
-            defaultPosted={posted}
-            defaultDateOrder={dateOrder}
-            defaultExperience={experience}
-            categories={categories}
-          />
+      {/* Compact page header */}
+      <section className="border-b border-border bg-muted/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Jobs
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {total > 0
+                  ? `${total.toLocaleString()} opportunit${total !== 1 ? "ies" : "y"}`
+                  : "Find your next opportunity"}
+                {isPersonalized && usePersonalSort && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Personalized for you
+                  </span>
+                )}
+              </p>
+            </div>
+            <Button size="sm" className="shrink-0 font-semibold" asChild>
+              <Link href="/dashboard/jobs/new">Post a Job</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Results */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        {hasFilters && (
-          <p className="text-sm text-muted-foreground mb-5">
-            {total} result{total !== 1 ? "s" : ""} found
-            {search && ` for "${search}"`}
-            {category && ` in ${category}`}
-            {employmentType && ` · ${employmentType.replace("_", " ")}`}
-            {activeCountry && ` · ${activeCountry.name}`}
-            {city && ` · ${city}`}
-          </p>
-        )}
+      {/* Marketplace layout: sidebar filters + results */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Desktop sidebar */}
+          <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
+              <JobsFilter
+                variant="sidebar"
+                defaultSearch={search}
+                defaultCategory={category}
+                defaultCountry={country}
+                defaultCity={city}
+                defaultSort={sort}
+                defaultPayout={payout}
+                defaultDuration={durationFilter}
+                defaultPosted={posted}
+                defaultDateOrder={dateOrder}
+                defaultExperience={experience}
+                categories={categories}
+              />
+            </div>
+          </aside>
 
-        {jobs.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground text-lg">No jobs found.</p>
-            {hasFilters && (
-              <Button variant="outline" className="mt-4" asChild>
-                <Link href="/jobs">Clear filters</Link>
-              </Button>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {jobs.map((job) => (
-                <JobCard key={job.id} job={job} />
-              ))}
+          {/* Main column */}
+          <div className="flex-1 min-w-0">
+            {/* Mobile filter bar */}
+            <div className="lg:hidden mb-4">
+              <JobsFilter
+                variant="bar"
+                defaultSearch={search}
+                defaultCategory={category}
+                defaultCountry={country}
+                defaultCity={city}
+                defaultSort={sort}
+                defaultPayout={payout}
+                defaultDuration={durationFilter}
+                defaultPosted={posted}
+                defaultDateOrder={dateOrder}
+                defaultExperience={experience}
+                categories={categories}
+              />
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-10">
-                {page > 1 && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={`/jobs?${buildParams({
-                        search,
-                        category,
-                        country,
-                        city,
-                        employmentType,
-                        sort,
-                        payout,
-                        duration: durationFilter,
-                        posted,
-                        dateOrder,
-                        experience,
-                        page: page - 1,
-                      })}`}
-                    >
-                      Previous
-                    </Link>
-                  </Button>
-                )}
-                <span className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                {page < totalPages && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={`/jobs?${buildParams({
-                        search,
-                        category,
-                        country,
-                        city,
-                        employmentType,
-                        sort,
-                        payout,
-                        duration: durationFilter,
-                        posted,
-                        dateOrder,
-                        experience,
-                        page: page + 1,
-                      })}`}
-                    >
-                      Next
-                    </Link>
+            {/* Result meta */}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {total} result{total !== 1 ? "s" : ""}
+                {search && ` for "${search}"`}
+                {category && ` in ${category}`}
+                {employmentType && ` · ${employmentType.replace("_", " ")}`}
+                {activeCountry && ` · ${activeCountry.name}`}
+                {city && ` · ${city}`}
+              </p>
+            </div>
+
+            {jobs.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-border rounded-lg">
+                <p className="text-muted-foreground text-lg">No jobs found.</p>
+                {hasFilters && (
+                  <Button variant="outline" className="mt-4" asChild>
+                    <Link href="/jobs">Clear filters</Link>
                   </Button>
                 )}
               </div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {jobs.map((job) => (
+                    <JobCard key={job.id} job={job} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    {page > 1 && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/jobs?${buildParams({
+                            search,
+                            category,
+                            country,
+                            city,
+                            employmentType,
+                            sort,
+                            payout,
+                            duration: durationFilter,
+                            posted,
+                            dateOrder,
+                            experience,
+                            page: page - 1,
+                          })}`}
+                        >
+                          Previous
+                        </Link>
+                      </Button>
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {totalPages}
+                    </span>
+                    {page < totalPages && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/jobs?${buildParams({
+                            search,
+                            category,
+                            country,
+                            city,
+                            employmentType,
+                            sort,
+                            payout,
+                            duration: durationFilter,
+                            posted,
+                            dateOrder,
+                            experience,
+                            page: page + 1,
+                          })}`}
+                        >
+                          Next
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </section>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -465,8 +502,8 @@ function JobCard({
         isRecommended && "surface-recommended"
       )}
     >
-      <CardContent className="pt-5 pb-4 flex flex-col h-full">
-        <div className="flex items-center gap-1.5 flex-wrap mb-3">
+      <CardContent className="pt-3.5 pb-3 px-0 flex flex-col h-full">
+        <div className="flex items-center gap-1.5 flex-wrap mb-2">
           {isRecommended && (
             <Badge className="text-xs bg-primary/15 text-primary border-primary/25 gap-1">
               <Sparkles className="h-3 w-3" />
@@ -500,7 +537,7 @@ function JobCard({
           </h3>
         </Link>
 
-        <p className="text-sm text-muted-foreground mb-3">{job.company_name}</p>
+        <p className="text-sm text-muted-foreground mb-2">{job.company_name}</p>
 
         <div className="space-y-1.5 text-xs text-muted-foreground flex-1">
           {job.location && (

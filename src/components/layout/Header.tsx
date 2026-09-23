@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   Menu,
@@ -352,9 +352,30 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
+            {/* Compact universal search */}
+            <form
+              action="/search"
+              method="get"
+              className="hidden md:flex items-center relative"
+            >
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="search"
+                name="q"
+                placeholder="Search jobs, talent, marketplace..."
+                className={cn(
+                  "h-8 rounded-md border border-border/80 bg-background/80 pl-8 pr-3 text-[13px]",
+                  "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary/40",
+                  "transition-all duration-300",
+                  scrolled ? "w-40 lg:w-52" : "w-44 lg:w-56"
+                )}
+                aria-label="Search Hunared"
+              />
+            </form>
+
             <div
               className={cn(
-                "hidden md:block transition-all duration-300 overflow-hidden",
+                "hidden xl:block transition-all duration-300 overflow-hidden",
                 scrolled
                   ? "max-w-0 opacity-0 pointer-events-none scale-95"
                   : "max-w-[12rem] opacity-100"
@@ -423,6 +444,18 @@ export function Header() {
                 </div>
               </Show>
             </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden w-9 h-9"
+              asChild
+              aria-label="Search"
+            >
+              <Link href="/search">
+                <Search className="h-5 w-5" />
+              </Link>
+            </Button>
 
             <Button
               variant="ghost"

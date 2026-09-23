@@ -264,129 +264,159 @@ export default async function MarketPage({
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-3">
-            <ShoppingBag className="h-7 w-7 text-primary" />
-            <h1 className="text-3xl sm:text-4xl font-bold">
-              <span className="gradient-text">Marketplace</span>
-            </h1>
+      {/* Compact page header */}
+      <section className="border-b border-border bg-muted/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Marketplace
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {total > 0
+                  ? `${total.toLocaleString()} listing${total !== 1 ? "s" : ""}`
+                  : "Buy, sell, rent and find services"}
+                {isPersonalized && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Personalized for you
+                  </span>
+                )}
+              </p>
+            </div>
+            <Button size="sm" className="shrink-0 font-semibold" asChild>
+              <Link href="/dashboard/market/new">Post a Listing</Link>
+            </Button>
           </div>
-          <p className="text-muted-foreground max-w-xl">
-            Buy, sell, and find services worldwide - property, vehicles,
-            electronics, services, and more.
-            {isPersonalized && usePersonalSort && (
-              <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
-                <Sparkles className="h-3.5 w-3.5" />
-                Personalized for you
-              </span>
-            )}
-          </p>
-
-          <MarketFilter
-            defaultSearch={search}
-            defaultCategory={category}
-            defaultSubcategory={subcategory}
-            defaultCountry={country}
-            defaultCity={city}
-            defaultSort={sort}
-            defaultMinPrice={minPrice}
-            defaultMaxPrice={maxPrice}
-            defaultPosted={posted}
-            defaultStatus={status}
-          />
         </div>
       </section>
 
-      {/* Listings */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        {(search || activeCat || subcategory || country || city || sort || minPrice || maxPrice || posted) && (
-          <p className="text-sm text-muted-foreground mb-5">
-            {total} listing{total !== 1 ? "s" : ""} found
-            {activeCat && ` in ${activeCat.label}`}
-            {subcategory && ` › ${subcategory}`}
-            {status && ` › ${status === "lost" ? "Lost" : status === "found" ? "Found" : status}`}
-            {activeCountry && ` · ${activeCountry.name}`}
-            {city && ` · ${city}`}
-            {search && ` matching "${search}"`}
-          </p>
-        )}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Desktop sidebar filters */}
+          <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-lg border border-border bg-card p-3">
+              <h2 className="text-sm font-semibold mb-3">Filters</h2>
+              <MarketFilter
+                defaultSearch={search}
+                defaultCategory={category}
+                defaultSubcategory={subcategory}
+                defaultCountry={country}
+                defaultCity={city}
+                defaultSort={sort}
+                defaultMinPrice={minPrice}
+                defaultMaxPrice={maxPrice}
+                defaultPosted={posted}
+                defaultStatus={status}
+              />
+            </div>
+          </aside>
 
-        {listings.length === 0 ? (
-          <div className="text-center py-20">
-            <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-lg">No listings found.</p>
-            <Button variant="outline" className="mt-4" asChild>
-              <Link href="/dashboard/market/new">Post the first listing</Link>
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
+          {/* Main */}
+          <div className="flex-1 min-w-0">
+            {/* Mobile filters */}
+            <div className="lg:hidden mb-4">
+              <MarketFilter
+                defaultSearch={search}
+                defaultCategory={category}
+                defaultSubcategory={subcategory}
+                defaultCountry={country}
+                defaultCity={city}
+                defaultSort={sort}
+                defaultMinPrice={minPrice}
+                defaultMaxPrice={maxPrice}
+                defaultPosted={posted}
+                defaultStatus={status}
+              />
             </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-10">
-                {page > 1 && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={`/market?${buildParams({
-                        category,
-                        subcategory,
-                        country,
-                        city,
-                        search,
-                        sort,
-                        minPrice,
-                        maxPrice,
-                        posted,
-                        page: page - 1,
-                      })}`}
-                    >
-                      Previous
-                    </Link>
-                  </Button>
-                )}
-                <span className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                {page < totalPages && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={`/market?${buildParams({
-                        category,
-                        subcategory,
-                        country,
-                        city,
-                        search,
-                        sort,
-                        minPrice,
-                        maxPrice,
-                        posted,
-                        page: page + 1,
-                      })}`}
-                    >
-                      Next
-                    </Link>
-                  </Button>
-                )}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {total} listing{total !== 1 ? "s" : ""}
+                {activeCat && ` in ${activeCat.label}`}
+                {subcategory && ` › ${subcategory}`}
+                {status && ` › ${status === "lost" ? "Lost" : status === "found" ? "Found" : status}`}
+                {activeCountry && ` · ${activeCountry.name}`}
+                {city && ` · ${city}`}
+                {search && ` matching "${search}"`}
+              </p>
+            </div>
+
+            {listings.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-border rounded-lg">
+                <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground text-lg">No listings found.</p>
+                <Button variant="outline" className="mt-4" asChild>
+                  <Link href="/dashboard/market/new">Post the first listing</Link>
+                </Button>
               </div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                  {listings.map((listing) => (
+                    <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    {page > 1 && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/market?${buildParams({
+                            category,
+                            subcategory,
+                            country,
+                            city,
+                            search,
+                            sort,
+                            minPrice,
+                            maxPrice,
+                            posted,
+                            page: page - 1,
+                          })}`}
+                        >
+                          Previous
+                        </Link>
+                      </Button>
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {totalPages}
+                    </span>
+                    {page < totalPages && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/market?${buildParams({
+                            category,
+                            subcategory,
+                            country,
+                            city,
+                            search,
+                            sort,
+                            minPrice,
+                            maxPrice,
+                            posted,
+                            page: page + 1,
+                          })}`}
+                        >
+                          Next
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </section>
+          </div>
+        </div>
+      </div>
 
       {/* CTA */}
-      <section className="border-t border-border bg-muted/30 py-12">
+      <section className="border-t border-border bg-muted/30 py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Have something to sell?</h2>
           <p className="text-muted-foreground text-sm mb-5">
-            Sign in to post a listing. All listings are reviewed before
-            publishing.
+            Sign in to post a listing. All listings are reviewed before publishing.
           </p>
           <Button asChild>
             <Link href="/dashboard/market/new">Post a Listing</Link>
@@ -427,7 +457,7 @@ function ListingCard({ listing }: { listing: Listing & { _matchScore?: number } 
         </div>
       )}
 
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3 flex flex-col flex-1">
         <div className="flex items-center gap-1.5 flex-wrap mb-2">
           {isRecommended && (
             <Badge className="text-xs bg-primary/15 text-primary border-primary/25 gap-1">

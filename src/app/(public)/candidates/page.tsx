@@ -95,104 +95,128 @@ export default async function CandidatesPage({
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            <span className="gradient-text">Talent Pool</span>
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            {total > 0
-              ? `${total.toLocaleString()} candidate${total !== 1 ? "s" : ""} ready for opportunities`
-              : "Discover skilled professionals worldwide"}
-          </p>
-          <CandidatesFilter
-            defaultSearch={search}
-            defaultProfession={profession}
-            defaultCountry={country}
-            defaultCity={city}
-            defaultLevel={level}
-            defaultAvailable={available}
-          />
+      {/* Compact header */}
+      <section className="border-b border-border bg-muted/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Talent</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {total > 0
+                  ? `${total.toLocaleString()} professional${total !== 1 ? "s" : ""}`
+                  : "Find talent ready to work"}
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Results */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        {hasFilters && (
-          <p className="text-sm text-muted-foreground mb-5">
-            {total} result{total !== 1 ? "s" : ""} found
-            {search && ` for "${search}"`}
-            {profession && ` · ${profession}`}
-            {activeCountry && ` · ${activeCountry.name}`}
-            {city && ` · ${city}`}
-            {level && ` · ${level}`}
-            {available === "yes" && ` · Available for hire`}
-            {available === "no" && ` · Unavailable`}
-          </p>
-        )}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Desktop sidebar filters */}
+          <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-lg border border-border bg-card p-3">
+              <h2 className="text-sm font-semibold mb-3">Filters</h2>
+              <CandidatesFilter
+                defaultSearch={search}
+                defaultProfession={profession}
+                defaultCountry={country}
+                defaultCity={city}
+                defaultLevel={level}
+                defaultAvailable={available}
+              />
+            </div>
+          </aside>
 
-        {candidates.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground text-lg">No candidates found.</p>
-            {hasFilters && (
-              <Button variant="outline" className="mt-4" asChild>
-                <Link href="/candidates">Clear filters</Link>
-              </Button>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {candidates.map((c) => (
-                <CandidateCard key={c.id} candidate={c} />
-              ))}
+          <div className="flex-1 min-w-0">
+            {/* Mobile filters */}
+            <div className="lg:hidden mb-4">
+              <CandidatesFilter
+                defaultSearch={search}
+                defaultProfession={profession}
+                defaultCountry={country}
+                defaultCity={city}
+                defaultLevel={level}
+                defaultAvailable={available}
+              />
             </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-10">
-                {page > 1 && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={`/candidates?${buildParams({
-                        search,
-                        profession,
-                        country,
-                        city,
-                        level,
-                        available,
-                        page: page - 1,
-                      })}`}
-                    >
-                      Previous
-                    </Link>
-                  </Button>
-                )}
-                <span className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                {page < totalPages && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={`/candidates?${buildParams({
-                        search,
-                        profession,
-                        country,
-                        city,
-                        level,
-                        available,
-                        page: page + 1,
-                      })}`}
-                    >
-                      Next
-                    </Link>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {total} result{total !== 1 ? "s" : ""}
+                {search && ` for "${search}"`}
+                {profession && ` · ${profession}`}
+                {activeCountry && ` · ${activeCountry.name}`}
+                {city && ` · ${city}`}
+                {level && ` · ${level}`}
+                {available === "yes" && ` · Available for hire`}
+                {available === "no" && ` · Unavailable`}
+              </p>
+            </div>
+
+            {candidates.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-border rounded-lg">
+                <p className="text-muted-foreground text-lg">No candidates found.</p>
+                {hasFilters && (
+                  <Button variant="outline" className="mt-4" asChild>
+                    <Link href="/candidates">Clear filters</Link>
                   </Button>
                 )}
               </div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {candidates.map((c) => (
+                    <CandidateCard key={c.id} candidate={c} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    {page > 1 && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/candidates?${buildParams({
+                            search,
+                            profession,
+                            country,
+                            city,
+                            level,
+                            available,
+                            page: page - 1,
+                          })}`}
+                        >
+                          Previous
+                        </Link>
+                      </Button>
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {totalPages}
+                    </span>
+                    {page < totalPages && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/candidates?${buildParams({
+                            search,
+                            profession,
+                            country,
+                            city,
+                            level,
+                            available,
+                            page: page + 1,
+                          })}`}
+                        >
+                          Next
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </section>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

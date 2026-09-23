@@ -311,8 +311,20 @@ export function CompanyProfile({ slug }: { slug: string }) {
 
   if (!mounted || companyLoading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading company…</div>
+      <div className="min-h-screen">
+        <div className="border-b border-border bg-muted/15 px-4 py-3">
+          <div className="mx-auto max-w-7xl h-4 w-64 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex gap-5">
+            <div className="h-20 w-20 rounded-2xl bg-muted animate-pulse shrink-0" />
+            <div className="flex-1 space-y-3">
+              <div className="h-7 w-1/3 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-1/2 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-2/3 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -320,8 +332,13 @@ export function CompanyProfile({ slug }: { slug: string }) {
   if (companyError && !liveCompany) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-muted-foreground">{companyError}</p>
-        <Link href="/companies" className="text-primary text-sm underline">
+        <Building2 className="h-12 w-12 text-muted-foreground/30" aria-hidden />
+        <p className="font-medium text-foreground">Company not found</p>
+        <p className="text-sm text-muted-foreground max-w-sm">{companyError}</p>
+        <Link
+          href="/companies"
+          className="text-sm font-medium text-primary hover:underline mt-1"
+        >
           Back to Companies directory
         </Link>
       </div>
@@ -475,9 +492,24 @@ export function CompanyProfile({ slug }: { slug: string }) {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-12">
+      {/* Breadcrumb */}
+      <div className="border-b border-border bg-muted/15">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/companies" className="hover:text-primary transition-colors">Companies</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium truncate max-w-[14rem] sm:max-w-xs">
+              {company.name}
+            </span>
+          </nav>
+        </div>
+      </div>
+
       {/* Header banner */}
-      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background pt-24 md:pt-28">
+      <section className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background pt-8 md:pt-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 md:pb-10">
           <div className="flex flex-col md:flex-row gap-5 md:gap-6 items-start">
             {/* Logo */}

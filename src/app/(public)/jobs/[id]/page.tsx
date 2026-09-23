@@ -200,11 +200,36 @@ export default async function JobDetailPage({
   const hasMap = job.office_lat != null && job.office_lng != null;
 
   return (
-    <div className="min-h-screen py-10">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        {/* Back */}
-        <div className="mb-6">
-          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2" asChild>
+    <div className="min-h-screen pb-16">
+      {/* Breadcrumb + compact top bar */}
+      <div className="border-b border-border bg-muted/15">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/jobs" className="hover:text-primary transition-colors">Jobs</Link>
+            {job.category && (
+              <>
+                <span>/</span>
+                <Link
+                  href={`/jobs?category=${encodeURIComponent(job.category)}`}
+                  className="hover:text-primary transition-colors"
+                >
+                  {job.category}
+                </Link>
+              </>
+            )}
+            <span>/</span>
+            <span className="text-foreground font-medium truncate max-w-[12rem] sm:max-w-xs">
+              {job.job_title}
+            </span>
+          </nav>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-4">
+          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 h-8 text-muted-foreground" asChild>
             <Link href="/jobs">
               <ArrowLeft className="h-4 w-4" /> Back to Jobs
             </Link>
@@ -213,7 +238,7 @@ export default async function JobDetailPage({
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-5">
             {/* Header card */}
             <Card>
               <CardContent className="pt-6 pb-5">
@@ -294,7 +319,7 @@ export default async function JobDetailPage({
           </div>
 
           {/* Sidebar — order: Quick Details → Company Contact → Apply → Posted by */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
             {/* 1. Quick details */}
             <Card>
               <CardContent className="pt-5 pb-5 space-y-3">
@@ -500,10 +525,10 @@ export default async function JobDetailPage({
               </CardContent>
             </Card>
 
-            {/* 3. Apply for this job */}
-            <Card>
+            {/* 3. Apply for this job — primary CTA */}
+            <Card className="border-primary/30 shadow-sm ring-1 ring-primary/10">
               <CardContent className="pt-5 pb-5 space-y-3">
-                <h3 className="text-sm font-semibold">Apply for this job</h3>
+                <h3 className="text-sm font-semibold text-primary">Apply for this job</h3>
                 {job.company_email || job.company_phone ? (
                   <div className="space-y-2">
                     {job.company_email && (

@@ -825,8 +825,33 @@ export function CompaniesDirectory() {
 
   if (!mounted) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">
-        Loading…
+      <div className="min-h-screen">
+        <div className="border-b border-border bg-muted/20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+            <div className="h-8 w-48 bg-muted animate-pulse rounded-md" />
+            <div className="h-4 w-72 bg-muted animate-pulse rounded-md mt-3" />
+          </div>
+        </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-border bg-card p-4 space-y-3"
+              >
+                <div className="flex gap-3">
+                  <div className="h-12 w-12 rounded-lg bg-muted animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-2/3 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-1/2 bg-muted animate-pulse rounded" />
+                  </div>
+                </div>
+                <div className="h-3 w-full bg-muted animate-pulse rounded" />
+                <div className="h-3 w-4/5 bg-muted animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -834,19 +859,19 @@ export function CompaniesDirectory() {
   return (
     <div className="min-h-screen">
       {/* ── Hero (same pattern as Jobs / Marketplace) ───────── */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
+      <section className="border-b border-border bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Building2 className="h-7 w-7 text-primary shrink-0" />
-            <h1 className="text-3xl sm:text-4xl font-bold">
-              <span className="gradient-text">Company Directory</span>
-            </h1>
+          <div className="py-5 sm:py-6">
+            <div className="flex items-center gap-2.5 mb-1">
+              <Building2 className="h-6 w-6 text-primary shrink-0" />
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Companies
+              </h1>
+            </div>
+            <p className="text-sm text-muted-foreground max-w-xl mb-5">
+              Discover verified employers, contractors and service providers worldwide.
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-xl mb-6">
-            Discover verified employers, contractors, service providers and
-            organizations worldwide. Search by industry, services, location and
-            more.
-          </p>
 
           {/* Horizontal filter bar — Marketplace style */}
           <div className="space-y-3">
@@ -1034,7 +1059,7 @@ export function CompaniesDirectory() {
       </section>
 
       {/* ── Results ──────────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         {/* Featured (only when no active filters) */}
         {!hasFilters && featured.length > 0 && (
           <div className="mb-10">
@@ -1128,18 +1153,21 @@ export function CompaniesDirectory() {
         </div>
 
         {pageItems.length === 0 ? (
-          <div className="text-center py-20">
-            <Building2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-lg">No companies found.</p>
+          <div className="text-center py-16 border border-dashed border-border rounded-lg px-4">
+            <Building2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" aria-hidden />
+            <p className="text-foreground font-medium">No companies found</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+              Try different keywords or clear filters to see more organizations.
+            </p>
             {hasFilters && (
               <Button variant="outline" className="mt-4" onClick={clearAll}>
-                Clear filters
+                Clear all filters
               </Button>
             )}
           </div>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {pageItems.map((c) => (
                 <CompanyCard key={c.id} company={c} />
               ))}
