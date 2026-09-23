@@ -1,7 +1,3 @@
-/**
- * Free AI CV fill — rule-based parser that turns natural language into CV sections.
- * Works without an API key. Optional OpenAI polish via /api/cv/ai.
- */
 import {
   DEFAULT_CV,
   EMPTY_EDUCATION,
@@ -12,255 +8,340 @@ import {
   type CvTemplateId,
 } from "./types";
 
-const TEMPLATE_HINTS: [RegExp, CvTemplateId][] = [
-  [/\b(classic|traditional|ats)\b/i, "classic"],
-  [/\b(modern|sidebar)\b/i, "modern"],
-  [/\b(professional|corporate|gulf)\b/i, "professional"],
-  [/\b(minimal|simple|clean)\b/i, "minimal"],
-  [/\b(executive|senior|manager)\b/i, "executive"],
-  [/\b(tech|engineer|developer|it)\b/i, "tech"],
+const TEMPLATES: CvTemplateId[] = [
+  "classic",
+  "modern",
+  "professional",
+  "minimal",
+  "executive",
+  "tech",
+  "ats",
+  "engineering",
+  "hse",
+  "graduate",
 ];
 
-function uid(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+function pickTemplate(text: string): CvTemplateId | null {
+  const t = text.toLowerCase();
+  if (/\bats\b/.test(t)) return "ats";
+  if (/\bhse\b|safety|nebosh\b/.test(t)) return "hse";
+  if (/\binstrument|engineer|calibration|plc\b/.test(t)) return "engineering";
+  if (/\bsoftware|developer|react|typescript|frontend|backend\b/.test(t)) return "tech";
+  if (/\bexecutive|director|vp\b|chief\b/.test(t)) return "executive";
+  if (/\bgraduate|entry.?level|fresh\b/.test(t)) return "graduate";
+  if (/\bminimal\b/.test(t)) return "minimal";
+  if (/\bmodern\b/.test(t)) return "modern";
+  if (/\bclassic\b/.test(t)) return "classic";
+  if (/\bprofessional\b/.test(t)) return "professional";
+  return null;
 }
 
-function lines(block: string): string[] {
-  return block
-    .split(/\n|;|\u2022|\|/)
-    .map((s) => s.replace(/^[-*•\d.)\s]+/, "").trim())
-    .filter(Boolean);
-}
-
-/**
- * Parse a free-text CV description / bullet paste into structured CvData.
- * Merges onto `base` when provided (keeps existing fields user already filled).
- */
+/** Rule-based natural language → CV fields. Never invents employers/degrees. */
 export function parseCvCommand(text: string, base?: Partial<CvData>): CvData {
-  const cv: CvData = { ...DEFAULT_CV(), ...base, experience: base?.experience?.length ? [...base.experience] : [EMPTY_EXPERIENCE()], education: base?.education?.length ? [...base.education] : [EMPTY_EDUCATION()] };
-  const raw = text.trim();
-  if (!raw) return cv;
-  const t = raw;
+  const cv: CvData = {
+    ...DEFAULT_CV(),
+    ...base,
+    experience:
+      base?.experience?.length ? [...base.experience] : [EMPTY_EXPERIENCE()],
+    education:
+      base?.education?.length ? [...base.education] : [EMPTY_EDUCATION()],
+    projects: base?.projects?.length ? [...base.projects] : [],
+    sectionOrder: base?.sectionOrder?.length
+      ? [...base.sectionOrder]
+      : DEFAULT_CV().sectionOrder,
+  };
 
-  // Template selection
-  for (const [re, id] of TEMPLATE_HINTS) {
-    if (re.test(t)) {
-      cv.template = id;
-      break;
-    }
-  }
+  const lower = text.toLowerCase();
+  const tpl = pickTemplate(text);
+  if (tpl) cv.template = tpl;
 
-  // Name
+  // Name patterns
   const nameM =
-    t.match(/(?:my name is|i am|i'm|name[:\s]+)\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,3})/) ||
-    t.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})\s*[-–|,]/m);
+    text.match(
+      /(?:my name is|i am|i'm)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z.-]+){0,3})/i
+    ) ||
+    text.match(
+      /^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z.-]+){1,2})\s*[,.]/
+    );
   if (nameM) cv.fullName = nameM[1].trim();
 
-  // Title / profession
-  const titleM =
-    t.match(
-      /(?:title|profession|role|position|job)[:\s]+([^\n.|]{3,60})/i
-    ) ||
-    t.match(
-      /\b((?:Senior |Junior |Lead )?(?:Instrument|Mechanical|Electrical|Civil|Software|HSE|Safety|Project)\s+(?:Technician|Engineer|Officer|Manager)|(?:Accountant|Nurse|Driver|Welder|Developer))\b/i
-    );
-  if (titleM) cv.title = titleM[1].trim();
-
-  // Contact
-  const emailM = t.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  if (emailM) cv.email = emailM[0];
-  const phoneM = t.match(/(?:\+?\d{1,3}[\s-]?)?(?:\(?\d{2,4}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,4}/);
-  if (phoneM && phoneM[0].replace(/\D/g, "").length >= 8) cv.phone = phoneM[0].trim();
-
-  // Location
-  const locM = t.match(
-    /(?:based in|located in|live in|from|location[:\s]+)\s*([A-Za-z\s,]{3,40})/i
+  // Title / role
+  const titleM = text.match(
+    /(?:as an?|role[:\s]+|title[:\s]+|for an?)\s+([A-Za-z][A-Za-z\s/&-]{2,40}?)(?:\s+in\s+|\s+applying|\s+for\s+jobs|[.,])/i
   );
-  if (locM) cv.location = locM[1].replace(/\.$/, "").trim();
+  if (titleM) cv.title = titleM[1].trim();
   else {
-    const cities = ["Riyadh", "Jeddah", "Dammam", "Khobar", "Jubail", "Dubai", "Abu Dhabi", "Doha", "Manama", "Muscat"];
-    for (const c of cities) {
-      if (new RegExp(`\\b${c}\\b`, "i").test(t)) {
-        cv.location = c;
+    const roles = [
+      "Instrument Technician",
+      "HSE Engineer",
+      "Software Engineer",
+      "Project Manager",
+      "Electrician",
+      "Mechanical Engineer",
+      "Safety Officer",
+    ];
+    for (const r of roles) {
+      if (lower.includes(r.toLowerCase()) && !cv.title) {
+        cv.title = r;
         break;
       }
     }
   }
 
-  // Summary
-  const sumM = t.match(
-    /(?:summary|about me|profile|objective)[:\s]+([\s\S]{20,400}?)(?=\n\s*(?:experience|education|skills|work|certification)|$)/i
+  // Location
+  const locM = text.match(
+    /\bin\s+([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)*)(?:\s*[,.]|\s+skills|\s+worked|$)/
   );
-  if (sumM) cv.summary = sumM[1].replace(/\s+/g, " ").trim();
-  else if (cv.title && !cv.summary) {
-    cv.summary = `Results-oriented ${cv.title} with hands-on experience delivering quality work in demanding environments. Seeking opportunities to contribute technical expertise and grow with a leading organization.`;
-  }
+  if (locM && locM[1].length < 40) cv.location = locM[1].trim();
 
   // Skills
-  const skillsM = t.match(
-    /(?:skills?|expertise|competencies)[:\s]+([\s\S]{5,300}?)(?=\n\s*(?:experience|education|languages|certification|work)|$)/i
+  const skillsM = text.match(
+    /skills?[:\s]+([^.]+?)(?:\.|worked|experience|certified|$)/i
   );
   if (skillsM) {
-    cv.skills = lines(skillsM[1]).join(", ");
-  } else if (/\b(plc|scada|autocad|solidworks|javascript|python|react|hse|osha|sap)\b/i.test(t)) {
-    const found = t.match(
-      /\b(PLC|SCADA|AutoCAD|SolidWorks|JavaScript|TypeScript|Python|React|Node\.?js|HSE|OSHA|NEBOSH|SAP|Excel|PMP|AWS|Docker|SQL|MATLAB|LabVIEW|Instrumentation|Calibration|Loop Checking)\b/gi
-    );
-    if (found) cv.skills = [...new Set(found)].join(", ");
-  }
-
-  // Languages
-  const langM = t.match(/(?:languages?)[:\s]+([^\n]{5,120})/i);
-  if (langM) cv.languages = langM[1].trim();
-  else if (/\b(english|arabic|urdu|hindi|tagalog)\b/i.test(t)) {
-    const langs = t.match(/\b(English|Arabic|Urdu|Hindi|Tagalog|French|Malayalam|Bengali)\b/gi);
-    if (langs) cv.languages = [...new Set(langs)].join(", ");
+    cv.skills = skillsM[1]
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join(", ");
   }
 
   // Certifications
-  const certM = t.match(
-    /(?:certifications?|certificates?|licenses?)[:\s]+([\s\S]{5,200}?)(?=\n\s*(?:experience|education|skills)|$)/i
-  );
-  if (certM) cv.certifications = lines(certM[1]).join(" · ");
-  else {
-    const certs = t.match(
-      /\b(NEBOSH|IOSH|OSHA|PMP|CCNA|AWS\s*\w+|CompTIA\s*\w+|First Aid|BOSIET|HUET|OPITO)\b/gi
-    );
-    if (certs) cv.certifications = [...new Set(certs)].join(" · ");
+  const certBits: string[] = [];
+  if (/\bnebosh\b/i.test(text)) certBits.push("NEBOSH");
+  if (/\biosh\b/i.test(text)) certBits.push("IOSH");
+  if (/\bpmp\b/i.test(text)) certBits.push("PMP");
+  if (/\bcompTIA\b/i.test(text)) certBits.push("CompTIA");
+  if (certBits.length) {
+    cv.certifications = [cv.certifications, ...certBits]
+      .filter(Boolean)
+      .join(", ");
   }
 
-  // Experience blocks: "Worked at X as Y from A to B"
-  const expBlocks = [
-    ...t.matchAll(
-      /(?:worked (?:at|for)|experience at|at)\s+([A-Za-z0-9 &.,'-]{2,50})\s+(?:as|—|-)?\s*([A-Za-z0-9 /&-]{2,50})?\s*(?:from|since)?\s*(\d{4}|\w+\s+\d{4})?\s*(?:to|-|–)?\s*(present|current|\d{4}|\w+\s+\d{4})?/gi
-    ),
-  ];
-  if (expBlocks.length) {
-    const experiences: CvExperience[] = expBlocks.slice(0, 5).map((m) => {
-      const company = (m[1] || "").trim();
-      const title = (m[2] || cv.title || "").trim();
-      const start = (m[3] || "").trim();
-      const endRaw = (m[4] || "").trim();
-      const current = /present|current/i.test(endRaw);
-      return {
-        id: uid("exp"),
-        title,
-        company,
-        location: cv.location || "",
-        start,
-        end: current ? "" : endRaw,
-        current,
-        bullets: "",
-      };
-    });
-    if (experiences.length) cv.experience = experiences;
+  // Experience: "Worked at X as Y from A to B/present"
+  const expM = text.match(
+    /worked\s+at\s+([^,.]+?)\s+as\s+([^,.]+?)(?:\s+from\s+(\d{4})\s*(?:to|-|–)\s*(\d{4}|present))?/i
+  );
+  if (expM) {
+    const exp: CvExperience = {
+      ...EMPTY_EXPERIENCE(),
+      company: expM[1].trim(),
+      title: expM[2].trim(),
+      start: expM[3] || "",
+      end: expM[4]?.toLowerCase() === "present" ? "" : expM[4] || "",
+      current: /present/i.test(expM[4] || ""),
+    };
+    cv.experience = [exp];
+    if (!cv.title) cv.title = exp.title;
   }
 
-  // Simple "Experience:" section lines
-  const expSection = t.match(
-    /(?:experience|work history|employment)[:\s]*\n([\s\S]{10,800}?)(?=\n\s*(?:education|skills|certification|languages)|$)/i
+  // Email / phone if present
+  const emailM = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+  if (emailM) cv.email = emailM[0];
+  const phoneM = text.match(
+    /(?:\+\d{1,3}[\s-]?)?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/
   );
-  if (expSection && cv.experience.length <= 1 && !cv.experience[0]?.company) {
-    const chunks = expSection[1].split(/\n(?=[A-Z])/).filter((c) => c.trim().length > 8);
-    if (chunks.length) {
-      cv.experience = chunks.slice(0, 4).map((chunk) => {
-        const first = chunk.split("\n")[0] || "";
-        const parts = first.split(/[-–|@]/).map((s) => s.trim());
-        return {
-          id: uid("exp"),
-          title: parts[0] || cv.title || "",
-          company: parts[1] || "",
-          location: "",
-          start: "",
-          end: "",
-          current: /present|current/i.test(chunk),
-          bullets: lines(chunk).slice(1).join("\n"),
-        };
-      });
+  if (phoneM && phoneM[0].replace(/\D/g, "").length >= 8) {
+    cv.phone = phoneM[0].trim();
+  }
+
+  // Professional summary if asked to create/improve
+  if (
+    /create|professional|summary|cv for/i.test(text) &&
+    (cv.fullName || cv.title)
+  ) {
+    const who = cv.fullName || "Professional";
+    const role = cv.title || "specialist";
+    const where = cv.location ? ` based in ${cv.location}` : "";
+    const sk = cv.skills ? ` Skilled in ${cv.skills}.` : "";
+    if (!cv.summary || /make my cv|create/i.test(text)) {
+      cv.summary = `${who} is an experienced ${role}${where}.${sk} Seeking opportunities to contribute technical expertise and deliver reliable results.`.trim();
     }
   }
 
-  // Education
-  const eduM = t.match(
-    /(?:educated at|graduated from|studied at|degree from|education[:\s]+)\s*([^\n.]{5,80})/i
-  );
-  if (eduM) {
-    cv.education = [
-      {
-        id: uid("edu"),
-        school: eduM[1].trim(),
-        degree: /\b(bachelor|master|b\.?sc|m\.?sc|diploma|phd|b\.?eng)\b/i.test(t)
-          ? (t.match(/\b(Bachelor(?:'s)?|Master(?:'s)?|B\.?Sc|M\.?Sc|Diploma|PhD|B\.?Eng)[^.\n]{0,40}/i)?.[0] || "")
-          : "",
-        field: "",
-        start: "",
-        end: "",
-        details: "",
-      },
-    ];
+  // Improve summary only (keep facts)
+  if (/make.*(professional|stronger)|rewrite.*summary|improve.*summary/i.test(text) && cv.summary) {
+    cv.summary = cv.summary
+      .replace(/\bi am\b/gi, "Experienced professional")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!/seeking|looking/i.test(cv.summary)) {
+      cv.summary += " Focused on delivering measurable results in professional environments.";
+    }
   }
 
-  // If still empty name but profile-like first line
-  if (!cv.fullName) {
-    const firstLine = t.split("\n")[0]?.trim() || "";
-    if (/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$/.test(firstLine)) {
-      cv.fullName = firstLine;
-    }
+  // ATS mode
+  if (/\bats\b/i.test(text)) {
+    cv.template = "ats";
   }
 
   return cv;
 }
 
-/** Sample demo CV for "Use example" */
+/** Import plain-text resume into structured CV (best-effort, no invented facts). */
+export function importCvFromText(text: string, base?: Partial<CvData>): CvData {
+  const cv = parseCvCommand(text, base);
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines[0] && lines[0].length < 60 && !cv.fullName) {
+    cv.fullName = lines[0];
+  }
+
+  // Collect skills-like lines
+  const skillIdx = lines.findIndex((l) =>
+    /^(skills|technical skills|competencies)\b/i.test(l)
+  );
+  if (skillIdx >= 0 && !cv.skills) {
+    const chunk = lines.slice(skillIdx + 1, skillIdx + 6).join(" ");
+    cv.skills = chunk
+      .split(/[,•|;]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 1 && s.length < 40)
+      .slice(0, 20)
+      .join(", ");
+  }
+
+  // Summary block
+  const sumIdx = lines.findIndex((l) =>
+    /^(summary|profile|objective|professional summary)\b/i.test(l)
+  );
+  if (sumIdx >= 0 && (!cv.summary || cv.summary.length < 40)) {
+    cv.summary = lines.slice(sumIdx + 1, sumIdx + 5).join(" ").slice(0, 600);
+  }
+
+  return cv;
+}
+
+export type AnalysisIssue = {
+  severity: "info" | "warn" | "critical";
+  area: string;
+  message: string;
+  action: string;
+};
+
+export function analyzeCv(data: CvData): AnalysisIssue[] {
+  const issues: AnalysisIssue[] = [];
+
+  if (!data.fullName.trim()) {
+    issues.push({
+      severity: "critical",
+      area: "Personal",
+      message: "Full name is missing.",
+      action: "Add your full name at the top of the CV.",
+    });
+  }
+  if (!data.title.trim()) {
+    issues.push({
+      severity: "warn",
+      area: "Personal",
+      message: "Professional title is empty.",
+      action: "Add a clear target role (e.g. Instrument Technician).",
+    });
+  }
+  if (!data.email.trim() && !data.phone.trim()) {
+    issues.push({
+      severity: "critical",
+      area: "Contact",
+      message: "No contact method provided.",
+      action: "Add an email and/or phone number.",
+    });
+  }
+  if (data.summary.trim().length < 40) {
+    issues.push({
+      severity: "warn",
+      area: "Summary",
+      message: "Professional summary is short or missing.",
+      action: "Write 2–4 sentences covering role, strengths, and focus.",
+    });
+  }
+  const realExp = data.experience.filter(
+    (e) => e.title.trim() || e.company.trim()
+  );
+  if (realExp.length === 0) {
+    issues.push({
+      severity: "critical",
+      area: "Experience",
+      message: "No work experience entries.",
+      action: "Add at least one role with company and responsibilities.",
+    });
+  } else {
+    realExp.forEach((e, i) => {
+      if (!e.bullets.trim()) {
+        issues.push({
+          severity: "warn",
+          area: "Experience",
+          message: `Role ${i + 1} (${e.title || "Untitled"}) has no bullet points.`,
+          action: "Add 2–5 achievement-focused bullets.",
+        });
+      }
+    });
+  }
+  if (!data.skills.trim()) {
+    issues.push({
+      severity: "warn",
+      area: "Skills",
+      message: "Skills section is empty.",
+      action: "List relevant technical and soft skills.",
+    });
+  }
+  if (!data.education.some((e) => e.school.trim() || e.degree.trim())) {
+    issues.push({
+      severity: "info",
+      area: "Education",
+      message: "Education section is empty.",
+      action: "Add degrees or relevant training if applicable.",
+    });
+  }
+  if (data.template !== "ats" && data.template !== "classic") {
+    issues.push({
+      severity: "info",
+      area: "ATS",
+      message: "Current template is design-oriented.",
+      action: "Use ATS Professional or Classic when applying through automated systems.",
+    });
+  }
+  return issues;
+}
+
 export function sampleCv(): CvData {
   return {
-    fullName: "Ahmed Al-Rashid",
+    ...DEFAULT_CV(),
+    fullName: "Sara Khan",
     title: "Instrument Technician",
-    email: "ahmed.rashid@email.com",
-    phone: "+966 50 123 4567",
-    location: "Dammam, Saudi Arabia",
-    website: "",
+    email: "sara.khan@example.com",
+    phone: "+966 50 000 0000",
+    location: "Al Khobar, Saudi Arabia",
     summary:
-      "Certified Instrument Technician with 7+ years in oil & gas, specializing in calibration, loop checking, and maintenance of field instrumentation. Strong HSE record and experience with DCS/PLC systems on major industrial projects.",
+      "Instrument Technician with hands-on experience in calibration, loop checking, and field instrumentation in oil & gas environments. Skilled in HART communicators, PLC basics, and permit-to-work systems.",
     skills:
-      "Calibration, Loop Checking, PLC, SCADA, DCS, HART Communicators, Pressure/Flow/Level Transmitters, Preventive Maintenance, HSE Compliance",
-    languages: "Arabic (Native), English (Fluent)",
-    certifications: "NEBOSH IGC · OPITO BOSIET · Instrumentation Diploma",
+      "Calibration, HART, PLC basics, Loop checking, Permit to Work, Troubleshooting",
+    languages: "English, Arabic, Urdu",
+    certifications: "NEBOSH IGC, CompEx awareness",
     experience: [
       {
-        id: "e1",
+        ...EMPTY_EXPERIENCE(),
         title: "Instrument Technician",
         company: "Gulf Petro Services",
-        location: "Jubail, KSA",
-        start: "2020",
-        end: "",
+        location: "Jubail, Saudi Arabia",
+        start: "2019",
         current: true,
         bullets:
-          "Perform calibration and maintenance of field instruments across process units\nExecute loop checks during shutdowns and commissioning\nSupport DCS/PLC troubleshooting with operations team",
-      },
-      {
-        id: "e2",
-        title: "Junior Instrument Technician",
-        company: "Eastern Maintenance Co.",
-        location: "Dammam, KSA",
-        start: "2017",
-        end: "2020",
-        current: false,
-        bullets:
-          "Assisted senior technicians with transmitter installation and wiring\nMaintained calibration records and ISO documentation",
+          "Performed preventive and corrective calibration on field instruments\nSupported shutdown activities and loop checks\nMaintained accurate calibration records to site standards",
       },
     ],
     education: [
       {
-        id: "ed1",
-        school: "Technical College of Dammam",
+        ...EMPTY_EDUCATION(),
+        school: "Technical Institute",
         degree: "Diploma",
-        field: "Industrial Instrumentation",
-        start: "2014",
-        end: "2017",
-        details: "",
+        field: "Instrumentation & Control",
+        end: "2018",
       },
     ],
-    template: "professional",
+    template: "engineering",
   };
 }
+

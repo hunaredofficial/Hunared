@@ -4,7 +4,11 @@ export type CvTemplateId =
   | "professional"
   | "minimal"
   | "executive"
-  | "tech";
+  | "tech"
+  | "ats"
+  | "engineering"
+  | "hse"
+  | "graduate";
 
 export type CvExperience = {
   id: string;
@@ -27,6 +31,26 @@ export type CvEducation = {
   details: string;
 };
 
+export type CvProject = {
+  id: string;
+  name: string;
+  role: string;
+  start: string;
+  end: string;
+  description: string;
+};
+
+export type CvSectionKey =
+  | "summary"
+  | "experience"
+  | "education"
+  | "skills"
+  | "certifications"
+  | "languages"
+  | "projects"
+  | "achievements"
+  | "custom";
+
 export type CvData = {
   fullName: string;
   title: string;
@@ -38,9 +62,29 @@ export type CvData = {
   skills: string;
   languages: string;
   certifications: string;
+  achievements: string;
+  customSectionTitle: string;
+  customSectionBody: string;
   experience: CvExperience[];
   education: CvEducation[];
+  projects: CvProject[];
   template: CvTemplateId;
+  /** section order for preview */
+  sectionOrder: CvSectionKey[];
+};
+
+export type CvDocumentMeta = {
+  id: string;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+  template: CvTemplateId;
+  targetRole?: string;
+  version: number;
+};
+
+export type CvDocument = CvDocumentMeta & {
+  data: CvData;
 };
 
 export const EMPTY_EXPERIENCE = (): CvExperience => ({
@@ -64,6 +108,27 @@ export const EMPTY_EDUCATION = (): CvEducation => ({
   details: "",
 });
 
+export const EMPTY_PROJECT = (): CvProject => ({
+  id: `prj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  name: "",
+  role: "",
+  start: "",
+  end: "",
+  description: "",
+});
+
+export const DEFAULT_SECTION_ORDER: CvSectionKey[] = [
+  "summary",
+  "experience",
+  "education",
+  "skills",
+  "certifications",
+  "languages",
+  "projects",
+  "achievements",
+  "custom",
+];
+
 export const DEFAULT_CV = (): CvData => ({
   fullName: "",
   title: "",
@@ -75,9 +140,14 @@ export const DEFAULT_CV = (): CvData => ({
   skills: "",
   languages: "",
   certifications: "",
+  achievements: "",
+  customSectionTitle: "",
+  customSectionBody: "",
   experience: [EMPTY_EXPERIENCE()],
   education: [EMPTY_EDUCATION()],
+  projects: [],
   template: "professional",
+  sectionOrder: [...DEFAULT_SECTION_ORDER],
 });
 
 export type CvTemplateMeta = {
@@ -85,4 +155,17 @@ export type CvTemplateMeta = {
   name: string;
   desc: string;
   accent: string;
+  category: string;
+};
+
+export type ProfileSeed = {
+  fullName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  profession?: string | null;
+  country?: string | null;
+  city?: string | null;
+  skills?: string | null;
+  languages?: string | null;
 };
