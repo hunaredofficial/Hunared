@@ -6,13 +6,12 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ═══════════════════════════════════════════════════════════════
-   HUNARED DESIGN SYSTEM v3 — Enhanced Global Platform Colors
-   Primary: Deep navy-blue with richer saturation
-   Secondary: Soft indigo / slate
-   Accent: Fresh teal (growth / opportunity)
-   Premium: Refined gold only for verified / featured
-   Surfaces: Cool white + deep navy dark mode
-   Better contrast, smoother gradients, polished elevation
+   HUNARED DESIGN SYSTEM v4 — Professional Dark Blue Platform
+   Primary: Deep professional navy / royal blue
+   Dark mode: Rich midnight navy surfaces (marketplace-grade)
+   Accent: Controlled teal for growth signals
+   Premium: Gold for verified / featured only
+   Dense, high-contrast, utility-focused UI
    ═══════════════════════════════════════════════════════════════ */
 
 @theme inline {
@@ -86,7 +85,7 @@
   --popover-foreground: oklch(0.18 0.03 255);
 
   /* Primary = Rich deep professional navy-blue (stronger) */
-  --primary: oklch(0.38 0.165 255);
+  --primary: oklch(0.36 0.17 255);
   --primary-foreground: oklch(0.99 0.005 250);
 
   /* Secondary = Soft indigo surface */
@@ -130,7 +129,7 @@
   /* Brand continuum — richer blue gradient */
   --brand-from: #1e3a8a;
   --brand-via: #1d4ed8;
-  --brand-to: #3b82f6;
+  --brand-to: #2563eb;
   --brand-glow: rgba(29, 78, 216, 0.18);
 
   /* Premium gold — badges / verified only */
@@ -140,56 +139,58 @@
 
 /* ─── Dark Mode — Richer deep navy-blue (enhanced) ───────────── */
 .dark {
-  --background: oklch(0.125 0.028 255);
-  --foreground: oklch(0.975 0.01 250);
-  --card: oklch(0.168 0.032 255);
-  --card-foreground: oklch(0.975 0.01 250);
-  --popover: oklch(0.168 0.032 255);
-  --popover-foreground: oklch(0.975 0.01 250);
+  /* Midnight navy surfaces — deeper, more professional */
+  --background: oklch(0.11 0.035 255);
+  --foreground: oklch(0.97 0.012 250);
+  --card: oklch(0.145 0.038 255);
+  --card-foreground: oklch(0.97 0.012 250);
+  --popover: oklch(0.155 0.04 255);
+  --popover-foreground: oklch(0.97 0.012 250);
 
-  --primary: oklch(0.72 0.165 255);
-  --primary-foreground: oklch(0.12 0.035 255);
+  /* Bright professional blue on dark */
+  --primary: oklch(0.68 0.17 255);
+  --primary-foreground: oklch(0.12 0.04 255);
 
-  --secondary: oklch(0.22 0.035 255);
-  --secondary-foreground: oklch(0.975 0.01 250);
-  --muted: oklch(0.20 0.028 255);
-  --muted-foreground: oklch(0.72 0.025 250);
-  --accent: oklch(0.26 0.05 175);
-  --accent-foreground: oklch(0.94 0.02 175);
+  --secondary: oklch(0.19 0.04 255);
+  --secondary-foreground: oklch(0.96 0.012 250);
+  --muted: oklch(0.175 0.035 255);
+  --muted-foreground: oklch(0.70 0.03 250);
+  --accent: oklch(0.24 0.055 200);
+  --accent-foreground: oklch(0.94 0.02 200);
 
-  --destructive: oklch(0.66 0.20 22);
-  --success: oklch(0.66 0.14 155);
+  --destructive: oklch(0.64 0.20 22);
+  --success: oklch(0.64 0.14 155);
   --success-foreground: oklch(0.14 0.02 155);
-  --warning: oklch(0.79 0.14 80);
+  --warning: oklch(0.78 0.14 80);
   --warning-foreground: oklch(0.16 0.03 80);
-  --info: oklch(0.70 0.14 240);
-  --info-foreground: oklch(0.14 0.02 240);
+  --info: oklch(0.68 0.15 245);
+  --info-foreground: oklch(0.14 0.02 245);
 
-  --border: oklch(0.55 0.04 255 / 22%);
-  --input: oklch(0.55 0.04 255 / 24%);
-  --ring: oklch(0.72 0.165 255);
+  --border: oklch(0.50 0.05 255 / 28%);
+  --input: oklch(0.50 0.05 255 / 30%);
+  --ring: oklch(0.68 0.17 255);
 
-  --chart-1: oklch(0.72 0.165 255);
-  --chart-2: oklch(0.66 0.13 175);
-  --chart-3: oklch(0.66 0.13 260);
+  --chart-1: oklch(0.68 0.17 255);
+  --chart-2: oklch(0.64 0.13 175);
+  --chart-3: oklch(0.64 0.13 260);
   --chart-4: oklch(0.73 0.13 40);
   --chart-5: oklch(0.62 0.13 300);
 
-  --sidebar: oklch(0.14 0.028 255);
-  --sidebar-foreground: oklch(0.975 0.01 250);
-  --sidebar-primary: oklch(0.72 0.165 255);
-  --sidebar-primary-foreground: oklch(0.12 0.035 255);
-  --sidebar-accent: oklch(0.24 0.04 255);
-  --sidebar-accent-foreground: oklch(0.975 0.01 250);
-  --sidebar-border: oklch(0.55 0.04 255 / 20%);
-  --sidebar-ring: oklch(0.72 0.165 255);
+  --sidebar: oklch(0.125 0.035 255);
+  --sidebar-foreground: oklch(0.97 0.012 250);
+  --sidebar-primary: oklch(0.68 0.17 255);
+  --sidebar-primary-foreground: oklch(0.12 0.04 255);
+  --sidebar-accent: oklch(0.20 0.045 255);
+  --sidebar-accent-foreground: oklch(0.97 0.012 250);
+  --sidebar-border: oklch(0.50 0.05 255 / 24%);
+  --sidebar-ring: oklch(0.68 0.17 255);
 
-  --brand-from: #2563eb;
-  --brand-via: #3b82f6;
-  --brand-to: #60a5fa;
-  --brand-glow: rgba(59, 130, 246, 0.28);
+  --brand-from: #1e3a8a;
+  --brand-via: #2563eb;
+  --brand-to: #3b82f6;
+  --brand-glow: rgba(37, 99, 235, 0.32);
 
-  --premium: oklch(0.81 0.13 85);
+  --premium: oklch(0.80 0.13 85);
   --premium-foreground: oklch(0.16 0.04 85);
 }
 

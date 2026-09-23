@@ -362,12 +362,12 @@ export function Header() {
               <input
                 type="search"
                 name="q"
-                placeholder="Search jobs, talent, marketplace..."
+                placeholder="Search…"
                 className={cn(
                   "h-8 rounded-md border border-border/80 bg-background/80 pl-8 pr-3 text-[13px]",
                   "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary/40",
                   "transition-all duration-300",
-                  scrolled ? "w-40 lg:w-52" : "w-44 lg:w-56"
+                  scrolled ? "w-32 lg:w-40" : "w-36 lg:w-44"
                 )}
                 aria-label="Search Hunared"
               />

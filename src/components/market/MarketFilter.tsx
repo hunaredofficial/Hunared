@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Search,
   SlidersHorizontal,
@@ -63,21 +62,21 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-border last:border-b-0">
+    <div className="border-b border-border/60 last:border-0">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:text-primary transition-colors"
+        className="flex w-full items-center justify-between py-2.5 text-left text-sm font-medium hover:text-primary transition-colors"
       >
         {title}
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
+            "h-3.5 w-3.5 text-muted-foreground transition-transform",
             open && "rotate-180"
           )}
         />
       </button>
-      {open && <div className="pb-3 space-y-1.5">{children}</div>}
+      {open && <div className="pb-3 space-y-0.5">{children}</div>}
     </div>
   );
 }
@@ -96,7 +95,7 @@ function RadioRow({
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm text-left transition-colors",
+        "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-left transition-colors",
         checked
           ? "bg-primary/10 text-primary font-medium"
           : "hover:bg-muted text-foreground"
@@ -126,6 +125,7 @@ export function MarketFilter({
   defaultMaxPrice = "",
   defaultPosted = "",
   defaultStatus = "",
+  variant = "bar",
 }: {
   defaultSearch?: string;
   defaultCategory?: string;
@@ -136,8 +136,9 @@ export function MarketFilter({
   defaultMinPrice?: string;
   defaultMaxPrice?: string;
   defaultPosted?: string;
-  /** Lost & Found: "lost" | "found" */
   defaultStatus?: string;
+  /** sidebar = all filters in left panel (no right sheet). bar = compact top + one sheet on mobile */
+  variant?: "bar" | "sidebar";
 }) {
   const router = useRouter();
   const geo = useGeo();
@@ -146,7 +147,6 @@ export function MarketFilter({
   const [category, setCategory] = useState(defaultCategory);
   const [country, setCountry] = useState(defaultCountry);
   const [city, setCity] = useState(defaultCity);
-
   const [sort, setSort] = useState(defaultSort);
   const [minPrice, setMinPrice] = useState(defaultMinPrice);
   const [maxPrice, setMaxPrice] = useState(defaultMaxPrice);
@@ -156,6 +156,8 @@ export function MarketFilter({
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    category: true,
+    location: true,
     sort: true,
     price: true,
     date: false,
@@ -170,23 +172,12 @@ export function MarketFilter({
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const availableSubs = category ? SUBCATEGORIES[category] ?? [] : [];
-
-  // Category-aware section visibility
-  // Condition = New/Used/etc. (separate from product Type subcategories)
   const showCondition = category === "for_sale";
   const showRental = category === "for_rent" || category === "accommodation";
   const showService = category === "services";
   const showStatus = category === "lost_found";
-  // Type (product subcategories) for any category that has them, except rental/service special UIs
-  const showType =
-    availableSubs.length > 0 && !showRental && !showService;
-
-  // Condition options live only in the Condition filter (not in subcategory lists)
-  const conditionOptions = showCondition
-    ? [...LISTING_CONDITION_OPTIONS]
-    : [];
-
-  // Rental Period filter: Hourly–Yearly only (type items stay in Subcategory)
+  const showType = availableSubs.length > 0 && !showRental && !showService;
+  const conditionOptions = showCondition ? [...LISTING_CONDITION_OPTIONS] : [];
   const rentalOptions =
     category === "for_rent"
       ? [...RENTAL_PERIOD_OPTIONS]
@@ -219,621 +210,496 @@ export function MarketFilter({
     if (vals.maxPrice.trim()) params.set("maxPrice", vals.maxPrice.trim());
     if (vals.posted) params.set("posted", vals.posted);
     if (vals.status) params.set("status", vals.status);
-    return params;
+    return params.toString();
   }
 
   function applyQuick(overrides: Record<string, string> = {}) {
-    router.push(`/market?${buildParams(overrides).toString()}`);
+    const q = buildParams(overrides);
+    router.push(q ? `/market?${q}` : "/market");
   }
 
-  function applyAdvanced() {
-    router.push(`/market?${buildParams().toString()}`);
+  function applyAll() {
+    applyQuick();
     setSheetOpen(false);
   }
 
   function clearAll() {
     setSearch("");
     setCategory("");
-    setSubcategory("");
-    setLfStatus("");
     setCountry("");
     setCity("");
     setSort("");
     setMinPrice("");
     setMaxPrice("");
     setPosted("");
+    setSubcategory("");
+    setLfStatus("");
     router.push("/market");
     setSheetOpen(false);
   }
 
-  // Auto country only; city stays All Cities
   useEffect(() => {
-    if (geo.loading) return;
-    if (defaultCountry || defaultCity) return;
-    if (!geo.countryCode) return;
+    setSearch(defaultSearch);
+    setCategory(defaultCategory);
+    setCountry(defaultCountry);
+    setCity(defaultCity);
+    setSort(defaultSort);
+    setMinPrice(defaultMinPrice);
+    setMaxPrice(defaultMaxPrice);
+    setPosted(defaultPosted);
+    setSubcategory(defaultSubcategory);
+    setLfStatus(defaultStatus);
+  }, [
+    defaultSearch,
+    defaultCategory,
+    defaultCountry,
+    defaultCity,
+    defaultSort,
+    defaultMinPrice,
+    defaultMaxPrice,
+    defaultPosted,
+    defaultSubcategory,
+    defaultStatus,
+  ]);
 
-    setCountry(geo.countryCode);
-    const params = buildParams({
-      country: geo.countryCode,
-      city: "",
-    });
-    router.replace(`/market?${params.toString()}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.loading, geo.countryCode]);
-
-  // Reset subcategory when category changes away from current
   useEffect(() => {
-    if (!category) {
-      setSubcategory("");
-      return;
-    }
-    const subs = SUBCATEGORIES[category] ?? [];
-    if (subcategory && !subs.includes(subcategory)) {
-      setSubcategory("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+    if (geo.loading || country || defaultCountry) return;
+    if (geo.countryCode) setCountry(geo.countryCode);
+  }, [geo.loading, geo.countryCode, country, defaultCountry]);
 
-  const activeAdvancedCount = useMemo(() => {
+  const activeCount = useMemo(() => {
     let n = 0;
-    if (sort) n++;
-    if (minPrice) n++;
-    if (maxPrice) n++;
-    if (posted) n++;
+    if (search) n++;
+    if (category) n++;
     if (subcategory) n++;
+    if (country) n++;
+    if (city) n++;
+    if (sort) n++;
+    if (minPrice || maxPrice) n++;
+    if (posted) n++;
     if (lfStatus) n++;
     return n;
-  }, [sort, minPrice, maxPrice, posted, subcategory]);
+  }, [search, category, subcategory, country, city, sort, minPrice, maxPrice, posted, lfStatus]);
 
-  const hasAnyFilter = !!(
-    search ||
-    category ||
-    country ||
-    city ||
-    activeAdvancedCount > 0
+  const advancedBody = (
+    <>
+      <Section title="Sort by" open={!!openSections.sort} onToggle={() => toggleSection("sort")}>
+        {SORT_OPTIONS.map((o) => (
+          <RadioRow
+            key={o.value || "rec"}
+            checked={sort === o.value}
+            label={o.label}
+            onSelect={() => {
+              setSort(o.value);
+              if (variant === "sidebar") applyQuick({ sort: o.value });
+            }}
+          />
+        ))}
+      </Section>
+
+      <Section title="Price" open={!!openSections.price} onToggle={() => toggleSection("price")}>
+        <div className="grid grid-cols-2 gap-2 px-1 pt-1">
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-1 block">Min</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="e.g. 50"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="w-full h-8 rounded-md border border-border bg-background px-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-1 block">Max</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="e.g. 5000"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-full h-8 rounded-md border border-border bg-background px-2 text-sm"
+            />
+          </div>
+        </div>
+        {variant === "sidebar" && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="mt-2 w-full h-8"
+            onClick={() => applyQuick()}
+          >
+            Apply price
+          </Button>
+        )}
+      </Section>
+
+      <Section title="Date posted" open={!!openSections.date} onToggle={() => toggleSection("date")}>
+        {DATE_POSTED_OPTIONS.map((o) => (
+          <RadioRow
+            key={o.value || "any"}
+            checked={posted === o.value}
+            label={o.label}
+            onSelect={() => {
+              setPosted(o.value);
+              if (variant === "sidebar") applyQuick({ posted: o.value });
+            }}
+          />
+        ))}
+      </Section>
+
+      {showType && (
+        <Section title="Type" open={!!openSections.type} onToggle={() => toggleSection("type")}>
+          <RadioRow
+            checked={!subcategory}
+            label="Any"
+            onSelect={() => {
+              setSubcategory("");
+              if (variant === "sidebar") applyQuick({ subcategory: "" });
+            }}
+          />
+          {availableSubs.map((s) => (
+            <RadioRow
+              key={s}
+              checked={subcategory === s}
+              label={s}
+              onSelect={() => {
+                setSubcategory(s);
+                if (variant === "sidebar") applyQuick({ subcategory: s });
+              }}
+            />
+          ))}
+        </Section>
+      )}
+
+      {showCondition && conditionOptions.length > 0 && (
+        <Section title="Condition" open={!!openSections.condition} onToggle={() => toggleSection("condition")}>
+          <RadioRow
+            checked={!subcategory || !conditionOptions.includes(subcategory as (typeof LISTING_CONDITION_OPTIONS)[number])}
+            label="Any"
+            onSelect={() => {
+              setSubcategory("");
+              if (variant === "sidebar") applyQuick({ subcategory: "" });
+            }}
+          />
+          {conditionOptions.map((c) => (
+            <RadioRow
+              key={c}
+              checked={subcategory === c}
+              label={c}
+              onSelect={() => {
+                setSubcategory(c);
+                if (variant === "sidebar") applyQuick({ subcategory: c });
+              }}
+            />
+          ))}
+        </Section>
+      )}
+
+      {showRental && rentalOptions.length > 0 && (
+        <Section title="Rental period" open={!!openSections.rental} onToggle={() => toggleSection("rental")}>
+          <RadioRow
+            checked={!subcategory}
+            label="Any"
+            onSelect={() => {
+              setSubcategory("");
+              if (variant === "sidebar") applyQuick({ subcategory: "" });
+            }}
+          />
+          {rentalOptions.map((r) => (
+            <RadioRow
+              key={r}
+              checked={subcategory === r}
+              label={r}
+              onSelect={() => {
+                setSubcategory(r);
+                if (variant === "sidebar") applyQuick({ subcategory: r });
+              }}
+            />
+          ))}
+        </Section>
+      )}
+
+      {showStatus && (
+        <Section title="Status" open={!!openSections.status} onToggle={() => toggleSection("status")}>
+          <RadioRow
+            checked={!lfStatus}
+            label="Any"
+            onSelect={() => {
+              setLfStatus("");
+              if (variant === "sidebar") applyQuick({ status: "" });
+            }}
+          />
+          {LOST_FOUND_STATUS_OPTIONS.map((s) => (
+            <RadioRow
+              key={s}
+              checked={lfStatus === s.toLowerCase()}
+              label={s}
+              onSelect={() => {
+                const v = s.toLowerCase();
+                setLfStatus(v);
+                if (variant === "sidebar") applyQuick({ status: v });
+              }}
+            />
+          ))}
+        </Section>
+      )}
+    </>
   );
 
-  return (
-    <div className="mt-6 space-y-3">
-      <div className="flex flex-wrap gap-2.5 sm:gap-3 items-end">
-        <div className="flex-[2] min-w-[240px] sm:min-w-[280px]">
-          <label className="text-xs text-muted-foreground mb-1 block">
-            Search
-          </label>
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") applyQuick();
-              }}
-              placeholder="Search listings..."
-              className="w-full h-11 pl-10 pr-11 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-              <VoiceSearchButton
-                size="sm"
-                onResult={(t) => {
-                  setSearch(t);
-                  applyQuick({ search: t });
-                }}
-              />
-            </div>
+  const chips = activeCount > 0 && (
+    <div className="flex flex-wrap gap-1.5 pt-1">
+      {search && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          “{search}”
+          <button type="button" onClick={() => { setSearch(""); applyQuick({ search: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {category && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? category}
+          <button type="button" onClick={() => { setCategory(""); setSubcategory(""); applyQuick({ category: "", subcategory: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {country && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {COUNTRIES.find((c) => c.code === country)?.name ?? country}
+          <button type="button" onClick={() => { setCountry(""); setCity(""); applyQuick({ country: "", city: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {city && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {city}
+          <button type="button" onClick={() => { setCity(""); applyQuick({ city: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {sort && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          {SORT_OPTIONS.find((s) => s.value === sort)?.label ?? sort}
+          <button type="button" onClick={() => { setSort(""); applyQuick({ sort: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      {(minPrice || maxPrice) && (
+        <Badge variant="secondary" className="gap-1 text-xs">
+          Price {minPrice || "0"}–{maxPrice || "∞"}
+          <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); applyQuick({ minPrice: "", maxPrice: "" }); }} aria-label="Remove">
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+      <button type="button" onClick={clearAll} className="text-xs text-muted-foreground hover:text-primary underline underline-offset-2">
+        Clear all
+      </button>
+    </div>
+  );
+
+  /* ── SIDEBAR: everything in one left panel — no right sheet ── */
+  if (variant === "sidebar") {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">Filters</span>
+          {activeCount > 0 && (
+            <button type="button" onClick={clearAll} className="text-xs text-muted-foreground hover:text-primary">
+              Clear all
+            </button>
+          )}
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Search listings…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && applyQuick()}
+            className="w-full h-9 rounded-md border border-border bg-background pl-8 pr-9 text-sm"
+          />
+          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            <VoiceSearchButton size="sm" onResult={(t) => { setSearch(t); applyQuick({ search: t }); }} />
           </div>
         </div>
 
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">
-            Category
-          </label>
-          <select data-color-scheme="dark"
+        <Section title="Category" open={!!openSections.category} onToggle={() => toggleSection("category")}>
+          <select
             value={category}
             onChange={(e) => {
               const v = e.target.value;
               setCategory(v);
               setSubcategory("");
-              setLfStatus("");
-              applyQuick({ category: v, subcategory: "", status: "" });
+              applyQuick({ category: v, subcategory: "" });
             }}
-            className="[color-scheme:dark] h-11 text-sm rounded-lg border border-input bg-background px-2.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[160px]"
+            className="w-full h-9 rounded-md border border-border bg-background px-2 text-sm"
           >
-            <option className="bg-background text-foreground" value="">All categories</option>
+            <option value="">All categories</option>
             {LISTING_CATEGORIES.map((c) => (
-              <option className="bg-background text-foreground" key={c.value} value={c.value}>
-                {c.label}
-              </option>
+              <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
-        </div>
+        </Section>
 
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">
-            Subcategory
-          </label>
-          <select
-            data-color-scheme="dark"
-            value={subcategory}
-            disabled={!category || (SUBCATEGORIES[category] ?? []).length === 0}
-            onChange={(e) => {
-              const v = e.target.value;
-              setSubcategory(v);
-              applyQuick({ subcategory: v });
-            }}
-            className="[color-scheme:dark] h-11 text-sm rounded-lg border border-input bg-background px-2.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer max-w-[170px] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option className="bg-background text-foreground" value="">
-              {!category
-                ? "Select category first"
-                : (SUBCATEGORIES[category] ?? []).length === 0
-                  ? "No subcategories"
-                  : "All subcategories"}
-            </option>
-            {(SUBCATEGORIES[category] ?? []).map((s) => (
-              <option
-                className="bg-background text-foreground"
-                key={s}
-                value={s}
-              >
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-
-
-        {category === "lost_found" && (
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">
-              Status
-            </label>
+        <Section title="Location" open={!!openSections.location} onToggle={() => toggleSection("location")}>
+          <div className="space-y-2">
             <select
-              data-color-scheme="dark"
-              value={lfStatus}
+              value={country}
               onChange={(e) => {
                 const v = e.target.value;
-                setLfStatus(v);
-                applyQuick({ status: v });
+                setCountry(v);
+                setCity("");
+                applyQuick({ country: v, city: "" });
               }}
-              className="[color-scheme:dark] h-11 text-sm rounded-lg border border-input bg-background px-2.5 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer min-w-[110px]"
+              className="w-full h-9 rounded-md border border-border bg-background px-2 text-sm"
             >
-              <option className="bg-background text-foreground" value="">
-                All status
-              </option>
-              <option className="bg-background text-foreground" value="lost">
-                Lost
-              </option>
-              <option className="bg-background text-foreground" value="found">
-                Found
-              </option>
+              <option value="">All countries</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
             </select>
+            <CityCombobox
+              id="market-city-sidebar"
+              country={country}
+              value={city}
+              onChange={(v) => {
+                setCity(v);
+                applyQuick({ city: v });
+              }}
+              className="w-full"
+              size="sm"
+              variant="select"
+            />
           </div>
-        )}
+        </Section>
 
-        <div className="w-[130px] sm:w-[140px]">
-          <label className="text-xs text-muted-foreground mb-1 block">
-            Country
-          </label>
-          <select data-color-scheme="dark"
-            value={country}
-            onChange={(e) => {
-              const v = e.target.value;
-              setCountry(v);
-              setCity("");
-              applyQuick({ country: v, city: "" });
-            }}
-            className="[color-scheme:dark] w-full h-11 text-sm rounded-lg border border-input bg-background px-2 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
-          >
-            <option className="bg-background text-foreground" value="">All countries</option>
-            {COUNTRIES.map((c) => (
-              <option className="bg-background text-foreground" key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {advancedBody}
 
-        <div className="w-[120px] sm:w-[130px]">
-          <label className="text-xs text-muted-foreground mb-1 block">City</label>
-          <CityCombobox
-            id="market-city"
-            country={country}
-            value={city}
-            onChange={setCity}
-            className="w-full"
-            size="sm"
-            variant="select"
+        <Button size="sm" className="w-full" onClick={applyAll}>
+          Apply filters
+        </Button>
+        {chips}
+      </div>
+    );
+  }
+
+  /* ── BAR (mobile / fallback): search row + ONE sheet with all filters ── */
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[160px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Search listings…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && applyQuick()}
+            className="w-full h-9 rounded-md border border-border bg-background pl-9 pr-10 text-sm"
           />
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+            <VoiceSearchButton size="sm" onResult={(t) => { setSearch(t); applyQuick({ search: t }); }} />
+          </div>
         </div>
 
-        {/* Advanced Filters panel */}
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block opacity-0">
-            Filters
-          </label>
+        <select
+          value={category}
+          onChange={(e) => {
+            const v = e.target.value;
+            setCategory(v);
+            setSubcategory("");
+            applyQuick({ category: v, subcategory: "" });
+          }}
+          className="h-9 rounded-md border border-border bg-background px-2 text-sm sm:w-[160px]"
+        >
+          <option value="">All categories</option>
+          {LISTING_CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+
+        <select
+          value={country}
+          onChange={(e) => {
+            const v = e.target.value;
+            setCountry(v);
+            setCity("");
+            applyQuick({ country: v, city: "" });
+          }}
+          className="h-9 rounded-md border border-border bg-background px-2 text-sm sm:w-[160px]"
+        >
+          <option value="">All countries</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.code} value={c.code}>{c.name}</option>
+          ))}
+        </select>
+
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <Button
             type="button"
             variant="outline"
-            className="gap-2 cursor-pointer relative"
+            className="h-9 gap-2"
             onClick={() => setSheetOpen(true)}
           >
             <SlidersHorizontal className="h-4 w-4" />
-            Filters
-            {activeAdvancedCount > 0 && (
-              <Badge
-                variant="default"
-                className="ml-0.5 h-5 min-w-5 px-1.5 text-[10px]"
-              >
-                {activeAdvancedCount}
-              </Badge>
+            More filters
+            {activeCount > 0 && (
+              <Badge className="h-5 min-w-5 px-1.5 text-[10px]">{activeCount}</Badge>
             )}
           </Button>
-        </div>
+          <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+            <SheetHeader className="border-b px-4 py-3">
+              <SheetTitle>Marketplace filters</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-4 py-2">
+              <div className="mb-3">
+                <CityCombobox
+                  id="market-city-sheet"
+                  country={country}
+                  value={city}
+                  onChange={setCity}
+                  className="w-full"
+                  size="sm"
+                  variant="select"
+                />
+              </div>
+              {advancedBody}
+            </div>
+            <SheetFooter className="border-t px-4 py-3 flex-row gap-2 sm:justify-between">
+              <Button type="button" variant="ghost" size="sm" onClick={clearAll}>
+                Clear all
+              </Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setSheetOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" size="sm" onClick={applyAll}>
+                  Apply
+                </Button>
+              </div>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
-        <Button type="button" size="lg" className="cursor-pointer" onClick={() => applyQuick()}>
+        <Button type="button" className="h-9" onClick={() => applyQuick()}>
           Search
         </Button>
-
-        {hasAnyFilter && (
-          <Button variant="ghost" size="sm" onClick={clearAll}>
+        {activeCount > 0 && (
+          <Button type="button" variant="ghost" size="sm" className="h-9" onClick={clearAll}>
             Clear
           </Button>
         )}
       </div>
-
-      {/* Active chips */}
-      {activeAdvancedCount > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {sort && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              {SORT_OPTIONS.find((s) => s.value === sort)?.label ?? sort}
-              <button
-                type="button"
-                onClick={() => {
-                  setSort("");
-                  applyQuick({ sort: "" });
-                }}
-                aria-label="Remove sort"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {(minPrice || maxPrice) && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              Price {minPrice || "0"}–{maxPrice || "∞"}
-              <button
-                type="button"
-                onClick={() => {
-                  setMinPrice("");
-                  setMaxPrice("");
-                  applyQuick({ minPrice: "", maxPrice: "" });
-                }}
-                aria-label="Remove price range"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {posted && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              {DATE_POSTED_OPTIONS.find((d) => d.value === posted)?.label ?? posted}
-              <button
-                type="button"
-                onClick={() => {
-                  setPosted("");
-                  applyQuick({ posted: "" });
-                }}
-                aria-label="Remove date"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {lfStatus && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              {lfStatus === "lost" ? "Lost" : lfStatus === "found" ? "Found" : lfStatus}
-              <button
-                type="button"
-                onClick={() => {
-                  setLfStatus("");
-                  applyQuick({ status: "" });
-                }}
-                aria-label="Remove status"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {subcategory && (
-            <Badge variant="secondary" className="gap-1 text-xs">
-              {subcategory}
-              <button
-                type="button"
-                onClick={() => {
-                  setSubcategory("");
-                  applyQuick({ subcategory: "" });
-                }}
-                aria-label="Remove type"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-        </div>
-      )}
-
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
-          <SheetHeader className="border-b px-4 py-3">
-            <SheetTitle>Marketplace Filters</SheetTitle>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-y-auto px-4">
-            <Section
-              title="Sort By"
-              open={!!openSections.sort}
-              onToggle={() => toggleSection("sort")}
-            >
-              {SORT_OPTIONS.map((o) => (
-                <RadioRow
-                  key={o.value || "rec"}
-                  checked={sort === o.value}
-                  label={o.label}
-                  onSelect={() => setSort(o.value)}
-                />
-              ))}
-            </Section>
-
-            <Section
-              title="Price"
-              open={!!openSections.price}
-              onToggle={() => toggleSection("price")}
-            >
-              <RadioRow
-                checked={sort !== "price_asc" && sort !== "price_desc"}
-                label="Any Price (default order)"
-                onSelect={() => {
-                  if (sort === "price_asc" || sort === "price_desc") setSort("");
-                }}
-              />
-              <RadioRow
-                checked={sort === "price_asc"}
-                label="Low to High"
-                onSelect={() => setSort("price_asc")}
-              />
-              <RadioRow
-                checked={sort === "price_desc"}
-                label="High to Low"
-                onSelect={() => setSort("price_desc")}
-              />
-              <div className="grid grid-cols-2 gap-2 px-2 pt-2">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
-                    Min Price
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    placeholder="e.g. 500"
-                    className="w-full px-2 py-1.5 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
-                    Max Price
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    placeholder="e.g. 5000"
-                    className="w-full px-2 py-1.5 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-              </div>
-            </Section>
-
-            <Section
-              title="Date Posted"
-              open={!!openSections.date}
-              onToggle={() => toggleSection("date")}
-            >
-              {DATE_POSTED_OPTIONS.map((o) => (
-                <RadioRow
-                  key={o.value || "any"}
-                  checked={posted === o.value}
-                  label={o.label}
-                  onSelect={() => setPosted(o.value)}
-                />
-              ))}
-            </Section>
-
-
-            {/* Lost / Found status — Lost & Found only */}
-            {showStatus && (
-              <Section
-                title="Status (Lost / Found)"
-                open={!!openSections.status}
-                onToggle={() => toggleSection("status")}
-              >
-                <RadioRow
-                  checked={!lfStatus}
-                  label="Any"
-                  onSelect={() => setLfStatus("")}
-                />
-                <RadioRow
-                  checked={lfStatus === "lost"}
-                  label="Lost"
-                  onSelect={() => setLfStatus("lost")}
-                />
-                <RadioRow
-                  checked={lfStatus === "found"}
-                  label="Found"
-                  onSelect={() => setLfStatus("found")}
-                />
-              </Section>
-            )}
-
-            {/* Type / Subcategory — product types (For Sale, Vehicles, Electronics, …) */}
-            {showType && (
-              <Section
-                title="Type"
-                open={!!openSections.type}
-                onToggle={() => toggleSection("type")}
-              >
-                <RadioRow
-                  checked={
-                    !subcategory ||
-                    (showCondition &&
-                      conditionOptions.includes(
-                        subcategory as (typeof LISTING_CONDITION_OPTIONS)[number]
-                      ))
-                  }
-                  label="Any"
-                  onSelect={() => {
-                    // Clear only when current value is a product type (not a condition)
-                    if (
-                      !showCondition ||
-                      !conditionOptions.includes(
-                        subcategory as (typeof LISTING_CONDITION_OPTIONS)[number]
-                      )
-                    ) {
-                      setSubcategory("");
-                    }
-                  }}
-                />
-                {availableSubs.map((s) => (
-                  <RadioRow
-                    key={s}
-                    checked={
-                      subcategory === s ||
-                      subcategory.startsWith(s + " · ")
-                    }
-                    label={s}
-                    onSelect={() => {
-                      if (showStatus) {
-                        const status =
-                          subcategory.endsWith(" · Lost")
-                            ? "Lost"
-                            : subcategory.endsWith(" · Found")
-                              ? "Found"
-                              : subcategory === "Lost"
-                                ? "Lost"
-                                : subcategory === "Found"
-                                  ? "Found"
-                                  : "";
-                        setSubcategory(status ? `${s} · ${status}` : s);
-                      } else {
-                        setSubcategory(s);
-                      }
-                    }}
-                  />
-                ))}
-              </Section>
-            )}
-
-            {/* Condition — For Sale only (New / Used / etc.; still filters via subcategory param) */}
-            {showCondition && conditionOptions.length > 0 && (
-              <Section
-                title="Condition"
-                open={!!openSections.condition}
-                onToggle={() => toggleSection("condition")}
-              >
-                <RadioRow
-                  checked={!subcategory || !conditionOptions.includes(subcategory as (typeof LISTING_CONDITION_OPTIONS)[number])}
-                  label="Any"
-                  onSelect={() => {
-                    // Clear only if current selection is a condition value
-                    if (conditionOptions.includes(subcategory as (typeof LISTING_CONDITION_OPTIONS)[number])) {
-                      setSubcategory("");
-                    }
-                  }}
-                />
-                {conditionOptions.map((s) => (
-                  <RadioRow
-                    key={s}
-                    checked={subcategory === s}
-                    label={s}
-                    onSelect={() => setSubcategory(s)}
-                  />
-                ))}
-              </Section>
-            )}
-
-            {/* Rental period */}
-            {showRental && rentalOptions.length > 0 && (
-              <Section
-                title={category === "for_rent" ? "Rental Period" : "Property Type"}
-                open={!!openSections.rental}
-                onToggle={() => toggleSection("rental")}
-              >
-                <RadioRow
-                  checked={!subcategory}
-                  label="Any"
-                  onSelect={() => setSubcategory("")}
-                />
-                {rentalOptions.map((s) => (
-                  <RadioRow
-                    key={s}
-                    checked={subcategory === s}
-                    label={s}
-                    onSelect={() => setSubcategory(s)}
-                  />
-                ))}
-              </Section>
-            )}
-
-            {/* Services */}
-            {showService && (
-              <Section
-                title="Service Type"
-                open={!!openSections.service}
-                onToggle={() => toggleSection("service")}
-              >
-                <RadioRow
-                  checked={!subcategory}
-                  label="Any"
-                  onSelect={() => setSubcategory("")}
-                />
-                {availableSubs.map((s) => (
-                  <RadioRow
-                    key={s}
-                    checked={subcategory === s}
-                    label={s}
-                    onSelect={() => setSubcategory(s)}
-                  />
-                ))}
-              </Section>
-            )}
-          </div>
-
-          <SheetFooter className="border-t px-4 py-3 flex-row gap-2 sm:justify-between">
-            <Button type="button" variant="ghost" size="sm" onClick={clearAll} className="gap-1">
-              <X className="h-3.5 w-3.5" />
-              Clear all
-            </Button>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setSheetOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="button" size="sm" onClick={applyAdvanced}>
-                Apply filters
-              </Button>
-            </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      {chips}
     </div>
   );
 }

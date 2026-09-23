@@ -296,8 +296,8 @@ export default async function MarketPage({
           {/* Desktop sidebar filters */}
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-lg border border-border bg-card p-3">
-              <h2 className="text-sm font-semibold mb-3">Filters</h2>
               <MarketFilter
+                variant="sidebar"
                 defaultSearch={search}
                 defaultCategory={category}
                 defaultSubcategory={subcategory}
@@ -317,6 +317,7 @@ export default async function MarketPage({
             {/* Mobile filters */}
             <div className="lg:hidden mb-4">
               <MarketFilter
+                variant="bar"
                 defaultSearch={search}
                 defaultCategory={category}
                 defaultSubcategory={subcategory}
