@@ -156,7 +156,7 @@ const NAV_ITEMS: NavItem[] = [
         items: [
           { label: "Programs & Training", href: "/program", desc: "Credentials & pathways" },
           { label: "Verify Credentials", href: "https://hunared.org", desc: "Official verification" },
-          { label: "Hunared Finder", href: "/finder", desc: "Lost & found community" },
+          { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
           { label: "About Hunared", href: "/about", desc: "Our mission" },
           { label: "Contact", href: "/contact", desc: "Help & support" },
         ],
@@ -352,27 +352,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0 ml-auto">
-            {/* Compact universal search */}
-            <form
-              action="/search"
-              method="get"
-              className="hidden md:flex items-center relative"
-            >
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                name="q"
-                placeholder="Search…"
-                className={cn(
-                  "h-8 rounded-md border border-border/80 bg-background/80 pl-8 pr-3 text-[13px]",
-                  "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary/40",
-                  "transition-all duration-300",
-                  scrolled ? "w-28 xl:w-36" : "w-32 xl:w-40"
-                )}
-                aria-label="Search Hunared"
-              />
-            </form>
-
             {/* Location — always available from lg up (compact) */}
             <div className="hidden lg:block shrink-0">
               <LocationPicker className="max-w-[9.5rem] xl:max-w-[11rem]" />
@@ -436,18 +415,6 @@ export function Header() {
                 </div>
               </Show>
             </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden w-9 h-9"
-              asChild
-              aria-label="Search"
-            >
-              <Link href="/search">
-                <Search className="h-5 w-5" />
-              </Link>
-            </Button>
 
             <Button
               variant="ghost"

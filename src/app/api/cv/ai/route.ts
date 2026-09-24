@@ -4,30 +4,40 @@ import { parseCvCommand } from "@/lib/cv/ai-fill";
 import type { CvData } from "@/lib/cv/types";
 import { DEFAULT_CV } from "@/lib/cv/types";
 
-/**
- * CV AI assist — rule-based parse always works.
- * If OPENAI_API_KEY is set, enriches summary/bullets only (no invented facts).
- */
+const SYSTEM = `You are Hunared CV Assistant — a professional CV writer for global job seekers (especially Gulf / international technical and professional roles).
+
+Return ONLY valid JSON matching the CV schema the user provides (parsed + current).
+
+HARD RULES:
+1. NEVER invent employers, job titles the user did not state, degrees, certifications, dates, skills, or achievements.
+2. You MAY improve wording of summary and bullets when facts exist.
+3. You MAY structure incomplete user text into fields.
+4. If the user asks for a "full professional CV" but gave only a role + location, fill summary/template only and leave experience empty or only with facts they provided.
+5. Prefer ATS-friendly clear language.
+6. Templates: classic, modern, professional, minimal, executive, tech, ats, engineering, hse, graduate.
+7. Keep phone/email/location only if present in input.`;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const command = String((body as { command?: string }).command || "").slice(
-      0,
-      4000
-    );
+    const command = String((body as { command?: string }).command || "").slice(0, 6000);
     const current = (body as { current?: Partial<CvData> }).current;
+    const sourceText = String((body as { sourceText?: string }).sourceText || "").slice(0, 20000);
 
-    if (!command.trim()) {
-      return NextResponse.json({ error: "Command required" }, { status: 400 });
+    if (!command.trim() && !sourceText.trim()) {
+      return NextResponse.json({ error: "Command or sourceText required" }, { status: 400 });
     }
 
     try {
       await auth();
     } catch {
-      /* soft auth */
+      /* soft */
     }
 
-    let cv = parseCvCommand(command, current);
+    const seed = sourceText ? parseCvCommand(sourceText, current) : parseCvCommand(command, current);
+    let cv = command && sourceText
+      ? parseCvCommand(command, seed)
+      : seed;
 
     const key = process.env.OPENAI_API_KEY;
     if (key) {
@@ -40,26 +50,17 @@ export async function POST(req: NextRequest) {
           },
           body: JSON.stringify({
             model: process.env.OPENAI_AGENT_MODEL || "gpt-4o-mini",
-            temperature: 0.35,
-            max_tokens: 1200,
+            temperature: 0.25,
+            max_tokens: 2000,
             messages: [
-              {
-                role: "system",
-                content: `You improve professional CV JSON for job seekers.
-Return ONLY valid JSON matching the input shape.
-Rules:
-- Keep all factual fields from the user (names, employers, degrees, dates, certifications).
-- You may improve wording of summary and experience bullets.
-- Never invent employers, degrees, certifications, skills the user did not provide.
-- If the user asks to target a role, emphasize matching existing skills in the summary only.
-- Templates allowed: classic, modern, professional, minimal, executive, tech, ats, engineering, hse, graduate.`,
-              },
+              { role: "system", content: SYSTEM },
               {
                 role: "user",
                 content: JSON.stringify({
-                  instruction: command,
+                  instruction: command || "Structure and professionally polish this CV from source text without inventing facts.",
+                  sourceText: sourceText || undefined,
                   current: current || DEFAULT_CV(),
-                  parsed: cv,
+                  localParse: cv,
                 }),
               },
             ],
@@ -75,20 +76,14 @@ Rules:
               ...DEFAULT_CV(),
               ...cv,
               ...parsed,
-              experience: parsed.experience?.length
-                ? parsed.experience
-                : cv.experience,
-              education: parsed.education?.length
-                ? parsed.education
-                : cv.education,
-              projects: parsed.projects?.length
-                ? parsed.projects
-                : cv.projects || [],
+              experience: parsed.experience?.length ? parsed.experience : cv.experience,
+              education: parsed.education?.length ? parsed.education : cv.education,
+              projects: parsed.projects?.length ? parsed.projects : cv.projects || [],
             };
           }
         }
       } catch (e) {
-        console.warn("[cv/ai] OpenAI enrich failed, using local parse", e);
+        console.warn("[cv/ai] enrich failed", e);
       }
     }
 

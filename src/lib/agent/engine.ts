@@ -282,7 +282,7 @@ export const COMMAND_PACKS: {
       { label: "Career tips", text: "Show career tips articles" },
       { label: "HSE safety", text: "HSE safety learning articles" },
       { label: "Programs", text: "Open Hunared programs" },
-      { label: "Finder", text: "Open Hunared Finder lost and found" },
+      { label: "Finder", text: "Open Finder Center lost and found" },
       { label: "Contact support", text: "Contact Hunared support" },
       { label: "What can you do?", text: "What can you do on Hunared?" },
     ],
@@ -601,8 +601,8 @@ export function parseUserMessage(
     return {
       intent: "search_finder",
       href: "/finder",
-      label: "Hunared Finder",
-      message: "Opening Hunared Finder (lost & found community).",
+      label: "Finder Center",
+      message: "Opening Finder Center (lost & found community).",
       autoNavigate: true,
     };
   }

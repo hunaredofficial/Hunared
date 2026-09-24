@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { FinderExperience } from "@/components/home/FinderExperience";
 
 export const metadata: Metadata = {
-  title: "Hunared Finder — Lost & Found",
+  title: "Finder Center — Lost & Found",
   description:
     "Lost something? Found something? Search and report lost & found items with the Hunared community.",
 };

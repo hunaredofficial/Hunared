@@ -377,7 +377,7 @@ export function HunaredFinder() {
                 Community service
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-                <span className="gradient-text">Hunared Finder</span>
+                <span className="gradient-text">Finder Center</span>
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 Lost something? Found an item? Search the community board or

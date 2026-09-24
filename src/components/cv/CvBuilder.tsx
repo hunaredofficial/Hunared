@@ -17,6 +17,7 @@ import {
   LayoutTemplate,
   BarChart3,
   GripVertical,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,10 +55,13 @@ import { toast } from "sonner";
 
 const AI_SUGGESTIONS = [
   "Create a professional CV for an Instrument Technician in Saudi Arabia",
+  "Write a full professional CV for HSE Officer with NEBOSH in Jubail",
   "Make my CV more professional and ATS friendly",
   "Rewrite my professional summary stronger",
-  "Improve my work experience bullets",
+  "Improve my work experience bullets with measurable language",
   "Target this CV for an HSE position",
+  "Create a graduate CV for Electrical Engineering in Riyadh",
+  "Make this suitable for an international company",
   "Analyze my CV and tell me what is missing",
 ];
 
@@ -169,6 +173,71 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
     setView("editor");
   }
 
+
+  async function handleFileUpload(file: File | null) {
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    const isText =
+      name.endsWith(".txt") ||
+      name.endsWith(".md") ||
+      name.endsWith(".rtf") ||
+      file.type.startsWith("text/");
+    try {
+      let text = "";
+      if (isText) {
+        text = await file.text();
+      } else if (name.endsWith(".pdf") || name.endsWith(".doc") || name.endsWith(".docx")) {
+        // Browser cannot reliably parse binary Office/PDF without extra libs.
+        // Read as text best-effort (works for some text-based PDFs) and prompt user.
+        const buf = await file.arrayBuffer();
+        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+        // Extract readable sequences
+        const readable = decoded
+          .replace(/\u0000/g, " ")
+          .replace(/[^\x09\x0A\x0D\x20-\x7E\u00A0-\u024F]/g, " ")
+          .replace(/\s{2,}/g, " ");
+        text = readable.slice(0, 50000);
+        if (text.trim().length < 80) {
+          toast.message(
+            "Could not fully read this file in-browser. Paste the CV text below, or export as .txt and upload again."
+          );
+          setShowImport(true);
+          setEditorTab("ai");
+          return;
+        }
+        toast.message("Extracted text from file — review fields carefully (binary formats vary).");
+      } else {
+        toast.error("Supported: .txt, .md, .pdf, .doc, .docx (best with .txt export).");
+        return;
+      }
+
+      setAiLoading(true);
+      const res = await fetch("/api/cv/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, current: data }),
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { cv?: typeof data };
+        if (json.cv) {
+          setData({ ...DEFAULT_CV(), ...json.cv });
+          toast.success("CV structured from your file. Edit anything that looks wrong.");
+          setEditorTab("edit");
+          return;
+        }
+      }
+      // local fallback
+      const { importCvFromText } = await import("@/lib/cv/ai-fill");
+      setData(importCvFromText(text, data));
+      toast.success("CV imported locally. Review all fields.");
+      setEditorTab("edit");
+    } catch {
+      toast.error("Could not read file.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   function applyImport() {
     if (!importText.trim()) {
       toast.error("Paste your CV text first.");
@@ -198,7 +267,11 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       const res = await fetch("/api/cv/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: cmd, current: data }),
+        body: JSON.stringify({
+          command: cmd,
+          current: data,
+          sourceText: importText.trim() || undefined,
+        }),
       });
       if (res.ok) {
         const json = (await res.json()) as { cv?: CvData };
@@ -319,6 +392,19 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
               action: () => {
                 startBlank();
                 setShowImport(true);
+                setEditorTab("ai");
+              },
+            },
+            {
+              icon: Upload,
+              title: "Upload CV file",
+              desc: "Upload .txt, PDF or Word — then edit in the builder.",
+              action: () => {
+                startBlank();
+                setEditorTab("ai");
+                setTimeout(() => {
+                  document.getElementById("cv-file-upload")?.click();
+                }, 200);
               },
             },
             {
@@ -465,8 +551,10 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 AI CV Assistant
               </p>
               <p className="text-xs text-muted-foreground">
-                Describe what you want. AI improves wording and structure — it
-                will not invent jobs, degrees, or certifications.
+                Describe your role, location, skills, and experience in plain
+                language — or upload your CV. AI structures a professional CV and
+                improves wording. It will not invent employers, degrees, or
+                certifications you did not provide.
               </p>
               <div className="relative">
                 <textarea
@@ -564,6 +652,40 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 </div>
               )}
 
+              <div className="grid grid-cols-1 gap-2">
+                <label className="w-full">
+                  <span className="sr-only">Upload CV file</span>
+                  <input
+                    type="file"
+                    accept=".txt,.md,.rtf,.pdf,.doc,.docx,text/plain"
+                    className="hidden"
+                    id="cv-file-upload"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      void handleFileUpload(f);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-1.5"
+                    disabled={aiLoading}
+                    onClick={() =>
+                      document.getElementById("cv-file-upload")?.click()
+                    }
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload CV file (txt / pdf / word)
+                  </Button>
+                </label>
+                <p className="text-[10px] text-muted-foreground">
+                  We extract text and map sections. We do not invent jobs or degrees.
+                  For complex PDF/Word layouts, paste text or export .txt for best results.
+                  Your content stays private in this browser.
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"

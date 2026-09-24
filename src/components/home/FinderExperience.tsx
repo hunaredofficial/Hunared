@@ -75,7 +75,7 @@ export function FinderExperience() {
             Community service
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Hunared Finder
+            Finder Center
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Lost something? Found something? Search the community board or report
