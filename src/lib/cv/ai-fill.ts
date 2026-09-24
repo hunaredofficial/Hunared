@@ -317,3 +317,90 @@ export function sampleCv(): CvData {
     template: "engineering",
   };
 }
+
+
+/** Local text improvements — never adds new employers or degrees. */
+export type ImproveAction =
+  | "professional"
+  | "ats"
+  | "shorten"
+  | "expand"
+  | "grammar"
+  | "bullets";
+
+export function improveText(text: string, action: ImproveAction): string {
+  let s = text.trim();
+  if (!s) return s;
+  if (action === "shorten") {
+    const sentences = s.split(/(?<=[.!?])\s+/);
+    return sentences.slice(0, Math.max(1, Math.ceil(sentences.length * 0.6))).join(" ");
+  }
+  if (action === "expand" && s.length < 400) {
+    return s + " Focused on quality, safety, and measurable results in professional environments.";
+  }
+  if (action === "grammar" || action === "professional" || action === "ats") {
+    s = s
+      .replace(/\bi am\b/gi, "Experienced professional")
+      .replace(/\bi've\b/gi, "Have")
+      .replace(/\bcan't\b/gi, "cannot")
+      .replace(/\bdon't\b/gi, "do not")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  if (action === "bullets") {
+    const lines = s.split(/\n|•|-/).map((l) => l.trim()).filter(Boolean);
+    return lines
+      .map((l) => {
+        const x = l.replace(/^[•\-\d.\s]+/, "");
+        if (/^(managed|led|developed|implemented|improved|delivered|performed|supported|coordinated)/i.test(x)) return x;
+        return x.charAt(0).toUpperCase() + x.slice(1);
+      })
+      .join("\n");
+  }
+  if (action === "ats") {
+    s = s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  }
+  return s;
+}
+
+export function extractJobKeywords(jobText: string): string[] {
+  const stop = new Set("the a an and or for with from this that your our their into onto using use based able will can must should".split(" "));
+  const words = jobText.toLowerCase().match(/[a-z][a-z+#.]{2,}/g) || [];
+  const freq = new Map<string, number>();
+  for (const w of words) {
+    if (stop.has(w)) continue;
+    freq.set(w, (freq.get(w) || 0) + 1);
+  }
+  return [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 25)
+    .map(([w]) => w);
+}
+
+export function tailorSuggestions(cv: CvData, jobText: string): string[] {
+  const keywords = extractJobKeywords(jobText);
+  const blob = JSON.stringify(cv).toLowerCase();
+  const missing = keywords.filter((k) => !blob.includes(k)).slice(0, 12);
+  const tips: string[] = [];
+  if (missing.length) {
+    tips.push(
+      "Keywords in the job ad not clearly present in your CV: " +
+        missing.join(", ") +
+        ". Only add skills/experience you truly have."
+    );
+  }
+  if (!cv.summary || cv.summary.length < 40) {
+    tips.push("Add a professional summary aligned to the target role title.");
+  }
+  if (!cv.skills.trim()) {
+    tips.push("Add a skills section using real skills that match the job.");
+  }
+  const weakBullets = cv.experience.filter((e) => e.title && !e.bullets.trim());
+  if (weakBullets.length) {
+    tips.push("Some roles lack bullet points — add real duties/achievements.");
+  }
+  if (!tips.length) {
+    tips.push("Your CV already covers many job keywords. Strengthen bullets with measurable outcomes you actually delivered.");
+  }
+  return tips;
+}

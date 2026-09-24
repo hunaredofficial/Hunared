@@ -38,6 +38,8 @@ import {
   importCvFromText,
   analyzeCv,
   sampleCv,
+  improveText,
+  tailorSuggestions,
 } from "@/lib/cv/ai-fill";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
 import {
@@ -50,6 +52,7 @@ import {
 } from "@/lib/cv/storage";
 import { CvPreview } from "./CvPreview";
 import { CvLibrary } from "./CvLibrary";
+import { CvSamples } from "./CvSamples";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { toast } from "sonner";
 
@@ -65,7 +68,7 @@ const AI_SUGGESTIONS = [
   "Analyze my CV and tell me what is missing",
 ];
 
-type View = "library" | "start" | "editor";
+type View = "library" | "start" | "editor" | "samples";
 
 export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [view, setView] = useState<View>("library");
@@ -80,6 +83,8 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [showImport, setShowImport] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [editorTab, setEditorTab] = useState<"edit" | "design" | "ai">("edit");
+  const [jobDesc, setJobDesc] = useState("");
+  const [tailorTips, setTailorTips] = useState<string[]>([])
 
   useEffect(() => {
     setMounted(true);
@@ -323,6 +328,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       <CvLibrary
         docs={docs}
         onCreate={() => setView("start")}
+        onSamples={() => setView("samples")}
         onOpen={openDoc}
         onDuplicate={(id) => {
           const src = docs.find((d) => d.id === id);
@@ -347,6 +353,24 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           const next = updateDocument(docs, id, { name });
           setDocs(next);
           saveLibrary(next);
+        }}
+      />
+    );
+  }
+
+  if (view === "samples") {
+    return (
+      <CvSamples
+        onBack={() => setView("library")}
+        onUse={(name, sampleData, targetRole) => {
+          const doc = createDocument(name, sampleData, targetRole);
+          const next = [doc, ...docs];
+          setDocs(next);
+          saveLibrary(next);
+          setActiveId(doc.id);
+          setData(sampleData);
+          setView("editor");
+          toast.success("Sample copied — replace placeholder details with your own.");
         }}
       />
     );
@@ -595,6 +619,106 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 )}
                 Run AI
               </Button>
+
+              <div className="flex flex-wrap gap-1.5">
+                {(
+                  [
+                    ["professional", "Make professional"],
+                    ["ats", "ATS-friendly"],
+                    ["shorten", "Shorten summary"],
+                    ["bullets", "Stronger bullets"],
+                  ] as const
+                ).map(([action, label]) => (
+                  <Button
+                    key={action}
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 text-[10px]"
+                    disabled={aiLoading}
+                    onClick={async () => {
+                      setAiLoading(true);
+                      try {
+                        if (action === "bullets") {
+                          const experience = await Promise.all(
+                            data.experience.map(async (e) => {
+                              if (!e.bullets.trim()) return e;
+                              const res = await fetch("/api/cv/improve", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ text: e.bullets, action: "bullets" }),
+                              });
+                              if (res.ok) {
+                                const j = await res.json();
+                                return { ...e, bullets: j.text || e.bullets };
+                              }
+                              return { ...e, bullets: improveText(e.bullets, "bullets") };
+                            })
+                          );
+                          setData((d) => ({ ...d, experience }));
+                        } else {
+                          const res = await fetch("/api/cv/improve", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text: data.summary, action }),
+                          });
+                          let next = data.summary;
+                          if (res.ok) {
+                            const j = await res.json();
+                            next = j.text || next;
+                          } else {
+                            next = improveText(data.summary, action);
+                          }
+                          setData((d) => ({ ...d, summary: next }));
+                        }
+                        toast.success("AI improvement applied — review the text.");
+                      } finally {
+                        setAiLoading(false);
+                      }
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-xs font-semibold">Tailor to a job description</p>
+                <textarea
+                  value={jobDesc}
+                  onChange={(e) => setJobDesc(e.target.value)}
+                  rows={3}
+                  placeholder="Paste the job description here…"
+                  className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8 text-xs"
+                  onClick={() => {
+                    if (!jobDesc.trim()) {
+                      toast.error("Paste a job description first.");
+                      return;
+                    }
+                    const tips = tailorSuggestions(data, jobDesc);
+                    setTailorTips(tips);
+                    setShowAnalysis(true);
+                    toast.message("Job match suggestions ready.");
+                  }}
+                >
+                  Analyze vs job
+                </Button>
+                {tailorTips.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {tailorTips.map((tip, i) => (
+                      <li key={i} className="text-[11px] text-muted-foreground leading-snug">
+                        • {tip}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
               <Button
                 variant="outline"

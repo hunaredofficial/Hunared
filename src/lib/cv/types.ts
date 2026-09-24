@@ -1,14 +1,24 @@
 export type CvTemplateId =
+  | "ats"
   | "classic"
-  | "modern"
   | "professional"
+  | "modern"
   | "minimal"
   | "executive"
   | "tech"
-  | "ats"
+  | "software"
   | "engineering"
   | "hse"
-  | "graduate";
+  | "oilgas"
+  | "construction"
+  | "healthcare"
+  | "finance"
+  | "sales"
+  | "graduate"
+  | "academic"
+  | "hospitality"
+  | "logistics"
+  | "trades";
 
 export type CvExperience = {
   id: string;
@@ -69,7 +79,6 @@ export type CvData = {
   education: CvEducation[];
   projects: CvProject[];
   template: CvTemplateId;
-  /** section order for preview */
   sectionOrder: CvSectionKey[];
 };
 
@@ -168,4 +177,12 @@ export type ProfileSeed = {
   city?: string | null;
   skills?: string | null;
   languages?: string | null;
+};
+
+export type SampleCvMeta = {
+  id: string;
+  profession: string;
+  category: string;
+  template: CvTemplateId;
+  blurb: string;
 };
