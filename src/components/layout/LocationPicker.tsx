@@ -222,7 +222,11 @@ export function LocationPicker({ className }: { className?: string }) {
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors max-w-[180px] sm:max-w-[240px]"
+        className={cn(
+          "inline-flex h-8 items-center gap-1.5 rounded-md border border-border/70 bg-background/50",
+          "px-2 text-[12px] xl:text-[13px] text-muted-foreground hover:text-foreground hover:border-border",
+          "transition-colors max-w-[8.5rem] xl:max-w-[11rem]"
+        )}
         title="Your location"
         aria-expanded={open}
         aria-haspopup="dialog"
