@@ -53,6 +53,7 @@ import {
 import { CvPreview } from "./CvPreview";
 import { CvLibrary } from "./CvLibrary";
 import { CvSamples } from "./CvSamples";
+import { CvDocumentEditor } from "./CvDocumentEditor";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { toast } from "sonner";
 
@@ -226,16 +227,16 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
         const json = (await res.json()) as { cv?: typeof data };
         if (json.cv) {
           setData({ ...DEFAULT_CV(), ...json.cv });
-          toast.success("CV structured from your file. Edit anything that looks wrong.");
-          setEditorTab("edit");
+          toast.success("CV loaded into document editor — edit like Word / Google Docs.");
+          setEditorTab("document");
           return;
         }
       }
       // local fallback
       const { importCvFromText } = await import("@/lib/cv/ai-fill");
       setData(importCvFromText(text, data));
-      toast.success("CV imported locally. Review all fields.");
-      setEditorTab("edit");
+      toast.success("CV imported — edit in the document canvas.");
+      setEditorTab("document");
     } catch {
       toast.error("Could not read file.");
     } finally {
@@ -369,8 +370,9 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           saveLibrary(next);
           setActiveId(doc.id);
           setData(sampleData);
+          setEditorTab("document");
           setView("editor");
-          toast.success("Sample copied — replace placeholder details with your own.");
+          toast.success("Sample copied — edit in the document canvas; replace placeholders.");
         }}
       />
     );
@@ -425,7 +427,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
               desc: "Upload .txt, PDF or Word — then edit in the builder.",
               action: () => {
                 startBlank();
-                setEditorTab("ai");
+                setEditorTab("document");
                 setTimeout(() => {
                   document.getElementById("cv-file-upload")?.click();
                 }, 200);
@@ -516,7 +518,8 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           <div className="flex gap-1 rounded-lg border border-border bg-muted/30 p-1">
             {(
               [
-                ["edit", "Edit", FileText],
+                ["document", "Document", FileText],
+                ["edit", "Fields", FileText],
                 ["design", "Design", LayoutTemplate],
                 ["ai", "AI Assist", Sparkles],
               ] as const
@@ -537,6 +540,17 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
               </button>
             ))}
           </div>
+
+          {editorTab === "document" && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Edit your CV on the page like Microsoft Word or Google Docs.
+                Select any text and use <strong>AI Improve selection</strong> in the toolbar.
+                Switch to Fields for structured form editing, or Design for templates.
+              </p>
+              <CvDocumentEditor data={data} onChange={setData} />
+            </div>
+          )}
 
           {editorTab === "design" && (
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
