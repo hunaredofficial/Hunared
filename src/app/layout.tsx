@@ -105,7 +105,7 @@ export default function RootLayout({
             <GeoProvider>
               <TooltipProvider>
                 <NextTopLoader
-                  color="#3b82f6"
+                  color="#6366f1"
                   height={3}
                   showSpinner={false}
                   easing="ease"

@@ -41,6 +41,7 @@ import {
   improveText,
   tailorSuggestions,
 } from "@/lib/cv/ai-fill";
+import { textToDocumentHtml, ensureDocumentHtml } from "@/lib/cv/text-to-html";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
 import {
   loadLibrary,
@@ -54,6 +55,7 @@ import { CvPreview } from "./CvPreview";
 import { CvLibrary } from "./CvLibrary";
 import { CvSamples } from "./CvSamples";
 import { CvDocumentEditor } from "./CvDocumentEditor";
+import { CvOwnDocumentEditor } from "./CvOwnDocumentEditor";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { toast } from "sonner";
 
@@ -83,7 +85,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [importText, setImportText] = useState("");
   const [showImport, setShowImport] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [editorTab, setEditorTab] = useState<"edit" | "design" | "ai">("edit");
+  const [editorTab, setEditorTab] = useState<"document" | "edit" | "design" | "ai">("document");
   const [jobDesc, setJobDesc] = useState("");
   const [tailorTips, setTailorTips] = useState<string[]>([])
 
@@ -218,24 +220,39 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       }
 
       setAiLoading(true);
-      const res = await fetch("/api/cv/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, current: data }),
-      });
-      if (res.ok) {
-        const json = (await res.json()) as { cv?: typeof data };
-        if (json.cv) {
-          setData({ ...DEFAULT_CV(), ...json.cv });
-          toast.success("CV loaded into document editor — edit like Word / Google Docs.");
-          setEditorTab("document");
-          return;
+      // Primary: keep the uploaded file as the editable document (own format/content)
+      const docHtml = textToDocumentHtml(text);
+      let structured = { ...DEFAULT_CV(), ...data };
+      try {
+        const res = await fetch("/api/cv/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, current: data }),
+        });
+        if (res.ok) {
+          const json = (await res.json()) as { cv?: typeof data };
+          if (json.cv) structured = { ...DEFAULT_CV(), ...json.cv };
+        } else {
+          const { importCvFromText } = await import("@/lib/cv/ai-fill");
+          structured = importCvFromText(text, data);
+        }
+      } catch {
+        try {
+          const { importCvFromText } = await import("@/lib/cv/ai-fill");
+          structured = importCvFromText(text, data);
+        } catch {
+          /* keep base */
         }
       }
-      // local fallback
-      const { importCvFromText } = await import("@/lib/cv/ai-fill");
-      setData(importCvFromText(text, data));
-      toast.success("CV imported — edit in the document canvas.");
+      setData({
+        ...structured,
+        documentHtml: docHtml,
+        sourceFileName: file.name,
+        editMode: "own",
+      });
+      toast.success(
+        "Your CV is open for editing — same content from your file. Edit freely, then Print → PDF."
+      );
       setEditorTab("document");
     } catch {
       toast.error("Could not read file.");
@@ -250,10 +267,17 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       return;
     }
     const imported = importCvFromText(importText, data);
-    setData(imported);
+    const docHtml = textToDocumentHtml(importText);
+    setData({
+      ...imported,
+      documentHtml: docHtml,
+      sourceFileName: data.sourceFileName || "pasted-cv.txt",
+      editMode: "own",
+    });
     setShowImport(false);
     setImportText("");
-    toast.success("Imported text structured into CV fields. Review carefully.");
+    setEditorTab("document");
+    toast.success("Your CV text is open as an editable document — edit freely.");
   }
 
   async function runAi() {
@@ -543,12 +567,35 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
 
           {editorTab === "document" && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Edit your CV on the page like Microsoft Word or Google Docs.
-                Select any text and use <strong>AI Improve selection</strong> in the toolbar.
-                Switch to Fields for structured form editing, or Design for templates.
-              </p>
-              <CvDocumentEditor data={data} onChange={setData} />
+              {data.editMode === "own" || (data.documentHtml && data.documentHtml.length > 20) ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Your uploaded CV</strong>
+                    {data.sourceFileName ? ` (${data.sourceFileName})` : ""}.
+                    Edit this document directly — content stays as your file, not a Hunared template.
+                    Select text → AI Improve. Print → Save as PDF when done.
+                  </p>
+                  <CvOwnDocumentEditor
+                    html={data.documentHtml || ""}
+                    sourceFileName={data.sourceFileName}
+                    onChangeHtml={(html) =>
+                      setData((d) => ({
+                        ...d,
+                        documentHtml: html,
+                        editMode: "own",
+                      }))
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    Document view built from your fields. Upload your own CV file to edit
+                    <strong> that file&apos;s content</strong> directly.
+                  </p>
+                  <CvDocumentEditor data={data} onChange={setData} />
+                </>
+              )}
             </div>
           )}
 

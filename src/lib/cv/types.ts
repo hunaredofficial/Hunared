@@ -80,6 +80,16 @@ export type CvData = {
   projects: CvProject[];
   template: CvTemplateId;
   sectionOrder: CvSectionKey[];
+  /**
+   * Free-form document HTML for "edit my own uploaded CV" mode.
+   * When set, Document tab edits THIS content (user's structure/style),
+   * not a regenerated Hunared template layout.
+   */
+  documentHtml?: string;
+  /** Original uploaded file name */
+  sourceFileName?: string;
+  /** own = edit uploaded document; template = structured Hunared templates */
+  editMode?: "own" | "template";
 };
 
 export type CvDocumentMeta = {
@@ -157,6 +167,9 @@ export const DEFAULT_CV = (): CvData => ({
   projects: [],
   template: "professional",
   sectionOrder: [...DEFAULT_SECTION_ORDER],
+  documentHtml: "",
+  sourceFileName: "",
+  editMode: "template",
 });
 
 export type CvTemplateMeta = {

@@ -28,6 +28,9 @@ function normalizeData(raw: Partial<CvData> | null | undefined): CvData {
     sectionOrder: Array.isArray(raw.sectionOrder) && raw.sectionOrder.length
       ? raw.sectionOrder
       : base.sectionOrder,
+    documentHtml: typeof raw.documentHtml === "string" ? raw.documentHtml : "",
+    sourceFileName: typeof raw.sourceFileName === "string" ? raw.sourceFileName : "",
+    editMode: raw.editMode === "own" ? "own" : "template",
   };
 }
 
