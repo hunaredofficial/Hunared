@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles,
   Plus,
@@ -86,6 +86,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [showImport, setShowImport] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [editorTab, setEditorTab] = useState<"document" | "edit" | "design" | "ai">("document");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [jobDesc, setJobDesc] = useState("");
   const [tailorTips, setTailorTips] = useState<string[]>([])
 
@@ -112,6 +113,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       setTimeout(() => setSavedFlash(false), 1200);
     }, 600);
     return () => clearTimeout(t);
+      {filePicker}
   }, [data, activeId, mounted]);
 
   const patch = useCallback((partial: Partial<CvData>) => {
@@ -244,14 +246,35 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           /* keep base */
         }
       }
-      setData({
-        ...structured,
-        documentHtml: docHtml,
-        sourceFileName: file.name,
-        editMode: "own",
-      });
+      // Ensure we have an active document in the library
+      let id = activeId;
+      if (!id || view !== "editor") {
+        const doc = createDocument(
+          file.name.replace(/\.[^.]+$/, "") || "Uploaded CV",
+          {
+            ...structured,
+            documentHtml: docHtml,
+            sourceFileName: file.name,
+            editMode: "own",
+          }
+        );
+        const next = [doc, ...docs];
+        setDocs(next);
+        saveLibrary(next);
+        id = doc.id;
+        setActiveId(id);
+        setData(doc.data);
+        setView("editor");
+      } else {
+        setData({
+          ...structured,
+          documentHtml: docHtml,
+          sourceFileName: file.name,
+          editMode: "own",
+        });
+      }
       toast.success(
-        "Your CV is open for editing — same content from your file. Edit freely, then Print → PDF."
+        "Your CV is open for editing — content from your file. Edit freely, then Print → PDF."
       );
       setEditorTab("document");
     } catch {
@@ -348,8 +371,27 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
     );
   }
 
+  // Always-mounted file picker (available from Create + editor)
+  const filePicker = (
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept=".txt,.md,.rtf,.pdf,.doc,.docx,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      className="sr-only"
+      aria-hidden
+      tabIndex={-1}
+      onChange={(e) => {
+        const f = e.target.files?.[0] || null;
+        void handleFileUpload(f);
+        e.target.value = "";
+      }}
+    />
+  );
+
   if (view === "library") {
     return (
+      <>
+      {filePicker}
       <CvLibrary
         docs={docs}
         onCreate={() => setView("start")}
@@ -380,6 +422,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           saveLibrary(next);
         }}
       />
+      </>
     );
   }
 
@@ -405,6 +448,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   if (view === "start") {
     return (
       <div className="max-w-3xl mx-auto space-y-6">
+        {filePicker}
         <Button
           variant="ghost"
           size="sm"
@@ -448,13 +492,10 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
             {
               icon: Upload,
               title: "Upload CV file",
-              desc: "Upload .txt, PDF or Word — then edit in the builder.",
+              desc: "Upload .txt, PDF or Word from your device — then edit it.",
               action: () => {
-                startBlank();
-                setEditorTab("document");
-                setTimeout(() => {
-                  document.getElementById("cv-file-upload")?.click();
-                }, 200);
+                // Open native file picker immediately (must stay in user gesture)
+                fileInputRef.current?.click();
               },
             },
             {
@@ -589,10 +630,21 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-muted-foreground">
-                    Document view built from your fields. Upload your own CV file to edit
-                    <strong> that file&apos;s content</strong> directly.
-                  </p>
+                  <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      Document view is empty. Upload your CV from your device to edit
+                      <strong> your file&apos;s content</strong> directly.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload CV from device
+                    </Button>
+                  </div>
                   <CvDocumentEditor data={data} onChange={setData} />
                 </>
               )}
@@ -844,7 +896,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                     type="file"
                     accept=".txt,.md,.rtf,.pdf,.doc,.docx,text/plain"
                     className="hidden"
-                    id="cv-file-upload"
+                    id="cv-file-upload-ai"
                     onChange={(e) => {
                       const f = e.target.files?.[0] || null;
                       void handleFileUpload(f);
@@ -858,7 +910,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                     className="w-full gap-1.5"
                     disabled={aiLoading}
                     onClick={() =>
-                      document.getElementById("cv-file-upload")?.click()
+                      fileInputRef.current?.click()
                     }
                   >
                     <Upload className="h-3.5 w-3.5" />
