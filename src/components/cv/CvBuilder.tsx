@@ -43,6 +43,7 @@ import {
 } from "@/lib/cv/ai-fill";
 import { textToDocumentHtml, ensureDocumentHtml } from "@/lib/cv/text-to-html";
 import { extractTextFromFile, textToCvDocumentHtml } from "@/lib/cv/extract-file-text";
+import { understandCv } from "@/lib/cv/understand-cv";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
 import {
   loadLibrary,
@@ -210,30 +211,54 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
         toast.message("Read your file — please review the document carefully.");
       }
 
-      // Build editable document HTML matching CV section structure (not Hunared template)
-      const docHtml = textToCvDocumentHtml(text);
-      let structured = { ...DEFAULT_CV(), ...data };
+      // Deep understanding: all sections, jobs, duties → structured + full document HTML
+      const understood = understandCv(text, data);
+      let structured = understood.data;
+      let docHtml = understood.documentHtml;
+      // If understanding produced a thin document, fall back to line HTML
+      if (!docHtml || docHtml.length < 80) {
+        docHtml = textToCvDocumentHtml(text);
+      }
       try {
         const res = await fetch("/api/cv/parse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, current: data }),
+          body: JSON.stringify({ text, current: structured }),
         });
         if (res.ok) {
           const json = (await res.json()) as { cv?: typeof data };
-          if (json.cv) structured = { ...DEFAULT_CV(), ...json.cv };
-        } else {
-          const { importCvFromText } = await import("@/lib/cv/ai-fill");
-          structured = importCvFromText(text, data);
+          // Merge server parse only for empty fields — never drop understood jobs/summary
+          if (json.cv) {
+            structured = {
+              ...json.cv,
+              fullName: structured.fullName || json.cv.fullName,
+              title: structured.title || json.cv.title,
+              email: structured.email || json.cv.email,
+              phone: structured.phone || json.cv.phone,
+              location: structured.location || json.cv.location,
+              summary: structured.summary || json.cv.summary,
+              experience:
+                structured.experience.filter((e) => e.company || e.title).length >=
+                (json.cv.experience?.filter((e) => e.company || e.title).length || 0)
+                  ? structured.experience
+                  : json.cv.experience || structured.experience,
+              education:
+                structured.education.filter((e) => e.degree || e.school).length
+                  ? structured.education
+                  : json.cv.education || structured.education,
+              certifications: structured.certifications || json.cv.certifications,
+              skills: structured.skills || json.cv.skills,
+              achievements: structured.achievements || json.cv.achievements,
+              template: structured.template || json.cv.template,
+            };
+          }
         }
       } catch {
-        try {
-          const { importCvFromText } = await import("@/lib/cv/ai-fill");
-          structured = importCvFromText(text, data);
-        } catch {
-          /* keep base */
-        }
+        /* local understanding is enough */
       }
+      toast.message(
+        `Understood ${understood.experienceCount} role(s), sections: ${understood.sectionsFound.filter((s) => s !== "header").slice(0, 6).join(", ") || "document"}`
+      );
       // Ensure we have an active document in the library
       let id = activeId;
       if (!id || view !== "editor") {
@@ -277,11 +302,10 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       toast.error("Paste your CV text first.");
       return;
     }
-    const imported = importCvFromText(importText, data);
-    const docHtml = textToDocumentHtml(importText);
+    const understood = understandCv(importText, data);
     setData({
-      ...imported,
-      documentHtml: docHtml,
+      ...understood.data,
+      documentHtml: understood.documentHtml || textToDocumentHtml(importText),
       sourceFileName: data.sourceFileName || "pasted-cv.txt",
       editMode: "own",
     });

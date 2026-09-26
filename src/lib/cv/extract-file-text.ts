@@ -161,17 +161,36 @@ async function extractWithPdfJs(buf: ArrayBuffer): Promise<string> {
     for (const it of items) {
       const s = typeof it.str === "string" ? it.str : "";
       if (!s) continue;
-      const y = it.transform ? Math.round(it.transform[5]) : 0;
+      const y = it.transform ? it.transform[5] : 0;
       const x = it.transform ? it.transform[4] : 0;
-      const key = Math.round(y / 2) * 2;
+      // Finer Y bucket so contact columns still merge on same line
+      const key = Math.round(y);
       if (!rows.has(key)) rows.set(key, []);
       rows.get(key)!.push({ x, s });
     }
-    const ys = [...rows.keys()].sort((a, b) => b - a);
+    // Merge rows that are within 3 units of Y (same visual line)
+    const ysRaw = [...rows.keys()].sort((a, b) => b - a);
+    const merged: { y: number; cells: { x: number; s: string }[] }[] = [];
+    for (const y of ysRaw) {
+      const cells = rows.get(y)!;
+      if (merged.length && Math.abs(merged[merged.length - 1].y - y) <= 3) {
+        merged[merged.length - 1].cells.push(...cells);
+      } else {
+        merged.push({ y, cells: [...cells] });
+      }
+    }
     const lines: string[] = [];
-    for (const y of ys) {
-      const row = rows.get(y)!.sort((a, b) => a.x - b.x);
-      lines.push(row.map((r) => r.s).join(" ").replace(/\s+/g, " ").trim());
+    for (const row of merged) {
+      const cells = row.cells.sort((a, b) => a.x - b.x);
+      let line = "";
+      let prevX = -9999;
+      for (const c of cells) {
+        if (line && c.x - prevX > 12) line += "  "; // column gap
+        else if (line && !line.endsWith(" ") && !c.s.startsWith(" ")) line += " ";
+        line += c.s;
+        prevX = c.x + c.s.length * 4;
+      }
+      lines.push(line.replace(/[ \t]+/g, " ").trim());
     }
     pageTexts.push(lines.filter(Boolean).join("\n"));
   }
