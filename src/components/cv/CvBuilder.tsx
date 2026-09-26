@@ -42,6 +42,7 @@ import {
   tailorSuggestions,
 } from "@/lib/cv/ai-fill";
 import { textToDocumentHtml, ensureDocumentHtml } from "@/lib/cv/text-to-html";
+import { extractTextFromFile, textToCvDocumentHtml } from "@/lib/cv/extract-file-text";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
 import {
   loadLibrary,
@@ -187,43 +188,30 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   async function handleFileUpload(file: File | null) {
     if (!file) return;
     const name = file.name.toLowerCase();
-    const isText =
-      name.endsWith(".txt") ||
-      name.endsWith(".md") ||
-      name.endsWith(".rtf") ||
-      file.type.startsWith("text/");
     try {
-      let text = "";
-      if (isText) {
-        text = await file.text();
-      } else if (name.endsWith(".pdf") || name.endsWith(".doc") || name.endsWith(".docx")) {
-        // Browser cannot reliably parse binary Office/PDF without extra libs.
-        // Read as text best-effort (works for some text-based PDFs) and prompt user.
-        const buf = await file.arrayBuffer();
-        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(buf);
-        // Extract readable sequences
-        const readable = decoded
-          .replace(/\u0000/g, " ")
-          .replace(/[^\x09\x0A\x0D\x20-\x7E\u00A0-\u024F]/g, " ")
-          .replace(/\s{2,}/g, " ");
-        text = readable.slice(0, 50000);
-        if (text.trim().length < 80) {
-          toast.message(
-            "Could not fully read this file in-browser. Paste the CV text below, or export as .txt and upload again."
-          );
-          setShowImport(true);
-          setEditorTab("ai");
-          return;
-        }
-        toast.message("Extracted text from file — review fields carefully (binary formats vary).");
-      } else {
-        toast.error("Supported: .txt, .md, .pdf, .doc, .docx (best with .txt export).");
+      setAiLoading(true);
+      const { text, method } = await extractTextFromFile(file);
+      // Reject PDF structure dumps (never show %PDF /Type /Catalog to the user)
+      const looksLikePdfJunk =
+        /%PDF-|\/Type\s*\/Catalog|endobj\s+\d+\s+obj/i.test(text.slice(0, 500)) &&
+        !/CAREER|OBJECTIVE|EDUCATION|EXPERIENCE|SKILLS|SUMMARY/i.test(text);
+
+      if (!text.trim() || text.trim().length < 40 || looksLikePdfJunk) {
+        toast.message(
+          "This PDF uses a locked layout (e.g. Canva). Paste your CV text, or Save as .txt / Word and upload again."
+        );
+        setShowImport(true);
+        setEditorTab("ai");
+        setAiLoading(false);
         return;
       }
 
-      setAiLoading(true);
-      // Primary: keep the uploaded file as the editable document (own format/content)
-      const docHtml = textToDocumentHtml(text);
+      if (method === "fallback") {
+        toast.message("Read your file — please review the document carefully.");
+      }
+
+      // Build editable document HTML matching CV section structure (not Hunared template)
+      const docHtml = textToCvDocumentHtml(text);
       let structured = { ...DEFAULT_CV(), ...data };
       try {
         const res = await fetch("/api/cv/parse", {

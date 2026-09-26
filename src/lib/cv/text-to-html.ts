@@ -1,5 +1,14 @@
 /** Convert plain extracted CV text into editable HTML, preserving line structure. */
+function looksLikePdfDump(s: string) {
+  return /%PDF-|\/Type\s*\/Catalog|endobj/i.test(s.slice(0, 400));
+}
+
 export function textToDocumentHtml(text: string): string {
+  if (looksLikePdfDump(text)) {
+    // Never render PDF structure as the CV document
+    return "<p><em>Could not read this PDF layout. Paste your CV text instead.</em></p>";
+  }
+
   const lines = text
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")

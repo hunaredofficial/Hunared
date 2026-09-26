@@ -52,12 +52,12 @@ export function CvOwnDocumentEditor({
     editorProps: {
       attributes: {
         class: cn(
-          "prose prose-sm max-w-none min-h-[32rem] px-10 py-12 sm:px-14 focus:outline-none",
-          "prose-headings:text-neutral-900 prose-p:text-neutral-800 prose-li:text-neutral-800",
-          "prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-2",
-          "prose-h2:text-sm prose-h2:font-bold prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-6 prose-h2:mb-2 prose-h2:border-b prose-h2:border-neutral-200 prose-h2:pb-1",
-          "prose-p:my-1 prose-p:leading-relaxed prose-p:text-[13px]",
-          "prose-ul:my-1 prose-li:my-0.5 prose-li:text-[13px]"
+          "prose prose-sm max-w-none min-h-[32rem] px-12 py-12 sm:px-16 focus:outline-none",
+          "prose-headings:text-black prose-p:text-neutral-900 prose-li:text-neutral-900",
+          "prose-h1:text-[22px] prose-h1:font-bold prose-h1:mb-1 prose-h1:tracking-tight prose-h1:uppercase",
+          "prose-h2:text-[12px] prose-h2:font-bold prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-5 prose-h2:mb-2 prose-h2:border-b prose-h2:border-black prose-h2:pb-1",
+          "prose-p:my-1 prose-p:leading-relaxed prose-p:text-[12.5px]",
+          "prose-ul:my-1 prose-li:my-0.5 prose-li:text-[12.5px] prose-strong:text-black"
         ),
       },
     },
@@ -209,7 +209,7 @@ export function CvOwnDocumentEditor({
           <EditorContent editor={editor} />
         </div>
         <p className="mx-auto max-w-[48rem] mt-3 text-[11px] text-muted-foreground text-center">
-          This is <strong>your uploaded CV</strong> as an editable document — not a Hunared template.
+          This is <strong>your CV content</strong> in a classic editable document. Section order follows your file — edit any line, heading, or bullet.
           Edit text, headings, and bullets freely. Select text for AI Improve. Use Print → Save as PDF to export.
         </p>
       </div>
