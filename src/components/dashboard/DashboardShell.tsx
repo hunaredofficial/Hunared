@@ -21,6 +21,7 @@ import {
   Bell,
   BellRing,
   FileText,
+  Sparkles,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/cv",
         label: "CV Builder",
         icon: <FileText className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/settings/ai",
+        label: "Privacy & AI",
+        icon: <Sparkles className="h-4 w-4" />,
       },
       {
         href: "/candidates",

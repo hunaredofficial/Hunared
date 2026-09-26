@@ -28,6 +28,13 @@ export type AgentIntent =
   | "notifications"
   | "subscriptions"
   | "clarify"
+  | "cover_letter"
+  | "match_job"
+  | "compare"
+  | "applications"
+  | "interview_prep"
+  | "career_roadmap"
+  | "ai_settings"
   | "unknown";
 
 export type AgentAction = {
@@ -282,7 +289,7 @@ export const COMMAND_PACKS: {
       { label: "Career tips", text: "Show career tips articles" },
       { label: "HSE safety", text: "HSE safety learning articles" },
       { label: "Programs", text: "Open Hunared programs" },
-      { label: "Finder", text: "Open Finder Center lost and found" },
+      { label: "Finder", text: "Open Hunared Finder lost and found" },
       { label: "Contact support", text: "Contact Hunared support" },
       { label: "What can you do?", text: "What can you do on Hunared?" },
     ],
@@ -601,8 +608,8 @@ export function parseUserMessage(
     return {
       intent: "search_finder",
       href: "/finder",
-      label: "Finder Center",
-      message: "Opening Finder Center (lost & found community).",
+      label: "Hunared Finder",
+      message: "Opening Hunared Finder (lost & found community).",
       autoNavigate: true,
     };
   }
@@ -786,4 +793,122 @@ export function parseUserMessage(
     message:
       "I didn’t catch a clear action. Try: “Instrument technician jobs in Khobar”, “Apartment for rent in Dammam”, or “What can you do?”",
   };
+}
+
+
+/** Extra high-value intents layered on Agent Pro engine */
+export function enhanceAction(action: AgentAction, q: string, role?: string): AgentAction {
+  const lower = q.toLowerCase();
+
+  if (/cover\s*letter/i.test(lower)) {
+    return {
+      intent: "cover_letter",
+      href: "/dashboard/cv",
+      label: "Open CV Builder",
+      message:
+        "I can help you prepare a cover letter in CV Builder. Open your CV, then use AI Assist with: \"Write a cover letter for [job title] at [company].\" Review before sending.",
+      secondary: [
+        { label: "Browse jobs", href: "/jobs" },
+        { label: "My CVs", href: "/dashboard/cv" },
+      ],
+    };
+  }
+
+  if (/am i qualified|match(ing)? (score|percent)|fit for this job|skills? (am i )?missing/i.test(lower)) {
+    return {
+      intent: "match_job",
+      href: "/jobs",
+      label: "Browse jobs",
+      message:
+        "Open a job page, then ask again — I compare your profile skills and experience to the job requirements. I only report matches supported by your data; I never invent qualifications.",
+      secondary: [
+        { label: "Edit profile", href: "/dashboard/profile" },
+        { label: "CV Builder", href: "/dashboard/cv" },
+      ],
+    };
+  }
+
+  if (/interview|prepare for interview/i.test(lower)) {
+    return {
+      intent: "interview_prep",
+      href: "/learning",
+      label: "Learning Hub",
+      message:
+        "Interview prep: review the job description, prepare STAR examples from your experience, and list questions for the employer. I can suggest practice questions once you share the job title — I will not invent your work history.",
+      secondary: [
+        { label: "Jobs", href: "/jobs" },
+        { label: "CV Builder", href: "/dashboard/cv" },
+      ],
+    };
+  }
+
+  if (/career (plan|path|roadmap)|what should i learn|skills? (to |I should )?learn/i.test(lower)) {
+    return {
+      intent: "career_roadmap",
+      href: "/learning",
+      label: "Explore learning",
+      message:
+        "Career roadmap: 1) Confirm your target role on your profile. 2) List skills from recent jobs. 3) Find gaps vs target job ads. 4) Take relevant courses/certifications on Hunared Learning. 5) Update your CV. Tell me your current and target role for a tailored outline.",
+      secondary: [
+        { label: "Learning", href: "/learning" },
+        { label: "Program", href: "/program" },
+        { label: "Jobs", href: "/jobs" },
+      ],
+    };
+  }
+
+  if (/my applications|application status|track application/i.test(lower)) {
+    return {
+      intent: "applications",
+      href: "/dashboard",
+      label: "Dashboard",
+      message:
+        "Your applications and activity are on your Dashboard. Open Dashboard to review recent activity. (Application tracking depends on what you have saved or submitted on Hunared.)",
+      secondary: [
+        { label: "Saved items", href: "/dashboard/saved" },
+        { label: "Jobs", href: "/jobs" },
+      ],
+    };
+  }
+
+  if (/compare (these )?jobs|compare listings/i.test(lower)) {
+    return {
+      intent: "compare",
+      href: "/jobs",
+      label: "Open Jobs",
+      message:
+        "Open the jobs you want to compare (or save them first). Compare location, employment type, requirements, and company. Paste two job titles or links and I will help structure a side-by-side checklist — I will not invent salaries or benefits.",
+      needsConfirm: false,
+      secondary: [{ label: "Saved", href: "/dashboard/saved" }],
+    };
+  }
+
+  if (/turn (on|off) (hunared )?ai|ai settings|disable ai|enable ai/i.test(lower)) {
+    return {
+      intent: "ai_settings",
+      href: "/dashboard/settings/ai",
+      label: "Privacy & AI settings",
+      message:
+        "You control Hunared AI in Dashboard → Settings → Privacy & AI. Turn AI ON or OFF anytime. When OFF, AI assistance and AI recommendations stop; Jobs, Marketplace, and other features keep working.",
+      secondary: [{ label: "Dashboard", href: "/dashboard" }],
+    };
+  }
+
+  // Role-aware nudge for employers
+  if (role === "employer" && /find (me )?(candidates|talent|technicians)/i.test(lower)) {
+    return {
+      intent: "search_candidates",
+      href: "/candidates?available=yes",
+      label: "Browse talent",
+      message:
+        "Opening Candidates for hiring. Filter by skills and availability. Only public profiles are shown.",
+      autoNavigate: true,
+      secondary: [
+        { label: "Post a job", href: "/post" },
+        { label: "My jobs", href: "/dashboard/jobs" },
+      ],
+    };
+  }
+
+  return action;
 }
