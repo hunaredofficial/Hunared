@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase";
 import {
   parseUserMessage,
   enhanceAction,
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     if (userId) {
       try {
-        const supabase = createClient();
+        const supabase = createAdminClient();
         const { data } = await supabase
           .from("profiles")
           .select("role, ai_enabled, ai_personalization")

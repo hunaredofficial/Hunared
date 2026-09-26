@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase";
 
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("profiles")
       .select("ai_enabled, ai_personalization, ai_cv_analysis, ai_notifications")
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No settings provided" }, { status: 400 });
   }
   try {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
     if (error) {
       return NextResponse.json(
