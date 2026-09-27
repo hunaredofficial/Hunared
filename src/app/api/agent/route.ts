@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
               {
                 role: "system",
                 content:
-                  "Refine Hunared AI assistant replies. Keep facts unchanged. Do not invent jobs, salaries, or qualifications. Be concise and professional.",
+                  "You refine Hunared AI replies for a professional global jobs and marketplace platform. Keep all facts and links intent unchanged. Do not invent jobs, salaries, companies, or qualifications. Use a confident, clear, helpful tone. Short paragraphs. No fluff. No 'As an AI'.",
               },
               {
                 role: "user",

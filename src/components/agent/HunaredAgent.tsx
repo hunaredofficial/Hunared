@@ -12,6 +12,16 @@ import {
   ThumbsUp,
   ThumbsDown,
   Power,
+  Briefcase,
+  ShoppingBag,
+  GraduationCap,
+  FileText,
+  Building2,
+  Users,
+  ArrowRight,
+  Loader2,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,41 +35,13 @@ type Msg = {
   action?: AgentAction;
 };
 
-const COMMAND_PACKS = [
-  {
-    title: "Jobs & career",
-    commands: [
-      { label: "Instrument jobs SA", text: "Find Instrument Technician jobs in Saudi Arabia" },
-      { label: "Jobs in Jubail", text: "Find jobs in Jubail" },
-      { label: "Match my profile", text: "Find jobs matching my profile" },
-      { label: "Career roadmap", text: "Help me build a career roadmap" },
-      { label: "Interview prep", text: "Help me prepare for an interview" },
-    ],
-  },
-  {
-    title: "CV",
-    commands: [
-      { label: "Open CV Builder", text: "Open CV Builder" },
-      { label: "Improve CV", text: "Help me improve my CV" },
-      { label: "Cover letter", text: "Help me write a cover letter" },
-    ],
-  },
-  {
-    title: "Marketplace",
-    commands: [
-      { label: "For sale", text: "Browse marketplace for sale" },
-      { label: "Accommodation", text: "Find accommodation" },
-      { label: "Services", text: "Find services near me" },
-    ],
-  },
-  {
-    title: "Learning & account",
-    commands: [
-      { label: "Courses", text: "Find courses to improve my skills" },
-      { label: "Saved items", text: "Show my saved items" },
-      { label: "AI settings", text: "Open AI settings" },
-    ],
-  },
+const QUICK_START = [
+  { icon: Briefcase, label: "Find jobs", text: "Find instrument technician jobs in Saudi Arabia" },
+  { icon: FileText, label: "CV Builder", text: "Open CV Builder" },
+  { icon: ShoppingBag, label: "Marketplace", text: "Browse marketplace for sale" },
+  { icon: GraduationCap, label: "Learning", text: "Find courses to improve my skills" },
+  { icon: Building2, label: "Companies", text: "Show companies in Saudi Arabia" },
+  { icon: Users, label: "Talent", text: "Show candidates available for hire" },
 ];
 
 function contextualSuggestions(path: string): string[] {
@@ -67,19 +49,19 @@ function contextualSuggestions(path: string): string[] {
     return [
       "Am I qualified for this job?",
       "Find similar jobs",
-      "Improve my CV for this job",
-      "Explain the requirements",
+      "Improve my CV for this role",
+      "Help me prepare for an interview",
     ];
   }
   if (path.startsWith("/jobs")) {
     return [
-      "Find HSE Officer jobs in Saudi Arabia",
-      "Jobs in Jubail",
-      "Show permanent jobs",
+      "HSE Officer jobs in Dammam",
+      "Permanent jobs in Jubail",
+      "Jobs matching my profile",
     ];
   }
   if (path.startsWith("/market")) {
-    return ["Find used laptops", "Find accommodation", "Find electrical services"];
+    return ["Apartment for rent in Dammam", "Used laptops for sale", "Electrical services"];
   }
   if (path.includes("/cv")) {
     return [
@@ -89,21 +71,50 @@ function contextualSuggestions(path: string): string[] {
     ];
   }
   if (path.startsWith("/companies")) {
-    return ["Show company jobs", "Find companies hiring technicians"];
+    return ["Show company jobs", "Find oil and gas companies"];
   }
-  if (path.startsWith("/learning") || path.startsWith("/program")) {
+  if (path.startsWith("/learning") || path.startsWith("/program") || path.startsWith("/education")) {
     return ["Will this help my career?", "Find related jobs"];
   }
   return [
-    "Find Instrument Technician jobs in Saudi Arabia",
+    "Instrument technician jobs in Jubail",
     "Open CV Builder",
-    "Browse marketplace",
-    "Find courses for my career",
+    "Apartment for rent in Dammam",
+    "What can you do?",
   ];
 }
 
+/** Light markdown: **bold** and newlines */
+function renderText(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <span key={i}>
+        {i > 0 && <br />}
+        {parts.map((part, j) => {
+          if (part.startsWith("**") && part.endsWith("**")) {
+            return (
+              <strong key={j} className="font-semibold text-foreground">
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          if (part.startsWith("•") || part.startsWith("- ")) {
+            return (
+              <span key={j} className="text-muted-foreground">
+                {part}
+              </span>
+            );
+          }
+          return <span key={j}>{part}</span>;
+        })}
+      </span>
+    );
+  });
+}
+
 type Props = {
-  /** Floating launcher (default) or embedded full panel */
   variant?: "float" | "page";
   className?: string;
 };
@@ -117,20 +128,21 @@ export function HunaredAgent({ variant = "float", className }: Props) {
     {
       id: "welcome",
       role: "assistant",
-      text: "I'm Hunared AI — I help you find jobs, improve your CV, explore the marketplace, and navigate the platform. What do you need?",
+      text: "I'm **Hunared AI** — your guide for jobs, CV, marketplace, companies, and learning.\n\nTell me what you need in plain language, or pick a shortcut below.",
     },
   ]);
   const [loading, setLoading] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const [ctx, setCtx] = useState<ConversationContext>({});
   const [aiEnabled, setAiEnabled] = useState(true);
-  const [pendingConfirm, setPendingConfirm] = useState<AgentAction | null>(null);
+  const [listening, setListening] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
     try {
-      const v = localStorage.getItem("hunared_ai_enabled");
-      if (v === "0") setAiEnabled(false);
+      if (localStorage.getItem("hunared_ai_enabled") === "0") setAiEnabled(false);
     } catch {
       /* ignore */
     }
@@ -157,6 +169,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
     async (text: string) => {
       const q = text.trim();
       if (!q || loading) return;
+
       if (!aiEnabled) {
         setMsgs((m) => [
           ...m,
@@ -164,7 +177,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           {
             id: `a-${Date.now()}`,
             role: "assistant",
-            text: "Hunared AI is OFF for your account. Turn it ON in Dashboard → Settings → Privacy & AI. Jobs, Marketplace, and other features still work normally.",
+            text: "Hunared AI is **OFF** for your account.\n\nJobs, Marketplace, and other features still work. Turn AI on anytime in Privacy & AI settings.",
             action: {
               intent: "ai_settings",
               href: "/dashboard/settings/ai",
@@ -180,6 +193,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       setShowCommands(false);
       setMsgs((m) => [...m, { id: `u-${Date.now()}`, role: "user", text: q }]);
       setLoading(true);
+
       try {
         const res = await fetch("/api/agent", {
           method: "POST",
@@ -187,6 +201,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           body: JSON.stringify({ message: q, context: ctx, path: pathname }),
         });
         const j = await res.json();
+
         if (j.disabled) {
           setAiEnabled(false);
           setMsgs((m) => [
@@ -200,6 +215,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           ]);
           return;
         }
+
         const action = j.action as AgentAction;
         setCtx({
           lastIntent: action.intent,
@@ -215,10 +231,10 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             action,
           },
         ]);
-        if (action.needsConfirm && action.href) {
-          setPendingConfirm(action);
-        } else if (action.autoNavigate && action.href) {
-          setTimeout(() => router.push(action.href!), 600);
+
+        // Only auto-navigate on explicit high-confidence short commands
+        if (action.autoNavigate && action.href && action.intent !== "search_jobs" && action.intent !== "search_market") {
+          setTimeout(() => router.push(action.href!), 900);
         }
       } catch {
         setMsgs((m) => [
@@ -226,22 +242,66 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           {
             id: `a-${Date.now()}`,
             role: "assistant",
-            text: "Something went wrong. Please try again, or use the main search and menus.",
+            text: "Something went wrong on my side. Please try again, or use the main search and menus.",
           },
         ]);
       } finally {
         setLoading(false);
+        inputRef.current?.focus();
       }
     },
     [aiEnabled, ctx, loading, pathname, router]
   );
 
-  function runAction(action: AgentAction) {
-    if (action.needsConfirm) {
-      setPendingConfirm(action);
+  function toggleVoice() {
+    const w = window as unknown as {
+      webkitSpeechRecognition?: new () => {
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        onresult: ((e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void) | null;
+        onerror: (() => void) | null;
+        onend: (() => void) | null;
+        start: () => void;
+        stop: () => void;
+      };
+      SpeechRecognition?: new () => {
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        onresult: ((e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void) | null;
+        onerror: (() => void) | null;
+        onend: (() => void) | null;
+        start: () => void;
+        stop: () => void;
+      };
+    };
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) {
+      toast.message("Voice input is not supported in this browser");
       return;
     }
-    if (action.href) router.push(action.href);
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+    rec.onresult = (e) => {
+      const transcript = e.results[0]?.[0]?.transcript;
+      if (transcript) {
+        setInput(transcript);
+        void send(transcript);
+      }
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recognitionRef.current = rec;
+    setListening(true);
+    rec.start();
   }
 
   const suggestions = contextualSuggestions(pathname);
@@ -249,34 +309,35 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const panel = (
     <div
       className={cn(
-        "flex flex-col bg-card border border-border shadow-2xl overflow-hidden",
+        "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "fixed bottom-20 right-4 z-50 w-[min(100vw-2rem,24rem)] h-[min(70vh,34rem)] rounded-2xl"
-          : "w-full h-[min(80vh,40rem)] rounded-2xl",
+          ? "fixed bottom-[4.5rem] right-4 z-50 w-[min(100vw-1.5rem,26rem)] h-[min(78vh,36rem)] rounded-2xl"
+          : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-            <Sparkles className="h-4 w-4 text-primary" />
+      {/* Header */}
+      <header className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="relative h-9 w-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
+            <Sparkles className="h-4.5 w-4.5 text-primary-foreground" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold leading-tight flex items-center gap-1.5">
+            <p className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
               Hunared AI
               <span
                 className={cn(
-                  "text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded",
+                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
                   aiEnabled
                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                     : "bg-muted text-muted-foreground"
                 )}
               >
-                {aiEnabled ? "On" : "Off"}
+                {aiEnabled ? "Online" : "Off"}
               </span>
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
-              Career · Marketplace · Learning assistant
+              Jobs · CV · Marketplace · Career
             </p>
           </div>
         </div>
@@ -284,9 +345,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           <button
             type="button"
             onClick={() => router.push("/dashboard/settings/ai")}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-            title="AI settings"
-            aria-label="AI settings"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+            title="Privacy & AI"
+            aria-label="Privacy and AI settings"
           >
             <Power className="h-4 w-4" />
           </button>
@@ -294,18 +355,20 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             type="button"
             onClick={() => setShowCommands((v) => !v)}
             className={cn(
-              "inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium",
-              showCommands ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+              "inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors",
+              showCommands
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted/80"
             )}
           >
             <Command className="h-3.5 w-3.5" />
-            Commands
+            Menu
           </button>
           {variant === "float" && (
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted"
+              className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted/80"
               aria-label="Minimize"
             >
               <Minimize2 className="h-4 w-4" />
@@ -315,37 +378,54 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       </header>
 
       {!aiEnabled ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-3">
-          <p className="text-sm font-medium">Hunared AI is OFF</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
-            AI assistance and recommendations are disabled for your account. Everything else on
-            Hunared still works.
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
+          <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
+            <Power className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">Hunared AI is off</p>
+          <p className="text-xs text-muted-foreground max-w-[16rem] leading-relaxed">
+            AI assistance is disabled for your account. Everything else on Hunared still works.
           </p>
-          <Button size="sm" onClick={() => router.push("/dashboard/settings/ai")}>
-            Turn On Hunared AI
+          <Button size="sm" className="mt-1" onClick={() => router.push("/dashboard/settings/ai")}>
+            Turn on in settings
           </Button>
         </div>
       ) : showCommands ? (
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-          {COMMAND_PACKS.map((pack) => (
-            <div key={pack.title}>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-                {pack.title}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {pack.commands.map((c) => (
-                  <button
-                    key={c.text}
-                    type="button"
-                    onClick={() => void send(c.text)}
-                    className="text-[12px] rounded-full border border-border bg-background px-2.5 py-1.5 hover:border-primary/50 hover:bg-primary/5"
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <p className="text-[11px] font-medium text-muted-foreground px-0.5">
+            Shortcuts — tap to run
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {QUICK_START.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => void send(item.text)}
+                className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/50 px-3 py-2.5 text-left hover:border-primary/40 hover:bg-primary/5 transition-colors"
+              >
+                <item.icon className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="space-y-2 pt-1">
+            {[
+              "Find permanent jobs in Jubail",
+              "Apartment for rent under 2000 in Dammam",
+              "Show my saved items",
+              "Career roadmap for Instrument Technician",
+              "What can you do?",
+            ].map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => void send(t)}
+                className="w-full text-left text-[12px] rounded-lg border border-border/50 px-3 py-2 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <>
@@ -357,51 +437,58 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               >
                 <div
                   className={cn(
-                    "max-w-[90%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed",
+                    "max-w-[92%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed",
                     m.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted/60 text-foreground rounded-bl-md"
+                      : "bg-muted/50 border border-border/40 text-foreground rounded-bl-md"
                   )}
                 >
-                  <p className="whitespace-pre-wrap">{m.text}</p>
+                  <div className={cn(m.role === "assistant" && "text-[13px]")}>
+                    {m.role === "assistant" ? renderText(m.text) : m.text}
+                  </div>
+
                   {m.action?.href && m.role === "assistant" && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => runAction(m.action!)}
-                      >
-                        {m.action.label || "Open"}
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                      {m.action.secondary?.map((s) => (
-                        <Button
-                          key={s.href}
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={() => router.push(s.href)}
-                        >
-                          {s.label}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  {m.role === "assistant" && m.id !== "welcome" && (
-                    <div className="mt-1.5 flex gap-1 opacity-60">
+                    <div className="mt-2.5 rounded-xl border border-border/60 bg-background/80 p-2.5 space-y-2">
                       <button
                         type="button"
-                        className="p-0.5 hover:opacity-100"
+                        onClick={() => router.push(m.action!.href!)}
+                        className="w-full flex items-center justify-between gap-2 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-semibold hover:opacity-95 transition-opacity"
+                      >
+                        <span>{m.action.label || "Open"}</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                      {m.action.secondary && m.action.secondary.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {m.action.secondary.map((s) => (
+                            <button
+                              key={s.href}
+                              type="button"
+                              onClick={() => router.push(s.href)}
+                              className="text-[11px] rounded-md border border-border px-2 py-1 text-muted-foreground hover:text-foreground hover:border-primary/40"
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {m.role === "assistant" && m.id !== "welcome" && (
+                    <div className="mt-1.5 flex gap-1 opacity-50 hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        className="p-0.5"
                         aria-label="Helpful"
-                        onClick={() => toast.message("Thanks for the feedback")}
+                        onClick={() => toast.message("Thanks — glad that helped")}
                       >
                         <ThumbsUp className="h-3 w-3" />
                       </button>
                       <button
                         type="button"
-                        className="p-0.5 hover:opacity-100"
+                        className="p-0.5"
                         aria-label="Not helpful"
-                        onClick={() => toast.message("Thanks — we'll use this to improve")}
+                        onClick={() => toast.message("Thanks — we'll improve this")}
                       >
                         <ThumbsDown className="h-3 w-3" />
                       </button>
@@ -410,17 +497,22 @@ export function HunaredAgent({ variant = "float", className }: Props) {
                 </div>
               </div>
             ))}
+
             {loading && (
-              <p className="text-xs text-muted-foreground px-1">Thinking…</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Thinking…
+              </div>
             )}
-            {msgs.length <= 1 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {suggestions.map((s) => (
+
+            {msgs.length <= 1 && !loading && (
+              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                {suggestions.slice(0, 4).map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="text-[11px] rounded-full border border-border px-2.5 py-1 text-muted-foreground hover:text-foreground hover:border-primary/40"
+                    className="text-left text-[11px] rounded-xl border border-border/60 px-2.5 py-2 text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors leading-snug"
                   >
                     {s}
                   </button>
@@ -429,56 +521,48 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             )}
           </div>
 
-          {pendingConfirm && (
-            <div className="mx-3 mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs">
-              <p className="font-medium text-foreground">Confirm action</p>
-              <p className="text-muted-foreground mt-0.5">
-                {pendingConfirm.label}: {pendingConfirm.href}
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    if (pendingConfirm.href) router.push(pendingConfirm.href);
-                    setPendingConfirm(null);
-                  }}
-                >
-                  Continue
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs"
-                  onClick={() => setPendingConfirm(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-
           <form
-            className="border-t border-border p-2 flex gap-1.5"
+            className="border-t border-border/60 p-2.5 flex items-center gap-1.5 bg-background/40"
             onSubmit={(e) => {
               e.preventDefault();
               void send(input);
             }}
           >
+            <button
+              type="button"
+              onClick={toggleVoice}
+              className={cn(
+                "p-2 rounded-xl shrink-0 transition-colors",
+                listening
+                  ? "bg-destructive/15 text-destructive"
+                  : "text-muted-foreground hover:bg-muted"
+              )}
+              aria-label={listening ? "Stop listening" : "Voice input"}
+              title="Voice input"
+            >
+              {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </button>
             <input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Hunared AI…"
-              className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Ask Hunared AI anything…"
+              className="flex-1 rounded-xl border border-border/70 bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/70"
               disabled={loading}
               aria-label="Message Hunared AI"
             />
-            <Button type="submit" size="icon" className="rounded-xl shrink-0" disabled={loading || !input.trim()}>
+            <Button
+              type="submit"
+              size="icon"
+              className="rounded-xl shrink-0 h-10 w-10"
+              disabled={loading || !input.trim()}
+            >
               <Send className="h-4 w-4" />
             </Button>
           </form>
-          <p className="text-[9px] text-center text-muted-foreground pb-1.5 px-2">
-            AI-generated assistance — verify important information before acting.
+          <p className="text-[9px] text-center text-muted-foreground/80 pb-2 px-3 leading-tight">
+            AI guidance only — verify important details. You stay in control of applications and
+            payments.
           </p>
         </>
       )}
@@ -494,10 +578,10 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg flex items-center justify-center transition-colors",
+          "fixed bottom-4 right-4 z-50 h-13 w-13 h-12 w-12 rounded-full shadow-lg shadow-primary/20 flex items-center justify-center transition-all",
           open
             ? "bg-muted text-foreground border border-border"
-            : "bg-primary text-primary-foreground"
+            : "bg-primary text-primary-foreground hover:scale-105"
         )}
         aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
       >

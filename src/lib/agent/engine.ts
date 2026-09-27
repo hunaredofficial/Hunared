@@ -457,12 +457,13 @@ export function parseUserMessage(
   ) {
     return {
       intent: "help",
-      label: "Capabilities",
+      label: "What I can do",
       message:
-        "I’m Hunared Agent — your guide across the whole platform.\n\nI can:\n• Search jobs (profession, city, country, temporary/permanent)\n• Search marketplace (rent, sale, services, vehicles, electronics…)\n• Find companies & talent\n• Open Learning, Programs, Finder\n• Take you to profile, saved items, dashboard, post job/listing\n\nSpeak or type naturally. Example: “Instrument technician jobs in Khobar” or “Apartment for rent under 2000 in Dammam”.",
+        "I'm **Hunared AI** — your intelligent guide across jobs, talent, companies, marketplace, learning, and your account.\n\n**Jobs & career**\n• Search by role, city, country, permanent/temporary\n• Open CV Builder, cover letter help, career roadmap\n\n**Marketplace**\n• For sale, rent, services, vehicles, property\n\n**People & business**\n• Candidates, companies, post a job or listing\n\n**Your account**\n• Profile, saved items, dashboard, AI settings\n\nTry: *Instrument technician jobs in Jubail* · *Apartment for rent in Dammam* · *Improve my CV*",
       secondary: [
-        { label: "Browse jobs", href: "/jobs" },
+        { label: "Search jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },
+        { label: "CV Builder", href: "/dashboard/cv" },
       ],
     };
   }
@@ -473,8 +474,8 @@ export function parseUserMessage(
       intent: "sign_in",
       href: "/sign-in",
       label: "Sign in",
-      message: "Opening sign in.",
-      autoNavigate: true,
+      message: "Continue to **Sign in** to access your Hunared account.",
+      autoNavigate: false,
     };
   }
   if (/\b(register|sign\s*up|create (an? )?account|get started)\b/.test(t)) {
@@ -482,8 +483,8 @@ export function parseUserMessage(
       intent: "register",
       href: "/register",
       label: "Register",
-      message: "Opening registration so you can create your Hunared account.",
-      autoNavigate: true,
+      message: "Create your free Hunared account to save jobs, build a CV, and post listings.",
+      autoNavigate: false,
     };
   }
   if (/\b(dashboard|my account overview)\b/.test(t)) {
@@ -591,8 +592,8 @@ export function parseUserMessage(
       intent: "contact",
       href: "/contact",
       label: "Contact",
-      message: "Opening the contact page.",
-      autoNavigate: true,
+      message: "Open **Contact** to reach the Hunared team. Include your account email if you already registered.",
+      autoNavigate: false,
     };
   }
   if (/\b(about hunared|about us|who (are|is) hunared)\b/.test(t)) {
@@ -699,19 +700,24 @@ export function parseUserMessage(
       country: entities.country,
       city: entities.city,
     })}`;
-    let msg = `Searching marketplace`;
-    if (marketLabel) msg += ` · ${marketLabel}`;
-    if (entities.q) msg += ` for “${entities.q}”`;
-    if (city) msg += ` in ${city}`;
-    if (priceMax) msg += ` (under ${priceMax} — apply price filter on results if needed)`;
-    msg += ".";
+    const mbits: string[] = [];
+    if (marketLabel) mbits.push(marketLabel);
+    if (entities.q) mbits.push(`“${entities.q}”`);
+    if (city) mbits.push(`in ${city}`);
+    if (priceMax) mbits.push(`under ${priceMax}`);
+    const mfocus = mbits.length ? mbits.join(" · ") : "listings";
+    const msg = `I prepared a marketplace search for **${mfocus}**.\n\nOpen **View marketplace** for live listings. Adjust category, price, and location filters on the results page.`;
     return {
       intent: "search_market",
       href,
-      label: "Search marketplace",
+      label: "View marketplace",
       message: msg,
-      autoNavigate: true,
+      autoNavigate: false,
       entities,
+      secondary: [
+        { label: "All marketplace", href: "/market" },
+        { label: "Post listing", href: "/post" },
+      ],
     };
   }
 
@@ -733,24 +739,28 @@ export function parseUserMessage(
       city: entities.city,
       employmentType: entities.employmentType,
     })}`;
-    let msg = `Searching jobs`;
-    if (entities.q) msg += ` for “${entities.q}”`;
-    if (city) msg += ` in ${city}`;
-    else if (country) msg += ` (selected country)`;
-    if (entities.employmentType) msg += ` · ${entities.employmentType}`;
-    if (salaryMin)
-      msg += `. Use the jobs board salary filters for “above ${salaryMin}” if available.`;
-    msg += ".";
+    const bits: string[] = [];
+    if (entities.q) bits.push(`**${entities.q}**`);
+    if (city) bits.push(`in **${city}**`);
+    else if (country) bits.push(`country filter applied`);
+    if (entities.employmentType) bits.push(entities.employmentType);
+    const focus = bits.length ? bits.join(" · ") : "open roles";
+    const msg = `I set up a job search for ${focus}.\n\nOpen **View jobs** to see live results on Hunared. You can refine with filters (location, employment type, category) on the jobs page.${
+      salaryMin
+        ? `\n\nYou mentioned a salary around **${salaryMin}** — apply salary filters on the results page if available.`
+        : ""
+    }`;
     return {
       intent: "search_jobs",
       href,
-      label: "Search jobs",
+      label: "View jobs",
       message: msg,
-      autoNavigate: true,
+      autoNavigate: false,
       entities,
       secondary: [
         { label: "All jobs", href: "/jobs" },
         { label: "Saved", href: "/dashboard/saved" },
+        { label: "CV Builder", href: "/dashboard/cv" },
       ],
     };
   }
@@ -789,9 +799,14 @@ export function parseUserMessage(
 
   return {
     intent: "unknown",
-    label: "Clarify",
+    label: "Try an example",
     message:
-      "I didn’t catch a clear action. Try: “Instrument technician jobs in Khobar”, “Apartment for rent in Dammam”, or “What can you do?”",
+      "I want to help, but that request was unclear.\n\nTry something like:\n• *Instrument technician jobs in Jubail*\n• *Apartment for rent in Dammam*\n• *Show candidates available for hire*\n• *Open CV Builder*\n• *What can you do?*",
+    secondary: [
+      { label: "Jobs", href: "/jobs" },
+      { label: "Marketplace", href: "/market" },
+      { label: "Capabilities", href: "/agent" },
+    ],
   };
 }
 
