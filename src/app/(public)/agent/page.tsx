@@ -9,21 +9,25 @@ import {
   Building2,
   Users,
   Shield,
+  HelpCircle,
+  LifeBuoy,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Hunared AI",
   description:
-    "Hunared AI — intelligent assistant for jobs, CV, marketplace, learning, and career on Hunared.",
+    "Hunared AI — platform guide for jobs, CV, marketplace, learning, and how to use Hunared. Works without login.",
 };
 
 const CAPS = [
-  { icon: Briefcase, title: "Jobs", desc: "Search by role, city, country, employment type" },
-  { icon: FileText, title: "CV & career", desc: "CV Builder, cover letters, interview prep" },
+  { icon: Briefcase, title: "Jobs", desc: "Search roles by city, country, employment type" },
+  { icon: FileText, title: "CV & career", desc: "CV Builder, cover letters, career tips" },
   { icon: ShoppingBag, title: "Marketplace", desc: "Sale, rent, services, vehicles, property" },
-  { icon: Building2, title: "Companies", desc: "Directory search and employer pages" },
-  { icon: Users, title: "Talent", desc: "Find professionals available for hire" },
-  { icon: GraduationCap, title: "Learning", desc: "Courses, programs, and skill growth" },
+  { icon: Building2, title: "Companies", desc: "Employer directory and company pages" },
+  { icon: Users, title: "Talent", desc: "Professionals available for hire" },
+  { icon: GraduationCap, title: "Learning", desc: "Articles, programs, skill growth" },
+  { icon: HelpCircle, title: "How to use", desc: "Post jobs/ads, register, save items" },
+  { icon: LifeBuoy, title: "Support", desc: "Safety tips and contact help" },
 ];
 
 export default function AgentPage() {
@@ -31,16 +35,16 @@ export default function AgentPage() {
     <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
-          Hunared AI
+          Hunared AI · No login required
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           What can I help you accomplish?
         </h1>
         <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-          Search jobs, improve your CV, explore marketplace and learning, or manage your account —
+          Search the platform, learn how Hunared works, get feature guides, or open the right page —
           in plain language.{" "}
           <Link
-            href="/dashboard/settings/ai"
+            href="/ai-settings"
             className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
           >
             <Shield className="h-3 w-3" />
@@ -49,7 +53,7 @@ export default function AgentPage() {
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {CAPS.map((c) => (
           <div
             key={c.title}
@@ -69,9 +73,8 @@ export default function AgentPage() {
       <HunaredAgent variant="page" />
 
       <p className="text-[11px] text-muted-foreground text-center max-w-lg mx-auto leading-relaxed">
-        You stay in control. Hunared AI does not submit applications, publish listings, or make
-        payments without your action. AI-generated guidance should be verified for important
-        decisions.
+        Guidance only — verify important details. You stay in control of applications, listings, and
+        payments. Sign in when you want to save items or post.
       </p>
     </div>
   );

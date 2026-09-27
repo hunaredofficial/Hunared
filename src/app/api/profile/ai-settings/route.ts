@@ -4,7 +4,9 @@ import { createAdminClient } from "@/lib/supabase";
 
 export async function GET() {
   const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -13,7 +15,6 @@ export async function GET() {
       .eq("id", userId)
       .maybeSingle();
     if (error) {
-      // Columns may not exist yet
       return NextResponse.json({
         ai_enabled: true,
         ai_personalization: true,

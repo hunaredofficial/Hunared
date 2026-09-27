@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         disabled: true,
         action: {
           intent: "ai_settings",
-          href: "/dashboard/settings/ai",
+          href: "/ai-settings",
           label: "Turn on Hunared AI",
           message:
             "Hunared AI is OFF for your account. Normal site features still work. Turn AI ON in Dashboard → Settings → Privacy & AI when you want assistance again.",
