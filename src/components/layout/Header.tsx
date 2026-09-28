@@ -26,8 +26,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LocationPicker } from "@/components/layout/LocationPicker";
-import { HunaredLogo } from "@/components/brand/HunaredLogo"
-import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
+import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton } from "@clerk/nextjs";
 
 type MegaItem = {
@@ -413,7 +412,6 @@ export function Header() {
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
-                  <MessagesHeaderIcon className="hidden sm:inline-flex" />
                   <UserButton
                     appearance={{
                       elements: {

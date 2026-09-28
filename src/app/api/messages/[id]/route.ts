@@ -118,6 +118,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       .eq("user_id", userId);
   }
 
+  // Remove conversation from this user's inbox only
+  if (body.deleteForMe === true) {
+    await supabase
+      .from("conversation_participants")
+      .delete()
+      .eq("conversation_id", id)
+      .eq("user_id", userId);
+  }
+
   return NextResponse.json({ ok: true });
 }
 

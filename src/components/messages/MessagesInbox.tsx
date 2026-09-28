@@ -12,10 +12,13 @@ import {
   MessageSquare,
   Search,
   Send,
+  User,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { buildReplySuggestions } from "@/lib/messages/reply-suggestions";
 
 type Conv = {
   id: string;
@@ -214,6 +217,23 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     else toast.error("Could not report");
   }
 
+  async function deleteChat() {
+    if (!activeId) return;
+    if (!confirm("Remove this conversation from your inbox? The other person will keep their copy.")) return;
+    const res = await fetch(`/api/messages/${activeId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deleteForMe: true }),
+    });
+    if (!res.ok) {
+      toast.error("Could not delete conversation");
+      return;
+    }
+    toast.success("Conversation removed");
+    router.push("/dashboard/messages");
+    void loadList();
+  }
+
   async function deleteMsg(messageId: string) {
     if (!activeId || !confirm("Delete this message?")) return;
     const res = await fetch(`/api/messages/${activeId}?messageId=${encodeURIComponent(messageId)}`, {
@@ -228,9 +248,21 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     toast.success("Message deleted");
   }
 
-  const quick = contextQuick?.length
-    ? contextQuick
-    : QUICK[conv?.context_type || ""] || QUICK.default;
+  // Smart chips: reply to last inbound message, else context openers
+  const lastInbound = [...messages].reverse().find((m) => m.sender_id !== currentUserId);
+  const replyChips = lastInbound
+    ? buildReplySuggestions({
+        lastMessage: lastInbound.body,
+        contextType: conv?.context_type,
+        contextTitle: conv?.context_title,
+      })
+    : [];
+  const quick =
+    replyChips.length > 0
+      ? replyChips
+      : contextQuick?.length
+        ? contextQuick
+        : QUICK[conv?.context_type || ""] || QUICK.default;
 
   const listPane = (
     <div className="flex flex-col h-full border-r border-border bg-card/40">
@@ -298,12 +330,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               )}
             >
               <div className="flex items-start gap-2">
-                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden text-muted-foreground">
                   {c.other?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.other.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    (c.other?.full_name || c.other?.username || "?")[0]?.toUpperCase()
+                    <User className="h-4 w-4" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -358,6 +390,14 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden text-muted-foreground">
+              {other?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={other.avatar_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
+            </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold truncate">
                 {other?.full_name || other?.username || "Conversation"}
@@ -371,6 +411,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             </div>
             <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Archive" onClick={() => void archive()}>
               <Archive className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Delete conversation" onClick={() => void deleteChat()}>
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
             </button>
             <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Block" onClick={() => void blockUser()}>
               <Ban className="h-4 w-4 text-muted-foreground" />
@@ -441,8 +484,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                         <button
                           type="button"
                           className={cn(
-                            "text-[9px] underline opacity-0 group-hover:opacity-100 transition-opacity",
-                            mine ? "text-primary-foreground/80" : "text-muted-foreground"
+                            "text-[9px] underline opacity-70 hover:opacity-100 transition-opacity",
+                            mine ? "text-primary-foreground/90" : "text-muted-foreground"
                           )}
                           onClick={() => void deleteMsg(m.id)}
                         >

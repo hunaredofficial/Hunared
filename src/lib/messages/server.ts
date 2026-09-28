@@ -258,11 +258,6 @@ export async function deleteMessage(
   if (msg.sender_id !== userId) {
     return { ok: false, error: "You can only delete your own messages" };
   }
-  // Optional: only within 24h
-  const age = Date.now() - new Date(msg.created_at).getTime();
-  if (age > 24 * 60 * 60 * 1000) {
-    return { ok: false, error: "Messages can only be deleted within 24 hours" };
-  }
   const { error } = await supabase
     .from("messages")
     .update({ deleted_at: new Date().toISOString(), body: "" })
