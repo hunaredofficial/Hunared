@@ -15,6 +15,7 @@ import {
   User,
   Trash2,
   Paperclip,
+  MapPin,
   FileText,
   ImageIcon,
 } from "lucide-react";
@@ -71,6 +72,10 @@ type Msg = {
     fileName?: string;
     fileType?: string;
     fileSize?: number;
+    lat?: number;
+    lng?: number;
+    mapsUrl?: string;
+    label?: string;
   } | null;
   sender?: {
     id: string;
@@ -114,26 +119,11 @@ function attachmentHref(m: {
     fileName?: string;
   } | null;
 }): string {
-  // Always short Hunared URL — never expose long signed storage URLs
   if (m.id && !String(m.id).startsWith("tmp-")) {
     return `/api/messages/file?messageId=${encodeURIComponent(m.id)}`;
   }
   if (m.metadata?.storagePath) {
     return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
-  }
-  return "#";
-}): string {
-  if (m.metadata?.storagePath) {
-    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
-  }
-  // Prefer messageId so server can resolve + auth
-  if (m.id && !m.id.startsWith("tmp-")) {
-    const q = new URLSearchParams({ messageId: m.id });
-    if (m.metadata?.fileUrl) q.set("url", m.metadata.fileUrl);
-    return `/api/messages/file?${q.toString()}`;
-  }
-  if (m.metadata?.fileUrl) {
-    return `/api/messages/file?url=${encodeURIComponent(m.metadata.fileUrl)}`;
   }
   return "#";
 }
@@ -375,6 +365,37 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
       toast.error("Cannot open this file. Ask the sender to share it again.");
+    }
+  }
+
+
+  async function shareLocation() {
+    if (!activeId || sending) return;
+    if (!navigator.geolocation) {
+      toast.error("Location is not supported on this device");
+      return;
+    }
+    setSending(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+        });
+      });
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+      await send({
+        body: `📍 Shared location`,
+        messageType: "location",
+        metadata: { lat, lng, mapsUrl, label: "Shared location" },
+      });
+      toast.success("Location shared");
+    } catch {
+      toast.error("Could not get location. Allow location permission and try again.");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -808,6 +829,22 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     >
                       {displayName}
                     </p>
+                    {(m.message_type === "location" || m.metadata?.mapsUrl) && (
+                      <a
+                        href={
+                          m.metadata?.mapsUrl ||
+                          (m.metadata?.lat != null && m.metadata?.lng != null
+                            ? `https://www.google.com/maps?q=${m.metadata.lat},${m.metadata.lng}`
+                            : "#")
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mb-1.5 flex items-center gap-2 rounded-lg border border-white/15 bg-black/10 px-2.5 py-2 text-[12px] hover:bg-black/20"
+                      >
+                        <MapPin className="h-4 w-4 shrink-0" />
+                        <span className="font-medium">Open in Google Maps</span>
+                      </a>
+                    )}
                     {(m.metadata?.fileUrl || m.metadata?.storagePath) && (
                       <div className="mb-1.5">
                         {m.message_type === "image" ||
@@ -850,12 +887,14 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     )}
                     {m.body &&
                     !(
-                      m.metadata?.fileName &&
-                      (m.body === m.metadata.fileName ||
-                        m.body === `📎 ${m.metadata.fileName}` ||
-                        m.body === `Shared file: ${m.metadata.fileName}` ||
-                        m.body.startsWith("📎 ") ||
-                        m.body.startsWith("Shared file:"))
+                      m.message_type === "location" ||
+                      !!m.metadata?.mapsUrl ||
+                      (!!m.metadata?.fileName &&
+                        (m.body === m.metadata.fileName ||
+                          m.body === `📎 ${m.metadata.fileName}` ||
+                          m.body === `Shared file: ${m.metadata.fileName}` ||
+                          m.body.startsWith("📎 ") ||
+                          m.body.startsWith("Shared file:")))
                     ) ? (
                       <p className="whitespace-pre-wrap break-words">{m.body}</p>
                     ) : null}
@@ -927,6 +966,15 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 ) : (
                   <Paperclip className="h-4 w-4" />
                 )}
+              </button>
+              <button
+                type="button"
+                className="p-2 rounded-xl text-muted-foreground hover:bg-muted shrink-0"
+                title="Share my location (Google Maps)"
+                disabled={sending}
+                onClick={() => void shareLocation()}
+              >
+                <MapPin className="h-4 w-4" />
               </button>
               <input
                 value={text}
