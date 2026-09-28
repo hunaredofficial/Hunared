@@ -10,12 +10,14 @@ export async function isSystemAccount(userId: string): Promise<boolean> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("profiles")
-    .select("is_system_account")
+    .select("is_system_account, role")
     .eq("id", userId)
     .maybeSingle();
   if (!data) return false;
-  // Only explicit system/team accounts are non-messageable
-  return data.is_system_account === true;
+  if (data.is_system_account === true) return true;
+  // Treat admin role as non-messageable team by default
+  if (data.role === "admin") return true;
+  return false;
 }
 
 export async function isBlocked(a: string, b: string): Promise<boolean> {
@@ -132,8 +134,13 @@ export async function startOrGetConversation(
     { conversation_id: conv.id, user_id: input.recipientId },
   ]);
 
-  if (input.initialMessage?.trim()) {
-    await sendMessage(senderId, conv.id, input.initialMessage.trim());
+  const first = (input.initialMessage || "").trim();
+  if (first) {
+    const sm = await sendMessage(senderId, conv.id, first);
+    // Conversation is valid even if first message fails — never block start
+    if (sm.error) {
+      console.warn("[messages] first message failed:", sm.error);
+    }
   }
 
   return { conversationId: conv.id, created: true };
@@ -150,7 +157,9 @@ export async function sendMessage(
 ): Promise<{ messageId?: string; error?: string }> {
   const text = body.trim().slice(0, MAX_BODY);
   const hasFile = !!(opts?.metadata && (opts.metadata as { fileUrl?: string }).fileUrl);
-  if (!text && !hasFile) return { error: "Message is empty" };
+  if (!text && !hasFile) {
+    return { error: "Message is empty" };
+  }
 
   const supabase = createAdminClient();
   const { data: part } = await supabase

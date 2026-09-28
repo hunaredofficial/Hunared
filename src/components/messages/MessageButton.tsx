@@ -16,7 +16,6 @@ type Props = {
   contextTitle?: string;
   contextSubtitle?: string;
   contextHref?: string;
-  /** Marketplace category for smarter openers */
   category?: string;
   price?: string;
   location?: string;
@@ -51,7 +50,8 @@ export function MessageButton({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  if (disabled || isSystemAccount || !recipientId) return null;
+  const rid = (recipientId || "").trim();
+  if (disabled || isSystemAccount || !rid) return null;
 
   async function onClick() {
     if (!isSignedIn) {
@@ -66,30 +66,29 @@ export function MessageButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientId,
-          contextType,
-          contextId,
-          contextTitle,
-          contextSubtitle,
-          contextHref,
-          category,
-          price,
-          location,
-          companyName,
-          send: false,
+          recipientId: rid,
+          contextType: contextType || "general",
+          contextId: contextId || undefined,
+          contextTitle: contextTitle || undefined,
+          contextSubtitle: contextSubtitle || undefined,
+          contextHref: contextHref || undefined,
+          category: category || undefined,
+          price: price || undefined,
+          location: location || undefined,
+          companyName: companyName || undefined,
+          // Send a professional opener so the chat is not empty
+          send: true,
         }),
       });
-      const j = await res.json();
-      if (!res.ok) {
-        toast.error(j.error || "Could not start conversation");
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.conversationId) {
+        toast.error(
+          (j as { error?: string }).error || "Could not start conversation"
+        );
         return;
       }
-      const draft = j.suggestedMessage
-        ? `?draft=${encodeURIComponent(j.suggestedMessage)}`
-        : "";
-      // Pass suggestions via sessionStorage for inbox
       try {
-        if (j.suggestions?.length) {
+        if (Array.isArray(j.suggestions) && j.suggestions.length) {
           sessionStorage.setItem(
             `hunared_msg_suggestions_${j.conversationId}`,
             JSON.stringify(j.suggestions)
@@ -98,7 +97,7 @@ export function MessageButton({
       } catch {
         /* ignore */
       }
-      router.push(`/dashboard/messages/${j.conversationId}${draft}`);
+      router.push(`/dashboard/messages/${j.conversationId}`);
     } catch {
       toast.error("Could not start conversation");
     } finally {
@@ -116,7 +115,7 @@ export function MessageButton({
       onClick={() => void onClick()}
     >
       <MessageSquare className="h-3.5 w-3.5" />
-      {label}
+      {loading ? "Opening…" : label}
     </Button>
   );
 }
