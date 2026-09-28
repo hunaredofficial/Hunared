@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { buildReplySuggestions } from "@/lib/messages/reply-suggestions";
-import { uploadToCloudinary } from "@/lib/cloudinary";
 
 /**
  * Cloudinary message attachments:
@@ -67,6 +66,7 @@ type Msg = {
   message_type?: string;
   metadata?: {
     fileUrl?: string;
+    storagePath?: string;
     fileName?: string;
     fileType?: string;
     fileSize?: number;
@@ -234,33 +234,32 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
 
   async function onPickFile(file: File | null) {
     if (!file || !activeId) return;
-    const max = 12 * 1024 * 1024; // 12MB
+    const max = 12 * 1024 * 1024;
     if (file.size > max) {
       toast.error("File too large (max 12MB)");
       return;
     }
     setUploading(true);
     try {
-      const isImage = file.type.startsWith("image/");
-      const isPdf =
-        file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-      const isDoc =
-        isPdf ||
-        /word|officedocument|msword|text\//.test(file.type) ||
-        /\.(docx?|pdf|txt)$/i.test(file.name);
-      // Always use "image" resource type — unsigned presets often block /raw/ (401)
-      const { url: rawUrl } = await uploadToCloudinary(file, "hunared/messages", {
-        resourceType: "image",
-      });
-      const url = fixAttachmentUrl(rawUrl);
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("conversationId", activeId);
+      const res = await fetch("/api/messages/upload", { method: "POST", body: fd });
+      const j = await res.json();
+      if (!res.ok) {
+        toast.error(j.error || "Upload failed");
+        return;
+      }
+      const isImage = (file.type || "").startsWith("image/");
       await send({
         body: isImage ? "" : `📎 ${file.name}`,
         messageType: isImage ? "image" : "file",
         metadata: {
-          fileUrl: url,
-          fileName: file.name,
-          fileType: file.type || "application/octet-stream",
-          fileSize: file.size,
+          fileUrl: j.url,
+          storagePath: j.storagePath,
+          fileName: j.fileName || file.name,
+          fileType: j.fileType || file.type || "application/octet-stream",
+          fileSize: j.fileSize || file.size,
         },
       });
       toast.success("Attachment sent");
@@ -614,10 +613,13 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                           </a>
                         ) : (
                           <a
-                            href={fixAttachmentUrl(m.metadata.fileUrl)}
+                            href={
+                              m.metadata.storagePath
+                                ? `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`
+                                : fixAttachmentUrl(m.metadata.fileUrl || "")
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
-                            download={m.metadata.fileName || "file"}
                             className="inline-flex items-center gap-1.5 text-[12px] underline"
                           >
                             <FileText className="h-3.5 w-3.5" />
