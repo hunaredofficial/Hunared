@@ -111,6 +111,99 @@ const QUICK: Record<string, string[]> = {
 };
 
 
+
+/** Suggestions for BOTH sides: seeker/buyer vs employer/seller */
+function roleAwareSuggestions(
+  contextType: string | undefined,
+  title: string | undefined,
+  iAmSenderOfLast: boolean,
+  lastBody: string | undefined
+): string[] {
+  const t = title || "this";
+  const ct = (contextType || "general").toLowerCase();
+  const last = (lastBody || "").toLowerCase();
+
+  // Reply-aware chips based on last message
+  if (last.includes("still open") || last.includes("still available")) {
+    return iAmSenderOfLast
+      ? ["Thank you — looking forward to your reply.", "I can share more details if helpful."]
+      : [
+          `Yes, ${t} is still available.`,
+          "Could you share your relevant experience or requirements?",
+          "Thank you for your interest. What is your timeline?",
+        ];
+  }
+  if (last.includes("experience") || last.includes("cv") || last.includes("resume")) {
+    return iAmSenderOfLast
+      ? ["I have attached my CV.", "I have 3+ years of relevant experience."]
+      : [
+          "Thank you. Please share your CV and a short summary of experience.",
+          "What certifications or tools are you familiar with?",
+        ];
+  }
+  if (last.includes("price") || last.includes("salary") || last.includes("negotiable")) {
+    return iAmSenderOfLast
+      ? ["Is the rate negotiable?", "What is the budget range?"]
+      : [
+          "The rate is as listed — open to discussion for the right fit.",
+          "Please share your expected range.",
+        ];
+  }
+  if (last.includes("location") || last.includes("where") || last.includes("maps")) {
+    return iAmSenderOfLast
+      ? ["I can share my location.", "Where should we meet?"]
+      : ["I will share the location shortly.", "Are you able to come to the site?"];
+  }
+
+  if (ct === "job") {
+    return iAmSenderOfLast
+      ? [
+          `Hi, I'm interested in the ${t} role. Is this position still open?`,
+          `Could you share more details about ${t}?`,
+          "Is accommodation or transportation provided?",
+          "What is the expected start date and contract type?",
+          "I have relevant experience — may I share my CV?",
+        ]
+      : [
+          `Yes, the ${t} position is still open. Are you available for a short discussion?`,
+          "Thank you for your interest. Please share your experience and CV.",
+          "Could you outline your key skills related to this role?",
+          "What is your notice period / availability?",
+          "This position is currently under review. May I have your experience summary?",
+        ];
+  }
+  if (ct === "marketplace" || ct === "product" || ct === "vehicle" || ct === "property" || ct === "accommodation") {
+    return iAmSenderOfLast
+      ? [
+          `Is ${t} still available?`,
+          "Is the price negotiable?",
+          "Can I see more photos or details?",
+          "Where is it located? Can we meet?",
+          "What is the condition and reason for selling?",
+        ]
+      : [
+          `Yes, ${t} is still available.`,
+          "Price is as listed — open to reasonable offers.",
+          "I can share more photos. What would you like to see?",
+          "Location can be shared after we agree to meet.",
+          "Feel free to ask any questions.",
+        ];
+  }
+  if (ct === "service") {
+    return iAmSenderOfLast
+      ? ["Are you available this week?", "What is your service rate?", "Can you provide a quotation?"]
+      : ["Yes, I am available. When do you need the service?", "Please share the scope so I can quote accurately."];
+  }
+  if (ct === "talent") {
+    return iAmSenderOfLast
+      ? ["Hi, I saw your profile and would like to discuss an opportunity.", "Are you open to new roles?"]
+      : ["Thank you for reaching out. Please share more about the role.", "Yes, I am open to opportunities."];
+  }
+  return iAmSenderOfLast
+    ? ["Hello!", "Thank you.", "Looking forward to your reply."]
+    : ["Hello! How can I help?", "Thank you for your message.", "I will get back to you shortly."];
+}
+
 function attachmentHref(m: {
   id: string;
   metadata?: {
@@ -137,6 +230,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
 
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
+  const [filterQ, setFilterQ] = useState("");
   const [list, setList] = useState<Conv[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -160,21 +254,31 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   }, [messages]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const loadList = useCallback(async () => {
-    setLoadingList(true);
+  const loadList = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = !!opts?.silent;
+    if (!silent) setLoadingList(true);
     try {
       const res = await fetch(
-        `/api/messages/conversations?filter=${encodeURIComponent(filter)}&q=${encodeURIComponent(q)}`
+        `/api/messages/conversations?filter=${encodeURIComponent(filter)}&q=${encodeURIComponent(filterQ)}`
       );
-      const j = await res.json();
+      const j = await res.json().catch(() => ({}));
       setList(j.conversations || []);
+    } catch {
+      /* keep previous list */
     } finally {
-      setLoadingList(false);
+      if (!silent) setLoadingList(false);
     }
-  }, [filter, q]);
+  }, [filter, filterQ]);
 
+  // Debounce search so typing does not spin the list
   useEffect(() => {
-    void loadList();
+    const tmr = setTimeout(() => setFilterQ(q.trim()), 350);
+    return () => clearTimeout(tmr);
+  }, [q]);
+
+  // Initial + filter change only (not every poll)
+  useEffect(() => {
+    void loadList({ silent: false });
   }, [loadList]);
 
   useEffect(() => {
@@ -235,7 +339,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             const add = (j.messages as Msg[]).filter((m) => !ids.has(m.id));
             return add.length ? [...prev, ...add] : prev;
           });
-          void loadList();
+          void loadList({ silent: true });
         } else if (!after && Array.isArray(j.messages)) {
           // full sync rarely
         }
@@ -244,7 +348,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         /* ignore */
       }
     };
-    const iv = setInterval(() => void tick(), 2500);
+    const iv = setInterval(() => void tick(), 4000);
     return () => {
       stopped = true;
       clearInterval(iv);
@@ -338,7 +442,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         );
       }
       // Refresh list in background (do not block chat)
-      void loadList();
+      void loadList({ silent: true });
     } catch {
       toast.error("Send failed");
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
@@ -447,7 +551,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     });
     toast.success(on ? "Archived" : "Removed from archive");
     if (on) router.push("/dashboard/messages");
-    void loadList();
+    void loadList({ silent: true });
   }
 
   async function loadBlocked() {
@@ -463,8 +567,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       body: JSON.stringify({ blockedId }),
     });
     if (res.ok) {
-      toast.success("User unblocked");
+      toast.success("User unblocked — you can message them again");
       void loadBlocked();
+      void loadList({ silent: true });
     } else {
       const j = await res.json().catch(() => ({}));
       toast.error(j.error || "Could not unblock");
@@ -490,6 +595,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success("User blocked");
+      void loadList({ silent: true });
         void deleteChat();
       } else {
         toast.error(j.error || "Could not block user");
@@ -547,7 +653,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     }
     toast.success("Conversation removed");
     router.push("/dashboard/messages");
-    void loadList();
+    void loadList({ silent: true });
   }
 
   async function deleteMsg(messageId: string) {
@@ -564,21 +670,19 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     toast.success("Message deleted");
   }
 
-  // Smart chips: reply to last inbound message, else context openers
-  const lastInbound = [...messages].reverse().find((m) => m.sender_id !== currentUserId);
-  const replyChips = lastInbound
-    ? buildReplySuggestions({
-        lastMessage: lastInbound.body,
-        contextType: conv?.context_type,
-        contextTitle: conv?.context_title,
-      })
-    : [];
-  const quick =
-    replyChips.length > 0
-      ? replyChips
-      : contextQuick?.length
-        ? contextQuick
-        : QUICK[conv?.context_type || ""] || QUICK.default;
+  // Smart chips for BOTH users — based on role + last message context
+  const lastMsg = messages.length ? messages[messages.length - 1] : null;
+  const iAmSenderOfLast = !!(lastMsg && lastMsg.sender_id === currentUserId);
+  const quick = roleAwareSuggestions(
+    conv?.context_type,
+    conv?.context_title || undefined,
+    iAmSenderOfLast,
+    lastMsg?.body
+  );
+  // Prefer session openers when chat is empty (starter side)
+  const starterQuick =
+    messages.length === 0 && contextQuick?.length ? contextQuick : null;
+  const chips = starterQuick || quick;
 
   const listPane = (
     <div className="flex flex-col h-full border-r border-border bg-card/40">
@@ -601,8 +705,11 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             type="button"
             className="text-[10px] text-muted-foreground hover:text-foreground underline"
             onClick={() => {
-              setShowBlocked((v) => !v);
-              void loadBlocked();
+              setShowBlocked((v) => {
+                const next = !v;
+                if (next) void loadBlocked();
+                return next;
+              });
             }}
           >
             {showBlocked ? "Hide blocked" : "Blocked users"}
@@ -688,7 +795,10 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     <User className="h-4 w-4" />
                   )}
                   {c.other?.id && onlineMap[c.other.id] ? (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" title="Online" />
+                    <span
+                      className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-background shadow-[0_0_0_1px_rgba(16,185,129,0.35)]"
+                      title="Online"
+                    />
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -744,13 +854,16 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden text-muted-foreground">
+            <div className="relative h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden text-muted-foreground">
               {other?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={other.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
                 <User className="h-4 w-4" />
               )}
+              {other?.id && onlineMap[other.id] ? (
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-background" title="Online" />
+              ) : null}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold truncate flex items-center gap-1.5">
@@ -929,7 +1042,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
 
           <div className="border-t border-border p-2 space-y-1.5">
             <div className="flex flex-wrap gap-1 px-0.5">
-              {quick.map((s) => (
+              {chips.map((s) => (
                 <button
                   key={s}
                   type="button"

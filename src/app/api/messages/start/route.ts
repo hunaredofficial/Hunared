@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
       primary = `Hi, I'm interested in ${title}.`;
     }
 
-    // Default: send opening message so chat is not empty (unless send === false)
-    const shouldSend = body.send !== false;
+    // Only auto-send when client explicitly sets send: true
+    const shouldSend = body.send === true;
 
     const result = await startOrGetConversation(userId, {
       recipientId,

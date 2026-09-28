@@ -1,112 +1,102 @@
-import type { MessageContextType } from "./types";
-
 /**
- * Suggest professional replies based on the last inbound message + conversation context.
+ * Context-aware reply chips for both sides of a conversation.
  */
+
 export function buildReplySuggestions(opts: {
-  lastMessage: string;
+  lastMessage?: string | null;
   contextType?: string | null;
   contextTitle?: string | null;
-  isEmployerSide?: boolean;
+  /** When true, chips are for the person who sent the last message (follow-ups). */
+  iAmLastSender?: boolean;
 }): string[] {
-  const text = (opts.lastMessage || "").toLowerCase();
+  const last = (opts.lastMessage || "").toLowerCase();
   const title = opts.contextTitle || "this";
-  const type = opts.contextType || "general";
-  const out: string[] = [];
+  const ct = (opts.contextType || "").toLowerCase();
+  const mine = !!opts.iAmLastSender;
 
-  const add = (s: string) => {
-    if (!out.includes(s) && out.length < 5) out.push(s);
-  };
-
-  // Availability / still open
-  if (/still (open|available)|is this (open|available)|available\?/.test(text)) {
-    if (type === "job" || type === "temporary_work") {
-      add(`Yes, the ${title} position is still open. Are you available for a short discussion?`);
-      add(`Thank you for your interest. The role is open — please share your experience and CV.`);
-      add(`This position is currently under review. May I have your relevant experience summary?`);
-    } else {
-      add(`Yes, it is still available. When would you like to proceed?`);
-      add(`Yes, still available. Happy to answer any questions you have.`);
-      add(`It is available. Would you like more details or photos?`);
+  if (!last.trim()) {
+    if (ct === "job") {
+      return mine
+        ? []
+        : [
+            `Hi, I'm interested in the ${title} role. Is this position still open?`,
+            `Could you share more about ${title}?`,
+            "Is accommodation provided?",
+          ];
     }
+    return ["Hello!", "Thank you for connecting."];
   }
 
-  // Price / salary / negotiable
-  if (/price|salary|negotiable|how much|cost|rate/.test(text)) {
-    if (type === "job" || type === "temporary_work") {
-      add(`Compensation depends on experience. Please share your expected range and background.`);
-      add(`We can discuss the package after reviewing your qualifications. Could you share your CV?`);
-    } else {
-      add(`The listed price is firm at the moment, but I am open to a reasonable offer.`);
-      add(`Yes, there is some room for negotiation for a serious buyer.`);
-      add(`Please share your offer and I will get back to you shortly.`);
-    }
+  if (/still (open|available)|is this (open|available)/.test(last)) {
+    return mine
+      ? ["Thank you — I look forward to your reply.", "Happy to share more details."]
+      : [
+          `Yes, ${title} is still available.`,
+          "Could you share your relevant experience?",
+          "What is your availability / timeline?",
+        ];
   }
 
-  // Accommodation
-  if (/accommodation|housing|transport|provided/.test(text)) {
-    add(`Accommodation details depend on the contract. I can confirm after reviewing your profile.`);
-    add(`Please share your experience level and I will confirm what is included.`);
+  if (/cv|resume|experience|skills/.test(last)) {
+    return mine
+      ? ["I have attached my CV.", "I have relevant experience in this field."]
+      : [
+          "Thank you. Please share your CV and a short experience summary.",
+          "Which tools or certifications do you have?",
+        ];
   }
 
-  // Start date / when
-  if (/start date|when can|when (do|does)|available (this|next)|schedule/.test(text)) {
-    if (type === "job" || type === "temporary_work") {
-      add(`Start date is flexible depending on the selected candidate. When can you join?`);
-      add(`We are looking to fill this soon. What is your earliest availability?`);
-    } else if (type === "service") {
-      add(`I can start based on mutual schedule. What dates work for you?`);
-      add(`Please share your preferred timeline and location.`);
-    } else {
-      add(`You can view it at a mutually convenient time. What day works for you?`);
-    }
+  if (/salary|price|rate|negotiable|budget|pay/.test(last)) {
+    return mine
+      ? ["Is this negotiable?", "What is the expected range?"]
+      : [
+          "As listed — open to discussion for the right fit.",
+          "Please share your expected range.",
+        ];
   }
 
-  // Location / viewing
-  if (/where|location|viewing|see it|inspect|meet/.test(text)) {
-    add(`We can arrange a viewing. Please share a suitable day and time.`);
-    add(`Location details can be shared once we confirm interest. Are you available this week?`);
+  if (/location|where|map|address|meet/.test(last)) {
+    return mine
+      ? ["I can share my location.", "Where would you like to meet?"]
+      : ["I will share the location details.", "Are you able to visit the site?"];
   }
 
-  // Experience / qualifications / CV
-  if (/experience|qualification|cv|resume|background|skill/.test(text)) {
-    add(`Thank you. Please share your CV and a short summary of relevant experience.`);
-    add(`Could you outline your key skills related to ${title}?`);
+  if (/start date|when can|availability|notice/.test(last)) {
+    return mine
+      ? ["I can start within 2 weeks.", "What is the expected start date?"]
+      : ["As soon as possible — depending on notice period.", "When can you start?"];
   }
 
-  // Greeting / general interest
-  if (/interested|would like|hello|hi[,.]|get in touch/.test(text) && out.length < 2) {
-    if (type === "job" || type === "temporary_work") {
-      add(`Thank you for your interest in ${title}. Could you share your CV and relevant experience?`);
-      add(`Appreciate your message. Are you available for a brief call this week?`);
-    } else if (type === "talent") {
-      add(`Thank you for reaching out. I am open to discussing suitable opportunities.`);
-      add(`Please share more details about the role and I will review.`);
-    } else {
-      add(`Thank you for your message. How can I help you further?`);
-      add(`Thanks for contacting me. Happy to provide more details.`);
-    }
+  if (/accommodation|transport|housing|visa/.test(last)) {
+    return mine
+      ? ["Is accommodation or transport provided?", "Is visa sponsorship available?"]
+      : [
+          "Please see the job details for benefits.",
+          "We can discuss benefits during the interview.",
+        ];
   }
 
-  // Defaults by context if still empty
-  if (out.length === 0) {
-    if (type === "job" || type === "temporary_work") {
-      add(`Thank you for your message. Could you share your CV and availability?`);
-      add(`Appreciate your interest. What is your relevant experience for this role?`);
-      add(`Thanks — I will review and get back to you shortly.`);
-    } else if (type === "marketplace" || type === "vehicle" || type === "property" || type === "accommodation") {
-      add(`Thank you for your interest. It is available — any specific questions?`);
-      add(`Yes, happy to help. Would you like to arrange a viewing?`);
-      add(`Thanks for messaging. Please share your best offer or preferred time to talk.`);
-    } else if (type === "service") {
-      add(`Thank you. Please share the scope and location so I can provide a quote.`);
-      add(`I am available. When do you need the service?`);
-    } else {
-      add(`Thank you for your message. I will get back to you shortly.`);
-      add(`Appreciate you reaching out. How can I assist?`);
-      add(`Thanks — could you share a bit more detail?`);
-    }
+  if (ct === "job") {
+    return mine
+      ? [
+          "Thank you for the update.",
+          "I am available for an interview.",
+          "Please let me know the next steps.",
+        ]
+      : [
+          "Thank you for your interest.",
+          "Please share your CV so we can review.",
+          "Are you available for a short call?",
+        ];
   }
 
-  return out.slice(0, 5);
+  if (["marketplace", "product", "vehicle", "property", "accommodation", "service"].includes(ct)) {
+    return mine
+      ? ["Is this still available?", "Can we arrange a viewing?", "Is the price firm?"]
+      : ["Yes, it is still available.", "Happy to arrange a time to meet.", "Open to reasonable offers."];
+  }
+
+  return mine
+    ? ["Thank you.", "Looking forward to your reply."]
+    : ["Thank you for your message.", "How can I help further?"];
 }
