@@ -14,11 +14,15 @@ import {
   Send,
   User,
   Trash2,
+  Paperclip,
+  FileText,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { buildReplySuggestions } from "@/lib/messages/reply-suggestions";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 type Conv = {
   id: string;
@@ -44,6 +48,13 @@ type Msg = {
   sender_id: string;
   body: string;
   created_at: string;
+  message_type?: string;
+  metadata?: {
+    fileUrl?: string;
+    fileName?: string;
+    fileType?: string;
+    fileSize?: number;
+  } | null;
   sender?: {
     id: string;
     full_name?: string | null;
@@ -95,6 +106,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   const [text, setText] = useState(draftFromUrl);
   const [sending, setSending] = useState(false);
   const [contextQuick, setContextQuick] = useState<string[] | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const loadList = useCallback(async () => {
@@ -151,14 +164,24 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     if (draftFromUrl) setText(draftFromUrl);
   }, [draftFromUrl]);
 
-  async function send() {
-    if (!activeId || !text.trim() || sending) return;
+  async function send(payload?: {
+    body?: string;
+    messageType?: string;
+    metadata?: Record<string, unknown>;
+  }) {
+    if (!activeId || sending) return;
+    const bodyText = payload?.body ?? text;
+    if (!bodyText.trim() && !payload?.metadata) return;
     setSending(true);
     try {
       const res = await fetch(`/api/messages/${activeId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text }),
+        body: JSON.stringify({
+          body: bodyText,
+          messageType: payload?.messageType,
+          metadata: payload?.metadata,
+        }),
       });
       const j = await res.json();
       if (!res.ok) {
@@ -166,7 +189,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         return;
       }
       setText("");
-      // reload messages
       const r2 = await fetch(`/api/messages/${activeId}`);
       const j2 = await r2.json();
       setMessages(j2.messages || []);
@@ -176,45 +198,110 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     }
   }
 
-  async function archive() {
+  async function onPickFile(file: File | null) {
+    if (!file || !activeId) return;
+    const max = 12 * 1024 * 1024; // 12MB
+    if (file.size > max) {
+      toast.error("File too large (max 12MB)");
+      return;
+    }
+    setUploading(true);
+    try {
+      const isImage = file.type.startsWith("image/");
+      const isPdf =
+        file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      const isDoc =
+        isPdf ||
+        /word|officedocument|msword|text\//.test(file.type) ||
+        /\.(docx?|pdf|txt)$/i.test(file.name);
+      const { url } = await uploadToCloudinary(file, "hunared/messages", {
+        resourceType: isImage ? "image" : "auto",
+      });
+      await send({
+        body: isImage ? "" : `Shared file: ${file.name}`,
+        messageType: isImage ? "image" : isDoc ? "file" : "file",
+        metadata: {
+          fileUrl: url,
+          fileName: file.name,
+          fileType: file.type || "application/octet-stream",
+          fileSize: file.size,
+        },
+      });
+      toast.success("Attachment sent");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function archive(on: boolean) {
     if (!activeId) return;
     await fetch(`/api/messages/${activeId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ archive: true }),
+      body: JSON.stringify({ archive: on }),
     });
-    toast.success("Archived");
-    router.push("/dashboard/messages");
+    toast.success(on ? "Archived" : "Removed from archive");
+    if (on) router.push("/dashboard/messages");
     void loadList();
   }
 
   async function blockUser() {
-    if (!other?.id) return;
+    const blockedId = other?.id;
+    if (!blockedId) {
+      toast.error("Cannot identify user to block");
+      return;
+    }
     if (!confirm("Block this user? They will not be able to message you.")) return;
-    const res = await fetch("/api/messages/block", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ blockedId: other.id }),
-    });
-    if (res.ok) toast.success("User blocked");
-    else toast.error("Could not block");
+    try {
+      const res = await fetch("/api/messages/block", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blockedId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success("User blocked");
+        void deleteChat();
+      } else {
+        toast.error(j.error || "Could not block user");
+      }
+    } catch {
+      toast.error("Could not block user");
+    }
   }
 
   async function reportUser() {
-    if (!other?.id) return;
-    const reason = prompt("Reason (spam, scam, harassment, fake job, other):", "spam");
+    const reportedUserId = other?.id;
+    if (!reportedUserId) {
+      toast.error("Cannot identify user to report");
+      return;
+    }
+    const reason = prompt(
+      "Reason:\nspam · scam · harassment · fake job · fake listing · abuse · other",
+      "spam"
+    );
     if (!reason) return;
-    const res = await fetch("/api/messages/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        conversationId: activeId,
-        reportedUserId: other.id,
-        reason,
-      }),
-    });
-    if (res.ok) toast.success("Report submitted");
-    else toast.error("Could not report");
+    const details = prompt("Optional details:") || "";
+    try {
+      const res = await fetch("/api/messages/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId: activeId,
+          reportedUserId,
+          reason,
+          details,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) toast.success("Report submitted. Thank you.");
+      else toast.error(j.error || "Could not submit report");
+    } catch {
+      toast.error("Could not submit report");
+    }
   }
 
   async function deleteChat() {
@@ -341,8 +428,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
                     <p className={cn("text-xs truncate", c.unread && "font-semibold")}>
-                      {c.other?.full_name || "User"}
-                      {c.other?.username ? (
+                      {c.other?.full_name ||
+                        (c.other?.username ? `@${c.other.username}` : null) ||
+                        c.context_subtitle ||
+                        c.context_title ||
+                        "Participant"}
+                      {c.other?.username && c.other?.full_name ? (
                         <span className="text-muted-foreground font-normal"> @{c.other.username}</span>
                       ) : null}
                     </p>
@@ -409,7 +500,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 </p>
               )}
             </div>
-            <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Archive" onClick={() => void archive()}>
+            <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title={filter === "archived" ? "Unarchive" : "Archive"} onClick={() => void archive(filter !== "archived")}>
               <Archive className="h-4 w-4 text-muted-foreground" />
             </button>
             <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Delete conversation" onClick={() => void deleteChat()}>
@@ -470,7 +561,34 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                         <span className="font-normal opacity-70"> · @{m.sender.username}</span>
                       ) : null}
                     </p>
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    {m.metadata?.fileUrl && (
+                      <div className="mb-1.5">
+                        {m.message_type === "image" ||
+                        (m.metadata.fileType || "").startsWith("image/") ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <a href={m.metadata.fileUrl} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={m.metadata.fileUrl}
+                              alt={m.metadata.fileName || "Image"}
+                              className="max-h-48 rounded-lg border border-white/10"
+                            />
+                          </a>
+                        ) : (
+                          <a
+                            href={m.metadata.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[12px] underline"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            {m.metadata.fileName || "Download file"}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {m.body ? (
+                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    ) : null}
                     <div className="flex items-center gap-2 mt-1">
                       <p
                         className={cn(
@@ -514,12 +632,32 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               ))}
             </div>
             <form
-              className="flex gap-1.5"
+              className="flex gap-1.5 items-center"
               onSubmit={(e) => {
                 e.preventDefault();
                 void send();
               }}
             >
+              <input
+                ref={fileRef}
+                type="file"
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.txt,application/pdf"
+                onChange={(e) => void onPickFile(e.target.files?.[0] || null)}
+              />
+              <button
+                type="button"
+                className="p-2 rounded-xl text-muted-foreground hover:bg-muted shrink-0"
+                title="Attach image, CV or file"
+                disabled={uploading || sending}
+                onClick={() => fileRef.current?.click()}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Paperclip className="h-4 w-4" />
+                )}
+              </button>
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -527,7 +665,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                 maxLength={4000}
               />
-              <Button type="submit" size="icon" className="rounded-xl shrink-0" disabled={sending || !text.trim()}>
+              <Button
+                type="submit"
+                size="icon"
+                className="rounded-xl shrink-0"
+                disabled={sending || uploading || !text.trim()}
+              >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </form>

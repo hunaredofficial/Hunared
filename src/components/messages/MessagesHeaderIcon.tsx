@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
@@ -10,24 +10,27 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
   const { isSignedIn } = useAuth();
   const [count, setCount] = useState(0);
 
+  const load = useCallback(() => {
+    if (!isSignedIn) return;
+    void fetch("/api/messages/unread")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j && typeof j.count === "number") setCount(j.count);
+      })
+      .catch(() => {});
+  }, [isSignedIn]);
+
   useEffect(() => {
     if (!isSignedIn) return;
-    let alive = true;
-    const load = () => {
-      void fetch("/api/messages/unread")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => {
-          if (alive && j && typeof j.count === "number") setCount(j.count);
-        })
-        .catch(() => {});
-    };
     load();
-    const t = setInterval(load, 45000);
+    const t = setInterval(load, 20000);
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
     return () => {
-      alive = false;
       clearInterval(t);
+      window.removeEventListener("focus", onFocus);
     };
-  }, [isSignedIn]);
+  }, [isSignedIn, load]);
 
   if (!isSignedIn) return null;
 
@@ -39,10 +42,11 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
         className
       )}
       aria-label={count ? `Messages, ${count} unread` : "Messages"}
+      title="Messages"
     >
-      <MessageSquare className="h-4.5 w-4.5 h-4 w-4" />
+      <MessageSquare className="h-4 w-4" />
       {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+        <span className="absolute -top-0.5 -right-0.5 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center leading-none">
           {count > 9 ? "9+" : count}
         </span>
       )}

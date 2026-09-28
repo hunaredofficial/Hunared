@@ -84,7 +84,10 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));
   const text = String(body.body || "");
-  const result = await sendMessage(userId, id, text);
+  const result = await sendMessage(userId, id, text, {
+    messageType: body.messageType,
+    metadata: body.metadata,
+  });
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json({ ok: true, messageId: result.messageId });
 }

@@ -144,10 +144,15 @@ export async function startOrGetConversation(
 export async function sendMessage(
   senderId: string,
   conversationId: string,
-  body: string
+  body: string,
+  opts?: {
+    messageType?: string;
+    metadata?: Record<string, unknown>;
+  }
 ): Promise<{ messageId?: string; error?: string }> {
   const text = body.trim().slice(0, MAX_BODY);
-  if (!text) return { error: "Message is empty" };
+  const hasFile = !!(opts?.metadata && (opts.metadata as { fileUrl?: string }).fileUrl);
+  if (!text && !hasFile) return { error: "Message is empty" };
 
   const supabase = createAdminClient();
   const { data: part } = await supabase
@@ -181,13 +186,15 @@ export async function sendMessage(
     }
   }
 
+  const preview = text || String((opts?.metadata as { fileName?: string })?.fileName || "Attachment");
   const { data: msg, error } = await supabase
     .from("messages")
     .insert({
       conversation_id: conversationId,
       sender_id: senderId,
-      body: text,
-      message_type: "text",
+      body: text || preview,
+      message_type: opts?.messageType || (hasFile ? "file" : "text"),
+      metadata: opts?.metadata || {},
     })
     .select("id")
     .single();
@@ -198,7 +205,7 @@ export async function sendMessage(
     .from("conversations")
     .update({
       last_message_at: new Date().toISOString(),
-      last_message_preview: text.slice(0, 120),
+      last_message_preview: preview.slice(0, 120),
       updated_at: new Date().toISOString(),
     })
     .eq("id", conversationId);

@@ -18,13 +18,13 @@ export async function GET(req: NextRequest) {
   if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
   if (!parts?.length) return NextResponse.json({ conversations: [] });
 
-  let archivedIds = new Set(
+  const archivedIds = new Set(
     parts.filter((p) => p.archived_at).map((p) => p.conversation_id)
   );
-  let activeIds = parts.filter((p) => !p.archived_at).map((p) => p.conversation_id);
+  const activeIds = parts.filter((p) => !p.archived_at).map((p) => p.conversation_id);
   const readMap = new Map(parts.map((p) => [p.conversation_id, p.last_read_at]));
 
-  let ids = filter === "archived" ? [...archivedIds] : activeIds;
+  const ids = filter === "archived" ? [...archivedIds] : activeIds;
   if (!ids.length) return NextResponse.json({ conversations: [] });
 
   let query = supabase
@@ -43,8 +43,9 @@ export async function GET(req: NextRequest) {
   const { data: convs, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Other participants
   const convIds = (convs ?? []).map((c) => c.id);
+  if (!convIds.length) return NextResponse.json({ conversations: [] });
+
   const { data: allParts } = await supabase
     .from("conversation_participants")
     .select("conversation_id, user_id")
@@ -59,46 +60,76 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, username, avatar_url, profession, company_name, role")
-    .in("id", [...otherIds]);
+  // Only select columns that exist on profiles (company_name does NOT)
+  let profileMap = new Map<
+    string,
+    {
+      id: string;
+      full_name: string | null;
+      username: string | null;
+      avatar_url: string | null;
+      profession: string | null;
+      role: string | null;
+    }
+  >();
 
-  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  if (otherIds.size) {
+    const { data: profiles, error: profErr } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, avatar_url, profession, role")
+      .in("id", [...otherIds]);
+    if (profErr) {
+      console.error("[messages/conversations] profiles", profErr.message);
+    }
+    profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  }
+
+  // Batch last messages for unread (avoid N+1)
+  const { data: recentMsgs } = await supabase
+    .from("messages")
+    .select("conversation_id, sender_id, created_at")
+    .in("conversation_id", convIds)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  const lastByConv = new Map<string, { sender_id: string; created_at: string }>();
+  for (const m of recentMsgs ?? []) {
+    if (!lastByConv.has(m.conversation_id)) {
+      lastByConv.set(m.conversation_id, {
+        sender_id: m.sender_id,
+        created_at: m.created_at,
+      });
+    }
+  }
 
   let list = (convs ?? []).map((c) => {
     const otherId = otherByConv.get(c.id);
-    const other = otherId ? profileMap.get(otherId) : null;
+    const other = otherId ? profileMap.get(otherId) ?? null : null;
+    const last = lastByConv.get(c.id);
     const lastRead = readMap.get(c.id);
-    const unread =
-      !!c.last_message_at &&
-      (!lastRead || new Date(c.last_message_at) > new Date(lastRead)) &&
-      c.created_by !== userId; // approximate: unread if last activity after read
-    // Better unread: last message not from me after last_read
-    return {
-      ...c,
-      other,
-      unread,
-    };
-  });
-
-  // Refine unread using last message sender
-  for (const item of list) {
-    const { data: last } = await supabase
-      .from("messages")
-      .select("sender_id, created_at")
-      .eq("conversation_id", item.id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const lastRead = readMap.get(item.id);
-    item.unread = !!(
+    const unread = !!(
       last &&
       last.sender_id !== userId &&
       (!lastRead || new Date(last.created_at) > new Date(lastRead))
     );
-  }
+    return {
+      ...c,
+      other: other
+        ? {
+            id: other.id,
+            full_name: other.full_name,
+            username: other.username,
+            avatar_url: other.avatar_url,
+            profession: other.profession,
+            role: other.role,
+          }
+        : otherId
+          ? { id: otherId, full_name: null, username: null, avatar_url: null }
+          : null,
+      unread,
+      is_archived: archivedIds.has(c.id),
+    };
+  });
 
   if (filter === "unread") list = list.filter((c) => c.unread);
   if (q) {
@@ -109,7 +140,6 @@ export async function GET(req: NextRequest) {
         c.last_message_preview,
         c.other?.full_name,
         c.other?.username,
-        c.other?.company_name,
       ]
         .filter(Boolean)
         .join(" ")
