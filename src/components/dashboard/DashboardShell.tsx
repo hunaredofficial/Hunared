@@ -21,7 +21,7 @@ import {
   Bell,
   BellRing,
   FileText,
-  Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -66,11 +66,6 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <FileText className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/settings/ai",
-        label: "Privacy & AI",
-        icon: <Sparkles className="h-4 w-4" />,
-      },
-      {
         href: "/candidates",
         label: "Browse Candidates",
         icon: <Users className="h-4 w-4" />,
@@ -89,6 +84,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/notifications",
         label: "Notifications",
         icon: <Bell className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/messages",
+        label: "Messages",
+        icon: <MessageSquare className="h-4 w-4" />,
       },
       {
         href: "/dashboard/articles",
@@ -198,6 +198,11 @@ function getNavItems(role: UserRole): NavItem[] {
       label: "Notifications",
       icon: <Bell className="h-4 w-4" />,
     },
+      {
+        href: "/dashboard/messages",
+        label: "Messages",
+        icon: <MessageSquare className="h-4 w-4" />,
+      },
     {
       href: "/dashboard/articles",
       label: "My Articles",

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   Menu,
@@ -26,7 +26,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LocationPicker } from "@/components/layout/LocationPicker";
-import { HunaredLogo } from "@/components/brand/HunaredLogo";
+import { HunaredLogo } from "@/components/brand/HunaredLogo"
+import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
 import { Show, UserButton } from "@clerk/nextjs";
 
 type MegaItem = {
@@ -156,7 +157,7 @@ const NAV_ITEMS: NavItem[] = [
         items: [
           { label: "Programs & Training", href: "/program", desc: "Credentials & pathways" },
           { label: "Verify Credentials", href: "https://hunared.org", desc: "Official verification" },
-          { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
+          { label: "Hunared Finder", href: "/finder", desc: "Lost & found community" },
           { label: "About Hunared", href: "/about", desc: "Our mission" },
           { label: "Contact", href: "/contact", desc: "Help & support" },
         ],
@@ -199,8 +200,8 @@ export function Header() {
         "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
         "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
         scrolled
-          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/70 bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/90 shadow-[0_4px_24px_rgba(0,0,0,0.25)]"
-          : "top-0 w-full max-w-full rounded-none border-b border-border/50 bg-background/95 backdrop-blur-sm"
+          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)]"
+          : "top-0 w-full max-w-full rounded-none border-b border-border/60 bg-background/95"
       )}
     >
       <div
@@ -216,7 +217,7 @@ export function Header() {
 
           <nav
             ref={megaRef}
-            className="hidden lg:flex items-center gap-0.5 relative min-w-0 flex-1 justify-center max-w-[28rem] xl:max-w-[36rem] 2xl:max-w-none"
+            className="hidden lg:flex items-center gap-0.5 relative"
             aria-label="Main navigation"
           >
             {NAV_ITEMS.map((item) => {
@@ -351,10 +352,16 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 min-w-0 ml-auto">
-            {/* Location — always available from lg up (compact) */}
-            <div className="hidden lg:block shrink-0">
-              <LocationPicker className="max-w-[9.5rem] xl:max-w-[11rem]" />
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
+            <div
+              className={cn(
+                "hidden md:block transition-all duration-300 overflow-hidden",
+                scrolled
+                  ? "max-w-0 opacity-0 pointer-events-none scale-95"
+                  : "max-w-[12rem] opacity-100"
+              )}
+            >
+              <LocationPicker />
             </div>
 
             <Button
@@ -396,14 +403,17 @@ export function Header() {
                   className={cn("h-8 shrink-0", scrolled && "px-2")}
                   asChild
                 >
-                  <Link href="/dashboard" className="inline-flex items-center gap-1.5" aria-label="Dashboard">
-                    <LayoutDashboard className="h-4 w-4 shrink-0" />
-                    <span className="hidden xl:inline text-[13px] font-medium">
+                  <Link href="/dashboard" className="inline-flex items-center">
+                    <LayoutDashboard className="h-4 w-4 sm:mr-1.5" />
+                    <span
+                      className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}
+                    >
                       Dashboard
                     </span>
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
+                  <MessagesHeaderIcon className="hidden sm:inline-flex" />
                   <UserButton
                     appearance={{
                       elements: {
