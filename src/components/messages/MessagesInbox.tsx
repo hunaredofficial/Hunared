@@ -41,6 +41,12 @@ type Msg = {
   sender_id: string;
   body: string;
   created_at: string;
+  sender?: {
+    id: string;
+    full_name?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+  } | null;
 };
 
 const FILTERS = [
@@ -85,6 +91,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   const [loadingChat, setLoadingChat] = useState(false);
   const [text, setText] = useState(draftFromUrl);
   const [sending, setSending] = useState(false);
+  const [contextQuick, setContextQuick] = useState<string[] | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const loadList = useCallback(async () => {
@@ -118,6 +125,17 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         setMessages(j.messages || []);
         setConv(j.conversation);
         setOther(j.other);
+        try {
+          const raw = sessionStorage.getItem(`hunared_msg_suggestions_${activeId}`);
+          if (raw) {
+            const arr = JSON.parse(raw) as string[];
+            if (Array.isArray(arr) && arr.length) setContextQuick(arr);
+          } else {
+            setContextQuick(null);
+          }
+        } catch {
+          setContextQuick(null);
+        }
       })
       .finally(() => setLoadingChat(false));
   }, [activeId]);
@@ -196,8 +214,23 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     else toast.error("Could not report");
   }
 
-  const quick =
-    QUICK[conv?.context_type || ""] || QUICK.default;
+  async function deleteMsg(messageId: string) {
+    if (!activeId || !confirm("Delete this message?")) return;
+    const res = await fetch(`/api/messages/${activeId}?messageId=${encodeURIComponent(messageId)}`, {
+      method: "DELETE",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast.error(j.error || "Could not delete");
+      return;
+    }
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    toast.success("Message deleted");
+  }
+
+  const quick = contextQuick?.length
+    ? contextQuick
+    : QUICK[conv?.context_type || ""] || QUICK.default;
 
   const listPane = (
     <div className="flex flex-col h-full border-r border-border bg-card/40">
@@ -276,7 +309,10 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
                     <p className={cn("text-xs truncate", c.unread && "font-semibold")}>
-                      {c.other?.full_name || c.other?.username || "User"}
+                      {c.other?.full_name || "User"}
+                      {c.other?.username ? (
+                        <span className="text-muted-foreground font-normal"> @{c.other.username}</span>
+                      ) : null}
                     </p>
                     {c.unread && (
                       <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -366,25 +402,54 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
           <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
             {messages.map((m) => {
               const mine = m.sender_id === currentUserId;
+              const displayName =
+                m.sender?.full_name ||
+                (m.sender?.username ? `@${m.sender.username}` : null) ||
+                (mine ? "You" : other?.full_name || other?.username || "User");
               return (
                 <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
-                      "max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed",
+                      "max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed group relative",
                       mine
                         ? "bg-primary text-primary-foreground rounded-br-md"
                         : "bg-muted rounded-bl-md"
                     )}
                   >
-                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
                     <p
                       className={cn(
-                        "text-[9px] mt-1",
-                        mine ? "text-primary-foreground/70" : "text-muted-foreground"
+                        "text-[10px] font-semibold mb-0.5",
+                        mine ? "text-primary-foreground/80" : "text-foreground/80"
                       )}
                     >
-                      {new Date(m.created_at).toLocaleString()}
+                      {displayName}
+                      {m.sender?.username && m.sender.full_name ? (
+                        <span className="font-normal opacity-70"> · @{m.sender.username}</span>
+                      ) : null}
                     </p>
+                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p
+                        className={cn(
+                          "text-[9px]",
+                          mine ? "text-primary-foreground/70" : "text-muted-foreground"
+                        )}
+                      >
+                        {new Date(m.created_at).toLocaleString()}
+                      </p>
+                      {mine && (
+                        <button
+                          type="button"
+                          className={cn(
+                            "text-[9px] underline opacity-0 group-hover:opacity-100 transition-opacity",
+                            mine ? "text-primary-foreground/80" : "text-muted-foreground"
+                          )}
+                          onClick={() => void deleteMsg(m.id)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

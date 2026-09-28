@@ -558,6 +558,8 @@ export default async function JobDetailPage({
                       ) ||
                       (poster as { role?: string } | null)?.role === "admin"
                     }
+                    companyName={job.company_name}
+                    location={job.location}
                     label="Message Company"
                     variant="secondary"
                     size="default"

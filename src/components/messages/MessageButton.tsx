@@ -16,16 +16,17 @@ type Props = {
   contextTitle?: string;
   contextSubtitle?: string;
   contextHref?: string;
-  /** Hide button entirely (e.g. system listing) */
+  /** Marketplace category for smarter openers */
+  category?: string;
+  price?: string;
+  location?: string;
+  companyName?: string;
   disabled?: boolean;
-  /** Pre-known system account — skip render */
   isSystemAccount?: boolean;
   label?: string;
   variant?: "default" | "outline" | "secondary" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
-  /** If true, open composer with suggested text without auto-send */
-  draftOnly?: boolean;
 };
 
 export function MessageButton({
@@ -35,13 +36,16 @@ export function MessageButton({
   contextTitle,
   contextSubtitle,
   contextHref,
+  category,
+  price,
+  location,
+  companyName,
   disabled,
   isSystemAccount,
   label = "Message",
   variant = "outline",
   size = "sm",
   className,
-  draftOnly = true,
 }: Props) {
   const { isSignedIn } = useAuth();
   const router = useRouter();
@@ -51,7 +55,9 @@ export function MessageButton({
 
   async function onClick() {
     if (!isSignedIn) {
-      router.push(`/sign-in?redirect_url=${encodeURIComponent(contextHref || "/dashboard/messages")}`);
+      router.push(
+        `/sign-in?redirect_url=${encodeURIComponent(contextHref || "/dashboard/messages")}`
+      );
       return;
     }
     setLoading(true);
@@ -66,7 +72,11 @@ export function MessageButton({
           contextTitle,
           contextSubtitle,
           contextHref,
-          send: !draftOnly,
+          category,
+          price,
+          location,
+          companyName,
+          send: false,
         }),
       });
       const j = await res.json();
@@ -74,10 +84,21 @@ export function MessageButton({
         toast.error(j.error || "Could not start conversation");
         return;
       }
-      const q = draftOnly && j.suggestedMessage
+      const draft = j.suggestedMessage
         ? `?draft=${encodeURIComponent(j.suggestedMessage)}`
         : "";
-      router.push(`/dashboard/messages/${j.conversationId}${q}`);
+      // Pass suggestions via sessionStorage for inbox
+      try {
+        if (j.suggestions?.length) {
+          sessionStorage.setItem(
+            `hunared_msg_suggestions_${j.conversationId}`,
+            JSON.stringify(j.suggestions)
+          );
+        }
+      } catch {
+        /* ignore */
+      }
+      router.push(`/dashboard/messages/${j.conversationId}${draft}`);
     } catch {
       toast.error("Could not start conversation");
     } finally {

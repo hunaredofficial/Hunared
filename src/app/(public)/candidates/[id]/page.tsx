@@ -1,3 +1,4 @@
+import { MessageButton } from "@/components/messages/MessageButton";
 import { Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { COUNTRIES } from "@/lib/countries";
@@ -312,7 +313,20 @@ export default async function CandidateDetailPage({
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <p className="font-medium text-foreground text-sm">
-                      Want the full profile?
+                      
+                  <MessageButton
+                    className="w-full mb-3"
+                    size="default"
+                    variant="secondary"
+                    recipientId={candidate.id}
+                    contextType="talent"
+                    contextId={candidate.id}
+                    contextTitle={candidate.full_name}
+                    contextSubtitle={candidate.profession || undefined}
+                    contextHref={`/candidates/${candidate.id}`}
+                    label="Message Talent"
+                  />
+Want the full profile?
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Sign in to download the CV and send job offers.

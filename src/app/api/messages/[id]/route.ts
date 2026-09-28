@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
-import { sendMessage } from "@/lib/messages/server";
+import { sendMessage, deleteMessage } from "@/lib/messages/server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -59,9 +59,21 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     other = data;
   }
 
+  const msgs = (messages ?? []).reverse();
+  const senderIds = [...new Set(msgs.map((m) => m.sender_id))];
+  const { data: senders } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, avatar_url")
+    .in("id", senderIds.length ? senderIds : ["__none__"]);
+  const senderMap = new Map((senders ?? []).map((s) => [s.id, s]));
+  const enriched = msgs.map((m) => ({
+    ...m,
+    sender: senderMap.get(m.sender_id) || null,
+  }));
+
   return NextResponse.json({
     conversation: conv,
-    messages: (messages ?? []).reverse(),
+    messages: enriched,
     other,
   });
 }
@@ -106,5 +118,20 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       .eq("user_id", userId);
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+
+export async function DELETE(req: NextRequest, ctx: Ctx) {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { id } = await ctx.params;
+  // id can be conversation id — messageId in body or query
+  const messageId = req.nextUrl.searchParams.get("messageId") || "";
+  const body = await req.json().catch(() => ({}));
+  const mid = messageId || String((body as { messageId?: string }).messageId || "");
+  if (!mid) return NextResponse.json({ error: "messageId required" }, { status: 400 });
+  const result = await deleteMessage(userId, mid);
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

@@ -1,3 +1,4 @@
+import { MessageButton } from "@/components/messages/MessageButton";
 import { ShareButton } from "@/components/shared/ShareButton";
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
@@ -75,7 +76,7 @@ export default async function ListingDetailPage({
     if (listing) {
       const { data: sellerData } = await supabase
         .from("profiles")
-        .select("id, full_name, location, avatar_url")
+        .select("id, full_name, username, location, avatar_url, role, is_system_account")
         .eq("id", listing.seller_id)
         .single();
       seller = sellerData;
@@ -135,38 +136,11 @@ export default async function ListingDetailPage({
   const isAffiliate = listing.listing_type === "affiliate";
   const isNative = listing.listing_type === "native";
 
-  const catMeta = LISTING_CATEGORIES.find((c) => c.value === listing.category);
-
   return (
-    <div className="min-h-screen bg-background pb-12">
-      {/* Breadcrumb */}
-      <div className="border-b border-border bg-muted/15">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-            <span>/</span>
-            <Link href="/market" className="hover:text-primary transition-colors">Marketplace</Link>
-            {catMeta && (
-              <>
-                <span>/</span>
-                <Link
-                  href={`/market?category=${encodeURIComponent(listing.category ?? "")}`}
-                  className="hover:text-primary transition-colors"
-                >
-                  {catMeta.label}
-                </Link>
-              </>
-            )}
-            <span>/</span>
-            <span className="text-foreground font-medium truncate max-w-[12rem] sm:max-w-xs">
-              {listing.title}
-            </span>
-          </nav>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-        <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 h-8 text-muted-foreground" asChild>
+    <div className="min-h-screen bg-background">
+      {/* Back button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <Button variant="ghost" size="sm" className="gap-1.5 -ml-2" asChild>
           <Link href="/market">
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
@@ -174,7 +148,7 @@ export default async function ListingDetailPage({
       </div>
 
       {/* Main grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* ── Left: Image gallery — sticky while details scroll; unsticks when grid ends (before Similar) ── */}
         <div className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start z-0">
           <ListingGallery images={allImages} title={listing.title} />
@@ -327,6 +301,35 @@ export default async function ListingDetailPage({
                 <p className="text-xs text-muted-foreground text-center">
                   Contact the seller to arrange purchase.
                 </p>
+              )}
+              {!isAffiliate && listing.seller_id && (
+                <MessageButton
+                  className="w-full"
+                  size="default"
+                  variant="secondary"
+                  recipientId={listing.seller_id}
+                  contextType="marketplace"
+                  contextId={listing.id}
+                  contextTitle={listing.title}
+                  contextSubtitle={
+                    listing.price != null && String(listing.price).trim() !== ""
+                      ? `${listing.price}${listing.currency ? ` ${listing.currency}` : ""}`
+                      : categoryLabel
+                  }
+                  contextHref={`/market/${listing.id}`}
+                  category={listing.category}
+                  price={
+                    listing.price != null
+                      ? `${listing.price}${listing.currency ? ` ${listing.currency}` : ""}`
+                      : undefined
+                  }
+                  location={listing.location || undefined}
+                  isSystemAccount={
+                    Boolean((seller as { is_system_account?: boolean } | null)?.is_system_account) ||
+                    (seller as { role?: string } | null)?.role === "admin"
+                  }
+                  label="Message Seller"
+                />
               )}
             </div>
 

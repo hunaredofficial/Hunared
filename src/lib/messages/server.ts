@@ -22,12 +22,20 @@ export async function isSystemAccount(userId: string): Promise<boolean> {
 
 export async function isBlocked(a: string, b: string): Promise<boolean> {
   const supabase = createAdminClient();
-  const { data } = await supabase
+  const { data: d1 } = await supabase
     .from("message_blocks")
     .select("blocker_id")
-    .or(`and(blocker_id.eq.${a},blocked_id.eq.${b}),and(blocker_id.eq.${b},blocked_id.eq.${a})`)
-    .limit(1);
-  return !!(data && data.length);
+    .eq("blocker_id", a)
+    .eq("blocked_id", b)
+    .maybeSingle();
+  if (d1) return true;
+  const { data: d2 } = await supabase
+    .from("message_blocks")
+    .select("blocker_id")
+    .eq("blocker_id", b)
+    .eq("blocked_id", a)
+    .maybeSingle();
+  return !!d2;
 }
 
 export async function canMessageRecipient(
@@ -201,13 +209,22 @@ export async function sendMessage(
     .eq("conversation_id", conversationId)
     .eq("user_id", senderId);
 
-  // Notify other participants
+  // Notify other participants with sender display name
+  const { data: senderProf } = await supabase
+    .from("profiles")
+    .select("full_name, username")
+    .eq("id", senderId)
+    .maybeSingle();
+  const who =
+    senderProf?.full_name ||
+    (senderProf?.username ? `@${senderProf.username}` : "Someone");
+
   for (const o of others ?? []) {
     try {
       await supabase.from("notifications").insert({
         user_id: o.user_id,
         type: "message",
-        title: "New message",
+        title: `New message from ${who}`,
         body: text.slice(0, 140),
         entity_type: "conversation",
         entity_id: conversationId,
@@ -221,26 +238,35 @@ export async function sendMessage(
   return { messageId: msg?.id };
 }
 
-export function suggestedOpener(
-  contextType: MessageContextType,
-  title?: string | null
-): string {
-  const t = title?.trim() || "this";
-  switch (contextType) {
-    case "job":
-      return `Hi, I'm interested in the ${t} role. Is this position still open?`;
-    case "marketplace":
-    case "vehicle":
-    case "property":
-    case "accommodation":
-      return `Hi, I'm interested in "${t}". Is it still available?`;
-    case "service":
-      return `Hi, I'm interested in your service "${t}". Are you available?`;
-    case "talent":
-      return `Hi, I came across your profile on Hunared and would like to connect.`;
-    case "company":
-      return `Hi, I'd like to learn more about opportunities at your company.`;
-    default:
-      return `Hi, I'd like to get in touch regarding ${t}.`;
+export { primaryOpener as suggestedOpener, buildSuggestedOpeners, contextTypeFromMarketCategory } from "./openers";
+export type { OpenerContext } from "./openers";
+
+
+
+export async function deleteMessage(
+  userId: string,
+  messageId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createAdminClient();
+  const { data: msg } = await supabase
+    .from("messages")
+    .select("id, sender_id, conversation_id, created_at")
+    .eq("id", messageId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!msg) return { ok: false, error: "Message not found" };
+  if (msg.sender_id !== userId) {
+    return { ok: false, error: "You can only delete your own messages" };
   }
+  // Optional: only within 24h
+  const age = Date.now() - new Date(msg.created_at).getTime();
+  if (age > 24 * 60 * 60 * 1000) {
+    return { ok: false, error: "Messages can only be deleted within 24 hours" };
+  }
+  const { error } = await supabase
+    .from("messages")
+    .update({ deleted_at: new Date().toISOString(), body: "" })
+    .eq("id", messageId);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }

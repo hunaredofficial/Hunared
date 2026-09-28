@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { startOrGetConversation, suggestedOpener } from "@/lib/messages/server";
+import { startOrGetConversation } from "@/lib/messages/server";
+import { buildSuggestedOpeners, primaryOpener, contextTypeFromMarketCategory } from "@/lib/messages/openers";
 import type { MessageContextType } from "@/lib/messages/types";
 
 export async function POST(req: NextRequest) {
@@ -9,15 +10,37 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const recipientId = String(body.recipientId || "");
-  const contextType = (body.contextType || "general") as MessageContextType;
   if (!recipientId) {
     return NextResponse.json({ error: "recipientId required" }, { status: 400 });
   }
 
+  let contextType = (body.contextType || "general") as MessageContextType;
+  // Auto-map marketplace categories
+  if (contextType === "marketplace" && body.category) {
+    contextType = contextTypeFromMarketCategory(String(body.category));
+  }
+
+  const openerCtx = {
+    contextType,
+    title: body.contextTitle as string | undefined,
+    subtitle: body.contextSubtitle as string | undefined,
+    category: body.category as string | undefined,
+    price: body.price as string | undefined,
+    location: body.location as string | undefined,
+    companyName: body.companyName as string | undefined,
+  };
+
+  const suggestions = buildSuggestedOpeners(openerCtx);
+  const primary = primaryOpener(openerCtx);
+
+  // draftOnly default true — create conversation without auto-sending
+  const shouldSend = body.send === true;
   const initialMessage =
-    typeof body.initialMessage === "string"
-      ? body.initialMessage
-      : suggestedOpener(contextType, body.contextTitle);
+    typeof body.initialMessage === "string" && body.initialMessage.trim()
+      ? body.initialMessage.trim()
+      : shouldSend
+        ? primary
+        : undefined;
 
   const result = await startOrGetConversation(userId, {
     recipientId,
@@ -26,8 +49,14 @@ export async function POST(req: NextRequest) {
     contextTitle: body.contextTitle,
     contextSubtitle: body.contextSubtitle,
     contextHref: body.contextHref,
-    contextMeta: body.contextMeta,
-    initialMessage: body.send !== false ? initialMessage : undefined,
+    contextMeta: {
+      ...(body.contextMeta || {}),
+      category: body.category,
+      price: body.price,
+      location: body.location,
+      companyName: body.companyName,
+    },
+    initialMessage,
   });
 
   if (result.error) {
@@ -37,6 +66,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     conversationId: result.conversationId,
     created: result.created,
-    suggestedMessage: suggestedOpener(contextType, body.contextTitle),
+    suggestedMessage: primary,
+    suggestions,
   });
 }
