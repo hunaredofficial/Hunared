@@ -37,8 +37,8 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
   const { data: messages } = await mq;
 
-  // Mark read
-  await supabase
+  // Mark read (fire-and-forget for speed)
+  void supabase
     .from("conversation_participants")
     .update({ last_read_at: new Date().toISOString() })
     .eq("conversation_id", id)

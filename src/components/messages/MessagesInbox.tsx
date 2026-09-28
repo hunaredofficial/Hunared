@@ -24,19 +24,18 @@ import { toast } from "sonner";
 import { buildReplySuggestions } from "@/lib/messages/reply-suggestions";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
-/** Fix Cloudinary PDF/doc URLs that break with fl_attachment or wrong resource type */
+/**
+ * Cloudinary message attachments:
+ * - /raw/upload/ often returns 401 on unsigned presets
+ * - /image/upload/fl_attachment/ often returns invalid response
+ * Use public /image/upload/ delivery (same as working Hunared CV images).
+ */
 function fixAttachmentUrl(url: string): string {
   if (!url) return url;
-  let u = url;
-  // Remove fl_attachment which often breaks browser open for PDFs
+  let u = url.startsWith("http://") ? url.replace("http://", "https://") : url;
+  u = u.replace(/\/(?:raw|video)\/upload\//g, "/image/upload/");
   u = u.replace(/\/fl_attachment\//g, "/");
-  // Prefer raw delivery for PDFs
-  if (/\.pdf($|\?)/i.test(u) || u.includes("/image/upload/")) {
-    if (/\.pdf($|\?)/i.test(u)) {
-      u = u.replace("/image/upload/", "/raw/upload/");
-      u = u.replace("/image/upload/", "/upload/"); // safety
-    }
-  }
+  u = u.replace(/\/upload\/fl_attachment\//g, "/upload/");
   return u;
 }
 
@@ -189,6 +188,17 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     if (!activeId || sending) return;
     const bodyText = payload?.body ?? text;
     if (!bodyText.trim() && !payload?.metadata) return;
+    const optimistic: Msg = {
+      id: `tmp-${Date.now()}`,
+      sender_id: currentUserId,
+      body: bodyText || String((payload?.metadata as { fileName?: string })?.fileName || ""),
+      created_at: new Date().toISOString(),
+      message_type: payload?.messageType || "text",
+      metadata: (payload?.metadata as Msg["metadata"]) || null,
+      sender: { id: currentUserId, full_name: "You", username: null, avatar_url: null },
+    };
+    setText("");
+    setMessages((prev) => [...prev, optimistic]);
     setSending(true);
     try {
       const res = await fetch(`/api/messages/${activeId}`, {
@@ -203,13 +213,20 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       const j = await res.json();
       if (!res.ok) {
         toast.error(j.error || "Send failed");
+        setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
         return;
       }
-      setText("");
-      const r2 = await fetch(`/api/messages/${activeId}`);
-      const j2 = await r2.json();
-      setMessages(j2.messages || []);
+      // Light refresh — replace temp id only
+      if (j.messageId) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimistic.id ? { ...m, id: j.messageId } : m))
+        );
+      }
+      // Refresh list in background (do not block chat)
       void loadList();
+    } catch {
+      toast.error("Send failed");
+      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
     } finally {
       setSending(false);
     }
@@ -231,8 +248,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         isPdf ||
         /word|officedocument|msword|text\//.test(file.type) ||
         /\.(docx?|pdf|txt)$/i.test(file.name);
+      // Always use "image" resource type — unsigned presets often block /raw/ (401)
       const { url: rawUrl } = await uploadToCloudinary(file, "hunared/messages", {
-        resourceType: isImage ? "image" : "raw",
+        resourceType: "image",
       });
       const url = fixAttachmentUrl(rawUrl);
       await send({
@@ -599,6 +617,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                             href={fixAttachmentUrl(m.metadata.fileUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
+                            download={m.metadata.fileName || "file"}
                             className="inline-flex items-center gap-1.5 text-[12px] underline"
                           >
                             <FileText className="h-3.5 w-3.5" />

@@ -23,7 +23,7 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
   useEffect(() => {
     if (!isSignedIn) return;
     load();
-    const t = setInterval(load, 20000);
+    const t = setInterval(load, 45000);
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
     return () => {
