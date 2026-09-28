@@ -26,6 +26,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     .single();
 
   const before = req.nextUrl.searchParams.get("before");
+  const after = req.nextUrl.searchParams.get("after");
   let mq = supabase
     .from("messages")
     .select("id, conversation_id, sender_id, body, message_type, metadata, created_at, deleted_at")
@@ -34,11 +35,14 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     .order("created_at", { ascending: false })
     .limit(50);
   if (before) mq = mq.lt("created_at", before);
+  if (after) {
+    mq = mq.gt("created_at", after).order("created_at", { ascending: true });
+  }
 
   const { data: messages } = await mq;
 
-  // Mark read (fire-and-forget for speed)
-  void supabase
+  // Mark read
+  await supabase
     .from("conversation_participants")
     .update({ last_read_at: new Date().toISOString() })
     .eq("conversation_id", id)
@@ -48,28 +52,20 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     .from("conversation_participants")
     .select("user_id")
     .eq("conversation_id", id);
-  const otherId = (parts ?? []).map((p) => p.user_id).find((u) => u !== userId) || null;
-  let other: {
-    id: string;
-    full_name?: string | null;
-    username?: string | null;
-    avatar_url?: string | null;
-    profession?: string | null;
-    role?: string | null;
-  } | null = null;
+  const otherId = (parts ?? []).map((p) => p.user_id).find((u) => u !== userId);
+  let other = null;
   if (otherId) {
-    const { data, error: oErr } = await supabase
+    const { data } = await supabase
       .from("profiles")
       .select("id, full_name, username, avatar_url, profession, role")
       .eq("id", otherId)
       .maybeSingle();
-    if (oErr) console.error("[messages/id] other profile", oErr.message);
-    other = data
-      ? { ...data, id: data.id || otherId }
-      : { id: otherId, full_name: null, username: null, avatar_url: null };
+    other = data;
   }
 
-  const msgs = (messages ?? []).reverse();
+  const msgs = after
+    ? (messages ?? [])
+    : (messages ?? []).reverse();
   const senderIds = [...new Set(msgs.map((m) => m.sender_id))];
   const { data: senders } = await supabase
     .from("profiles")

@@ -6,37 +6,19 @@ export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json().catch(() => ({}));
     const blockedId = String(body.blockedId || "").trim();
     if (!blockedId || blockedId === userId) {
       return NextResponse.json({ error: "Invalid user to block" }, { status: 400 });
     }
-
     const supabase = createAdminClient();
     const { error } = await supabase.from("message_blocks").upsert(
-      {
-        blocker_id: userId,
-        blocked_id: blockedId,
-      },
+      { blocker_id: userId, blocked_id: blockedId },
       { onConflict: "blocker_id,blocked_id" }
     );
-
-    if (error) {
-      console.error("[messages/block]", error);
-      return NextResponse.json(
-        {
-          error:
-            error.message?.includes("does not exist")
-              ? "Message blocks table missing. Run SQL 010_messages.sql in Supabase."
-              : error.message || "Could not block user",
-        },
-        { status: 500 }
-      );
-    }
+    if (error) return NextResponse.json({ error: error.message || "Could not block" }, { status: 500 });
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[messages/block]", e);
+  } catch {
     return NextResponse.json({ error: "Block failed" }, { status: 500 });
   }
 }
@@ -48,10 +30,11 @@ export async function DELETE(req: NextRequest) {
   const blockedId = String(body.blockedId || "").trim();
   if (!blockedId) return NextResponse.json({ error: "blockedId required" }, { status: 400 });
   const supabase = createAdminClient();
-  await supabase
+  const { error } = await supabase
     .from("message_blocks")
     .delete()
     .eq("blocker_id", userId)
     .eq("blocked_id", blockedId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

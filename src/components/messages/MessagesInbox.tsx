@@ -56,6 +56,7 @@ type Conv = {
     profession?: string | null;
     company_name?: string | null;
   } | null;
+  is_archived?: boolean;
 };
 
 type Msg = {
@@ -104,6 +105,39 @@ const QUICK: Record<string, string[]> = {
   default: ["Hello!", "Thank you.", "I'll get back to you soon."],
 };
 
+
+function attachmentHref(m: {
+  id: string;
+  metadata?: {
+    storagePath?: string;
+    fileUrl?: string;
+    fileName?: string;
+  } | null;
+}): string {
+  // Always short Hunared URL — never expose long signed storage URLs
+  if (m.id && !String(m.id).startsWith("tmp-")) {
+    return `/api/messages/file?messageId=${encodeURIComponent(m.id)}`;
+  }
+  if (m.metadata?.storagePath) {
+    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
+  }
+  return "#";
+}): string {
+  if (m.metadata?.storagePath) {
+    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
+  }
+  // Prefer messageId so server can resolve + auth
+  if (m.id && !m.id.startsWith("tmp-")) {
+    const q = new URLSearchParams({ messageId: m.id });
+    if (m.metadata?.fileUrl) q.set("url", m.metadata.fileUrl);
+    return `/api/messages/file?${q.toString()}`;
+  }
+  if (m.metadata?.fileUrl) {
+    return `/api/messages/file?url=${encodeURIComponent(m.metadata.fileUrl)}`;
+  }
+  return "#";
+}
+
 export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -123,7 +157,17 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   const [sending, setSending] = useState(false);
   const [contextQuick, setContextQuick] = useState<string[] | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [onlineMap, setOnlineMap] = useState<Record<string, boolean>>({});
+  const [showBlocked, setShowBlocked] = useState(false);
+  const [blockedList, setBlockedList] = useState<
+    { userId: string; profile: { full_name?: string | null; username?: string | null } | null }[]
+  >([]);
+  const [reportOpen, setReportOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<Msg[]>([]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const loadList = useCallback(async () => {
@@ -180,6 +224,87 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     if (draftFromUrl) setText(draftFromUrl);
   }, [draftFromUrl]);
 
+  // Live chat: poll new messages every 2.5s while conversation is open
+  useEffect(() => {
+    if (!activeId) return;
+    let stopped = false;
+    const tick = async () => {
+      if (stopped) return;
+      try {
+        const last = messagesRef.current[messagesRef.current.length - 1];
+        const after = last?.created_at && !String(last.id).startsWith("tmp-") ? last.created_at : "";
+        const url = after
+          ? `/api/messages/${activeId}?after=${encodeURIComponent(after)}`
+          : `/api/messages/${activeId}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const j = await res.json();
+        if (after && Array.isArray(j.messages) && j.messages.length) {
+          setMessages((prev) => {
+            const ids = new Set(prev.map((m) => m.id));
+            const add = (j.messages as Msg[]).filter((m) => !ids.has(m.id));
+            return add.length ? [...prev, ...add] : prev;
+          });
+          void loadList();
+        } else if (!after && Array.isArray(j.messages)) {
+          // full sync rarely
+        }
+        if (j.other) setOther(j.other);
+      } catch {
+        /* ignore */
+      }
+    };
+    const iv = setInterval(() => void tick(), 2500);
+    return () => {
+      stopped = true;
+      clearInterval(iv);
+    };
+  }, [activeId, loadList]);
+
+  // Presence heartbeat + other user online status
+  useEffect(() => {
+    let stopped = false;
+    const beat = () => {
+      void fetch("/api/messages/presence", { method: "POST" }).catch(() => {});
+    };
+    beat();
+    const iv = setInterval(beat, 30000);
+    return () => {
+      stopped = true;
+      clearInterval(iv);
+    };
+  }, []);
+
+  useEffect(() => {
+    const ids = new Set<string>();
+    if (other?.id) ids.add(other.id);
+    for (const c of list) {
+      if (c.other && (c.other as { id?: string }).id) ids.add((c.other as { id: string }).id);
+    }
+    if (!ids.size) return;
+    let stopped = false;
+    const load = () => {
+      void fetch(`/api/messages/presence?ids=${encodeURIComponent([...ids].join(","))}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          if (stopped || !j?.presence) return;
+          const map: Record<string, boolean> = {};
+          for (const [id, v] of Object.entries(j.presence as Record<string, { online: boolean }>)) {
+            map[id] = !!v.online;
+          }
+          setOnlineMap(map);
+        })
+        .catch(() => {});
+    };
+    load();
+    const iv = setInterval(load, 20000);
+    return () => {
+      stopped = true;
+      clearInterval(iv);
+    };
+  }, [other?.id, list]);
+
+
   async function send(payload?: {
     body?: string;
     messageType?: string;
@@ -229,6 +354,27 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
     } finally {
       setSending(false);
+    }
+  }
+
+  async function openAttachment(m: Msg) {
+    try {
+      const href = attachmentHref(m);
+      const res = await fetch(href);
+      const ct = res.headers.get("content-type") || "";
+      if (!res.ok || ct.includes("application/json")) {
+        const j = await res.json().catch(() => ({}));
+        toast.error(
+          (j as { error?: string }).error ||
+            "Cannot open this file. Ask the sender to share it again."
+        );
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Cannot open this file. Ask the sender to share it again.");
     }
   }
 
@@ -283,6 +429,27 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     void loadList();
   }
 
+  async function loadBlocked() {
+    const res = await fetch("/api/messages/blocked");
+    const j = await res.json().catch(() => ({}));
+    setBlockedList(j.blocked || []);
+  }
+
+  async function unblockUser(blockedId: string) {
+    const res = await fetch("/api/messages/block", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blockedId }),
+    });
+    if (res.ok) {
+      toast.success("User unblocked");
+      void loadBlocked();
+    } else {
+      const j = await res.json().catch(() => ({}));
+      toast.error(j.error || "Could not unblock");
+    }
+  }
+
   async function blockUser() {
     const blockedId =
       other?.id ||
@@ -321,11 +488,11 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       return;
     }
     const reason = prompt(
-      "Reason:\nspam · scam · harassment · fake job · fake listing · abuse · other",
+      "Report reason (type one):\nspam | scam | harassment | fake_job | fake_listing | abuse | inappropriate | other",
       "spam"
     );
     if (!reason) return;
-    const details = prompt("Optional details:") || "";
+    const details = prompt("Optional details for moderators:") || "";
     try {
       const res = await fetch("/api/messages/report", {
         method: "POST",
@@ -408,6 +575,40 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            className="text-[10px] text-muted-foreground hover:text-foreground underline"
+            onClick={() => {
+              setShowBlocked((v) => !v);
+              void loadBlocked();
+            }}
+          >
+            {showBlocked ? "Hide blocked" : "Blocked users"}
+          </button>
+        </div>
+        {showBlocked && (
+          <div className="rounded-lg border border-border bg-muted/20 p-2 space-y-1 max-h-32 overflow-y-auto">
+            {blockedList.length === 0 ? (
+              <p className="text-[10px] text-muted-foreground">No blocked users</p>
+            ) : (
+              blockedList.map((b) => (
+                <div key={b.userId} className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="truncate">
+                    {b.profile?.full_name || b.profile?.username || b.userId.slice(0, 8)}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-primary shrink-0"
+                    onClick={() => void unblockUser(b.userId)}
+                  >
+                    Unblock
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap gap-1">
           {FILTERS.map((f) => (
             <button
@@ -458,13 +659,16 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               )}
             >
               <div className="flex items-start gap-2">
-                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden text-muted-foreground">
+                <div className="relative h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden text-muted-foreground">
                   {c.other?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.other.avatar_url} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <User className="h-4 w-4" />
                   )}
+                  {c.other?.id && onlineMap[c.other.id] ? (
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" title="Online" />
+                  ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
@@ -528,8 +732,13 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate">
+              <p className="text-sm font-semibold truncate flex items-center gap-1.5">
                 {other?.full_name || other?.username || "Conversation"}
+                {other?.id && onlineMap[other.id] ? (
+                  <span className="text-[10px] font-medium text-emerald-500">Online</span>
+                ) : other?.id ? (
+                  <span className="text-[10px] font-normal text-muted-foreground">Offline</span>
+                ) : null}
               </p>
               {other?.username && other?.full_name ? (
                 <p className="text-[11px] text-muted-foreground truncate">@{other.username}</p>
@@ -599,36 +808,55 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     >
                       {displayName}
                     </p>
-                    {m.metadata?.fileUrl && (
+                    {(m.metadata?.fileUrl || m.metadata?.storagePath) && (
                       <div className="mb-1.5">
                         {m.message_type === "image" ||
                         (m.metadata.fileType || "").startsWith("image/") ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <a href={fixAttachmentUrl(m.metadata.fileUrl)} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={attachmentHref(m)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <img
-                              src={fixAttachmentUrl(m.metadata.fileUrl)}
+                              src={
+                                m.metadata.storagePath
+                                  ? attachmentHref(m)
+                                  : fixAttachmentUrl(m.metadata.fileUrl || "")
+                              }
                               alt={m.metadata.fileName || "Image"}
                               className="max-h-48 rounded-lg border border-white/10"
                             />
                           </a>
                         ) : (
                           <a
-                            href={
-                              m.metadata.storagePath
-                                ? `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`
-                                : fixAttachmentUrl(m.metadata.fileUrl || "")
-                            }
+                            href={attachmentHref(m)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[12px] underline"
+                            className="inline-flex items-center gap-1.5 text-[12px] underline font-medium"
+                            onClick={(e) => {
+                              // If API returns JSON error, surface it
+                              if (!m.metadata?.storagePath && (m.metadata?.fileUrl || "").includes("raw/upload")) {
+                                e.preventDefault();
+                                void openAttachment(m);
+                              }
+                            }}
                           >
                             <FileText className="h-3.5 w-3.5" />
-                            {m.metadata.fileName || "Download file"}
+                            {m.metadata.fileName || "Open file"}
                           </a>
                         )}
                       </div>
                     )}
-                    {m.body ? (
+                    {m.body &&
+                    !(
+                      m.metadata?.fileName &&
+                      (m.body === m.metadata.fileName ||
+                        m.body === `📎 ${m.metadata.fileName}` ||
+                        m.body === `Shared file: ${m.metadata.fileName}` ||
+                        m.body.startsWith("📎 ") ||
+                        m.body.startsWith("Shared file:"))
+                    ) ? (
                       <p className="whitespace-pre-wrap break-words">{m.body}</p>
                     ) : null}
                     <div className="flex items-center gap-2 mt-1">
