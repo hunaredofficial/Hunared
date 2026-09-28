@@ -551,13 +551,7 @@ export default async function JobDetailPage({
                     contextTitle={job.job_title}
                     contextSubtitle={job.company_name}
                     contextHref={`/jobs/${job.id}`}
-                    isSystemAccount={
-                      Boolean(
-                        (poster as { is_system_account?: boolean; role?: string } | null)
-                          ?.is_system_account
-                      ) ||
-                      (poster as { role?: string } | null)?.role === "admin"
-                    }
+                    isSystemAccount={Boolean((poster as { is_system_account?: boolean } | null)?.is_system_account)}
                     companyName={job.company_name}
                     location={job.location}
                     label="Message Company"

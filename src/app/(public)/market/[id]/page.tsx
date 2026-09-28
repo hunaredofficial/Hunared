@@ -314,7 +314,7 @@ export default async function ListingDetailPage({
                   contextSubtitle={
                     listing.price != null && String(listing.price).trim() !== ""
                       ? `${listing.price}${listing.currency ? ` ${listing.currency}` : ""}`
-                      : categoryLabel
+                      : catLabel
                   }
                   contextHref={`/market/${listing.id}`}
                   category={listing.category}
@@ -324,10 +324,9 @@ export default async function ListingDetailPage({
                       : undefined
                   }
                   location={listing.location || undefined}
-                  isSystemAccount={
-                    Boolean((seller as { is_system_account?: boolean } | null)?.is_system_account) ||
-                    (seller as { role?: string } | null)?.role === "admin"
-                  }
+                  isSystemAccount={Boolean(
+                    (seller as { is_system_account?: boolean } | null)?.is_system_account
+                  )}
                   label="Message Seller"
                 />
               )}

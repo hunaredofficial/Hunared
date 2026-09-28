@@ -48,15 +48,25 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     .from("conversation_participants")
     .select("user_id")
     .eq("conversation_id", id);
-  const otherId = (parts ?? []).map((p) => p.user_id).find((u) => u !== userId);
-  let other = null;
+  const otherId = (parts ?? []).map((p) => p.user_id).find((u) => u !== userId) || null;
+  let other: {
+    id: string;
+    full_name?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+    profession?: string | null;
+    role?: string | null;
+  } | null = null;
   if (otherId) {
-    const { data } = await supabase
+    const { data, error: oErr } = await supabase
       .from("profiles")
-      .select("id, full_name, username, avatar_url, profession, company_name, role")
+      .select("id, full_name, username, avatar_url, profession, role")
       .eq("id", otherId)
       .maybeSingle();
-    other = data;
+    if (oErr) console.error("[messages/id] other profile", oErr.message);
+    other = data
+      ? { ...data, id: data.id || otherId }
+      : { id: otherId, full_name: null, username: null, avatar_url: null };
   }
 
   const msgs = (messages ?? []).reverse();

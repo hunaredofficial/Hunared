@@ -10,14 +10,12 @@ export async function isSystemAccount(userId: string): Promise<boolean> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("profiles")
-    .select("is_system_account, role")
+    .select("is_system_account")
     .eq("id", userId)
     .maybeSingle();
   if (!data) return false;
-  if (data.is_system_account === true) return true;
-  // Treat admin role as non-messageable team by default
-  if (data.role === "admin") return true;
-  return false;
+  // Only explicit system/team accounts are non-messageable
+  return data.is_system_account === true;
 }
 
 export async function isBlocked(a: string, b: string): Promise<boolean> {

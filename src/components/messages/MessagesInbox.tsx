@@ -24,6 +24,23 @@ import { toast } from "sonner";
 import { buildReplySuggestions } from "@/lib/messages/reply-suggestions";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
+/** Fix Cloudinary PDF/doc URLs that break with fl_attachment or wrong resource type */
+function fixAttachmentUrl(url: string): string {
+  if (!url) return url;
+  let u = url;
+  // Remove fl_attachment which often breaks browser open for PDFs
+  u = u.replace(/\/fl_attachment\//g, "/");
+  // Prefer raw delivery for PDFs
+  if (/\.pdf($|\?)/i.test(u) || u.includes("/image/upload/")) {
+    if (/\.pdf($|\?)/i.test(u)) {
+      u = u.replace("/image/upload/", "/raw/upload/");
+      u = u.replace("/image/upload/", "/upload/"); // safety
+    }
+  }
+  return u;
+}
+
+
 type Conv = {
   id: string;
   context_type: string;
@@ -214,12 +231,13 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         isPdf ||
         /word|officedocument|msword|text\//.test(file.type) ||
         /\.(docx?|pdf|txt)$/i.test(file.name);
-      const { url } = await uploadToCloudinary(file, "hunared/messages", {
-        resourceType: isImage ? "image" : "auto",
+      const { url: rawUrl } = await uploadToCloudinary(file, "hunared/messages", {
+        resourceType: isImage ? "image" : "raw",
       });
+      const url = fixAttachmentUrl(rawUrl);
       await send({
-        body: isImage ? "" : `Shared file: ${file.name}`,
-        messageType: isImage ? "image" : isDoc ? "file" : "file",
+        body: isImage ? "" : `📎 ${file.name}`,
+        messageType: isImage ? "image" : "file",
         metadata: {
           fileUrl: url,
           fileName: file.name,
@@ -249,9 +267,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   }
 
   async function blockUser() {
-    const blockedId = other?.id;
+    const blockedId =
+      other?.id ||
+      messages.find((m) => m.sender_id !== currentUserId)?.sender_id ||
+      null;
     if (!blockedId) {
-      toast.error("Cannot identify user to block");
+      toast.error("Cannot identify user to block. Re-open the conversation and try again.");
       return;
     }
     if (!confirm("Block this user? They will not be able to message you.")) return;
@@ -274,9 +295,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   }
 
   async function reportUser() {
-    const reportedUserId = other?.id;
+    const reportedUserId =
+      other?.id ||
+      messages.find((m) => m.sender_id !== currentUserId)?.sender_id ||
+      null;
     if (!reportedUserId) {
-      toast.error("Cannot identify user to report");
+      toast.error("Cannot identify user to report. Re-open the conversation and try again.");
       return;
     }
     const reason = prompt(
@@ -433,9 +457,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                         c.context_subtitle ||
                         c.context_title ||
                         "Participant"}
-                      {c.other?.username && c.other?.full_name ? (
-                        <span className="text-muted-foreground font-normal"> @{c.other.username}</span>
-                      ) : null}
                     </p>
                     {c.unread && (
                       <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -493,6 +514,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               <p className="text-sm font-semibold truncate">
                 {other?.full_name || other?.username || "Conversation"}
               </p>
+              {other?.username && other?.full_name ? (
+                <p className="text-[11px] text-muted-foreground truncate">@{other.username}</p>
+              ) : null}
               {conv?.context_title && (
                 <p className="text-[11px] text-muted-foreground truncate">
                   {conv.context_title}
@@ -557,25 +581,22 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                       )}
                     >
                       {displayName}
-                      {m.sender?.username && m.sender.full_name ? (
-                        <span className="font-normal opacity-70"> · @{m.sender.username}</span>
-                      ) : null}
                     </p>
                     {m.metadata?.fileUrl && (
                       <div className="mb-1.5">
                         {m.message_type === "image" ||
                         (m.metadata.fileType || "").startsWith("image/") ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <a href={m.metadata.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <a href={fixAttachmentUrl(m.metadata.fileUrl)} target="_blank" rel="noopener noreferrer">
                             <img
-                              src={m.metadata.fileUrl}
+                              src={fixAttachmentUrl(m.metadata.fileUrl)}
                               alt={m.metadata.fileName || "Image"}
                               className="max-h-48 rounded-lg border border-white/10"
                             />
                           </a>
                         ) : (
                           <a
-                            href={m.metadata.fileUrl}
+                            href={fixAttachmentUrl(m.metadata.fileUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-[12px] underline"
