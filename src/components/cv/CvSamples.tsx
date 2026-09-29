@@ -27,7 +27,7 @@ export function CvSamples({
       s.meta.category.toLowerCase().includes(t) ||
       s.meta.blurb.toLowerCase().includes(t)
     );
-  });
+  }).sort((a, b) => a.meta.profession.localeCompare(b.meta.profession));
 
   return (
     <div className="space-y-5">
@@ -100,9 +100,9 @@ export function CvSamples({
                   `${s.meta.profession} CV`,
                   {
                     ...s.data,
-                    fullName: "",
-                    email: "",
-                    phone: "",
+                    fullName: s.data.fullName || "Muhammad Abdullah",
+                    email: s.data.email || "m.abdullah@example.com",
+                    phone: s.data.phone || "+966 50 000 0000",
                   },
                   s.meta.profession
                 )

@@ -791,10 +791,12 @@ const SPECS: Spec[] = [
   },
 ];
 
-export const CV_SAMPLES: { meta: SampleCvMeta; data: CvData }[] = SPECS.map(build);
+export const CV_SAMPLES: { meta: SampleCvMeta; data: CvData }[] = SPECS.map(build).sort((a, b) =>
+  a.meta.profession.localeCompare(b.meta.profession)
+);
 
 export function listSampleCategories(): string[] {
-  return [...new Set(CV_SAMPLES.map((s) => s.meta.category))].sort();
+  return [...new Set(CV_SAMPLES.map((s) => s.meta.category))].sort((a, b) => a.localeCompare(b));
 }
 
 export function getSampleById(id: string) {
