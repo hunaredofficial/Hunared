@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles,
   Plus,
@@ -42,6 +42,7 @@ import {
   tailorSuggestions,
 } from "@/lib/cv/ai-fill";
 import { extractTextFromFile } from "@/lib/cv/extract-file-text";
+import { understandCv } from "@/lib/cv/understand-cv";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
 import {
   loadLibrary,
@@ -76,7 +77,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [view, setView] = useState<View>("library");
   const [docs, setDocs] = useState<CvDocument[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [data, setData] = useState<CvData>(DEFAULT_CV);
+  const [data, setData] = useState<CvData>(() => DEFAULT_CV());
   const [aiCmd, setAiCmd] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
