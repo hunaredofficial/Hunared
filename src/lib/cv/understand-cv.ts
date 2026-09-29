@@ -1,10 +1,10 @@
+import { cleanExtractedCvText } from "./extract-file-text";
 /**
  * Deep CV understanding: parse uploaded/pasted resume text into
  * structured CvData + full editable document HTML preserving ALL content.
  * Does not invent employers, dates, or credentials.
  */
 
-import { repairBrokenSpacing } from "./extract-file-text";
 import {
   DEFAULT_CV,
   EMPTY_EDUCATION,
@@ -150,17 +150,10 @@ function parseHeaderBlock(lines: string[], cv: CvData) {
   const iqamaM = joined.match(/Iqama\s*[:.]?\s*(\d{5,15})/i);
   const locationBits: string[] = [];
   for (const line of lines) {
-    let L = line;
-    // Split "Saudi Arabia Email: x" style merges
-    if (/Email\s*:/i.test(L) && !cv.email) {
-      const em = L.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-      if (em) cv.email = em[0];
-      L = L.replace(/Email\s*:.*$/i, "").trim();
-    }
-    if (/Iqama|Mobile\s*No|Mobile|Phone|Tel/i.test(L) && /:/.test(L)) continue;
-    if (/@/.test(L)) continue;
-    if (/saudi|arabia|jubail|riyadh|dammam|jeddah|dubai|uae|kuwait|qatar|khobar|yanbu/i.test(L)) {
-      locationBits.push(L.replace(/\s{2,}/g, " ").trim());
+    if (/Iqama|Mobile|Email|Phone|Tel/i.test(line) && /:/.test(line)) continue;
+    if (/@/.test(line)) continue;
+    if (/saudi|arabia|jubail|riyadh|dammam|jeddah|dubai|uae|kuwait|qatar/i.test(line)) {
+      locationBits.push(line.replace(/^(Al-?)/, "Al-"));
     }
   }
   if (locationBits.length) cv.location = [...new Set(locationBits)].join(", ");
@@ -199,43 +192,37 @@ function parseHeaderBlock(lines: string[], cv: CvData) {
   }
 }
 
-function parseEducation(body: string[]): { education: CvEducation[]; certExtras: string[] } {
+function parseEducation(body: string[]): CvEducation[] {
   const items: CvEducation[] = [];
-  const certExtras: string[] = [];
   for (const line of body) {
     if (!line || isSectionHeader(line)) continue;
-    const clean = line.replace(/^[\u2022\-\*•]\s*/, "").trim();
-    if (!clean) continue;
-    // Short safety certs often listed under education
-    if (/^(NEBOSH|IOSH|OSHA|First Aid|BLS|H2S)\b/i.test(clean) && clean.length < 40) {
-      certExtras.push(clean);
-      continue;
-    }
-    const degreeM = clean.match(
-      /^(DAE|B\.?Sc\.?|B\.?E\.?|B\.?Tech|M\.?Sc\.?|Diploma|Certificate|Bachelor|Master)\b(.*)$/i
-    );
-    if (degreeM) {
-      items.push({
-        ...EMPTY_EDUCATION(),
-        degree: degreeM[1].trim(),
-        field: degreeM[2].trim().replace(/^[\s\-–—:]+/, ""),
-        school: "",
-        end: "",
-      });
-    } else if (clean.length > 2) {
-      items.push({
-        ...EMPTY_EDUCATION(),
-        degree: clean,
-        field: "",
-        school: "",
-        end: "",
-      });
+    if (/^[\u2022\-\*•]/.test(line) || line.length > 2) {
+      const clean = line.replace(/^[\u2022\-\*•]\s*/, "").trim();
+      if (!clean) continue;
+      // DAE / Bachelor / Diploma patterns
+      const degreeM = clean.match(
+        /^(DAE|B\.?Sc\.?|B\.?E\.?|B\.?Tech|M\.?Sc\.?|Diploma|Certificate|NEBOSH|IOSH|Bachelor|Master)\b(.*)$/i
+      );
+      if (degreeM) {
+        items.push({
+          ...EMPTY_EDUCATION(),
+          degree: degreeM[1].trim(),
+          field: degreeM[2].trim().replace(/^[\s\-–—:]+/, ""),
+          school: "",
+          end: "",
+        });
+      } else {
+        items.push({
+          ...EMPTY_EDUCATION(),
+          degree: clean,
+          field: "",
+          school: "",
+          end: "",
+        });
+      }
     }
   }
-  return {
-    education: items.length ? items : [EMPTY_EDUCATION()],
-    certExtras,
-  };
+  return items.length ? items : [EMPTY_EDUCATION()];
 }
 
 /** Parse Work Summary blocks: Project / Company / Position triplets */
@@ -323,9 +310,10 @@ function parseSkills(body: string[]): string {
 /**
  * Main entry: deeply understand CV text → structured data + full document HTML.
  */
-export function understandCv(text: string, base?: Partial<CvData>): UnderstoodCv {
-  // Repair PDF character-spacing damage before any parsing
-  text = repairBrokenSpacing(text);
+export function understandCv(rawText: string, base?: Partial<CvData>): UnderstoodCv {
+  // Strip PDF/Canva metadata before structure parsing
+  const text = cleanExtractedCvText(rawText);
+
   const cv: CvData = { ...DEFAULT_CV(), ...base };
   const sections = splitSections(text);
   const sectionsFound: string[] = [];
@@ -343,19 +331,11 @@ export function understandCv(text: string, base?: Partial<CvData>): UnderstoodCv
       continue;
     }
     if (sec.key === "education") {
-      const ed = parseEducation(sec.body);
-      cv.education = ed.education;
-      if (ed.certExtras.length) {
-        certLines = [...certLines, ...ed.certExtras];
-        cv.certifications = [cv.certifications, ...ed.certExtras].filter(Boolean).join("\n");
-      }
+      cv.education = parseEducation(sec.body);
       continue;
     }
     if (sec.key === "professional_qual") {
-      const more = sec.body
-        .filter(Boolean)
-        .map((l) => l.replace(/^[•\-\*•]\s*/, "").trim());
-      certLines = [...new Set([...certLines, ...more].filter(Boolean))];
+      certLines = sec.body.filter(Boolean).map((l) => l.replace(/^[\u2022\-\*•]\s*/, ""));
       cv.certifications = certLines.join("\n");
       continue;
     }
@@ -365,7 +345,7 @@ export function understandCv(text: string, base?: Partial<CvData>): UnderstoodCv
       continue;
     }
     if (sec.key === "duties") {
-      dutiesBullets = parseBulletList(sec.body).map((b) => repairBrokenSpacing(b));
+      dutiesBullets = parseBulletList(sec.body);
       continue;
     }
     if (sec.key === "skills") {
@@ -452,17 +432,16 @@ function buildFullDocumentHtml(
   if (cv.fullName) parts.push(`<h1>${esc(cv.fullName)}</h1>`);
   if (cv.title) parts.push(`<p><strong>${esc(cv.title)}</strong></p>`);
 
-  const iqamaLine = cv.customSectionBody
-    ?.split("\n")
-    .find((l) => /Iqama/i.test(l));
-  const contactLines = [
-    iqamaLine || "",
-    cv.phone ? `Mobile No: ${cv.phone}` : "",
+  const contactBits = [
+    cv.location,
+    cv.phone ? `Mobile: ${cv.phone}` : "",
     cv.email ? `Email: ${cv.email}` : "",
-    cv.location || "",
+    cv.customSectionBody?.includes("Iqama")
+      ? cv.customSectionBody.split("\n").find((l) => /Iqama/i.test(l))
+      : "",
   ].filter(Boolean);
-  for (const cl of contactLines) {
-    parts.push(`<p>${esc(cl)}</p>`);
+  if (contactBits.length) {
+    parts.push(`<p>${contactBits.map(esc).join(" · ")}</p>`);
   }
   parts.push("<hr />");
 
@@ -503,7 +482,7 @@ function buildFullDocumentHtml(
       parts.push("<ul>");
       for (const ed of cv.education) {
         const line = [ed.degree, ed.field, ed.school].filter(Boolean).join(" — ");
-        if (line && line.length > 1) parts.push(`<li>${esc(line)}</li>`);
+        if (line) parts.push(`<li>${esc(line)}</li>`);
       }
       // Also keep any body lines not captured
       for (const line of sec.body) {

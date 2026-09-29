@@ -16,17 +16,57 @@ function isPdfJunkLine(line: string): boolean {
   if (/^startxref$/i.test(t)) return true;
   if (/^\d+\s+\d+\s+obj$/i.test(t)) return true;
   if (/^<<$/.test(t) || /^>>$/.test(t)) return true;
+
+  // Canva / Adobe / XMP / PDF date metadata (common in exported design PDFs)
+  if (/^D:\d{14}/i.test(t)) return true; // D:20260329131155+00'00'
+  if (/^D:\d{8,}/i.test(t)) return true;
+  if (/^\d{14}[+-]\d{2}/.test(t)) return true;
+  if (/^(Adobe|Identity|Canva|Canva Pty|xmp|XMP|uuid:|http:\/\/ns\.adobe|photoshop:|pdf:|xmpMM:|dc:|rdf:)/i.test(t)) return true;
+  if (/^CANVA$/i.test(t)) return true;
+  if (/producer|creator tool|modifydate|createdate|metadatadate/i.test(t) && t.length < 80) return true;
+  // Opaque binary-ish tokens e.g. DAHFVY2fRRM,BAGjaSfwKho,0
+  if (/^[A-Za-z0-9+\/=]{8,}(,[A-Za-z0-9+\/=]{4,})+,?\d*$/.test(t) && !/\s/.test(t)) return true;
+  if (/^[A-Za-z0-9+/]{20,}$/.test(t) && !/[aeiou]{2}/i.test(t)) return true;
+  // Hex-like garbage
+  if (/^[0-9A-F]{16,}$/i.test(t)) return true;
+  // Pure numbers / ids alone
+  if (/^(Iqama|ID|Passport)\s*:?\s*$/i.test(t)) return false; // keep labels
+  if (/^[\d\s.+()-]{8,}$/.test(t) && !/@/.test(t)) {
+    // phone-like kept if has + or starts with 0
+    if (!/^[+0]/.test(t.replace(/\s/g, ""))) {
+      // still might be iqama — keep long digit runs of 10+
+      if (!/^\d{8,15}$/.test(t.replace(/\s/g, ""))) return true;
+    }
+  }
+
   if (/^\/[A-Za-z]/.test(t) && t.length < 80 && !/\s{2,}/.test(t)) {
-    // PDF name tokens like /Type /Catalog /Pages
-    if (/^\/(Type|Pages|Page|Catalog|Metadata|StructTreeRoot|MarkInfo|Lang|ViewerPreferences|Outlines|OutputIntents|Title|Creator|Producer|CreationDate|ModDate|Keywords|Author|Subject|Filter|Length|Font|MediaBox|Parent|Kids|Count|Resources|Contents|ProcSet|ExtGState|XObject|ColorSpace|Pattern|Shading|FontDescriptor|BaseFont|Encoding|ToUnicode|Widths|FirstChar|LastChar|Subtype|Name|Root|Info|Size|ID|Prev|Encrypt)/i.test(t)) {
+    if (/^\/(Type|Pages|Page|Catalog|Metadata|StructTreeRoot|MarkInfo|Lang|ViewerPreferences|Outlines|OutputIntents|Title|Creator|Producer|CreationDate|ModDate|Keywords|Author|Subject|Filter|Length|Font|MediaBox|Parent|Kids|Count|Resources|Contents|ProcSet|ExtGState|XObject|ColorSpace|Pattern|Shading|FontDescriptor|BaseFont|Encoding|ToUnicode|Widths|FirstChar|LastChar|Subtype|Name|Root|Info|Size|ID|Prev|Encrypt|PieceInfo|LastModified|Private|Group|BBox|FormType)/i.test(t)) {
       return true;
     }
   }
-  // High ratio of / and numbers → PDF dict junk
   const slash = (t.match(/\//g) || []).length;
   if (slash >= 3 && t.length < 120) return true;
   if (/stream\s*$/i.test(t) || /^endstream$/i.test(t)) return true;
+  // Mostly non-printable / control
+  const printable = (t.match(/[\x20-\x7E\u00A0-\u024F]/g) || []).length;
+  if (t.length > 4 && printable / t.length < 0.7) return true;
   return false;
+}
+
+/** Final cleanup of extracted plain text */
+export function cleanExtractedCvText(raw: string): string {
+  const lines = raw.split(/\r?\n/);
+  const out: string[] = [];
+  for (const line of lines) {
+    const t = line.replace(/\u0000/g, "").trim();
+    if (!t || isPdfJunkLine(t)) continue;
+    // Drop lines that are only Canva branding noise
+    if (/^canva$/i.test(t)) continue;
+    if (/designed with canva/i.test(t)) continue;
+    out.push(t);
+  }
+  // Collapse excessive blank runs later in caller
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 /**
@@ -89,13 +129,13 @@ export async function extractTextFromFile(file: File): Promise<{ text: string; m
     name.endsWith(".rtf") ||
     file.type.startsWith("text/")
   ) {
-    return { text: await file.text(), method: "text" };
+    return { text: cleanExtractedCvText(await file.text()), method: "text" };
   }
 
   if (name.endsWith(".docx")) {
     try {
       const buf = await file.arrayBuffer();
-      const text = await extractDocxText(buf);
+      const text = cleanExtractedCvText(await extractDocxText(buf));
       if (text.trim().length > 40) return { text, method: "docx" };
     } catch {
       /* fall through */
@@ -106,12 +146,12 @@ export async function extractTextFromFile(file: File): Promise<{ text: string; m
     const buf = await file.arrayBuffer();
     // Try pdf.js (CDN) for compressed Canva/modern PDFs
     try {
-      const fromPdfJs = await extractWithPdfJs(buf);
+      const fromPdfJs = cleanExtractedCvText(await extractWithPdfJs(buf));
       if (fromPdfJs.trim().length > 40) return { text: fromPdfJs, method: "pdfjs" };
     } catch {
       /* offline / blocked CDN */
     }
-    const text = extractPdfText(buf);
+    const text = cleanExtractedCvText(extractPdfText(buf));
     if (text.trim().length > 40) return { text, method: "pdf" };
   }
 
@@ -123,25 +163,16 @@ export async function extractTextFromFile(file: File): Promise<{ text: string; m
     .split(/\r?\n/)
     .map((l) => l.replace(/[^\x09\x0A\x0D\x20-\x7E\u00A0-\u024F]/g, "").trim())
     .filter((l) => l.length > 1 && !isPdfJunkLine(l));
-  const text = lines.join("\n");
-  return { text: text.slice(0, 60000), method: "fallback" };
+  const text = cleanExtractedCvText(lines.join("\n")).slice(0, 60000);
+  return { text, method: "fallback" };
 }
 
 
-
 async function extractWithPdfJs(buf: ArrayBuffer): Promise<string> {
+  // Load pdf.js from CDN only when needed (no package.json change)
   const w = window as unknown as {
     pdfjsLib?: {
-      getDocument: (opts: { data: ArrayBuffer }) => {
-        promise: Promise<{
-          numPages: number;
-          getPage: (n: number) => Promise<{
-            getTextContent: () => Promise<{
-              items: { str?: string; transform?: number[]; width?: number; height?: number }[];
-            }>;
-          }>;
-        }>;
-      };
+      getDocument: (opts: { data: ArrayBuffer }) => { promise: Promise<{ numPages: number; getPage: (n: number) => Promise<{ getTextContent: () => Promise<{ items: { str?: string }[] }> }> }> };
       GlobalWorkerOptions: { workerSrc: string };
     };
   };
@@ -160,162 +191,31 @@ async function extractWithPdfJs(buf: ArrayBuffer): Promise<string> {
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
   const pageTexts: string[] = [];
-
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    type Item = {
-      str?: string;
-      transform?: number[];
-      width?: number;
-      height?: number;
-    };
-    const items = (content.items as Item[]).filter(
-      (it) => typeof it.str === "string" && it.str.length > 0
-    );
-
-    // Build rows by Y
-    type Cell = { x: number; endX: number; s: string; h: number };
-    const rows = new Map<number, Cell[]>();
+    type Item = { str?: string; transform?: number[] };
+    const items = content.items as Item[];
+    // Group by approximate Y (transform[5]) so CV lines stay intact
+    const rows = new Map<number, { x: number; s: string }[]>();
     for (const it of items) {
-      const s = it.str as string;
+      const s = typeof it.str === "string" ? it.str : "";
+      if (!s) continue;
+      const y = it.transform ? Math.round(it.transform[5]) : 0;
       const x = it.transform ? it.transform[4] : 0;
-      const y = it.transform ? it.transform[5] : 0;
-      const h = it.height || (it.transform ? Math.abs(it.transform[0] || it.transform[3] || 10) : 10);
-      const wdt = it.width != null ? it.width : Math.max(h * 0.5 * s.length, 1);
-      const key = Math.round(y * 10) / 10;
+      const key = Math.round(y / 2) * 2;
       if (!rows.has(key)) rows.set(key, []);
-      rows.get(key)!.push({ x, endX: x + wdt, s, h });
+      rows.get(key)!.push({ x, s });
     }
-
     const ys = [...rows.keys()].sort((a, b) => b - a);
-    // Merge near-Y into same visual line
-    const merged: { y: number; cells: Cell[] }[] = [];
-    for (const y of ys) {
-      const cells = rows.get(y)!;
-      const avgH = cells.reduce((a, c) => a + c.h, 0) / cells.length || 10;
-      if (
-        merged.length &&
-        Math.abs(merged[merged.length - 1].y - y) <= Math.max(2.5, avgH * 0.35)
-      ) {
-        merged[merged.length - 1].cells.push(...cells);
-      } else {
-        merged.push({ y, cells: [...cells] });
-      }
-    }
-
     const lines: string[] = [];
-    for (const row of merged) {
-      const cells = row.cells.sort((a, b) => a.x - b.x);
-      let line = "";
-      let prevEnd = -1e9;
-      let avgH = 10;
-      if (cells.length) avgH = cells.reduce((a, c) => a + c.h, 0) / cells.length;
-
-      for (const c of cells) {
-        const gap = c.x - prevEnd;
-        if (line) {
-          // Same word / kerning: small gap → no space
-          // Normal word space
-          // Column gap: large
-          if (gap > avgH * 2.2) {
-            line += "   "; // column
-          } else if (gap > avgH * 0.28) {
-            line += " ";
-          }
-          // else: concatenate (character pieces of same word)
-        }
-        line += c.s;
-        prevEnd = c.endX;
-      }
-      lines.push(line.replace(/[ \t]+/g, " ").trim());
+    for (const y of ys) {
+      const row = rows.get(y)!.sort((a, b) => a.x - b.x);
+      lines.push(row.map((r) => r.s).join(" ").replace(/\s+/g, " ").trim());
     }
     pageTexts.push(lines.filter(Boolean).join("\n"));
   }
-
-  const raw = pageTexts.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
-  return repairBrokenSpacing(raw);
-}
-
-/** Rejoin words broken by PDF character-level extraction: "insp ect" → "inspect" */
-export function repairBrokenSpacing(text: string): string {
-  let s = text;
-
-  // 1) Single isolated letter stuck to next word: "C oordinate" "F ollow" "Re spond"
-  s = s.replace(/\b([A-Za-z])\s+([a-z]{2,})\b/g, "$1$2");
-
-  // 2) Two-letter fragment + rest of word: "su ch" "ac c" sometimes harder —
-  //    Fix common pattern: lowercase chunk space lowercase when both short
-  s = s.replace(/\b([a-z]{1,3})\s+([a-z]{1,4})\b/g, (full, a, b) => {
-    const joined = a + b;
-    // Only join if result looks like a real word fragment (vowels present or common)
-    if (/[aeiou]/i.test(joined) && joined.length <= 7) return joined;
-    return full;
-  });
-
-  // 3) Known broken CV vocabulary (Fire Alarm / industrial)
-  const fixes: [RegExp, string][] = [
-    [/\binsp\s*ect\b/gi, "inspect"],
-    [/\bdet\s*ectors\b/gi, "detectors"],
-    [/\bsu\s*ch\b/gi, "such"],
-    [/\bAssi\s*st\b/gi, "Assist"],
-    [/\bac\s*c\s*urate\b/gi, "accurate"],
-    [/\bac\s*curate\b/gi, "accurate"],
-    [/\bC\s*oordinate\b/gi, "Coordinate"],
-    [/\bF\s*ollow\b/gi, "Follow"],
-    [/\bRe\s*spond\b/gi, "Respond"],
-    [/\btechni\s*cians\b/gi, "technicians"],
-    [/\bmanu\s*als\b/gi, "manuals"],
-    [/\bdocu\s*mentation\b/gi, "documentation"],
-    [/\bcom\s*plies\b/gi, "complies"],
-    [/\bappli\s*cable\b/gi, "applicable"],
-    [/\bmaint\s*ain\b/gi, "maintain"],
-    [/\binstall\s*ation\b/gi, "installation"],
-    [/\bcommis\s*sioning\b/gi, "commissioning"],
-    [/\bpreven\s*tive\b/gi, "preventive"],
-    [/\bcorrec\s*tive\b/gi, "corrective"],
-    [/\btrouble\s*shoot\b/gi, "troubleshoot"],
-    [/\bnotifi\s*cation\b/gi, "notification"],
-    [/\bequip\s*ment\b/gi, "equipment"],
-    [/\bproce\s*dures\b/gi, "procedures"],
-    [/\bregula\s*tions\b/gi, "regulations"],
-    [/\bstand\s*ards\b/gi, "standards"],
-    [/\bsuper\s*visors\b/gi, "supervisors"],
-    [/\bassig\s*ned\b/gi, "assigned"],
-    [/\bappro\s*priate\b/gi, "appropriate"],
-    [/\bPerson\s*al\b/gi, "Personal"],
-    [/\bProtec\s*tive\b/gi, "Protective"],
-    [/\bemerg\s*ency\b/gi, "emergency"],
-    [/\brest\s*ore\b/gi, "restore"],
-    [/\bprompt\s*ly\b/gi, "promptly"],
-    [/\bhouse\s*keeping\b/gi, "housekeeping"],
-    [/\bparti\s*cipate\b/gi, "participate"],
-    [/\btrain\s*ing\b/gi, "training"],
-    [/\bprogr\s*ams\b/gi, "programs"],
-    [/\bdraw\s*ings\b/gi, "drawings"],
-    [/\bwir\s*ing\b/gi, "wiring"],
-    [/\btech\s*nical\b/gi, "technical"],
-    [/\bterm\s*inate\b/gi, "terminate"],
-    [/\bcon\s*duits\b/gi, "conduits"],
-    [/\brelat\s*ed\b/gi, "related"],
-    [/\bfunc\s*tional\b/gi, "functional"],
-    [/\boper\s*ation\b/gi, "operation"],
-    [/\bdefec\s*tive\b/gi, "defective"],
-    [/\bcompo\s*nents\b/gi, "components"],
-    [/\bmod\s*ules\b/gi, "modules"],
-    [/\bbatt\s*eries\b/gi, "batteries"],
-    [/\bpower\s*supplies\b/gi, "power supplies"],
-    [/\bMobile\s*No\b/gi, "Mobile No"],
-    [/\bPhas\s*phase\b/gi, "Phosphate"],
-    [/\bPhasphase\b/gi, "Phosphate"],
-  ];
-  for (const [re, rep] of fixes) s = s.replace(re, rep);
-
-  // 4) Collapse "word - word" spacing artifacts around hyphens
-  s = s.replace(/\s+-\s+/g, " - ");
-  s = s.replace(/([A-Za-z])\s+([.,;:])/g, "$1$2");
-
-  return s;
+  return pageTexts.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function extractPdfText(buf: ArrayBuffer): string {
@@ -384,7 +284,7 @@ function extractPdfText(buf: ArrayBuffer): string {
     deduped.push(l);
   }
 
-  return repairBrokenSpacing(deduped.join("\n").replace(/\n{3,}/g, "\n\n").trim());
+  return deduped.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 async function extractDocxText(buf: ArrayBuffer): Promise<string> {

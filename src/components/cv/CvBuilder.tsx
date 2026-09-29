@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Sparkles,
   Plus,
@@ -41,16 +41,7 @@ import {
   improveText,
   tailorSuggestions,
 } from "@/lib/cv/ai-fill";
-import { textToDocumentHtml, ensureDocumentHtml } from "@/lib/cv/text-to-html";
-import { extractTextFromFile, textToCvDocumentHtml } from "@/lib/cv/extract-file-text";
-import { understandCv } from "@/lib/cv/understand-cv";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
-import {
-  getPersonalizedCommands,
-  buildAtsReport,
-  buildTailorReport,
-  buildReadinessReport,
-} from "@/lib/cv/ai-engine";
 import {
   loadLibrary,
   saveLibrary,
@@ -63,7 +54,6 @@ import { CvPreview } from "./CvPreview";
 import { CvLibrary } from "./CvLibrary";
 import { CvSamples } from "./CvSamples";
 import { CvDocumentEditor } from "./CvDocumentEditor";
-import { CvOwnDocumentEditor } from "./CvOwnDocumentEditor";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { toast } from "sonner";
 
@@ -93,12 +83,9 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [importText, setImportText] = useState("");
   const [showImport, setShowImport] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [editorTab, setEditorTab] = useState<"document" | "edit" | "design" | "ai">("document");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editorTab, setEditorTab] = useState<"edit" | "design" | "ai">("edit");
   const [jobDesc, setJobDesc] = useState("");
-  const [tailorTips, setTailorTips] = useState<string[]>([]);
-  const [atsReport, setAtsReport] = useState<ReturnType<typeof buildAtsReport> | null>(null);
-  const [readiness, setReadiness] = useState<ReturnType<typeof buildReadinessReport> | null>(null);
+  const [tailorTips, setTailorTips] = useState<string[]>([])
 
   useEffect(() => {
     setMounted(true);
@@ -196,106 +183,59 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   async function handleFileUpload(file: File | null) {
     if (!file) return;
     const name = file.name.toLowerCase();
+    const isText =
+      name.endsWith(".txt") ||
+      name.endsWith(".md") ||
+      name.endsWith(".rtf") ||
+      file.type.startsWith("text/");
     try {
-      setAiLoading(true);
-      const { text, method } = await extractTextFromFile(file);
-      // Reject PDF structure dumps (never show %PDF /Type /Catalog to the user)
-      const looksLikePdfJunk =
-        /%PDF-|\/Type\s*\/Catalog|endobj\s+\d+\s+obj/i.test(text.slice(0, 500)) &&
-        !/CAREER|OBJECTIVE|EDUCATION|EXPERIENCE|SKILLS|SUMMARY/i.test(text);
-
-      if (!text.trim() || text.trim().length < 40 || looksLikePdfJunk) {
-        toast.message(
-          "This PDF uses a locked layout (e.g. Canva). Paste your CV text, or Save as .txt / Word and upload again."
-        );
-        setShowImport(true);
-        setEditorTab("ai");
-        setAiLoading(false);
+      let text = "";
+      if (isText) {
+        text = await file.text();
+      } else if (name.endsWith(".pdf") || name.endsWith(".doc") || name.endsWith(".docx")) {
+        // Browser cannot reliably parse binary Office/PDF without extra libs.
+        // Read as text best-effort (works for some text-based PDFs) and prompt user.
+        const buf = await file.arrayBuffer();
+        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+        // Extract readable sequences
+        const readable = decoded
+          .replace(/\u0000/g, " ")
+          .replace(/[^\x09\x0A\x0D\x20-\x7E\u00A0-\u024F]/g, " ")
+          .replace(/\s{2,}/g, " ");
+        text = readable.slice(0, 50000);
+        if (text.trim().length < 80) {
+          toast.message(
+            "Could not fully read this file in-browser. Paste the CV text below, or export as .txt and upload again."
+          );
+          setShowImport(true);
+          setEditorTab("ai");
+          return;
+        }
+        toast.message("Extracted text from file — review fields carefully (binary formats vary).");
+      } else {
+        toast.error("Supported: .txt, .md, .pdf, .doc, .docx (best with .txt export).");
         return;
       }
 
-      if (method === "fallback") {
-        toast.message("Read your file — please review the document carefully.");
-      }
-
-      // Deep understanding: all sections, jobs, duties → structured + full document HTML
-      const understood = understandCv(text, data);
-      let structured = understood.data;
-      let docHtml = understood.documentHtml;
-      // If understanding produced a thin document, fall back to line HTML
-      if (!docHtml || docHtml.length < 80) {
-        docHtml = textToCvDocumentHtml(text);
-      }
-      try {
-        const res = await fetch("/api/cv/parse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, current: structured }),
-        });
-        if (res.ok) {
-          const json = (await res.json()) as { cv?: typeof data };
-          // Merge server parse only for empty fields — never drop understood jobs/summary
-          if (json.cv) {
-            structured = {
-              ...json.cv,
-              fullName: structured.fullName || json.cv.fullName,
-              title: structured.title || json.cv.title,
-              email: structured.email || json.cv.email,
-              phone: structured.phone || json.cv.phone,
-              location: structured.location || json.cv.location,
-              summary: structured.summary || json.cv.summary,
-              experience:
-                structured.experience.filter((e) => e.company || e.title).length >=
-                (json.cv.experience?.filter((e) => e.company || e.title).length || 0)
-                  ? structured.experience
-                  : json.cv.experience || structured.experience,
-              education:
-                structured.education.filter((e) => e.degree || e.school).length
-                  ? structured.education
-                  : json.cv.education || structured.education,
-              certifications: structured.certifications || json.cv.certifications,
-              skills: structured.skills || json.cv.skills,
-              achievements: structured.achievements || json.cv.achievements,
-              template: structured.template || json.cv.template,
-            };
-          }
+      setAiLoading(true);
+      const res = await fetch("/api/cv/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, current: data }),
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { cv?: typeof data };
+        if (json.cv) {
+          setData({ ...DEFAULT_CV(), ...json.cv });
+          toast.success("CV loaded into document editor — edit like Word / Google Docs.");
+          setEditorTab("document");
+          return;
         }
-      } catch {
-        /* local understanding is enough */
       }
-      toast.message(
-        `Understood ${understood.experienceCount} role(s), sections: ${understood.sectionsFound.filter((s) => s !== "header").slice(0, 6).join(", ") || "document"}`
-      );
-      // Ensure we have an active document in the library
-      let id = activeId;
-      if (!id || view !== "editor") {
-        const doc = createDocument(
-          file.name.replace(/\.[^.]+$/, "") || "Uploaded CV",
-          {
-            ...structured,
-            documentHtml: docHtml,
-            sourceFileName: file.name,
-            editMode: "own",
-          }
-        );
-        const next = [doc, ...docs];
-        setDocs(next);
-        saveLibrary(next);
-        id = doc.id;
-        setActiveId(id);
-        setData(doc.data);
-        setView("editor");
-      } else {
-        setData({
-          ...structured,
-          documentHtml: docHtml,
-          sourceFileName: file.name,
-          editMode: "own",
-        });
-      }
-      toast.success(
-        "Your CV is open for editing — content from your file. Edit freely, then Print → PDF."
-      );
+      // local fallback
+      const { importCvFromText } = await import("@/lib/cv/ai-fill");
+      setData(importCvFromText(text, data));
+      toast.success("CV imported — edit in the document canvas.");
       setEditorTab("document");
     } catch {
       toast.error("Could not read file.");
@@ -309,17 +249,11 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       toast.error("Paste your CV text first.");
       return;
     }
-    const understood = understandCv(importText, data);
-    setData({
-      ...understood.data,
-      documentHtml: understood.documentHtml || textToDocumentHtml(importText),
-      sourceFileName: data.sourceFileName || "pasted-cv.txt",
-      editMode: "own",
-    });
+    const imported = importCvFromText(importText, data);
+    setData(imported);
     setShowImport(false);
     setImportText("");
-    setEditorTab("document");
-    toast.success("Your CV text is open as an editable document — edit freely.");
+    toast.success("Imported text structured into CV fields. Review carefully.");
   }
 
   async function runAi() {
@@ -348,7 +282,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       if (res.ok) {
         const json = (await res.json()) as { cv?: CvData };
         if (json.cv) {
-          setData({ ...DEFAULT_CV(), ...json.cv, originalSnapshot: JSON.stringify(json.cv) });
+          setData({ ...DEFAULT_CV(), ...json.cv });
           toast.success("AI applied — review every field before exporting.");
           setAiCmd("");
           return;
@@ -356,12 +290,12 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       }
       // Fallback local
       const local = parseCvCommand(cmd, data);
-      setData({ ...local, originalSnapshot: data.originalSnapshot || JSON.stringify(data) });
+      setData(local);
       toast.success("Applied locally. Review facts carefully.");
       setAiCmd("");
     } catch {
       const local = parseCvCommand(cmd, data);
-      setData({ ...local, originalSnapshot: data.originalSnapshot || JSON.stringify(data) });
+      setData(local);
       toast.message("Used offline assistant.");
     } finally {
       setAiLoading(false);
@@ -381,13 +315,6 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const completion = getCompletionPercent(data);
   const completionItems = getCompletionItems(data);
   const analysis = useMemo(() => analyzeCv(data), [data]);
-  const personalizedCmds = useMemo(
-    () => getPersonalizedCommands(data, profile?.profession || data.title),
-    [data, profile?.profession]
-  );
-  useEffect(() => {
-    setReadiness(buildReadinessReport(data));
-  }, [data]);
 
   if (!mounted) {
     return (
@@ -397,27 +324,8 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
     );
   }
 
-  // Always-mounted file picker (available from Create + editor)
-  const filePicker = (
-    <input
-      ref={fileInputRef}
-      type="file"
-      accept=".txt,.md,.rtf,.pdf,.doc,.docx,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      className="sr-only"
-      aria-hidden
-      tabIndex={-1}
-      onChange={(e) => {
-        const f = e.target.files?.[0] || null;
-        void handleFileUpload(f);
-        e.target.value = "";
-      }}
-    />
-  );
-
   if (view === "library") {
     return (
-      <>
-      {filePicker}
       <CvLibrary
         docs={docs}
         onCreate={() => setView("start")}
@@ -448,7 +356,6 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           saveLibrary(next);
         }}
       />
-      </>
     );
   }
 
@@ -474,7 +381,6 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   if (view === "start") {
     return (
       <div className="max-w-3xl mx-auto space-y-6">
-        {filePicker}
         <Button
           variant="ghost"
           size="sm"
@@ -518,10 +424,13 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
             {
               icon: Upload,
               title: "Upload CV file",
-              desc: "Upload .txt, PDF or Word from your device — then edit it.",
+              desc: "Upload .txt, PDF or Word — then edit in the builder.",
               action: () => {
-                // Open native file picker immediately (must stay in user gesture)
-                fileInputRef.current?.click();
+                startBlank();
+                setEditorTab("document");
+                setTimeout(() => {
+                  document.getElementById("cv-file-upload")?.click();
+                }, 200);
               },
             },
             {
@@ -634,51 +543,59 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
 
           {editorTab === "document" && (
             <div className="space-y-3">
-              {data.editMode === "own" || (data.documentHtml && data.documentHtml.length > 20) ? (
-                <>
-                  <p className="text-xs text-muted-foreground">
-                    <strong>Your uploaded CV</strong>
-                    {data.sourceFileName ? ` (${data.sourceFileName})` : ""}.
-                    Edit this document directly — content stays as your file, not a Hunared template.
-                    Select text → AI Improve. Print → Save as PDF when done.
-                  </p>
-                  <CvOwnDocumentEditor
-                    html={data.documentHtml || ""}
-                    sourceFileName={data.sourceFileName}
-                    onChangeHtml={(html) =>
-                      setData((d) => ({
-                        ...d,
-                        documentHtml: html,
-                        editMode: "own",
-                      }))
-                    }
-                  />
-                </>
-              ) : (
-                <>
-                  <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Document view is empty. Upload your CV from your device to edit
-                      <strong> your file&apos;s content</strong> directly.
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                      Upload CV from device
-                    </Button>
-                  </div>
-                  <CvDocumentEditor data={data} onChange={setData} />
-                </>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Edit your CV on the page like Microsoft Word or Google Docs.
+                Select any text and use <strong>AI Improve selection</strong> in the toolbar.
+                Switch to Fields for structured form editing, or Design for templates.
+              </p>
+              <CvDocumentEditor data={data} onChange={setData} />
             </div>
           )}
 
           {editorTab === "design" && (
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <div className="rounded-xl border border-border p-3 space-y-2">
+                <p className="text-xs font-semibold">Profile photo (optional)</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Select a template in the &quot;With Photo&quot; group to display your photo on the CV.
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {data.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.photoUrl} alt="" className="h-14 w-14 rounded-full object-cover border" />
+                  ) : (
+                    <div className="h-14 w-14 rounded-full bg-muted border" />
+                  )}
+                  <label className="text-xs px-2 py-1.5 rounded-md border border-border cursor-pointer hover:bg-muted">
+                    Upload photo
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        if (f.size > 3 * 1024 * 1024) {
+                          toast.error("Photo max 3MB");
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          patch({ photoUrl: String(reader.result || "") });
+                          toast.success("Photo added — choose a With Photo template");
+                        };
+                        reader.readAsDataURL(f);
+                      }}
+                    />
+                  </label>
+                  {data.photoUrl ? (
+                    <button type="button" className="text-xs text-muted-foreground underline" onClick={() => patch({ photoUrl: "" })}>
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
               <p className="text-sm font-semibold">Template</p>
               <div className="grid grid-cols-2 gap-2">
                 {CV_TEMPLATES.map((t) => (
@@ -701,6 +618,15 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                     <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
                       {t.desc}
                     </p>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {"ats" in t && t.ats ? (
+                        <span className="text-[9px] rounded bg-emerald-500/15 text-emerald-600 px-1">ATS</span>
+                      ) : null}
+                      {"photo" in t && t.photo ? (
+                        <span className="text-[9px] rounded bg-blue-500/15 text-blue-600 px-1">Photo</span>
+                      ) : null}
+                      <span className="text-[9px] text-muted-foreground">{t.category}</span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -735,7 +661,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {personalizedCmds.map((s) => (
+                {AI_SUGGESTIONS.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -840,11 +766,10 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                       toast.error("Paste a job description first.");
                       return;
                     }
-                    const report = buildTailorReport(data, jobDesc);
-                    setTailorTips(report.suggestions);
-                    setAtsReport(buildAtsReport(data, jobDesc));
+                    const tips = tailorSuggestions(data, jobDesc);
+                    setTailorTips(tips);
                     setShowAnalysis(true);
-                    toast.message("Job match & ATS suggestions ready — review carefully.");
+                    toast.message("Job match suggestions ready.");
                   }}
                 >
                   Analyze vs job
@@ -870,82 +795,6 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 {showAnalysis ? "Hide" : "Show"} CV analysis
               </Button>
 
-              {readiness && (
-                <div className="rounded-xl border border-border bg-card p-3 space-y-2 text-xs">
-                  <p className="font-semibold text-sm flex items-center gap-1.5">
-                    <BarChart3 className="h-3.5 w-3.5 text-primary" />
-                    CV Readiness
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                      <p className="text-[10px] text-muted-foreground">Content</p>
-                      <p className="font-medium">{readiness.content}</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                      <p className="text-[10px] text-muted-foreground">ATS</p>
-                      <p className="font-medium">{readiness.ats}</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                      <p className="text-[10px] text-muted-foreground">Professionalism</p>
-                      <p className="font-medium">{readiness.professionalism}</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                      <p className="text-[10px] text-muted-foreground">Completeness</p>
-                      <p className="font-medium">{readiness.percent}%</p>
-                    </div>
-                  </div>
-                  {readiness.missing.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-medium text-muted-foreground mb-1">Missing / improve</p>
-                      <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
-                        {readiness.missing.slice(0, 6).map((m) => (
-                          <li key={m}>{m}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {readiness.nextActions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {readiness.nextActions.slice(0, 4).map((a) => (
-                        <button
-                          key={a}
-                          type="button"
-                          className="text-[10px] rounded-full border border-border px-2 py-0.5 hover:border-primary/40"
-                          onClick={() => setAiCmd(a)}
-                        >
-                          {a}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {atsReport && (
-                <div className="rounded-xl border border-border bg-card p-3 space-y-2 text-xs">
-                  <p className="font-semibold text-sm">ATS Report</p>
-                  <p className="text-muted-foreground">{atsReport.summary}</p>
-                  {atsReport.matchedKeywords.length > 0 && (
-                    <p>
-                      <span className="font-medium text-emerald-600">Matched: </span>
-                      {atsReport.matchedKeywords.slice(0, 12).join(", ")}
-                    </p>
-                  )}
-                  {atsReport.missingKeywords.length > 0 && (
-                    <p>
-                      <span className="font-medium text-amber-600">Consider (if true): </span>
-                      {atsReport.missingKeywords.slice(0, 10).join(", ")}
-                    </p>
-                  )}
-                  <ul className="list-disc pl-4 text-muted-foreground space-y-0.5">
-                    {atsReport.issues.slice(0, 6).map((i) => (
-                      <li key={i}>{i}</li>
-                    ))}
-                  </ul>
-                  <p className="text-[10px] text-muted-foreground">
-                    Scores are guidance only — never invent skills or experience to match keywords.
-                  </p>
-                </div>
-              )}
               {showAnalysis && (
                 <div className="space-y-2 pt-1">
                   {analysis.length === 0 ? (
@@ -999,7 +848,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                     type="file"
                     accept=".txt,.md,.rtf,.pdf,.doc,.docx,text/plain"
                     className="hidden"
-                    id="cv-file-upload-ai"
+                    id="cv-file-upload"
                     onChange={(e) => {
                       const f = e.target.files?.[0] || null;
                       void handleFileUpload(f);
@@ -1013,7 +862,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                     className="w-full gap-1.5"
                     disabled={aiLoading}
                     onClick={() =>
-                      fileInputRef.current?.click()
+                      document.getElementById("cv-file-upload")?.click()
                     }
                   >
                     <Upload className="h-3.5 w-3.5" />

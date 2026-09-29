@@ -283,9 +283,9 @@ export function analyzeCv(data: CvData): AnalysisIssue[] {
 export function sampleCv(): CvData {
   return {
     ...DEFAULT_CV(),
-    fullName: "Sara Khan",
+    fullName: "Muhammad Abdullah",
     title: "Instrument Technician",
-    email: "sara.khan@example.com",
+    email: "m.abdullah@example.com",
     phone: "+966 50 000 0000",
     location: "Al Khobar, Saudi Arabia",
     summary:

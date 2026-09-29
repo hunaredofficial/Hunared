@@ -4,6 +4,12 @@ import { cn } from "@/lib/utils";
 import type { CvData, CvSectionKey } from "@/lib/cv/types";
 import { CV_TEMPLATES } from "@/lib/cv/templates";
 
+function templateAllowsPhoto(templateId: string): boolean {
+  const meta = CV_TEMPLATES.find((x) => x.id === templateId);
+  return !!meta?.photo;
+}
+
+
 const SECTION_LABELS: Record<CvSectionKey, string> = {
   summary: "Professional Summary",
   experience: "Work Experience",
@@ -220,6 +226,19 @@ export function CvPreview({
             : { background: accent }
         }
       >
+        <div className="flex items-start gap-3">
+          {data.photoUrl && templateAllowsPhoto(data.template) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.photoUrl}
+              alt=""
+              className={cn(
+                "h-16 w-16 rounded-full object-cover shrink-0 border",
+                isAts ? "border-neutral-200" : "border-white/30"
+              )}
+            />
+          ) : null}
+          <div className="min-w-0 flex-1">
         <h1
           className={cn(
             "text-xl font-bold tracking-tight",

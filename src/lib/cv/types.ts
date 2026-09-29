@@ -18,7 +18,12 @@ export type CvTemplateId =
   | "academic"
   | "hospitality"
   | "logistics"
-  | "trades";
+  | "trades"
+  | "photo_pro"
+  | "photo_exec"
+  | "photo_modern"
+  | "photo_gulf"
+  | "photo_minimal";
 
 export type CvExperience = {
   id: string;
@@ -80,24 +85,7 @@ export type CvData = {
   projects: CvProject[];
   template: CvTemplateId;
   sectionOrder: CvSectionKey[];
-  /**
-   * Free-form document HTML for "edit my own uploaded CV" mode.
-   * When set, Document tab edits THIS content (user's structure/style),
-   * not a regenerated Hunared template layout.
-   */
-  documentHtml?: string;
-  /** Original uploaded file name */
-  sourceFileName?: string;
-  /** own = edit uploaded document; template = structured Hunared templates */
-  editMode?: "own" | "template";
-  /** Optional profile photo data URL or hosted URL (photo templates only) */
-  photoUrl?: string;
-  /** Snapshot of original import for restore (JSON stringified CvData fields) */
-  originalSnapshot?: string;
-  /** Target job notes for tailored versions */
-  targetJobNote?: string;
 };
-
 
 export type CvDocumentMeta = {
   id: string;
@@ -174,9 +162,6 @@ export const DEFAULT_CV = (): CvData => ({
   projects: [],
   template: "professional",
   sectionOrder: [...DEFAULT_SECTION_ORDER],
-  documentHtml: "",
-  sourceFileName: "",
-  editMode: "template",
 });
 
 export type CvTemplateMeta = {
