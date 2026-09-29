@@ -60,15 +60,16 @@ import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { toast } from "sonner";
 
 const AI_SUGGESTIONS = [
-  "Create a professional CV for an Instrument Technician in Saudi Arabia",
-  "Write a full professional CV for HSE Officer with NEBOSH in Jubail",
   "Make my CV more professional and ATS friendly",
-  "Rewrite my professional summary stronger",
-  "Improve my work experience bullets with measurable language",
-  "Target this CV for an HSE position",
-  "Create a graduate CV for Electrical Engineering in Riyadh",
-  "Make this suitable for an international company",
-  "Analyze my CV and tell me what is missing",
+  "Rewrite my professional summary stronger and clearer",
+  "Improve work experience bullets with action verbs",
+  "Shorten my CV and remove weak wording",
+  "Make this suitable for international employers",
+  "Optimize for Gulf / Middle East job applications",
+  "Improve skills section structure and clarity",
+  "Check my CV and list what is missing",
+  "Make the tone more confident and professional",
+  "Reorganize sections for a cleaner structure",
 ];
 
 type View = "library" | "start" | "editor" | "samples";
@@ -338,6 +339,34 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
     }
   }
 
+  async function addToProfile() {
+    try {
+      const res = await fetch("/api/profile/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profession: data.title || undefined,
+          skills: data.skills
+            ? data.skills.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean)
+            : undefined,
+          // best-effort fields used by Hunared profiles
+          full_name: data.fullName || undefined,
+          phone: data.phone || undefined,
+          city: data.location?.split(",")[0]?.trim() || undefined,
+          bio: data.summary || undefined,
+        }),
+      });
+      if (res.ok) {
+        toast.success("Key CV details saved to your Hunared profile.");
+      } else {
+        const j = await res.json().catch(() => ({}));
+        toast.error((j as { error?: string }).error || "Could not update profile. You can still download your CV.");
+      }
+    } catch {
+      toast.error("Could not reach profile save. Download your CV and upload it from My Profile if needed.");
+    }
+  }
+
   function handlePrint() {
     const prev = document.title;
     // Blank title reduces browser header/footer "CV Builder | Hunared" text
@@ -578,6 +607,15 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
             <Download className="h-3.5 w-3.5" />
             PDF
           </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-8 gap-1"
+            onClick={() => void addToProfile()}
+          >
+            <User className="h-3.5 w-3.5" />
+            Add to profile
+          </Button>
         </div>
       </div>
 
@@ -656,7 +694,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                             ? data.template
                             : "photo_pro";
                           patch({ photoUrl: url, template: nextTemplate as typeof data.template });
-                          toast.success("Photo added and shown on your CV");
+                          toast.success("Profile image added — visible on portrait templates");
                         };
                         reader.readAsDataURL(f);
                       }}

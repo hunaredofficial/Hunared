@@ -60,7 +60,7 @@ export function CvPreview({
     ? data.sectionOrder
     : (Object.keys(SECTION_LABELS) as CvSectionKey[]);
 
-  const isAts = data.template === "ats" || data.template === "classic" || data.template === "photo_minimal";
+  const isAts = data.template === "ats" || data.template === "classic";
   const isSidebar =
     data.template === "modern" || data.template === "tech" || data.template === "hse";
 
@@ -77,7 +77,8 @@ export function CvPreview({
     return (
       <section key={key} className="mb-3.5 break-inside-avoid">
         <h2
-          className="text-[11px] font-bold uppercase tracking-[0.08em] mb-1.5 pb-0.5"
+          className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2 pb-1 border-b-2"
+          style={{ borderColor: accent, color: accent }}
           style={{
             color: accent,
             borderBottom: `1.5px solid ${accent}33`,
@@ -227,7 +228,7 @@ export function CvPreview({
         }
       >
         <div className="flex items-start gap-3">
-          {data.photoUrl ? (
+          {data.photoUrl && templateAllowsPhoto(data.template) ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.photoUrl}
@@ -267,8 +268,6 @@ export function CvPreview({
             {contact}
           </p>
         )}
-          </div>
-        </div>
       </header>
 
       <div

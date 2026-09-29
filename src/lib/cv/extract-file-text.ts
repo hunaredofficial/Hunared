@@ -54,22 +54,51 @@ function isPdfJunkLine(line: string): boolean {
 }
 
 /** Final cleanup of extracted plain text */
+
+/** Fix PDF mid-word spaces: "insp ect" → "inspect", "su ch" → "such" */
+export function repairBrokenSpacing(text: string): string {
+  let s = text;
+  // Join single/double letters split inside words (lowercase)
+  for (let i = 0; i < 4; i++) {
+    s = s.replace(/\b([a-z]{2,})\s+([a-z]{1,3})\b/g, (m, a, b) => {
+      // Don't join normal word boundaries like "in the"
+      const common = new Set(["of","to","in","on","at","by","or","an","is","it","as","be","we","if","no","so","do","my"]);
+      if (common.has(b) || common.has(a)) return m;
+      return a + b;
+    });
+  }
+  // Specific common CV breaks
+  const fixes: [RegExp, string][] = [
+    [/insp\s+ect/gi, "inspect"],
+    [/su\s+ch/gi, "such"],
+    [/det\s+ectors/gi, "detectors"],
+    [/mod\s+ules/gi, "modules"],
+    [/main\s+tain/gi, "maintain"],
+    [/trou\s+bleshoot/gi, "troubleshoot"],
+    [/instal\s+l/gi, "install"],
+    [/equ\s+ipment/gi, "equipment"],
+    [/elec\s+trical/gi, "electrical"],
+    [/tech\s+nician/gi, "technician"],
+    [/exper\s+ience/gi, "experience"],
+    [/profes\s+sional/gi, "professional"],
+  ];
+  for (const [re, rep] of fixes) s = s.replace(re, rep);
+  return s;
+}
+
 export function cleanExtractedCvText(raw: string): string {
   const lines = raw.split(/\r?\n/);
   const out: string[] = [];
   for (const line of lines) {
-    let t = line.replace(/\u0000/g, "").trim();
+    const t = line.replace(/\u0000/g, "").trim();
     if (!t || isPdfJunkLine(t)) continue;
-    // Drop lines that are only Canva / design-tool branding noise
+    // Drop lines that are only Canva branding noise
     if (/^canva$/i.test(t)) continue;
     if (/designed with canva/i.test(t)) continue;
-    if (/^canva\s/i.test(t) && t.length < 40) continue;
-    // Drop pure metadata fragments sometimes left mid-line
-    t = t.replace(/\bD:\d{14}[^\s]*/g, "").replace(/\s{2,}/g, " ").trim();
-    if (!t || isPdfJunkLine(t)) continue;
     out.push(t);
   }
-  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  // Collapse excessive blank runs later in caller
+  return repairBrokenSpacing(out.join("\n").replace(/\n{3,}/g, "\n\n").trim());
 }
 
 /**

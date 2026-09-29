@@ -1,4 +1,4 @@
-import { cleanExtractedCvText } from "./extract-file-text";
+import { cleanExtractedCvText, repairBrokenSpacing } from "./extract-file-text";
 /**
  * Deep CV understanding: parse uploaded/pasted resume text into
  * structured CvData + full editable document HTML preserving ALL content.
@@ -25,37 +25,49 @@ export type UnderstoodCv = {
 const SECTION_ALIASES: { key: string; patterns: RegExp }[] = [
   {
     key: "objective",
-    patterns: /^(career\s*objective|objective|professional\s*summary|summary|profile|about\s*me)\s*:?$/i,
+    patterns: /^(career\s*objective|objective|professional\s*summary|summary|profile|about\s*me|career\s*profile)\s*:?$/i,
   },
   {
     key: "education",
-    patterns: /^(educational?\s*qualifications?|education|academic|qualifications?)\s*:?$/i,
+    patterns: /^(educational?\s*qualifications?|education|academic(\s*background)?|qualifications?)\s*:?$/i,
   },
   {
     key: "professional_qual",
-    patterns: /^(professional\s*qualifications?|certifications?|certificates?|licenses?|training|courses?)\s*:?$/i,
+    patterns: /^(professional\s*qualifications?|certifications?|certificates?|licenses?|training|courses?|professional\s*development|nebosh|osha)\s*:?$/i,
   },
   {
     key: "experience",
     patterns:
-      /^(work\s*summary|work\s*experience|employment(\s*history)?|experience|professional\s*experience|career\s*history|projects?)\s*:?$/i,
+      /^(work\s*summary|work\s*experience|employment(\s*history)?|experience|professional\s*experience|career\s*history|employment\s*record)\s*:?$/i,
+  },
+  {
+    key: "projects",
+    patterns: /^(projects?|key\s*projects?|major\s*projects?)\s*:?$/i,
   },
   {
     key: "duties",
     patterns:
-      /^(duties\s*(&|and)?\s*responsibilities|responsibilities|key\s*responsibilities|job\s*duties|key\s*duties)\s*:?$/i,
+      /^(duties\s*(&|and)?\s*responsibilities|responsibilities|key\s*responsibilities|job\s*duties|key\s*duties|job\s*description)\s*:?$/i,
+  },
+  {
+    key: "achievements",
+    patterns: /^(achievements?|accomplishments?|key\s*achievements?|awards?)\s*:?$/i,
   },
   {
     key: "skills",
-    patterns: /^(skills|technical\s*skills|core\s*competenc|key\s*skills|competencies)\s*:?$/i,
+    patterns: /^(skills|technical\s*skills|core\s*competenc|key\s*skills|competencies|areas\s*of\s*expertise)\s*:?$/i,
   },
   {
     key: "languages",
     patterns: /^(languages?|language\s*skills)\s*:?$/i,
   },
   {
+    key: "references",
+    patterns: /^(references?|referees?)\s*:?$/i,
+  },
+  {
     key: "personal",
-    patterns: /^(personal\s*(information|details)|biodata)\s*:?$/i,
+    patterns: /^(personal\s*(information|details)|biodata|contact(\s*details)?)\s*:?$/i,
   },
 ];
 
@@ -356,24 +368,56 @@ export function understandCv(rawText: string, base?: Partial<CvData>): Understoo
       cv.languages = sec.body.filter(Boolean).join(", ");
       continue;
     }
+    if (sec.key === "achievements") {
+      cv.achievements = parseBulletList(sec.body).join("\n");
+      continue;
+    }
+    if (sec.key === "projects") {
+      // Keep project lines in custom or append to experience notes
+      const body = sec.body.filter(Boolean).join("\n");
+      if (body && !cv.customSectionTitle) {
+        cv.customSectionTitle = "Projects";
+        cv.customSectionBody = body;
+      }
+      continue;
+    }
+    if (sec.key === "references") {
+      if (!cv.customSectionTitle) {
+        cv.customSectionTitle = "References";
+        cv.customSectionBody = sec.body.filter(Boolean).join("\n");
+      }
+      continue;
+    }
     if (sec.key.startsWith("custom:")) {
-      const title = sec.key.slice(7);
-      cv.customSectionTitle = title;
-      cv.customSectionBody = sec.body.filter(Boolean).join("\n");
+      const title = sec.key.slice(7).trim();
+      // Map known cert/training headers into certifications
+      if (/nebosh|osha|certif|license|training|course/i.test(title)) {
+        const lines = sec.body.filter(Boolean).map((l) => l.replace(/^[\u2022\-\*•]\s*/, ""));
+        const block = [title, ...lines].filter(Boolean).join("\n");
+        cv.certifications = cv.certifications
+          ? cv.certifications + "\n" + block
+          : block;
+      } else if (/achiev|award/i.test(title)) {
+        cv.achievements = parseBulletList(sec.body).join("\n");
+      } else {
+        cv.customSectionTitle = title;
+        cv.customSectionBody = sec.body.filter(Boolean).join("\n");
+      }
     }
   }
 
-  // Attach duties to most recent experience or as achievements
+  // Attach duties to experience only (not also as achievements)
   if (dutiesBullets.length) {
-    if (cv.experience.length && cv.experience[0].title) {
-      // Put full duties on first role as representative, keep others with project note
+    if (cv.experience.length) {
       cv.experience = cv.experience.map((ex, idx) =>
         idx === 0
-          ? { ...ex, bullets: dutiesBullets.join("\n") }
+          ? { ...ex, bullets: dutiesBullets.map(repairBrokenSpacing).join("\n") }
           : ex
       );
+    } else {
+      // No structured jobs — keep duties as achievements so content is not lost
+      cv.achievements = dutiesBullets.map(repairBrokenSpacing).join("\n");
     }
-    cv.achievements = dutiesBullets.slice(0, 8).join("\n");
   }
 
   // Skills fallback from duties keywords
@@ -397,6 +441,22 @@ export function understandCv(rawText: string, base?: Partial<CvData>): Understoo
   }
 
   cv.template = pickTemplate(text);
+
+  // Final spacing cleanup on all text fields
+  cv.summary = repairBrokenSpacing(cv.summary || "");
+  cv.skills = repairBrokenSpacing(cv.skills || "");
+  cv.certifications = repairBrokenSpacing(cv.certifications || "");
+  cv.achievements = repairBrokenSpacing(cv.achievements || "");
+  cv.languages = repairBrokenSpacing(cv.languages || "");
+  cv.customSectionBody = repairBrokenSpacing(cv.customSectionBody || "");
+  cv.experience = cv.experience.map((e) => ({
+    ...e,
+    title: repairBrokenSpacing(e.title),
+    company: repairBrokenSpacing(e.company),
+    location: repairBrokenSpacing(e.location),
+    bullets: repairBrokenSpacing(e.bullets),
+  }));
+
 
   // Guarantee name/title from whole text if header parse missed
   if (!cv.fullName) {
