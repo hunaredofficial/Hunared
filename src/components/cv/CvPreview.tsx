@@ -267,6 +267,8 @@ export function CvPreview({
             {contact}
           </p>
         )}
+          </div>
+        </div>
       </header>
 
       <div
