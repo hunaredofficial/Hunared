@@ -1,46 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { parseCvCommand } from "@/lib/cv/ai-fill";
-import type { CvData } from "@/lib/cv/types";
-import { DEFAULT_CV } from "@/lib/cv/types";
-
-const SYSTEM = `You are Hunared CV Assistant — a professional CV writer for global job seekers (especially Gulf / international technical and professional roles).
-
-Return ONLY valid JSON matching the CV schema the user provides (parsed + current).
-
-HARD RULES:
-1. NEVER invent employers, job titles the user did not state, degrees, certifications, dates, skills, or achievements.
-2. You MAY improve wording of summary and bullets when facts exist.
-3. You MAY structure incomplete user text into fields.
-4. If the user asks for a "full professional CV" but gave only a role + location, fill summary/template only and leave experience empty or only with facts they provided.
-5. Prefer ATS-friendly clear language.
-6. Templates: classic, modern, professional, minimal, executive, tech, ats, engineering, hse, graduate.
-7. Keep phone/email/location only if present in input.`;
+import { applyLocalCommand, getPersonalizedCommands } from "@/lib/cv/ai-engine";
+import { DEFAULT_CV, type CvData } from "@/lib/cv/types";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const command = String((body as { command?: string }).command || "").slice(0, 6000);
-    const current = (body as { current?: Partial<CvData> }).current;
-    const sourceText = String((body as { sourceText?: string }).sourceText || "").slice(0, 20000);
+    const command = String((body as { command?: string }).command || "").trim();
+    const current = {
+      ...DEFAULT_CV(),
+      ...((body as { current?: Partial<CvData> }).current || {}),
+    } as CvData;
+    const sourceText = String((body as { sourceText?: string }).sourceText || "");
 
-    if (!command.trim() && !sourceText.trim()) {
-      return NextResponse.json({ error: "Command or sourceText required" }, { status: 400 });
+    if (!command) {
+      return NextResponse.json({ error: "command required" }, { status: 400 });
     }
 
-    try {
-      await auth();
-    } catch {
-      /* soft */
-    }
-
-    const seed = sourceText ? parseCvCommand(sourceText, current) : parseCvCommand(command, current);
-    let cv = command && sourceText
-      ? parseCvCommand(command, seed)
-      : seed;
+    // Always compute local baseline (never invent employers/dates/certs)
+    let cv = parseCvCommand(command, current);
+    cv = applyLocalCommand(command, cv);
 
     const key = process.env.OPENAI_API_KEY;
-    if (key) {
+    if (key && command.length > 3) {
       try {
         const r = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
@@ -51,16 +33,24 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             model: process.env.OPENAI_AGENT_MODEL || "gpt-4o-mini",
             temperature: 0.25,
-            max_tokens: 2000,
+            max_tokens: 2500,
             messages: [
-              { role: "system", content: SYSTEM },
+              {
+                role: "system",
+                content: `You are Hunared CV AI. Improve professional CV content only.
+HARD RULES:
+- Never invent employers, job titles, dates, degrees, certifications, skills, metrics, or projects.
+- If information is missing, leave fields unchanged or write a short note in summary that the user should add facts.
+- Prefer strong action verbs and clear bullets from existing facts.
+- Return ONLY valid JSON matching the CV fields you change, or a full CV object.
+- Do not use markdown.`,
+              },
               {
                 role: "user",
                 content: JSON.stringify({
-                  instruction: command || "Structure and professionally polish this CV from source text without inventing facts.",
-                  sourceText: sourceText || undefined,
-                  current: current || DEFAULT_CV(),
-                  localParse: cv,
+                  command,
+                  currentCv: cv,
+                  sourceText: sourceText?.slice(0, 12000) || undefined,
                 }),
               },
             ],
@@ -68,26 +58,26 @@ export async function POST(req: NextRequest) {
         });
         if (r.ok) {
           const j = await r.json();
-          const content = j.choices?.[0]?.message?.content || "";
-          const match = content.match(/\{[\s\S]*\}/);
-          if (match) {
-            const parsed = JSON.parse(match[0]) as Partial<CvData>;
-            cv = {
-              ...DEFAULT_CV(),
-              ...cv,
-              ...parsed,
-              experience: parsed.experience?.length ? parsed.experience : cv.experience,
-              education: parsed.education?.length ? parsed.education : cv.education,
-              projects: parsed.projects?.length ? parsed.projects : cv.projects || [],
-            };
+          const content = j.choices?.[0]?.message?.content?.trim();
+          if (content) {
+            try {
+              const cleaned = content.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+              const parsed = JSON.parse(cleaned) as Partial<CvData>;
+              cv = { ...cv, ...parsed, experience: parsed.experience || cv.experience };
+            } catch {
+              /* keep local */
+            }
           }
         }
-      } catch (e) {
-        console.warn("[cv/ai] enrich failed", e);
+      } catch {
+        /* local fallback */
       }
     }
 
-    return NextResponse.json({ cv });
+    return NextResponse.json({
+      cv,
+      suggestions: getPersonalizedCommands(cv, cv.title),
+    });
   } catch (e) {
     console.error("[cv/ai]", e);
     return NextResponse.json({ error: "AI failed" }, { status: 500 });

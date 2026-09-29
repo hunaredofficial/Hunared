@@ -90,7 +90,14 @@ export type CvData = {
   sourceFileName?: string;
   /** own = edit uploaded document; template = structured Hunared templates */
   editMode?: "own" | "template";
+  /** Optional profile photo data URL or hosted URL (photo templates only) */
+  photoUrl?: string;
+  /** Snapshot of original import for restore (JSON stringified CvData fields) */
+  originalSnapshot?: string;
+  /** Target job notes for tailored versions */
+  targetJobNote?: string;
 };
+
 
 export type CvDocumentMeta = {
   id: string;

@@ -46,6 +46,12 @@ import { extractTextFromFile, textToCvDocumentHtml } from "@/lib/cv/extract-file
 import { understandCv } from "@/lib/cv/understand-cv";
 import { getCompletionItems, getCompletionPercent } from "@/lib/cv/completion";
 import {
+  getPersonalizedCommands,
+  buildAtsReport,
+  buildTailorReport,
+  buildReadinessReport,
+} from "@/lib/cv/ai-engine";
+import {
   loadLibrary,
   saveLibrary,
   createDocument,
@@ -90,7 +96,9 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const [editorTab, setEditorTab] = useState<"document" | "edit" | "design" | "ai">("document");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [jobDesc, setJobDesc] = useState("");
-  const [tailorTips, setTailorTips] = useState<string[]>([])
+  const [tailorTips, setTailorTips] = useState<string[]>([]);
+  const [atsReport, setAtsReport] = useState<ReturnType<typeof buildAtsReport> | null>(null);
+  const [readiness, setReadiness] = useState<ReturnType<typeof buildReadinessReport> | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -115,7 +123,6 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       setTimeout(() => setSavedFlash(false), 1200);
     }, 600);
     return () => clearTimeout(t);
-      {filePicker}
   }, [data, activeId, mounted]);
 
   const patch = useCallback((partial: Partial<CvData>) => {
@@ -341,7 +348,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       if (res.ok) {
         const json = (await res.json()) as { cv?: CvData };
         if (json.cv) {
-          setData({ ...DEFAULT_CV(), ...json.cv });
+          setData({ ...DEFAULT_CV(), ...json.cv, originalSnapshot: JSON.stringify(json.cv) });
           toast.success("AI applied — review every field before exporting.");
           setAiCmd("");
           return;
@@ -349,12 +356,12 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       }
       // Fallback local
       const local = parseCvCommand(cmd, data);
-      setData(local);
+      setData({ ...local, originalSnapshot: data.originalSnapshot || JSON.stringify(data) });
       toast.success("Applied locally. Review facts carefully.");
       setAiCmd("");
     } catch {
       const local = parseCvCommand(cmd, data);
-      setData(local);
+      setData({ ...local, originalSnapshot: data.originalSnapshot || JSON.stringify(data) });
       toast.message("Used offline assistant.");
     } finally {
       setAiLoading(false);
@@ -374,6 +381,13 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   const completion = getCompletionPercent(data);
   const completionItems = getCompletionItems(data);
   const analysis = useMemo(() => analyzeCv(data), [data]);
+  const personalizedCmds = useMemo(
+    () => getPersonalizedCommands(data, profile?.profession || data.title),
+    [data, profile?.profession]
+  );
+  useEffect(() => {
+    setReadiness(buildReadinessReport(data));
+  }, [data]);
 
   if (!mounted) {
     return (
@@ -721,7 +735,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {AI_SUGGESTIONS.map((s) => (
+                {personalizedCmds.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -826,10 +840,11 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                       toast.error("Paste a job description first.");
                       return;
                     }
-                    const tips = tailorSuggestions(data, jobDesc);
-                    setTailorTips(tips);
+                    const report = buildTailorReport(data, jobDesc);
+                    setTailorTips(report.suggestions);
+                    setAtsReport(buildAtsReport(data, jobDesc));
                     setShowAnalysis(true);
-                    toast.message("Job match suggestions ready.");
+                    toast.message("Job match & ATS suggestions ready — review carefully.");
                   }}
                 >
                   Analyze vs job
@@ -855,6 +870,82 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 {showAnalysis ? "Hide" : "Show"} CV analysis
               </Button>
 
+              {readiness && (
+                <div className="rounded-xl border border-border bg-card p-3 space-y-2 text-xs">
+                  <p className="font-semibold text-sm flex items-center gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5 text-primary" />
+                    CV Readiness
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                      <p className="text-[10px] text-muted-foreground">Content</p>
+                      <p className="font-medium">{readiness.content}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                      <p className="text-[10px] text-muted-foreground">ATS</p>
+                      <p className="font-medium">{readiness.ats}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                      <p className="text-[10px] text-muted-foreground">Professionalism</p>
+                      <p className="font-medium">{readiness.professionalism}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                      <p className="text-[10px] text-muted-foreground">Completeness</p>
+                      <p className="font-medium">{readiness.percent}%</p>
+                    </div>
+                  </div>
+                  {readiness.missing.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-medium text-muted-foreground mb-1">Missing / improve</p>
+                      <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                        {readiness.missing.slice(0, 6).map((m) => (
+                          <li key={m}>{m}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {readiness.nextActions.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {readiness.nextActions.slice(0, 4).map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          className="text-[10px] rounded-full border border-border px-2 py-0.5 hover:border-primary/40"
+                          onClick={() => setAiCmd(a)}
+                        >
+                          {a}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {atsReport && (
+                <div className="rounded-xl border border-border bg-card p-3 space-y-2 text-xs">
+                  <p className="font-semibold text-sm">ATS Report</p>
+                  <p className="text-muted-foreground">{atsReport.summary}</p>
+                  {atsReport.matchedKeywords.length > 0 && (
+                    <p>
+                      <span className="font-medium text-emerald-600">Matched: </span>
+                      {atsReport.matchedKeywords.slice(0, 12).join(", ")}
+                    </p>
+                  )}
+                  {atsReport.missingKeywords.length > 0 && (
+                    <p>
+                      <span className="font-medium text-amber-600">Consider (if true): </span>
+                      {atsReport.missingKeywords.slice(0, 10).join(", ")}
+                    </p>
+                  )}
+                  <ul className="list-disc pl-4 text-muted-foreground space-y-0.5">
+                    {atsReport.issues.slice(0, 6).map((i) => (
+                      <li key={i}>{i}</li>
+                    ))}
+                  </ul>
+                  <p className="text-[10px] text-muted-foreground">
+                    Scores are guidance only — never invent skills or experience to match keywords.
+                  </p>
+                </div>
+              )}
               {showAnalysis && (
                 <div className="space-y-2 pt-1">
                   {analysis.length === 0 ? (

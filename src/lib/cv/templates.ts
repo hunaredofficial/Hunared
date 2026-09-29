@@ -1,24 +1,45 @@
-import type { CvTemplateMeta } from "./types";
+import type { CvTemplateId } from "./types";
+
+export type CvTemplateMeta = {
+  id: CvTemplateId;
+  name: string;
+  desc: string;
+  accent: string;
+  category: string;
+  photo?: boolean;
+  ats?: boolean;
+};
 
 export const CV_TEMPLATES: CvTemplateMeta[] = [
-  { id: "ats", name: "ATS Professional", desc: "Maximum ATS compatibility", accent: "#1e293b", category: "ATS" },
-  { id: "classic", name: "Classic", desc: "Traditional single-column", accent: "#1e3a5f", category: "Professional" },
-  { id: "professional", name: "Corporate", desc: "Enterprise & Gulf corporate", accent: "#1d4ed8", category: "Professional" },
-  { id: "modern", name: "Modern Professional", desc: "Clean contemporary layout", accent: "#2563eb", category: "Modern" },
-  { id: "minimal", name: "Minimal Professional", desc: "Sparse, high-clarity", accent: "#334155", category: "Modern" },
-  { id: "executive", name: "Executive", desc: "Leadership & management", accent: "#0f172a", category: "Executive" },
-  { id: "tech", name: "IT / Technology", desc: "IT support & infrastructure", accent: "#0e7490", category: "Technology" },
-  { id: "software", name: "Software / Dev", desc: "Developers & digital roles", accent: "#0369a1", category: "Technology" },
-  { id: "engineering", name: "Engineering", desc: "Industrial & engineering", accent: "#b45309", category: "Technical" },
-  { id: "hse", name: "HSE / Safety", desc: "Health, safety & environment", accent: "#15803d", category: "Technical" },
-  { id: "oilgas", name: "Oil & Gas", desc: "Upstream / downstream roles", accent: "#9a3412", category: "Technical" },
-  { id: "construction", name: "Construction", desc: "Site & construction trades", accent: "#a16207", category: "Technical" },
-  { id: "healthcare", name: "Healthcare", desc: "Clinical & care roles", accent: "#0f766e", category: "Professional" },
-  { id: "finance", name: "Finance / Accounting", desc: "Finance & audit", accent: "#1e40af", category: "Business" },
-  { id: "sales", name: "Sales / Marketing", desc: "Commercial roles", accent: "#7c3aed", category: "Business" },
-  { id: "graduate", name: "Entry-Level", desc: "Graduate & junior", accent: "#4f46e5", category: "Career stage" },
-  { id: "academic", name: "Academic", desc: "Education & research", accent: "#5b21b6", category: "Professional" },
-  { id: "hospitality", name: "Hospitality", desc: "Hotels & service", accent: "#be185d", category: "Service" },
+  { id: "ats", name: "Classic ATS", desc: "Single column, maximum ATS safety", accent: "#0f172a", category: "ATS / Classic", ats: true },
+  { id: "classic", name: "Classic", desc: "Traditional corporate layout", accent: "#1e293b", category: "ATS / Classic", ats: true },
+  { id: "professional", name: "Professional", desc: "Clean professional hierarchy", accent: "#1d4ed8", category: "ATS / Classic", ats: true },
+  { id: "modern", name: "Modern", desc: "Contemporary spacing & type", accent: "#4f46e5", category: "Modern Professional" },
+  { id: "minimal", name: "Minimal", desc: "Whitespace-forward minimal", accent: "#334155", category: "Modern Professional", ats: true },
+  { id: "executive", name: "Executive", desc: "Senior leadership presence", accent: "#0f172a", category: "Executive" },
+  { id: "tech", name: "Technical", desc: "Technical specialist layout", accent: "#0e7490", category: "Technical / Engineering" },
+  { id: "software", name: "Software", desc: "Developers & IT roles", accent: "#6d28d9", category: "Technical / Engineering" },
+  { id: "engineering", name: "Engineering", desc: "Engineering professionals", accent: "#0369a1", category: "Technical / Engineering" },
+  { id: "hse", name: "HSE / Safety", desc: "Safety & HSE officers", accent: "#b45309", category: "Technical / Engineering" },
+  { id: "oilgas", name: "Oil & Gas", desc: "Energy & industrial projects", accent: "#9a3412", category: "Technical / Engineering" },
+  { id: "construction", name: "Construction", desc: "Site & construction roles", accent: "#a16207", category: "Technical / Engineering" },
+  { id: "healthcare", name: "Healthcare", desc: "Clinical & care roles", accent: "#0f766e", category: "Service" },
+  { id: "finance", name: "Finance", desc: "Accounting & finance", accent: "#1e3a8a", category: "Corporate" },
+  { id: "sales", name: "Sales", desc: "Sales & business development", accent: "#c2410c", category: "Corporate" },
+  { id: "graduate", name: "Graduate", desc: "Early career / fresh graduate", accent: "#2563eb", category: "ATS / Classic", ats: true },
+  { id: "academic", name: "Academic", desc: "Research & academic", accent: "#3730a3", category: "ATS / Classic" },
+  { id: "hospitality", name: "Hospitality", desc: "Hotels & service", accent: "#be185d", category: "Service", photo: true },
   { id: "logistics", name: "Logistics", desc: "Supply chain & warehouse", accent: "#0f766e", category: "Operations" },
   { id: "trades", name: "Skilled Trades", desc: "Technical trades", accent: "#b45309", category: "Trades" },
 ];
+
+export const TEMPLATE_CATEGORIES = [
+  "ATS / Classic",
+  "Modern Professional",
+  "Executive",
+  "Technical / Engineering",
+  "Corporate",
+  "Service",
+  "Operations",
+  "Trades",
+] as const;
