@@ -162,6 +162,7 @@ export const DEFAULT_CV = (): CvData => ({
   projects: [],
   template: "professional",
   sectionOrder: [...DEFAULT_SECTION_ORDER],
+  photoUrl: "",
 });
 
 export type CvTemplateMeta = {
@@ -170,6 +171,8 @@ export type CvTemplateMeta = {
   desc: string;
   accent: string;
   category: string;
+  photo?: boolean;
+  ats?: boolean;
 };
 
 export type ProfileSeed = {

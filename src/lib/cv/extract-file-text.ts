@@ -58,14 +58,17 @@ export function cleanExtractedCvText(raw: string): string {
   const lines = raw.split(/\r?\n/);
   const out: string[] = [];
   for (const line of lines) {
-    const t = line.replace(/\u0000/g, "").trim();
+    let t = line.replace(/\u0000/g, "").trim();
     if (!t || isPdfJunkLine(t)) continue;
-    // Drop lines that are only Canva branding noise
+    // Drop lines that are only Canva / design-tool branding noise
     if (/^canva$/i.test(t)) continue;
     if (/designed with canva/i.test(t)) continue;
+    if (/^canva\s/i.test(t) && t.length < 40) continue;
+    // Drop pure metadata fragments sometimes left mid-line
+    t = t.replace(/\bD:\d{14}[^\s]*/g, "").replace(/\s{2,}/g, " ").trim();
+    if (!t || isPdfJunkLine(t)) continue;
     out.push(t);
   }
-  // Collapse excessive blank runs later in caller
   return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 

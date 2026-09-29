@@ -557,7 +557,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
               <div className="rounded-xl border border-border p-3 space-y-2">
                 <p className="text-xs font-semibold">Profile photo (optional)</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Select a template in the &quot;With Photo&quot; group to display your photo on the CV.
+                  Your photo appears on the live preview. Switch templates anytime — photo stays until you remove it.
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   {data.photoUrl ? (
@@ -581,8 +581,13 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                         }
                         const reader = new FileReader();
                         reader.onload = () => {
-                          patch({ photoUrl: String(reader.result || "") });
-                          toast.success("Photo added — choose a With Photo template");
+                          const url = String(reader.result || "");
+                          const photoTemplates = ["photo_pro","photo_exec","photo_modern","photo_gulf","photo_minimal","hospitality"];
+                          const nextTemplate = photoTemplates.includes(data.template)
+                            ? data.template
+                            : "photo_pro";
+                          patch({ photoUrl: url, template: nextTemplate as typeof data.template });
+                          toast.success("Photo added and shown on your CV");
                         };
                         reader.readAsDataURL(f);
                       }}

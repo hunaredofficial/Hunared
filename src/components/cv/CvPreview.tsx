@@ -60,7 +60,7 @@ export function CvPreview({
     ? data.sectionOrder
     : (Object.keys(SECTION_LABELS) as CvSectionKey[]);
 
-  const isAts = data.template === "ats" || data.template === "classic";
+  const isAts = data.template === "ats" || data.template === "classic" || data.template === "photo_minimal";
   const isSidebar =
     data.template === "modern" || data.template === "tech" || data.template === "hse";
 
@@ -227,7 +227,7 @@ export function CvPreview({
         }
       >
         <div className="flex items-start gap-3">
-          {data.photoUrl && templateAllowsPhoto(data.template) ? (
+          {data.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.photoUrl}
