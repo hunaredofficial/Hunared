@@ -49,6 +49,8 @@ export async function POST(req: Request) {
     services?: string[];
     company_about?: string;
     short_description?: string;
+    avatar_url?: string;
+    avatar_public_id?: string;
   };
   try {
     body = await req.json();
@@ -118,6 +120,8 @@ export async function POST(req: Request) {
     phone_verified_at: new Date().toISOString(),
     team_managed: true,
     created_by_team_id: userId,
+    avatar_url: body.avatar_url?.trim() || null,
+    avatar_public_id: body.avatar_public_id?.trim() || null,
     company_cr: role === "employer" ? body.company_cr?.trim() || null : null,
     company_website: role === "employer" ? body.company_website?.trim() || null : null,
     company_address: role === "employer" ? body.company_address?.trim() || null : null,
@@ -167,6 +171,8 @@ export async function POST(req: Request) {
       status: "active",
       team_managed: true,
       created_by_team_id: userId,
+      logo_url: body.avatar_url?.trim() || null,
+      logo_public_id: body.avatar_public_id?.trim() || null,
     };
 
     const { data: co, error: coErr } = await supabase
@@ -205,7 +211,7 @@ export async function GET() {
   let q = supabase
     .from("profiles")
     .select(
-      "id, full_name, role, email, phone, city, country, profession, username, team_managed, created_at"
+      "id, full_name, role, email, phone, city, country, profession, username, avatar_url, team_managed, created_at"
     )
     .eq("team_managed", true)
     .order("created_at", { ascending: false })

@@ -1,14 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Plus, RefreshCw } from "lucide-react";
-
-/**
- * Full profile creator for Team — same fields as real signup/profile,
- * without email/phone verification requirements.
- */
+import { Loader2, Plus, RefreshCw, User, X } from "lucide-react";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 type Row = {
   id: string;
@@ -20,6 +16,7 @@ type Row = {
   country: string | null;
   profession: string | null;
   username?: string | null;
+  avatar_url?: string | null;
   created_at?: string;
 };
 
@@ -35,17 +32,16 @@ const emptyForm = () => ({
   location: "",
   profession: "",
   skill_level: "",
-  job_interests: "" as string, // comma-separated
+  job_interests: "",
   available_for_hire: true,
   listed_publicly: true,
-  // company
   company_name: "",
   company_cr: "",
   company_website: "",
   company_address: "",
   company_location: "",
-  industries: "" as string, // comma-separated
-  services: "" as string,
+  industries: "",
+  services: "",
   company_about: "",
   short_description: "",
 });
@@ -55,6 +51,9 @@ export function TeamProfilesClient() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof ReturnType<typeof emptyForm>>(
     key: K,
@@ -79,6 +78,28 @@ export function TeamProfilesClient() {
     void load();
   }, [load]);
 
+  function onPickPhoto(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file (JPG, PNG, WebP).");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB.");
+      return;
+    }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(String(reader.result || ""));
+    reader.readAsDataURL(file);
+  }
+
+  function clearPhoto() {
+    setAvatarFile(null);
+    setAvatarPreview("");
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
   async function create() {
     if (!form.full_name.trim()) {
       toast.error("Full name is required");
@@ -90,6 +111,24 @@ export function TeamProfilesClient() {
     }
     setSaving(true);
     try {
+      let avatarUrl: string | undefined;
+      let avatarPublicId: string | undefined;
+      if (avatarFile) {
+        try {
+          const up = await uploadToCloudinary(avatarFile, "hunared/avatars");
+          avatarUrl = up.url;
+          avatarPublicId = up.publicId;
+        } catch (e) {
+          toast.error(
+            e instanceof Error
+              ? e.message
+              : "Photo upload failed — check Cloudinary env vars"
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const res = await fetch("/api/team/create-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,7 +147,8 @@ export function TeamProfilesClient() {
           job_interests: form.job_interests
             ? form.job_interests.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
             : undefined,
-          available_for_hire: form.role === "seeker" ? form.available_for_hire : false,
+          available_for_hire:
+            form.role === "seeker" ? form.available_for_hire : false,
           listed_publicly: form.listed_publicly,
           company_name: form.company_name.trim() || undefined,
           company_cr: form.company_cr.trim() || undefined,
@@ -123,16 +163,19 @@ export function TeamProfilesClient() {
             : undefined,
           company_about: form.company_about.trim() || undefined,
           short_description: form.short_description.trim() || undefined,
+          avatar_url: avatarUrl,
+          avatar_public_id: avatarPublicId,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       toast.success(
         form.role === "employer"
-          ? "Full company profile created (no verification required)"
-          : "Full candidate profile created (no verification required)"
+          ? "Company profile created with full details (no verification)"
+          : "Candidate profile created with full details (no verification)"
       );
       setForm(emptyForm());
+      clearPhoto();
       void load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -142,7 +185,7 @@ export function TeamProfilesClient() {
   }
 
   const inputCls =
-    "w-full h-9 rounded-md border border-input bg-background px-2 text-sm";
+    "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
   const labelCls = "text-xs space-y-1 block";
   const isCompany = form.role === "employer";
   const isSeeker = form.role === "seeker";
@@ -152,13 +195,12 @@ export function TeamProfilesClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Create complete candidate or company profiles with the same fields as normal signup —
+          Create profiles with the same fields as normal signup — including photo —
           <strong className="text-foreground"> without email or phone verification</strong>.
-          If a real user later signs up with the same email/phone, the team placeholder is removed automatically.
         </p>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-5 space-y-5">
+      <section className="rounded-xl border border-border bg-card p-5 space-y-6">
         <h2 className="font-semibold text-sm flex items-center gap-2">
           <Plus className="h-4 w-4" /> Create full profile
         </h2>
@@ -179,6 +221,57 @@ export function TeamProfilesClient() {
           </select>
         </div>
 
+        {/* Profile photo — top like register */}
+        <div className="flex items-center gap-5 p-4 rounded-xl border border-border bg-background/50">
+          <div className="relative shrink-0">
+            {avatarPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarPreview}
+                alt="Preview"
+                className="h-20 w-20 rounded-full object-cover border-2 border-primary/20"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
+                <User className="h-8 w-8 text-muted-foreground" />
+              </div>
+            )}
+            {avatarPreview && (
+              <button
+                type="button"
+                onClick={clearPhoto}
+                className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center"
+                aria-label="Remove photo"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium mb-1">
+              {isCompany ? "Company logo / profile photo" : "Profile photo"}
+            </p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Optional for Team. JPG, PNG or WebP · max 10MB · no verification needed
+            </p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/*"
+              className="hidden"
+              onChange={(e) => onPickPhoto(e.target.files?.[0] || null)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileRef.current?.click()}
+            >
+              Upload photo
+            </Button>
+          </div>
+        </div>
+
         {/* Personal info */}
         <div className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -195,7 +288,7 @@ export function TeamProfilesClient() {
               />
             </label>
             <label className={labelCls}>
-              <span className="text-muted-foreground">Username / handle (optional)</span>
+              <span className="text-muted-foreground">Username / handle</span>
               <input
                 className={inputCls}
                 value={form.username}
@@ -223,17 +316,16 @@ export function TeamProfilesClient() {
               </select>
             </label>
             <label className={labelCls}>
-              <span className="text-muted-foreground">Email (optional — no verification)</span>
+              <span className="text-muted-foreground">Email (optional · not verified)</span>
               <input
                 className={inputCls}
                 type="email"
                 value={form.email}
                 onChange={(e) => set("email", e.target.value)}
-                placeholder="optional@email.com"
               />
             </label>
             <label className={labelCls}>
-              <span className="text-muted-foreground">Phone (optional — no verification)</span>
+              <span className="text-muted-foreground">Phone (optional · not verified)</span>
               <input
                 className={inputCls}
                 value={form.phone}
@@ -247,7 +339,6 @@ export function TeamProfilesClient() {
                 className={inputCls}
                 value={form.country}
                 onChange={(e) => set("country", e.target.value)}
-                placeholder="Saudi Arabia"
               />
             </label>
             <label className={labelCls}>
@@ -256,11 +347,10 @@ export function TeamProfilesClient() {
                 className={inputCls}
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
-                placeholder="Riyadh"
               />
             </label>
             <label className={`${labelCls} sm:col-span-2`}>
-              <span className="text-muted-foreground">Location (display)</span>
+              <span className="text-muted-foreground">Location (display text)</span>
               <input
                 className={inputCls}
                 value={form.location}
@@ -271,7 +361,6 @@ export function TeamProfilesClient() {
           </div>
         </div>
 
-        {/* Seeker career */}
         {isSeeker && (
           <div className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -284,7 +373,6 @@ export function TeamProfilesClient() {
                   className={inputCls}
                   value={form.profession}
                   onChange={(e) => set("profession", e.target.value)}
-                  placeholder="Fire Alarm Technician"
                 />
               </label>
               <label className={labelCls}>
@@ -313,9 +401,7 @@ export function TeamProfilesClient() {
                 </select>
               </label>
               <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">
-                  Job interests (comma-separated categories)
-                </span>
+                <span className="text-muted-foreground">Job interests (comma-separated)</span>
                 <input
                   className={inputCls}
                   value={form.job_interests}
@@ -324,7 +410,7 @@ export function TeamProfilesClient() {
                 />
               </label>
               <label className={labelCls}>
-                <span className="text-muted-foreground">Listed publicly on Candidates</span>
+                <span className="text-muted-foreground">Show on Candidates directory</span>
                 <select
                   className={inputCls}
                   value={form.listed_publicly ? "yes" : "no"}
@@ -338,7 +424,6 @@ export function TeamProfilesClient() {
           </div>
         )}
 
-        {/* Company */}
         {isCompany && (
           <div className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -351,7 +436,6 @@ export function TeamProfilesClient() {
                   className={inputCls}
                   value={form.company_name}
                   onChange={(e) => set("company_name", e.target.value)}
-                  placeholder="Gulf Petro Services"
                 />
               </label>
               <label className={labelCls}>
@@ -368,7 +452,6 @@ export function TeamProfilesClient() {
                   className={inputCls}
                   value={form.company_website}
                   onChange={(e) => set("company_website", e.target.value)}
-                  placeholder="https://"
                 />
               </label>
               <label className={`${labelCls} sm:col-span-2`}>
@@ -380,12 +463,11 @@ export function TeamProfilesClient() {
                 />
               </label>
               <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Google Maps location link</span>
+                <span className="text-muted-foreground">Google Maps link</span>
                 <input
                   className={inputCls}
                   value={form.company_location}
                   onChange={(e) => set("company_location", e.target.value)}
-                  placeholder="https://maps.google.com/..."
                 />
               </label>
               <label className={`${labelCls} sm:col-span-2`}>
@@ -394,7 +476,6 @@ export function TeamProfilesClient() {
                   className={inputCls}
                   value={form.industries}
                   onChange={(e) => set("industries", e.target.value)}
-                  placeholder="Oil & Gas, Construction"
                 />
               </label>
               <label className={`${labelCls} sm:col-span-2`}>
@@ -403,7 +484,6 @@ export function TeamProfilesClient() {
                   className={inputCls}
                   value={form.services}
                   onChange={(e) => set("services", e.target.value)}
-                  placeholder="Installation, Maintenance"
                 />
               </label>
               <label className={`${labelCls} sm:col-span-2`}>
@@ -418,13 +498,13 @@ export function TeamProfilesClient() {
                 <span className="text-muted-foreground">About company</span>
                 <textarea
                   rows={3}
-                  className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={form.company_about}
                   onChange={(e) => set("company_about", e.target.value)}
                 />
               </label>
               <label className={labelCls}>
-                <span className="text-muted-foreground">Listed in Companies directory</span>
+                <span className="text-muted-foreground">Show in Companies directory</span>
                 <select
                   className={inputCls}
                   value={form.listed_publicly ? "yes" : "no"}
@@ -438,11 +518,12 @@ export function TeamProfilesClient() {
           </div>
         )}
 
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
-          Team profiles skip email and phone verification. Optional contact fields are stored for matching when a real user signs up later.
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-50/90">
+          No email or phone verification. Photo uploads to Cloudinary like normal signup.
+          When a real user registers with the same email/phone, this team placeholder is removed.
         </div>
 
-        <Button onClick={() => void create()} disabled={saving} className="gap-2">
+        <Button onClick={() => void create()} disabled={saving} className="gap-2 w-full sm:w-auto">
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Create full profile (no verification)
         </Button>
@@ -464,17 +545,29 @@ export function TeamProfilesClient() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
                 <tr>
+                  <th className="px-3 py-2">Photo</th>
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Profession</th>
-                  <th className="px-3 py-2">Email</th>
-                  <th className="px-3 py-2">Phone</th>
+                  <th className="px-3 py-2">Contact</th>
                   <th className="px-3 py-2">Location</th>
                 </tr>
               </thead>
               <tbody>
                 {list.map((r) => (
                   <tr key={r.id} className="border-t border-border">
+                    <td className="px-3 py-2">
+                      {r.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.avatar_url}
+                          alt=""
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-muted" />
+                      )}
+                    </td>
                     <td className="px-3 py-2 font-medium">{r.full_name}</td>
                     <td className="px-3 py-2">
                       {r.role === "seeker"
@@ -487,10 +580,8 @@ export function TeamProfilesClient() {
                       {r.profession || "—"}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground text-xs">
-                      {r.email?.includes("@team-managed.") ? "—" : r.email}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground text-xs">
-                      {r.phone || "—"}
+                      {r.email?.includes("@team-managed.") ? "—" : r.email || "—"}
+                      {r.phone ? ` · ${r.phone}` : ""}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground text-xs">
                       {[r.city, r.country].filter(Boolean).join(", ") || "—"}
