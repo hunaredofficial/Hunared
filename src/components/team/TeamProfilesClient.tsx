@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Plus, RefreshCw, User, X, Pencil } from "lucide-react";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { JOB_CATEGORIES } from "@/lib/constants";
+import { INDUSTRIES } from "@/lib/companyConstants";
+import {
+  recommendServicesForIndustries,
+  allServices,
+} from "@/lib/industryServiceRecommendations";
 
 type Row = {
   id: string;
@@ -20,6 +27,8 @@ type Row = {
   created_at?: string;
 };
 
+const ALL_SERVICES = allServices();
+
 const emptyForm = () => ({
   role: "seeker" as "seeker" | "employer" | "personal",
   full_name: "",
@@ -32,7 +41,7 @@ const emptyForm = () => ({
   location: "",
   profession: "",
   skill_level: "",
-  job_interests: "",
+  job_interests: [] as string[],
   available_for_hire: true,
   listed_publicly: true,
   company_name: "",
@@ -40,8 +49,8 @@ const emptyForm = () => ({
   company_website: "",
   company_address: "",
   company_location: "",
-  industries: "",
-  services: "",
+  industries: [] as string[],
+  services: [] as string[],
   company_about: "",
   short_description: "",
 });
@@ -62,6 +71,11 @@ export function TeamProfilesClient() {
     key: K,
     value: ReturnType<typeof emptyForm>[K]
   ) => setForm((f) => ({ ...f, [key]: value }));
+
+  const recommendedServices = useMemo(
+    () => recommendServicesForIndustries(form.industries),
+    [form.industries]
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -112,7 +126,9 @@ export function TeamProfilesClient() {
   async function startEdit(id: string) {
     setLoadingEdit(true);
     try {
-      const res = await fetch(`/api/team/create-profile?id=${encodeURIComponent(id)}`);
+      const res = await fetch(
+        `/api/team/create-profile?id=${encodeURIComponent(id)}`
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load profile");
       const p = data.profile;
@@ -130,9 +146,7 @@ export function TeamProfilesClient() {
         location: p.location || "",
         profession: p.profession || "",
         skill_level: p.skill_level || "",
-        job_interests: Array.isArray(p.job_interests)
-          ? p.job_interests.join(", ")
-          : "",
+        job_interests: Array.isArray(p.job_interests) ? p.job_interests : [],
         available_for_hire: p.available_for_hire !== false,
         listed_publicly: p.listed_publicly !== false,
         company_name: co?.name || "",
@@ -140,8 +154,8 @@ export function TeamProfilesClient() {
         company_website: p.company_website || co?.website || "",
         company_address: p.company_address || "",
         company_location: p.company_location || "",
-        industries: Array.isArray(co?.industry) ? co.industry.join(", ") : "",
-        services: Array.isArray(co?.services) ? co.services.join(", ") : "",
+        industries: Array.isArray(co?.industry) ? co.industry : [],
+        services: Array.isArray(co?.services) ? co.services : [],
         company_about: co?.about || "",
         short_description: co?.short_description || "",
       });
@@ -195,11 +209,11 @@ export function TeamProfilesClient() {
         country: form.country.trim() || undefined,
         city: form.city.trim() || undefined,
         location: form.location.trim() || undefined,
-        profession: form.profession.trim() || undefined,
+        profession:
+          form.profession.trim() ||
+          (form.job_interests[0] ? form.job_interests[0] : undefined),
         skill_level: form.skill_level || undefined,
-        job_interests: form.job_interests
-          ? form.job_interests.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-          : undefined,
+        job_interests: form.job_interests.length ? form.job_interests : undefined,
         available_for_hire:
           form.role === "seeker" ? form.available_for_hire : false,
         listed_publicly: form.listed_publicly,
@@ -208,12 +222,8 @@ export function TeamProfilesClient() {
         company_website: form.company_website.trim() || undefined,
         company_address: form.company_address.trim() || undefined,
         company_location: form.company_location.trim() || undefined,
-        industries: form.industries
-          ? form.industries.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-          : undefined,
-        services: form.services
-          ? form.services.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-          : undefined,
+        industries: form.industries.length ? form.industries : undefined,
+        services: form.services.length ? form.services : undefined,
         company_about: form.company_about.trim() || undefined,
         short_description: form.short_description.trim() || undefined,
       };
@@ -244,7 +254,7 @@ export function TeamProfilesClient() {
 
   const inputCls =
     "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
-  const labelCls = "text-xs space-y-1 block";
+  const labelCls = "text-xs space-y-1.5 block";
   const isCompany = form.role === "employer";
   const isSeeker = form.role === "seeker";
 
@@ -253,8 +263,8 @@ export function TeamProfilesClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Create and <strong className="text-foreground">edit</strong> full candidate/company
-          profiles without email or phone verification.
+          Same fields as normal My Profile — including searchable categories —
+          without email or phone verification. Create or edit anytime.
         </p>
       </div>
 
@@ -281,7 +291,6 @@ export function TeamProfilesClient() {
           )}
         </div>
 
-        {/* Account type — locked while editing */}
         <div>
           <label className="text-sm font-medium block mb-1.5">Account type</label>
           <select
@@ -296,11 +305,6 @@ export function TeamProfilesClient() {
             <option value="employer">Company</option>
             <option value="personal">Personal</option>
           </select>
-          {editId && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Account type cannot be changed while editing.
-            </p>
-          )}
         </div>
 
         {/* Photo */}
@@ -334,7 +338,7 @@ export function TeamProfilesClient() {
               {isCompany ? "Company logo / profile photo" : "Profile photo"}
             </p>
             <p className="text-xs text-muted-foreground mb-2">
-              Optional · max 10MB · {editId ? "upload a new file to replace" : "no verification"}
+              Optional · max 10MB · same upload as signup
             </p>
             <input
               ref={fileRef}
@@ -439,20 +443,39 @@ export function TeamProfilesClient() {
           </div>
         </div>
 
+        {/* Seeker — same MultiSelectChips as My Profile */}
         {isSeeker && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Career (Seeker)
+              Professional info
             </h3>
+            <div className="space-y-1.5">
+              <span className="text-sm font-medium">Professions / job categories</span>
+              <MultiSelectChips
+                options={JOB_CATEGORIES}
+                value={form.job_interests}
+                onChange={(next) => {
+                  set("job_interests", next);
+                  if (!form.profession.trim() && next[0]) set("profession", next[0]);
+                }}
+                placeholder="Select one or more professions"
+                searchPlaceholder="Search professions…"
+                label="Professions"
+              />
+              <p className="text-xs text-muted-foreground">
+                Same category list as seeker signup / My Profile.
+              </p>
+            </div>
+            <label className={labelCls}>
+              <span className="text-muted-foreground">Profession title (display)</span>
+              <input
+                className={inputCls}
+                value={form.profession}
+                onChange={(e) => set("profession", e.target.value)}
+                placeholder="e.g. Fire Alarm Technician"
+              />
+            </label>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Profession / job title</span>
-                <input
-                  className={inputCls}
-                  value={form.profession}
-                  onChange={(e) => set("profession", e.target.value)}
-                />
-              </label>
               <label className={labelCls}>
                 <span className="text-muted-foreground">Skill level</span>
                 <select
@@ -472,26 +495,22 @@ export function TeamProfilesClient() {
                 <select
                   className={inputCls}
                   value={form.available_for_hire ? "yes" : "no"}
-                  onChange={(e) => set("available_for_hire", e.target.value === "yes")}
+                  onChange={(e) =>
+                    set("available_for_hire", e.target.value === "yes")
+                  }
                 >
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
                 </select>
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Job interests (comma-separated)</span>
-                <input
-                  className={inputCls}
-                  value={form.job_interests}
-                  onChange={(e) => set("job_interests", e.target.value)}
-                />
               </label>
               <label className={labelCls}>
                 <span className="text-muted-foreground">Show on Candidates</span>
                 <select
                   className={inputCls}
                   value={form.listed_publicly ? "yes" : "no"}
-                  onChange={(e) => set("listed_publicly", e.target.value === "yes")}
+                  onChange={(e) =>
+                    set("listed_publicly", e.target.value === "yes")
+                  }
                 >
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
@@ -501,107 +520,167 @@ export function TeamProfilesClient() {
           </div>
         )}
 
+        {/* Company — same Industry / Services multi-select as My Profile */}
         {isCompany && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Company info
             </h3>
+            <label className={labelCls}>
+              <span className="text-muted-foreground">Company name *</span>
+              <input
+                className={inputCls}
+                value={form.company_name}
+                onChange={(e) => set("company_name", e.target.value)}
+              />
+            </label>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Company name *</span>
-                <input
-                  className={inputCls}
-                  value={form.company_name}
-                  onChange={(e) => set("company_name", e.target.value)}
-                />
-              </label>
               <label className={labelCls}>
-                <span className="text-muted-foreground">CR number</span>
+                <span className="text-muted-foreground">Company CR number</span>
                 <input
                   className={inputCls}
                   value={form.company_cr}
                   onChange={(e) => set("company_cr", e.target.value)}
+                  placeholder="e.g. 1010123456"
                 />
               </label>
               <label className={labelCls}>
-                <span className="text-muted-foreground">Website</span>
+                <span className="text-muted-foreground">Company website</span>
                 <input
                   className={inputCls}
                   value={form.company_website}
                   onChange={(e) => set("company_website", e.target.value)}
+                  placeholder="https://company.com"
                 />
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Company address</span>
-                <input
-                  className={inputCls}
-                  value={form.company_address}
-                  onChange={(e) => set("company_address", e.target.value)}
-                />
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Google Maps link</span>
-                <input
-                  className={inputCls}
-                  value={form.company_location}
-                  onChange={(e) => set("company_location", e.target.value)}
-                />
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Industries (comma-separated)</span>
-                <input
-                  className={inputCls}
-                  value={form.industries}
-                  onChange={(e) => set("industries", e.target.value)}
-                />
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Services (comma-separated)</span>
-                <input
-                  className={inputCls}
-                  value={form.services}
-                  onChange={(e) => set("services", e.target.value)}
-                />
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">Short description</span>
-                <input
-                  className={inputCls}
-                  value={form.short_description}
-                  onChange={(e) => set("short_description", e.target.value)}
-                />
-              </label>
-              <label className={`${labelCls} sm:col-span-2`}>
-                <span className="text-muted-foreground">About company</span>
-                <textarea
-                  rows={3}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={form.company_about}
-                  onChange={(e) => set("company_about", e.target.value)}
-                />
-              </label>
-              <label className={labelCls}>
-                <span className="text-muted-foreground">Show in Companies directory</span>
-                <select
-                  className={inputCls}
-                  value={form.listed_publicly ? "yes" : "no"}
-                  onChange={(e) => set("listed_publicly", e.target.value === "yes")}
-                >
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
               </label>
             </div>
+
+            <div className="space-y-1.5">
+              <span className="text-sm font-medium">Industry *</span>
+              <MultiSelectChips
+                options={[...INDUSTRIES]}
+                value={form.industries}
+                onChange={(next) => set("industries", next)}
+                placeholder="Select industry"
+                searchPlaceholder="Search industries…"
+                label="Industry"
+              />
+            </div>
+
+            {recommendedServices.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-primary">Recommended services</p>
+                <p className="text-xs text-muted-foreground">
+                  Based on industry. Tap to add — nothing is forced.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {recommendedServices.slice(0, 24).map((s) => {
+                    const on = form.services.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`text-xs rounded-full border px-2.5 py-1 transition-colors ${
+                          on
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border hover:bg-accent"
+                        }`}
+                        onClick={() => {
+                          if (on) {
+                            set(
+                              "services",
+                              form.services.filter((x) => x !== s)
+                            );
+                          } else {
+                            set("services", [...form.services, s]);
+                          }
+                        }}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <span className="text-sm font-medium">Services</span>
+              <MultiSelectChips
+                options={ALL_SERVICES}
+                value={form.services}
+                onChange={(next) => set("services", next)}
+                placeholder="Select services you offer"
+                searchPlaceholder="Search services…"
+                label="Services"
+              />
+            </div>
+
+            <label className={labelCls}>
+              <span className="text-muted-foreground">Company address</span>
+              <input
+                className={inputCls}
+                value={form.company_address}
+                onChange={(e) => set("company_address", e.target.value)}
+              />
+            </label>
+            <label className={labelCls}>
+              <span className="text-muted-foreground">Company location (Google Maps link)</span>
+              <input
+                className={inputCls}
+                value={form.company_location}
+                onChange={(e) => set("company_location", e.target.value)}
+              />
+            </label>
+            <label className={labelCls}>
+              <span className="text-muted-foreground">Short description</span>
+              <input
+                className={inputCls}
+                value={form.short_description}
+                onChange={(e) => set("short_description", e.target.value)}
+              />
+            </label>
+            <label className={labelCls}>
+              <span className="text-muted-foreground">About company</span>
+              <textarea
+                rows={3}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={form.company_about}
+                onChange={(e) => set("company_about", e.target.value)}
+              />
+            </label>
+            <label className={labelCls}>
+              <span className="text-muted-foreground">Show in Companies directory</span>
+              <select
+                className={inputCls}
+                value={form.listed_publicly ? "yes" : "no"}
+                onChange={(e) => set("listed_publicly", e.target.value === "yes")}
+              >
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
           </div>
         )}
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void save()} disabled={saving || loadingEdit} className="gap-2">
-            {(saving || loadingEdit) && <Loader2 className="h-4 w-4 animate-spin" />}
+          <Button
+            onClick={() => void save()}
+            disabled={saving || loadingEdit}
+            className="gap-2"
+          >
+            {(saving || loadingEdit) && (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
             {editId ? "Save changes" : "Create full profile (no verification)"}
           </Button>
           {editId && (
-            <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetForm}
+              disabled={saving}
+            >
               Cancel
             </Button>
           )}
@@ -611,14 +690,21 @@ export function TeamProfilesClient() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-sm">Team-managed profiles</h2>
-          <Button variant="outline" size="sm" onClick={() => void load()} className="gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void load()}
+            className="gap-1"
+          >
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </Button>
         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : !list.length ? (
-          <p className="text-sm text-muted-foreground">No team-managed profiles yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No team-managed profiles yet.
+          </p>
         ) : (
           <div className="rounded-xl border border-border overflow-x-auto">
             <table className="w-full text-sm">
@@ -636,7 +722,9 @@ export function TeamProfilesClient() {
                 {list.map((r) => (
                   <tr
                     key={r.id}
-                    className={`border-t border-border ${editId === r.id ? "bg-primary/5" : ""}`}
+                    className={`border-t border-border ${
+                      editId === r.id ? "bg-primary/5" : ""
+                    }`}
                   >
                     <td className="px-3 py-2">
                       {r.avatar_url ? (
