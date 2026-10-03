@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Plus, RefreshCw, User, X } from "lucide-react";
+import { Loader2, Plus, RefreshCw, User, X, Pencil } from "lucide-react";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
 type Row = {
@@ -51,9 +51,12 @@ export function TeamProfilesClient() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const formTopRef = useRef<HTMLDivElement>(null);
 
   const set = <K extends keyof ReturnType<typeof emptyForm>>(
     key: K,
@@ -100,12 +103,65 @@ export function TeamProfilesClient() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function create() {
+  function resetForm() {
+    setEditId(null);
+    setForm(emptyForm());
+    clearPhoto();
+  }
+
+  async function startEdit(id: string) {
+    setLoadingEdit(true);
+    try {
+      const res = await fetch(`/api/team/create-profile?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load profile");
+      const p = data.profile;
+      const co = data.company;
+      setEditId(id);
+      setForm({
+        role: (p.role as "seeker" | "employer" | "personal") || "seeker",
+        full_name: p.full_name || "",
+        username: p.username || "",
+        email: p.email?.includes("@team-managed.") ? "" : p.email || "",
+        phone: p.phone || "",
+        gender: p.gender || "",
+        country: p.country || "",
+        city: p.city || "",
+        location: p.location || "",
+        profession: p.profession || "",
+        skill_level: p.skill_level || "",
+        job_interests: Array.isArray(p.job_interests)
+          ? p.job_interests.join(", ")
+          : "",
+        available_for_hire: p.available_for_hire !== false,
+        listed_publicly: p.listed_publicly !== false,
+        company_name: co?.name || "",
+        company_cr: p.company_cr || "",
+        company_website: p.company_website || co?.website || "",
+        company_address: p.company_address || "",
+        company_location: p.company_location || "",
+        industries: Array.isArray(co?.industry) ? co.industry.join(", ") : "",
+        services: Array.isArray(co?.services) ? co.services.join(", ") : "",
+        company_about: co?.about || "",
+        short_description: co?.short_description || "",
+      });
+      setAvatarFile(null);
+      setAvatarPreview(p.avatar_url || co?.logo_url || "");
+      formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      toast.message("Editing profile — update fields then save");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setLoadingEdit(false);
+    }
+  }
+
+  async function save() {
     if (!form.full_name.trim()) {
       toast.error("Full name is required");
       return;
     }
-    if (form.role === "employer" && !form.company_name.trim()) {
+    if (form.role === "employer" && !form.company_name.trim() && !editId) {
       toast.error("Company name is required for Company profiles");
       return;
     }
@@ -129,53 +185,55 @@ export function TeamProfilesClient() {
         }
       }
 
+      const payload: Record<string, unknown> = {
+        role: form.role,
+        full_name: form.full_name.trim(),
+        username: form.username.trim() || undefined,
+        email: form.email.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        gender: form.gender || undefined,
+        country: form.country.trim() || undefined,
+        city: form.city.trim() || undefined,
+        location: form.location.trim() || undefined,
+        profession: form.profession.trim() || undefined,
+        skill_level: form.skill_level || undefined,
+        job_interests: form.job_interests
+          ? form.job_interests.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+          : undefined,
+        available_for_hire:
+          form.role === "seeker" ? form.available_for_hire : false,
+        listed_publicly: form.listed_publicly,
+        company_name: form.company_name.trim() || undefined,
+        company_cr: form.company_cr.trim() || undefined,
+        company_website: form.company_website.trim() || undefined,
+        company_address: form.company_address.trim() || undefined,
+        company_location: form.company_location.trim() || undefined,
+        industries: form.industries
+          ? form.industries.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+          : undefined,
+        services: form.services
+          ? form.services.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+          : undefined,
+        company_about: form.company_about.trim() || undefined,
+        short_description: form.short_description.trim() || undefined,
+      };
+      if (avatarUrl) {
+        payload.avatar_url = avatarUrl;
+        payload.avatar_public_id = avatarPublicId;
+      }
+
+      const isEdit = Boolean(editId);
+      if (isEdit) payload.id = editId;
+
       const res = await fetch("/api/team/create-profile", {
-        method: "POST",
+        method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          role: form.role,
-          full_name: form.full_name.trim(),
-          username: form.username.trim() || undefined,
-          email: form.email.trim() || undefined,
-          phone: form.phone.trim() || undefined,
-          gender: form.gender || undefined,
-          country: form.country.trim() || undefined,
-          city: form.city.trim() || undefined,
-          location: form.location.trim() || undefined,
-          profession: form.profession.trim() || undefined,
-          skill_level: form.skill_level || undefined,
-          job_interests: form.job_interests
-            ? form.job_interests.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-            : undefined,
-          available_for_hire:
-            form.role === "seeker" ? form.available_for_hire : false,
-          listed_publicly: form.listed_publicly,
-          company_name: form.company_name.trim() || undefined,
-          company_cr: form.company_cr.trim() || undefined,
-          company_website: form.company_website.trim() || undefined,
-          company_address: form.company_address.trim() || undefined,
-          company_location: form.company_location.trim() || undefined,
-          industries: form.industries
-            ? form.industries.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-            : undefined,
-          services: form.services
-            ? form.services.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-            : undefined,
-          company_about: form.company_about.trim() || undefined,
-          short_description: form.short_description.trim() || undefined,
-          avatar_url: avatarUrl,
-          avatar_public_id: avatarPublicId,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      toast.success(
-        form.role === "employer"
-          ? "Company profile created with full details (no verification)"
-          : "Candidate profile created with full details (no verification)"
-      );
-      setForm(emptyForm());
-      clearPhoto();
+      toast.success(isEdit ? "Profile updated" : "Profile created (no verification)");
+      resetForm();
       void load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -195,22 +253,41 @@ export function TeamProfilesClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Create profiles with the same fields as normal signup — including photo —
-          <strong className="text-foreground"> without email or phone verification</strong>.
+          Create and <strong className="text-foreground">edit</strong> full candidate/company
+          profiles without email or phone verification.
         </p>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-5 space-y-6">
-        <h2 className="font-semibold text-sm flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Create full profile
-        </h2>
+      <section
+        ref={formTopRef}
+        className="rounded-xl border border-border bg-card p-5 space-y-6"
+      >
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="font-semibold text-sm flex items-center gap-2">
+            {editId ? (
+              <>
+                <Pencil className="h-4 w-4" /> Edit profile
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" /> Create full profile
+              </>
+            )}
+          </h2>
+          {editId && (
+            <Button type="button" variant="ghost" size="sm" onClick={resetForm}>
+              Cancel edit
+            </Button>
+          )}
+        </div>
 
-        {/* Account type */}
+        {/* Account type — locked while editing */}
         <div>
           <label className="text-sm font-medium block mb-1.5">Account type</label>
           <select
             className={inputCls}
             value={form.role}
+            disabled={Boolean(editId)}
             onChange={(e) =>
               set("role", e.target.value as "seeker" | "employer" | "personal")
             }
@@ -219,9 +296,14 @@ export function TeamProfilesClient() {
             <option value="employer">Company</option>
             <option value="personal">Personal</option>
           </select>
+          {editId && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Account type cannot be changed while editing.
+            </p>
+          )}
         </div>
 
-        {/* Profile photo — top like register */}
+        {/* Photo */}
         <div className="flex items-center gap-5 p-4 rounded-xl border border-border bg-background/50">
           <div className="relative shrink-0">
             {avatarPreview ? (
@@ -252,7 +334,7 @@ export function TeamProfilesClient() {
               {isCompany ? "Company logo / profile photo" : "Profile photo"}
             </p>
             <p className="text-xs text-muted-foreground mb-2">
-              Optional for Team. JPG, PNG or WebP · max 10MB · no verification needed
+              Optional · max 10MB · {editId ? "upload a new file to replace" : "no verification"}
             </p>
             <input
               ref={fileRef}
@@ -267,12 +349,12 @@ export function TeamProfilesClient() {
               size="sm"
               onClick={() => fileRef.current?.click()}
             >
-              Upload photo
+              {editId ? "Change photo" : "Upload photo"}
             </Button>
           </div>
         </div>
 
-        {/* Personal info */}
+        {/* Personal */}
         <div className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Personal info
@@ -284,7 +366,6 @@ export function TeamProfilesClient() {
                 className={inputCls}
                 value={form.full_name}
                 onChange={(e) => set("full_name", e.target.value)}
-                placeholder="Ahmed Al-Rashidi"
               />
             </label>
             <label className={labelCls}>
@@ -298,7 +379,6 @@ export function TeamProfilesClient() {
                     e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
                   )
                 }
-                placeholder="ahmed_hse"
               />
             </label>
             <label className={labelCls}>
@@ -330,7 +410,6 @@ export function TeamProfilesClient() {
                 className={inputCls}
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
-                placeholder="+966 5x xxx xxxx"
               />
             </label>
             <label className={labelCls}>
@@ -355,7 +434,6 @@ export function TeamProfilesClient() {
                 className={inputCls}
                 value={form.location}
                 onChange={(e) => set("location", e.target.value)}
-                placeholder="Riyadh, Saudi Arabia"
               />
             </label>
           </div>
@@ -406,11 +484,10 @@ export function TeamProfilesClient() {
                   className={inputCls}
                   value={form.job_interests}
                   onChange={(e) => set("job_interests", e.target.value)}
-                  placeholder="engineering, electrical, hse"
                 />
               </label>
               <label className={labelCls}>
-                <span className="text-muted-foreground">Show on Candidates directory</span>
+                <span className="text-muted-foreground">Show on Candidates</span>
                 <select
                   className={inputCls}
                   value={form.listed_publicly ? "yes" : "no"}
@@ -518,15 +595,17 @@ export function TeamProfilesClient() {
           </div>
         )}
 
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-50/90">
-          No email or phone verification. Photo uploads to Cloudinary like normal signup.
-          When a real user registers with the same email/phone, this team placeholder is removed.
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => void save()} disabled={saving || loadingEdit} className="gap-2">
+            {(saving || loadingEdit) && <Loader2 className="h-4 w-4 animate-spin" />}
+            {editId ? "Save changes" : "Create full profile (no verification)"}
+          </Button>
+          {editId && (
+            <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+              Cancel
+            </Button>
+          )}
         </div>
-
-        <Button onClick={() => void create()} disabled={saving} className="gap-2 w-full sm:w-auto">
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-          Create full profile (no verification)
-        </Button>
       </section>
 
       <section className="space-y-3">
@@ -549,13 +628,16 @@ export function TeamProfilesClient() {
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Profession</th>
-                  <th className="px-3 py-2">Contact</th>
                   <th className="px-3 py-2">Location</th>
+                  <th className="px-3 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {list.map((r) => (
-                  <tr key={r.id} className="border-t border-border">
+                  <tr
+                    key={r.id}
+                    className={`border-t border-border ${editId === r.id ? "bg-primary/5" : ""}`}
+                  >
                     <td className="px-3 py-2">
                       {r.avatar_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -580,11 +662,20 @@ export function TeamProfilesClient() {
                       {r.profession || "—"}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground text-xs">
-                      {r.email?.includes("@team-managed.") ? "—" : r.email || "—"}
-                      {r.phone ? ` · ${r.phone}` : ""}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground text-xs">
                       {[r.city, r.country].filter(Boolean).join(", ") || "—"}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 h-8"
+                        disabled={loadingEdit}
+                        onClick={() => void startEdit(r.id)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
