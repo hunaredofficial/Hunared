@@ -105,7 +105,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!["admin", "employer", "seeker", "personal"].includes(profile.role)) {
+  if (!["admin", "team", "employer", "seeker", "personal"].includes(profile.role)) {
     return NextResponse.json(
       { error: "You must complete registration before posting jobs." },
       { status: 403 }
@@ -123,7 +123,8 @@ export async function POST(req: Request) {
   if (!body.jobTitle?.trim()) return NextResponse.json({ error: "Job title is required" }, { status: 400 });
   if (!body.jobDescription?.trim()) return NextResponse.json({ error: "Job description is required" }, { status: 400 });
   if (!body.companyName?.trim()) return NextResponse.json({ error: "Company name is required" }, { status: 400 });
-  if (!body.companyPhone?.trim() || body.companyPhone.replace(/\D/g, "").length < 7) {
+  const isStaff = profile.role === "admin" || profile.role === "team";
+  if (!isStaff && (!body.companyPhone?.trim() || body.companyPhone.replace(/\D/g, "").length < 7)) {
     return NextResponse.json({ error: "A valid company phone number is required to post a job." }, { status: 400 });
   }
 

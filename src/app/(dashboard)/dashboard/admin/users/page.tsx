@@ -12,9 +12,19 @@ import type { Profile } from "@/types/database";
 export const dynamic = "force-dynamic";
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: "bg-purple-100 text-purple-800 border-purple-200",
-  employer: "bg-blue-100 text-blue-800 border-blue-200",
-  seeker: "bg-gray-100 text-gray-700 border-gray-200",
+  admin: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/30",
+  team: "bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-500/20 dark:text-teal-200 dark:border-teal-500/30",
+  employer: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/30",
+  seeker: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-200 dark:border-gray-500/30",
+  personal: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/20 dark:text-slate-200 dark:border-slate-500/30",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  team: "Team",
+  employer: "Company",
+  seeker: "Seeker",
+  personal: "Personal",
 };
 
 interface SearchParams {
@@ -104,8 +114,10 @@ export default async function AdminUsersPage({
                 className="text-sm rounded-md border border-input bg-background px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">All roles</option>
+                <option value="personal">Personal</option>
                 <option value="seeker">Seeker</option>
-                <option value="employer">Employer</option>
+                <option value="employer">Company</option>
+                <option value="team">Team</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -147,7 +159,7 @@ export default async function AdminUsersPage({
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{user.full_name ?? "—"}</span>
                         <Badge className={`text-xs border ${ROLE_COLORS[user.role ?? "seeker"] ?? ""}`}>
-                          {user.role}
+                          {ROLE_LABELS[user.role ?? "seeker"] ?? user.role}
                         </Badge>
                       </div>
                     </td>

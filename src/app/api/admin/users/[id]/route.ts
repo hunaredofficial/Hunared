@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase";
 import { deleteUserData } from "@/lib/deleteUserData";
 import type { UserRole } from "@/types/database";
 
-const VALID_ROLES: UserRole[] = ["seeker", "employer", "personal", "admin"];
+const VALID_ROLES: UserRole[] = ["seeker", "employer", "personal", "team", "admin"];
 
 /** PATCH /api/admin/users/[id]  — change role */
 export async function PATCH(

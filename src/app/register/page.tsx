@@ -216,7 +216,7 @@ function RegisterInner() {
   }, [sessionConfirmed, user, goal]);
   // Auto country/city from geo — COMPANY only (seeker selects manually)
   useEffect(() => {
-    if (goal === "seeker") return; // Job seekers pick country/city themselves
+    if (goal === "seeker") return; // Seekers pick country/city themselves
     if (!geo || geo.loading || geo.error || locationTouched) return;
     if (geo.countryCode) {
       setCountry((prev) => prev || geo.countryCode!);
@@ -524,7 +524,7 @@ function RegisterInner() {
     },
     {
       id: "seeker",
-      title: "Job Seeker",
+      title: "Seeker",
       desc: "Find your next opportunity",
       icon: User,
     },

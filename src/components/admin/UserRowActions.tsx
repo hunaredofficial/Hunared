@@ -72,8 +72,9 @@ export function UserRowActions({ userId, currentRole, selfId }: UserRowActionsPr
         </SelectTrigger>
         <SelectContent>
           <SelectItem className="cursor-pointer" value="personal">Personal</SelectItem>
-          <SelectItem className="cursor-pointer" value="seeker">Job Seeker</SelectItem>
+          <SelectItem className="cursor-pointer" value="seeker">Seeker</SelectItem>
           <SelectItem className="cursor-pointer" value="employer">Company</SelectItem>
+          <SelectItem className="cursor-pointer" value="team">Team</SelectItem>
           <SelectItem className="cursor-pointer" value="admin">Admin</SelectItem>
         </SelectContent>
       </Select>

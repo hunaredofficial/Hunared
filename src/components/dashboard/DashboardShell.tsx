@@ -21,7 +21,8 @@ import {
   Bell,
   BellRing,
   FileText,
-  MessageSquare,
+  Building2,
+  Layers,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -86,11 +87,6 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Bell className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/messages",
-        label: "Messages",
-        icon: <MessageSquare className="h-4 w-4" />,
-      },
-      {
         href: "/dashboard/articles",
         label: "My Articles",
         icon: <BookOpen className="h-4 w-4" />,
@@ -105,6 +101,52 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/market/orders",
         label: "Incoming Orders",
         icon: <PackageOpen className="h-4 w-4" />,
+      },
+    ];
+  }
+
+  if (role === "team") {
+    return [
+      {
+        href: "/dashboard",
+        label: "Overview",
+        icon: <LayoutDashboard className="h-4 w-4" />,
+        exact: true,
+      },
+      {
+        href: "/dashboard/profile",
+        label: "My Profile",
+        icon: <User className="h-4 w-4" />,
+      },
+      {
+        href: "/post",
+        label: "Post",
+        icon: <Plus className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/team/bulk",
+        label: "Bulk Post",
+        icon: <Layers className="h-4 w-4" />,
+      },
+      {
+        href: "/jobs",
+        label: "Jobs",
+        icon: <Briefcase className="h-4 w-4" />,
+      },
+      {
+        href: "/candidates",
+        label: "Candidates",
+        icon: <Users className="h-4 w-4" />,
+      },
+      {
+        href: "/companies",
+        label: "Companies",
+        icon: <Building2 className="h-4 w-4" />,
+      },
+      {
+        href: "/market",
+        label: "Marketplace",
+        icon: <ShoppingBag className="h-4 w-4" />,
       },
     ];
   }
@@ -198,11 +240,6 @@ function getNavItems(role: UserRole): NavItem[] {
       label: "Notifications",
       icon: <Bell className="h-4 w-4" />,
     },
-      {
-        href: "/dashboard/messages",
-        label: "Messages",
-        icon: <MessageSquare className="h-4 w-4" />,
-      },
     {
       href: "/dashboard/articles",
       label: "My Articles",
