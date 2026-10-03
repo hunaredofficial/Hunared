@@ -124,6 +124,11 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Plus className="h-4 w-4" />,
       },
       {
+        href: "/dashboard/team/profiles",
+        label: "Team Profiles",
+        icon: <Users className="h-4 w-4" />,
+      },
+      {
         href: "/dashboard/team/bulk",
         label: "Bulk Post",
         icon: <Layers className="h-4 w-4" />,

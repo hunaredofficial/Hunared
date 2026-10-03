@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { canBulkPost } from "@/lib/roles";
+import { findTeamManagedCompanyByName } from "@/lib/team-profiles";
 
 type BulkJob = {
   jobTitle?: string;
   jobDescription?: string;
   companyName?: string;
   companyPhone?: string;
+  companyEmail?: string;
   country?: string;
   city?: string;
   location?: string;
@@ -15,13 +17,10 @@ type BulkJob = {
   duration?: string;
   category?: string;
   categories?: string[];
+  positions?: number;
+  salaryRate?: string;
 };
 
-/**
- * POST /api/team/bulk-jobs
- * Body: { jobs: BulkJob[] }
- * Staff only (admin | team). Creates multiple jobs; auto-approved for staff.
- */
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,7 +48,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Provide jobs: [] (max 50)." }, { status: 400 });
   }
 
-  const results: { index: number; ok: boolean; id?: string; error?: string }[] = [];
+  const results: {
+    index: number;
+    ok: boolean;
+    id?: string;
+    linkedCompanyId?: string | null;
+    linkedCompanyName?: string | null;
+    error?: string;
+  }[] = [];
 
   for (let i = 0; i < jobs.length; i++) {
     const j = jobs[i];
@@ -65,6 +71,9 @@ export async function POST(req: Request) {
       .filter(Boolean);
     const primary = cats[0] || "other";
 
+    // Auto-link ONLY team-managed companies matching name
+    const teamCo = await findTeamManagedCompanyByName(supabase, company);
+
     const { data, error } = await supabase
       .from("jobs")
       .insert({
@@ -73,6 +82,7 @@ export async function POST(req: Request) {
         job_description: desc,
         company_name: company,
         company_phone: j.companyPhone?.trim() || null,
+        company_email: j.companyEmail?.trim() || null,
         country: j.country?.trim() || null,
         city: j.city?.trim() || null,
         location: j.location?.trim() || j.city?.trim() || "Remote",
@@ -80,7 +90,11 @@ export async function POST(req: Request) {
         duration: j.duration?.trim() || "Permanent",
         category: primary,
         categories: cats,
+        positions: j.positions ?? null,
+        salary_rate: j.salaryRate?.trim() || null,
         status: "approved",
+        linked_company_id: teamCo?.id ?? null,
+        show_profile_contact: false,
       })
       .select("id")
       .single();
@@ -88,10 +102,17 @@ export async function POST(req: Request) {
     if (error) {
       results.push({ index: i, ok: false, error: error.message });
     } else {
-      results.push({ index: i, ok: true, id: data?.id });
+      results.push({
+        index: i,
+        ok: true,
+        id: data?.id,
+        linkedCompanyId: teamCo?.id ?? null,
+        linkedCompanyName: teamCo?.name ?? null,
+      });
     }
   }
 
   const created = results.filter((r) => r.ok).length;
-  return NextResponse.json({ created, total: jobs.length, results });
+  const linked = results.filter((r) => r.linkedCompanyId).length;
+  return NextResponse.json({ created, linked, total: jobs.length, results });
 }

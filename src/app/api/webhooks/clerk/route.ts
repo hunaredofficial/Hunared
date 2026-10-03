@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { deleteUserData } from "@/lib/deleteUserData";
+import { claimOrReplaceTeamProfile } from "@/lib/team-profiles";
 import type { UserRole, Database } from "@/types/database";
 import { isOfficialAdminEmail } from "@/lib/adminEmails";
 
@@ -55,6 +56,13 @@ export async function POST(req: Request) {
         role = "admin";
       }
 
+      // If team created a placeholder with same email, remove it so real user owns the identity
+      try {
+        await claimOrReplaceTeamProfile(supabase, id, { email });
+      } catch (e) {
+        console.error("[Webhook] team profile claim failed:", e);
+      }
+
       const { error } = await supabase.from("profiles").upsert({
         id,
         role,
@@ -62,6 +70,7 @@ export async function POST(req: Request) {
         email,
         // username may be set during onboarding; not available at creation yet
         username: (unsafe_metadata?.username as string) ?? null,
+        team_managed: false,
       });
 
       if (error) {

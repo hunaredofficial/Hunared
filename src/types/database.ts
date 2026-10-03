@@ -88,6 +88,8 @@ export interface Database {
           available_for_hire: boolean;
           listed_publicly: boolean;
           phone_verified_at: string | null;
+          team_managed: boolean;
+          created_by_team_id: string | null;
           skill_level: string | null;
           deleted_at: string | null;
           created_at: string;

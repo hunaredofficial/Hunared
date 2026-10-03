@@ -5,6 +5,7 @@ import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { computeExpiresAt } from "@/lib/expiration";
 import type { EmploymentType } from "@/types/database";
+import { findTeamManagedCompanyByName } from "@/lib/team-profiles";
 
 const EMPLOYMENT_TYPES = ["permanent", "temporary"] as const;
 
@@ -199,6 +200,13 @@ export async function POST(req: Request) {
     .single();
   const jobStatus = settings?.auto_approve_jobs ? "approved" : "pending";
 
+  // Auto-link to team-managed company by exact name match (team/admin posts only)
+  let linkedCompanyId: string | null = null;
+  if (profile.role === "admin" || profile.role === "team") {
+    const teamCo = await findTeamManagedCompanyByName(supabase, body.companyName.trim());
+    if (teamCo) linkedCompanyId = teamCo.id;
+  }
+
   const { data, error } = await supabase
     .from("jobs")
     .insert({
@@ -222,6 +230,7 @@ export async function POST(req: Request) {
       categories,
       subcategory: body.subcategory ?? null,
       company_name: body.companyName.trim(),
+      linked_company_id: linkedCompanyId,
       company_phone: body.companyPhone.trim(),
       company_email: body.companyEmail ?? null,
       company_address: body.companyAddress ?? null,

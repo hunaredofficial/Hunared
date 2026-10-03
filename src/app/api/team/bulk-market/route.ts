@@ -16,11 +16,6 @@ type BulkListing = {
   contact_phone?: string;
 };
 
-/**
- * POST /api/team/bulk-market
- * Body: { listings: BulkListing[] }
- * Staff only (admin | team). Max 50. Auto-approved.
- */
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { claimOrReplaceTeamProfile } from "@/lib/team-profiles";
 import { COUNTRIES } from "@/lib/countries";
 import { JOB_CATEGORIES } from "@/lib/constants";
 import type { UserRole } from "@/types/database";
@@ -100,6 +101,16 @@ export async function POST(req: Request) {
   }
 
   const phone = body.phone?.trim() ?? "";
+  // Claim team-managed placeholder matching email/phone
+  try {
+    await claimOrReplaceTeamProfile(supabase, userId, {
+      email: body.email || undefined,
+      phone: body.phone || undefined,
+    });
+  } catch (e) {
+    console.error("[profile/save] team claim:", e);
+  }
+
   const isSeeker = body.role === "seeker";
   const isEmployer = body.role === "employer";
 

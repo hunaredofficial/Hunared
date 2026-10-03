@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
-import { canBulkPost } from "@/lib/roles";
-import BulkClient from "./BulkClient";
+import { canBypassVerification } from "@/lib/roles";
+import { TeamProfilesClient } from "@/components/team/TeamProfilesClient";
 
-export default async function TeamBulkPage() {
+export default async function TeamProfilesPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const supabase = createAdminClient();
@@ -13,6 +13,6 @@ export default async function TeamBulkPage() {
     .select("role")
     .eq("id", userId)
     .maybeSingle();
-  if (!canBulkPost(profile?.role)) redirect("/dashboard");
-  return <BulkClient />;
+  if (!canBypassVerification(profile?.role)) redirect("/dashboard");
+  return <TeamProfilesClient />;
 }
