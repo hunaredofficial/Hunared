@@ -35,6 +35,8 @@ import {
   SmartJobFillPanel,
   type SmartFillFieldKey,
 } from "@/components/jobs/SmartJobFill";
+import { MagicPostPanel } from "@/components/team/MagicPostPanel";
+import type { MagicJobFields } from "@/lib/magicPostParser";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import {
   EXPIRATION_OPTIONS,
@@ -559,6 +561,41 @@ export default function PostJobPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <MagicPostPanel
+          mode="job"
+          onApplyJob={(fields: MagicJobFields) => {
+            setForm((prev) => {
+              const next = { ...prev };
+              if (fields.jobTitle) next.jobTitle = fields.jobTitle;
+              if (fields.jobDescription) next.jobDescription = fields.jobDescription;
+              if (fields.companyName) next.companyName = fields.companyName;
+              if (fields.companyPhone) next.companyPhone = fields.companyPhone;
+              if (fields.companyEmail) next.companyEmail = fields.companyEmail;
+              if (fields.companyAddress) next.companyAddress = fields.companyAddress;
+              if (fields.country) next.country = fields.country;
+              if (fields.city) next.city = fields.city;
+              if (fields.location && !fields.workLocation) next.workLocation = fields.location;
+              if (fields.workLocation) next.workLocation = fields.workLocation;
+              if (fields.employmentType) next.employmentType = fields.employmentType;
+              if (fields.duration) next.duration = fields.duration;
+              if (fields.category) next.category = fields.category;
+              if (fields.categories?.length) {
+                next.categories = fields.categories;
+                next.category = fields.categories[0] || fields.category || next.category;
+              }
+              if (fields.positions) next.positions = fields.positions;
+              if (fields.salaryRate) next.salaryRate = fields.salaryRate;
+              if (fields.salaryType) next.salaryType = fields.salaryType;
+              if (fields.currency) next.currency = fields.currency;
+              if (fields.mapLocation) next.mapLocation = fields.mapLocation;
+              return next;
+            });
+            // Refresh smart suggestions from filled content
+            try {
+              runSmartParse(fields.jobTitle, fields.jobDescription);
+            } catch { /* ignore */ }
+          }}
+        />
         {/* Job Details */}
         <Section title="Job Details">
           <Field label="Job Title *">

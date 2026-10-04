@@ -16,6 +16,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { MagicPostPanel } from "@/components/team/MagicPostPanel";
+import type { MagicListingFields } from "@/lib/magicPostParser";
 import {
   parseListingText,
   buildDescription,
@@ -470,6 +472,36 @@ function NewListingForm() {
         <p className="text-sm text-muted-foreground mt-1">
           Listings are reviewed before appearing on the Marketplace.
         </p>
+      </div>
+
+      <div className="mb-6">
+        <MagicPostPanel
+          mode="listing"
+          onApplyListing={(fields: MagicListingFields) => {
+            if (fields.title) {
+              setTitle(fields.title);
+              runTitleAutoFill(fields.title);
+            }
+            if (fields.description) {
+              setDescription(fields.description);
+              descFromSmart.current = true;
+            }
+            if (fields.category) setCategory(fields.category);
+            if (fields.subcategory) setSubcategory(fields.subcategory);
+            if (fields.condition) setCondition(fields.condition);
+            if (fields.price) setPrice(fields.price);
+            if (fields.currency) setCurrency(fields.currency);
+            if (fields.country) setCountry(fields.country);
+            if (fields.city) setCity(fields.city);
+            if (fields.contact_phone) setContactPhone(fields.contact_phone);
+            if (fields.rentalPeriod) {
+              try {
+                setRentalPeriod(fields.rentalPeriod);
+              } catch { /* optional field */ }
+            }
+            setSmartNote("Magic Post applied — review fields before submit");
+          }}
+        />
       </div>
 
       <form onSubmit={handleSubmit}>
