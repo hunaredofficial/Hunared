@@ -155,7 +155,7 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-];];
+];
 
 export function Header() {
   const pathname = usePathname();
