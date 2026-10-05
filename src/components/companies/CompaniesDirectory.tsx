@@ -844,19 +844,14 @@ export function CompaniesDirectory() {
 
   return (
     <div className="min-h-screen">
-      {/* ── Hero (same pattern as Jobs / Marketplace) ───────── */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-28 sm:pt-32">
+      {/* Hero — same pattern as Jobs / Marketplace */}
+      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Building2 className="h-7 w-7 text-primary shrink-0" />
-            <h1 className="text-3xl sm:text-4xl font-bold">
-              <span className="gradient-text">Company Directory</span>
-            </h1>
-          </div>
-          <p className="text-muted-foreground max-w-xl mb-6">
-            Discover verified employers, contractors, service providers and
-            organizations worldwide. Search by industry, services, location and
-            more.
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+            <span className="gradient-text">Companies</span>
+          </h1>
+          <p className="text-muted-foreground mb-6 max-w-xl">
+            Discover verified employers, contractors and service providers worldwide.
           </p>
 
           {/* Horizontal filter bar — Marketplace style */}

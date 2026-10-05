@@ -24,8 +24,8 @@ const FOOTER_LINKS = {
     { href: "/market?category=offers_deals", label: "Offers & Deals" },
   ],
   Programs: [
-    { href: "/program", label: "Training & Programs" },
-    { href: "/program", label: "Programs & Training" },
+    { href: "/program", label: "Programs" },
+    { href: "/dashboard/cv", label: "CV Builder" },
   ],
   Company: [
     { href: "/about", label: "About" },
