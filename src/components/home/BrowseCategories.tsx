@@ -43,7 +43,7 @@ const MARKETPLACE_GROUPS: {
       { label: "Offers & Deals", category: "offers_deals" },
       { label: "Wholesale", category: "wholesale" },
       { label: "Free Items", category: "free_items" },
-      { label: "Wanted", category: "wanted" },
+      { label: "Lost & Found", category: "lost_found" },
     ],
   },
   {
@@ -84,7 +84,7 @@ const MARKETPLACE_GROUPS: {
     group: "Community",
     items: [
       { label: "Lost & Found", category: "lost_found" },
-      { label: "Events", category: "events" },
+      { label: "Offers & Deals", category: "offers_deals" },
       { label: "Announcements", category: "announcements" },
       { label: "Donations", category: "donations" },
       { label: "Community", category: "community" },

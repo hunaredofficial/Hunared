@@ -11,7 +11,6 @@ const FOOTER_LINKS = {
     { href: "/companies", label: "Companies" },
     { href: "/market", label: "Marketplace" },
     { href: "/education", label: "Learning" },
-    { href: "/dashboard/cv", label: "CV Builder" },
   ],
   Discover: [
     { href: "/market?type=services", label: "Services" },
@@ -20,13 +19,13 @@ const FOOTER_LINKS = {
     { href: "/market?type=vehicles", label: "Vehicles" },
   ],
   Community: [
-    { href: "/finder", label: "Finder Center" },
+    { href: "/finder", label: "Hunared Finder" },
     { href: "/market?type=community", label: "Community" },
-    { href: "/market?type=events", label: "Events" },
+    { href: "/market?category=offers_deals", label: "Offers & Deals" },
   ],
   Programs: [
     { href: "/program", label: "Training & Programs" },
-    { href: "https://hunared.org", label: "Verify Credentials" },
+    { href: "/program", label: "Programs & Training" },
   ],
   Company: [
     { href: "/about", label: "About" },

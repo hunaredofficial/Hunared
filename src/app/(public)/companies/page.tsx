@@ -1,17 +1,27 @@
-import { Metadata } from "next";
+import { Suspense } from "react";
 import { CompaniesDirectory } from "@/components/companies/CompaniesDirectory";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Companies",
   description:
-    "Browse companies, employers, contractors, and service providers on Hunared. Search by industry, location, and size.",
+    "Discover verified employers, contractors and service providers on Hunared.",
   openGraph: {
     title: "Companies | Hunared",
     description:
-      "Browse companies, employers, contractors, and service providers on Hunared.",
+      "Discover verified employers, contractors and service providers on Hunared.",
   },
 };
 
 export default function CompaniesPage() {
-  return <CompaniesDirectory />;
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">
+          Loading companies…
+        </div>
+      }
+    >
+      <CompaniesDirectory />
+    </Suspense>
+  );
 }

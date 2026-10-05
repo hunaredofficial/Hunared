@@ -27,7 +27,6 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
-import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
 import { Show, UserButton } from "@clerk/nextjs";
 
 type MegaItem = {
@@ -56,16 +55,8 @@ const NAV_ITEMS: NavItem[] = [
         title: "Explore",
         items: [
           { label: "Browse Jobs", href: "/jobs", desc: "All open roles" },
-          { label: "Permanent Roles", href: "/jobs?employmentType=permanent", desc: "Full-time positions" },
-          { label: "Temporary Work", href: "/jobs?employmentType=temporary", desc: "Short-term roles" },
-        ],
-      },
-      {
-        title: "Actions",
-        items: [
-          { label: "Jobs by Category", href: "/jobs", desc: "Filter on the board" },
-          { label: "Jobs by Location", href: "/jobs", desc: "Country & city filters" },
-          { label: "Post a Job", href: "/dashboard/jobs/new", desc: "Hire talent" },
+          { label: "Permanent Roles", href: "/jobs?employmentType=permanent", desc: "Permanent employment only" },
+          { label: "Temporary Work", href: "/jobs?employmentType=temporary", desc: "Short-term & contract roles" },
         ],
       },
     ],
@@ -79,9 +70,9 @@ const NAV_ITEMS: NavItem[] = [
         title: "Professionals",
         items: [
           { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
-          { label: "Available for Hire", href: "/candidates?available=yes", desc: "Open to opportunities" },
-          { label: "By Location", href: "/candidates", desc: "Country & city filters" },
-          { label: "Browse All Talent", href: "/candidates", desc: "Full directory" },
+          { label: "Available for Hire", href: "/candidates?available=yes", desc: "Open to opportunities only" },
+          { label: "Expert Level", href: "/candidates?level=expert", desc: "Senior & expert talent" },
+          { label: "Create Candidate Profile", href: "/register?goal=seeker", desc: "Join as a job seeker" },
         ],
       },
     ],
@@ -95,9 +86,9 @@ const NAV_ITEMS: NavItem[] = [
         title: "Directory",
         items: [
           { label: "Company Directory", href: "/companies", desc: "Explore organizations" },
-          { label: "By Industry", href: "/companies", desc: "Sectors & services" },
-          { label: "By Country", href: "/companies", desc: "Regional employers" },
-          { label: "Create Company Profile", href: "/register", desc: "Get listed" },
+          { label: "Hiring Now", href: "/companies?hiring=1", desc: "Companies actively hiring" },
+          { label: "Verified Only", href: "/companies?verified=1", desc: "Verified employers" },
+          { label: "Create Company Profile", href: "/register?goal=employer", desc: "Get listed" },
         ],
       },
     ],
@@ -122,9 +113,9 @@ const NAV_ITEMS: NavItem[] = [
         title: "More",
         items: [
           { label: "Home & Furniture", href: "/market?category=home_furniture", icon: Sofa },
-          { label: "Wanted", href: "/market?category=wanted", icon: Search },
+          { label: "Lost & Found", href: "/market?category=lost_found", icon: Search },
           { label: "Free Items", href: "/market?category=free_items", icon: Gift },
-          { label: "Events", href: "/market?category=events", icon: Calendar },
+          { label: "Offers & Deals", href: "/market?category=offers_deals", icon: Calendar },
           { label: "Community", href: "/market?category=community", icon: Users },
           { label: "All listings", href: "/market", icon: Tag },
         ],
@@ -155,16 +146,16 @@ const NAV_ITEMS: NavItem[] = [
       {
         title: "Programs & community",
         items: [
-          { label: "Programs & Training", href: "/program", desc: "Credentials & pathways" },
-          { label: "Verify Credentials", href: "https://hunared.org", desc: "Official verification" },
-          { label: "Hunared Finder", href: "/finder", desc: "Lost & found community" },
+          { label: "Programs & Training", href: "/program", desc: "Pathways & learning" },
+          { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
+          { label: "CV Builder", href: "/dashboard/cv", desc: "Build a professional CV" },
           { label: "About Hunared", href: "/about", desc: "Our mission" },
           { label: "Contact", href: "/contact", desc: "Help & support" },
         ],
       },
     ],
   },
-];
+];];
 
 export function Header() {
   const pathname = usePathname();
@@ -413,7 +404,6 @@ export function Header() {
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
-                  <MessagesHeaderIcon />
                   <UserButton
                     appearance={{
                       elements: {

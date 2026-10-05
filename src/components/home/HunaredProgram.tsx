@@ -17,7 +17,7 @@ export function HunaredProgram() {
                 Training & credentials that support your career
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-                Explore pathways and verify credentials. Future initiatives are
+                Explore pathways, courses and training programs. Future initiatives are
                 clearly marked so you always know what is available now.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -33,7 +33,7 @@ export function HunaredProgram() {
                     rel="noopener noreferrer"
                   >
                     <ShieldCheck className="h-4 w-4 mr-1.5" />
-                    Verify credentials
+                    Explore programs
                   </Link>
                 </Button>
               </div>
