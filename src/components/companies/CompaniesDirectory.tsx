@@ -567,7 +567,7 @@ const MOCK_COMPANIES: CompanyRecord[] = [
 ];
 
 const fieldClass =
-  "[color-scheme:dark] h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30";
+  "[color-scheme:dark] h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0";
 
 export function CompaniesDirectory() {
   const [search, setSearch] = useState("");
@@ -850,7 +850,7 @@ export function CompaniesDirectory() {
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">
             <span className="gradient-text">Companies</span>
           </h1>
-          <p className="text-muted-foreground mb-6 max-w-xl">
+          <p className="text-muted-foreground mb-6">
             Discover verified employers, contractors and service providers worldwide.
           </p>
 
@@ -946,7 +946,7 @@ export function CompaniesDirectory() {
                   }}
                   size="md"
                   variant="select"
-                  inputClassName="rounded-xl border-border h-10"
+                  inputClassName="rounded-md border-input h-10"
                 />
               </div>
 
@@ -955,7 +955,7 @@ export function CompaniesDirectory() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 rounded-xl gap-1.5"
+                  className="h-10 rounded-md gap-1.5"
                   onClick={() => setSheetOpen(true)}
                 >
                   <SlidersHorizontal className="h-4 w-4" />
@@ -968,7 +968,7 @@ export function CompaniesDirectory() {
                 </Button>
                 <Button
                   type="button"
-                  className="h-10 rounded-xl px-5"
+                  className="h-10 rounded-md px-5"
                   onClick={applySearch}
                 >
                   Search
@@ -977,7 +977,7 @@ export function CompaniesDirectory() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-10 rounded-xl text-muted-foreground"
+                    className="h-10 rounded-md text-muted-foreground"
                     onClick={clearAll}
                   >
                     Clear
@@ -1045,18 +1045,18 @@ export function CompaniesDirectory() {
         {!hasFilters && featured.length > 0 && (
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              <h2 className="text-base font-semibold">Featured companies</h2>
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="text-base font-semibold tracking-tight">Featured companies</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {featured.map((c) => (
                 <Link
                   key={c.id}
                   href={"/companies/" + c.slug}
-                  className="group rounded-xl border border-border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all"
+                  className="group rounded-lg border border-border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-xl border border-border bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary">
+                    <div className="h-11 w-11 rounded-lg border border-border bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-primary">
                       {c.name.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -1083,15 +1083,15 @@ export function CompaniesDirectory() {
         {!hasFilters && (
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-4">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <h2 className="text-base font-semibold">Hiring now</h2>
+              <Flame className="h-4 w-4 text-primary" />
+              <h2 className="text-base font-semibold tracking-tight">Hiring now</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {MOCK_COMPANIES.filter((c) => c.is_hiring).map((c) => (
                 <Link
                   key={"hire-" + c.id}
                   href={"/companies/" + c.slug}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-sm hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-sm hover:border-primary/40 hover:bg-primary/5 transition-colors duration-200"
                 >
                   <span className="font-medium">{c.name}</span>
                   <span className="text-xs text-muted-foreground">
@@ -1122,7 +1122,7 @@ export function CompaniesDirectory() {
             <select data-color-scheme="dark"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="h-9 px-2.5 rounded-lg border border-border bg-background text-sm"
+              className="h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
             >
               {SORT_OPTIONS.map((o) => (
                 <option className="bg-background text-foreground" key={o.value} value={o.value}>
@@ -1187,7 +1187,7 @@ export function CompaniesDirectory() {
           <p className="text-muted-foreground text-sm mb-5 max-w-md mx-auto">
             Create your company profile, post jobs, and reach talent on Hunared.
           </p>
-          <Button asChild className="rounded-xl">
+          <Button asChild className="rounded-md">
             <Link href="/register?goal=employer">Register your company</Link>
           </Button>
         </div>
@@ -1299,13 +1299,13 @@ export function CompaniesDirectory() {
             <div className="p-4 border-t border-border flex gap-2">
               <Button
                 variant="outline"
-                className="flex-1 rounded-xl"
+                className="flex-1 rounded-md"
                 onClick={clearAll}
               >
                 Clear
               </Button>
               <Button
-                className="flex-1 rounded-xl"
+                className="flex-1 rounded-md"
                 onClick={() => {
                   setPage(1);
                   setSheetOpen(false);
@@ -1338,16 +1338,16 @@ function CompanyCard({ company: c }: { company: CompanyRecord }) {
   return (
     <Link
       href={"/companies/" + c.slug}
-      className="group flex flex-col rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all p-4 h-full"
+      className="group flex flex-col rounded-lg border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 p-4 h-full"
     >
       <div className="flex gap-3 mb-3">
-        <div className="h-12 w-12 rounded-xl border border-border bg-primary/10 flex items-center justify-center shrink-0 text-base font-bold text-primary">
+        <div className="h-12 w-12 rounded-lg border border-border bg-muted flex items-center justify-center shrink-0 text-base font-bold text-primary">
           {c.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={c.logo_url}
               alt=""
-              className="h-full w-full object-cover rounded-xl"
+              className="h-full w-full object-cover rounded-lg"
             />
           ) : (
             c.name.charAt(0)
@@ -1371,17 +1371,17 @@ function CompanyCard({ company: c }: { company: CompanyRecord }) {
 
       <div className="flex flex-wrap gap-1 mb-2">
         {c.is_featured && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/12 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-medium">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 text-primary px-1.5 py-0.5 text-[10px] font-medium">
             <Star className="h-2.5 w-2.5" /> Featured
           </span>
         )}
         {c.is_hiring && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/12 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 text-[10px] font-medium">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[10px] font-medium">
             <Flame className="h-2.5 w-2.5" /> Hiring
           </span>
         )}
         {c.is_premium && (
-          <span className="rounded-full bg-violet-500/12 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 text-[10px] font-medium">
+          <span className="rounded-full bg-muted text-muted-foreground px-1.5 py-0.5 text-[10px] font-medium">
             Premium
           </span>
         )}
