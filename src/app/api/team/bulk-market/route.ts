@@ -10,6 +10,8 @@ type BulkListing = {
   currency?: string;
   category?: string;
   subcategory?: string;
+  condition?: string;
+  rentalPeriod?: string;
   country?: string;
   city?: string;
   location?: string;
@@ -53,27 +55,49 @@ export async function POST(req: Request) {
       results.push({ index: i, ok: false, error: "title and description required" });
       continue;
     }
+
+    // Prefer known columns; extra fields may be ignored by DB if absent
+    const row: Record<string, unknown> = {
+      seller_id: userId,
+      title,
+      description,
+      price: L.price?.trim() || "",
+      currency: L.currency?.trim() || "SAR",
+      category: L.category?.trim() || "for_sale",
+      subcategory: L.subcategory?.trim() || null,
+      country: L.country?.trim() || null,
+      city: L.city?.trim() || null,
+      location: L.location?.trim() || L.city?.trim() || null,
+      contact_phone: L.contact_phone?.trim() || null,
+      status: "approved",
+    };
+    if (L.condition?.trim()) row.condition = L.condition.trim();
+    if (L.rentalPeriod?.trim()) row.rental_period = L.rentalPeriod.trim();
+
     const { data, error } = await supabase
       .from("marketplace_listings")
-      .insert({
-        seller_id: userId,
-        title,
-        description,
-        price: L.price?.trim() || "",
-        currency: L.currency?.trim() || "SAR",
-        category: L.category?.trim() || "other",
-        subcategory: L.subcategory?.trim() || null,
-        country: L.country?.trim() || null,
-        city: L.city?.trim() || null,
-        location: L.location?.trim() || L.city?.trim() || null,
-        contact_phone: L.contact_phone?.trim() || null,
-        status: "approved",
-      })
+      .insert(row)
       .select("id")
       .single();
 
-    if (error) results.push({ index: i, ok: false, error: error.message });
-    else results.push({ index: i, ok: true, id: data?.id });
+    if (error) {
+      // Retry without optional columns if schema is stricter
+      if (/column|schema|rental_period|condition/i.test(error.message)) {
+        delete row.condition;
+        delete row.rental_period;
+        const retry = await supabase
+          .from("marketplace_listings")
+          .insert(row)
+          .select("id")
+          .single();
+        if (retry.error) results.push({ index: i, ok: false, error: retry.error.message });
+        else results.push({ index: i, ok: true, id: retry.data?.id });
+      } else {
+        results.push({ index: i, ok: false, error: error.message });
+      }
+    } else {
+      results.push({ index: i, ok: true, id: data?.id });
+    }
   }
 
   const created = results.filter((r) => r.ok).length;
