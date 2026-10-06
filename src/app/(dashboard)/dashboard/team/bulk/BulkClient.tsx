@@ -17,6 +17,7 @@ import {
   Briefcase,
   Store,
   Sparkles,
+  Wand2,
 } from "lucide-react";
 import {
   JOB_CATEGORIES,
@@ -29,6 +30,10 @@ import {
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
+import {
+  parseMagicJobRaw,
+  parseMagicListingRaw,
+} from "@/lib/magicPostParser";
 
 type JobRow = {
   jobTitle: string;
@@ -49,6 +54,8 @@ type JobRow = {
   currency: string;
   mapLocation: string;
   open: boolean;
+  smartRaw: string;
+  smartOpen: boolean;
 };
 
 type MarketRow = {
@@ -64,6 +71,8 @@ type MarketRow = {
   contact_phone: string;
   rentalPeriod: string;
   open: boolean;
+  smartRaw: string;
+  smartOpen: boolean;
 };
 
 const emptyJob = (): JobRow => ({
@@ -85,6 +94,8 @@ const emptyJob = (): JobRow => ({
   currency: "SAR",
   mapLocation: "",
   open: true,
+  smartRaw: "",
+  smartOpen: false,
 });
 
 const emptyMarket = (): MarketRow => ({
@@ -100,6 +111,8 @@ const emptyMarket = (): MarketRow => ({
   contact_phone: "",
   rentalPeriod: "",
   open: true,
+  smartRaw: "",
+  smartOpen: false,
 });
 
 const inputCls =
@@ -148,10 +161,80 @@ export default function BulkClient() {
     );
   }
 
+  function applySmartJob(i: number) {
+    const raw = jobs[i]?.smartRaw?.trim() || "";
+    if (raw.length < 12) {
+      toast.error("Paste more text for Smart Fill");
+      return;
+    }
+    try {
+      const f = parseMagicJobRaw(raw);
+      const emp =
+        f.employmentType === "temporary" ||
+        (f.duration && f.duration !== "Permanent")
+          ? "temporary"
+          : "permanent";
+      updateJob(i, {
+        jobTitle: f.jobTitle || jobs[i].jobTitle,
+        jobDescription: f.jobDescription || jobs[i].jobDescription,
+        companyName: f.companyName || jobs[i].companyName,
+        companyPhone: f.companyPhone || jobs[i].companyPhone,
+        companyEmail: f.companyEmail || jobs[i].companyEmail,
+        companyAddress: f.companyAddress || jobs[i].companyAddress,
+        country: f.country || jobs[i].country,
+        city: f.city || jobs[i].city,
+        workLocation: f.workLocation || jobs[i].workLocation,
+        employmentType: emp,
+        duration:
+          f.duration ||
+          (emp === "permanent" ? "Permanent" : jobs[i].duration),
+        category: f.category || f.categories?.[0] || jobs[i].category,
+        positions: f.positions || jobs[i].positions,
+        salaryType: f.salaryType || jobs[i].salaryType,
+        salaryRate: f.salaryRate || jobs[i].salaryRate,
+        currency: f.currency || jobs[i].currency,
+        mapLocation: f.mapLocation || jobs[i].mapLocation,
+        smartOpen: false,
+      });
+      toast.success(`Smart Fill applied to job #${i + 1}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Smart Fill failed");
+    }
+  }
+
+  function applySmartListing(i: number) {
+    const raw = listings[i]?.smartRaw?.trim() || "";
+    if (raw.length < 12) {
+      toast.error("Paste more text for Smart Fill");
+      return;
+    }
+    try {
+      const f = parseMagicListingRaw(raw);
+      updateListing(i, {
+        title: f.title || listings[i].title,
+        description: f.description || listings[i].description,
+        category: f.category || listings[i].category,
+        subcategory: f.subcategory || listings[i].subcategory,
+        condition: f.condition || listings[i].condition,
+        price: f.price || listings[i].price,
+        currency: f.currency || listings[i].currency,
+        country: f.country || listings[i].country,
+        city: f.city || listings[i].city,
+        contact_phone: f.contact_phone || listings[i].contact_phone,
+        rentalPeriod: f.rentalPeriod || listings[i].rentalPeriod,
+        smartOpen: false,
+      });
+      toast.success(`Smart Fill applied to listing #${i + 1}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Smart Fill failed");
+    }
+  }
+
+
   async function submitJobs() {
     const payload = jobs
       .filter((j) => j.jobTitle.trim() && j.jobDescription.trim())
-      .map(({ open: _o, ...rest }) => rest);
+      .map(({ open: _o, smartRaw: _s, smartOpen: _so, ...rest }) => rest);
     if (!payload.length) {
       toast.error("Add at least one job with title and description");
       return;
@@ -182,7 +265,7 @@ export default function BulkClient() {
   async function submitMarket() {
     const payload = listings
       .filter((l) => l.title.trim() && l.description.trim())
-      .map(({ open: _o, ...rest }) => rest);
+      .map(({ open: _o, smartRaw: _s, smartOpen: _so, ...rest }) => rest);
     if (!payload.length) {
       toast.error("Add at least one listing with title and description");
       return;
@@ -286,6 +369,43 @@ export default function BulkClient() {
 
               {row.open && (
                 <div className="p-4 space-y-4">
+                  <div className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-3 space-y-2">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1.5 text-xs font-medium text-violet-300"
+                      onClick={() =>
+                        updateJob(i, { smartOpen: !row.smartOpen })
+                      }
+                    >
+                      <Wand2 className="h-3.5 w-3.5" />
+                      Smart Fill
+                      <span className="text-muted-foreground font-normal">
+                        — paste raw job text (same engine as Post a Job)
+                      </span>
+                    </button>
+                    {row.smartOpen && (
+                      <>
+                        <textarea
+                          className={cn(areaCls, "font-mono text-xs min-h-[100px]")}
+                          value={row.smartRaw}
+                          onChange={(e) =>
+                            updateJob(i, { smartRaw: e.target.value })
+                          }
+                          placeholder={"Job Title\nCompany: …\nCity: …\n\nDescription…"}
+                          spellCheck={false}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="gap-1.5 bg-violet-600 hover:bg-violet-500 text-white"
+                          onClick={() => applySmartJob(i)}
+                        >
+                          <Wand2 className="h-3.5 w-3.5" />
+                          Fill this job from text
+                        </Button>
+                      </>
+                    )}
+                  </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                       <label className={labelCls}>Job title *</label>
@@ -598,6 +718,43 @@ export default function BulkClient() {
 
                 {row.open && (
                   <div className="p-4 space-y-4">
+                    <div className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-3 space-y-2">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1.5 text-xs font-medium text-violet-300"
+                        onClick={() =>
+                          updateListing(i, { smartOpen: !row.smartOpen })
+                        }
+                      >
+                        <Wand2 className="h-3.5 w-3.5" />
+                        Smart Fill
+                        <span className="text-muted-foreground font-normal">
+                          — paste raw listing text (same engine as Post a Listing)
+                        </span>
+                      </button>
+                      {row.smartOpen && (
+                        <>
+                          <textarea
+                            className={cn(areaCls, "font-mono text-xs min-h-[100px]")}
+                            value={row.smartRaw}
+                            onChange={(e) =>
+                              updateListing(i, { smartRaw: e.target.value })
+                            }
+                            placeholder={"Title\nPrice: 5000 SAR\nCity: Riyadh\n\nDetails…"}
+                            spellCheck={false}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="gap-1.5 bg-violet-600 hover:bg-violet-500 text-white"
+                            onClick={() => applySmartListing(i)}
+                          >
+                            <Wand2 className="h-3.5 w-3.5" />
+                            Fill this listing from text
+                          </Button>
+                        </>
+                      )}
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="sm:col-span-2">
                         <label className={labelCls}>Title *</label>
