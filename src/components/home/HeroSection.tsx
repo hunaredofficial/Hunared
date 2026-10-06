@@ -100,7 +100,7 @@ export function HeroSection() {
       >
         <form
           onSubmit={handleSearch}
-          className="relative overflow-hidden rounded-2xl bg-card border border-border brand-glow p-6 sm:p-8 md:p-10 space-y-6"
+          className="relative overflow-visible rounded-2xl bg-card border border-border brand-glow p-6 sm:p-8 md:p-10 space-y-6"
         >
           <div className="text-center space-y-2.5">
             <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/8 px-3 py-0.5 text-[11px] sm:text-xs font-semibold tracking-wide text-primary uppercase">
