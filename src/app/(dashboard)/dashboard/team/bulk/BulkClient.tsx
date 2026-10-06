@@ -31,9 +31,14 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
 import {
-  parseMagicJobRaw,
-  parseMagicListingRaw,
-} from "@/lib/magicPostParser";
+  parseJobText,
+  hasSuggestions,
+  type SmartJobParseResult,
+} from "@/lib/smartJobParser";
+import {
+  parseListingText,
+  type SmartListingParseResult,
+} from "@/lib/smartListingParser";
 
 type JobRow = {
   jobTitle: string;
@@ -95,7 +100,7 @@ const emptyJob = (): JobRow => ({
   mapLocation: "",
   open: true,
   smartRaw: "",
-  smartOpen: false,
+  smartOpen: true,
 });
 
 const emptyMarket = (): MarketRow => ({
@@ -161,75 +166,178 @@ export default function BulkClient() {
     );
   }
 
+
+  function val<T>(f?: { value: T } | null | undefined): T | undefined {
+    return f?.value;
+  }
+
+  /** Same apply-all logic as Post a Job Smart Fill */
+  function fieldsFromJobParse(
+    result: SmartJobParseResult,
+    blob: string
+  ): Partial<JobRow> {
+    const patch: Partial<JobRow> = {};
+    const title = val(result.jobTitle);
+    if (title) patch.jobTitle = String(title).trim();
+
+    let desc = val(result.jobDescription);
+    if (desc) {
+      patch.jobDescription = String(desc).trim();
+    } else {
+      // Strip common labeled header lines from blob so description is clean
+      const cleaned = blob
+        .split("\n")
+        .filter((line) => {
+          const s = line.trim();
+          if (!s) return true;
+          return !/^(job\s*title|title|company(\s*name)?|category|categories|country|city|currency|salary|rate|duration|employment|job\s*type|phone|whatsapp|email|positions?|vacancies|work\s*location|location\s*link|office\s*location|map)\s*[:\-]/i.test(
+            s
+          );
+        })
+        .join("\n")
+        .trim();
+      if (cleaned) patch.jobDescription = cleaned;
+    }
+
+    if (val(result.companyName))
+      patch.companyName = String(val(result.companyName)).trim();
+    if (val(result.companyPhone))
+      patch.companyPhone = String(val(result.companyPhone)).trim();
+    if (val(result.companyEmail))
+      patch.companyEmail = String(val(result.companyEmail)).trim();
+    if (val(result.companyAddress))
+      patch.companyAddress = String(val(result.companyAddress)).trim();
+    if (val(result.country))
+      patch.country = String(val(result.country)).trim();
+    if (val(result.city)) patch.city = String(val(result.city)).trim();
+    if (val(result.workLocation))
+      patch.workLocation = String(val(result.workLocation)).trim();
+    if (val(result.mapLocation))
+      patch.mapLocation = String(val(result.mapLocation)).trim();
+    if (val(result.positions))
+      patch.positions = String(val(result.positions)).trim();
+    if (val(result.salaryRate))
+      patch.salaryRate = String(val(result.salaryRate)).trim();
+    if (val(result.salaryType))
+      patch.salaryType = String(val(result.salaryType)).trim();
+    if (val(result.currency))
+      patch.currency = String(val(result.currency)).trim();
+
+    const cats = val(result.categories);
+    const cat = val(result.category);
+    if (cats?.length) patch.category = String(cats[0]);
+    else if (cat) patch.category = String(cat);
+
+    let duration = val(result.duration)
+      ? String(val(result.duration)).trim()
+      : "";
+    let emp = val(result.employmentType)
+      ? String(val(result.employmentType)).toLowerCase().trim()
+      : "";
+    if (duration === "Permanent") emp = "permanent";
+    else if (duration && !emp) emp = "temporary";
+    if (emp === "permanent" || emp === "temporary") {
+      patch.employmentType = emp;
+    }
+    if (duration) patch.duration = duration;
+    else if (emp === "permanent") patch.duration = "Permanent";
+
+    return patch;
+  }
+
   function applySmartJob(i: number) {
-    const raw = jobs[i]?.smartRaw?.trim() || "";
-    if (raw.length < 12) {
-      toast.error("Paste more text for Smart Fill");
+    const row = jobs[i];
+    if (!row) return;
+    // Prefer Smart Fill box; else title+description (same as Post a Job)
+    const blob = (
+      row.smartRaw.trim() ||
+      `${row.jobTitle}\n${row.jobDescription}`
+    ).trim();
+    if (blob.length < 12) {
+      toast.error("Paste job text into Smart Fill or description first");
       return;
     }
     try {
-      const f = parseMagicJobRaw(raw);
-      const emp =
-        f.employmentType === "temporary" ||
-        (f.duration && f.duration !== "Permanent")
-          ? "temporary"
-          : "permanent";
+      // Same engine as /dashboard/jobs/new
+      const firstLine =
+        blob.split("\n").map((l) => l.trim()).find(Boolean) || "";
+      const result = parseJobText(firstLine.slice(0, 180), blob);
+      if (!hasSuggestions(result) && !result.jobTitle && !result.jobDescription) {
+        toast.message("No fields detected — try labeled text (Company:, City:, …)");
+      }
+      const patch = fieldsFromJobParse(result, blob);
+      // Ensure title from first line if parser missed
+      if (!patch.jobTitle && firstLine && !/^job\s*title/i.test(firstLine)) {
+        patch.jobTitle = firstLine.replace(/^job\s*title\s*:\s*/i, "").slice(0, 180);
+      }
       updateJob(i, {
-        jobTitle: f.jobTitle || jobs[i].jobTitle,
-        jobDescription: f.jobDescription || jobs[i].jobDescription,
-        companyName: f.companyName || jobs[i].companyName,
-        companyPhone: f.companyPhone || jobs[i].companyPhone,
-        companyEmail: f.companyEmail || jobs[i].companyEmail,
-        companyAddress: f.companyAddress || jobs[i].companyAddress,
-        country: f.country || jobs[i].country,
-        city: f.city || jobs[i].city,
-        workLocation: f.workLocation || jobs[i].workLocation,
-        employmentType: emp,
-        duration:
-          f.duration ||
-          (emp === "permanent" ? "Permanent" : jobs[i].duration),
-        category: f.category || f.categories?.[0] || jobs[i].category,
-        positions: f.positions || jobs[i].positions,
-        salaryType: f.salaryType || jobs[i].salaryType,
-        salaryRate: f.salaryRate || jobs[i].salaryRate,
-        currency: f.currency || jobs[i].currency,
-        mapLocation: f.mapLocation || jobs[i].mapLocation,
+        ...patch,
         smartOpen: false,
+        // keep smartRaw so user can re-run
       });
-      toast.success(`Smart Fill applied to job #${i + 1}`);
+      const filled = Object.keys(patch).filter((k) => k !== "open").length;
+      toast.success(
+        filled
+          ? `Smart Fill applied ${filled} fields on job #${i + 1}`
+          : `Parsed job #${i + 1} — review fields`
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Smart Fill failed");
     }
   }
 
   function applySmartListing(i: number) {
-    const raw = listings[i]?.smartRaw?.trim() || "";
-    if (raw.length < 12) {
-      toast.error("Paste more text for Smart Fill");
+    const row = listings[i];
+    if (!row) return;
+    const blob = (
+      row.smartRaw.trim() ||
+      `${row.title}\n${row.description}`
+    ).trim();
+    if (blob.length < 12) {
+      toast.error("Paste listing text into Smart Fill or description first");
       return;
     }
     try {
-      const f = parseMagicListingRaw(raw);
-      updateListing(i, {
-        title: f.title || listings[i].title,
-        description: f.description || listings[i].description,
-        category: f.category || listings[i].category,
-        subcategory: f.subcategory || listings[i].subcategory,
-        condition: f.condition || listings[i].condition,
-        price: f.price || listings[i].price,
-        currency: f.currency || listings[i].currency,
-        country: f.country || listings[i].country,
-        city: f.city || listings[i].city,
-        contact_phone: f.contact_phone || listings[i].contact_phone,
-        rentalPeriod: f.rentalPeriod || listings[i].rentalPeriod,
-        smartOpen: false,
-      });
-      toast.success(`Smart Fill applied to listing #${i + 1}`);
+      const firstLine =
+        blob.split("\n").map((l) => l.trim()).find(Boolean) || "";
+      const result: SmartListingParseResult = parseListingText(
+        firstLine.slice(0, 180),
+        blob
+      );
+      const patch: Partial<MarketRow> = {};
+      if (firstLine) {
+        patch.title = firstLine
+          .replace(/^(title|listing)\s*:\s*/i, "")
+          .slice(0, 180);
+      }
+      const body = blob
+        .split("\n")
+        .slice(1)
+        .join("\n")
+        .trim();
+      if (body) patch.description = body;
+      if (val(result.category)) patch.category = String(val(result.category));
+      if (val(result.subcategory))
+        patch.subcategory = String(val(result.subcategory));
+      if (val(result.condition))
+        patch.condition = String(val(result.condition));
+      if (val(result.price)) patch.price = String(val(result.price));
+      if (val(result.currency)) patch.currency = String(val(result.currency));
+      if (val(result.country)) patch.country = String(val(result.country));
+      if (val(result.city)) patch.city = String(val(result.city));
+      if (val(result.contactPhone))
+        patch.contact_phone = String(val(result.contactPhone));
+      if (val(result.rentalPeriod))
+        patch.rentalPeriod = String(val(result.rentalPeriod));
+      if (val(result.suggestedDescription))
+        patch.description = String(val(result.suggestedDescription));
+
+      updateListing(i, { ...patch, smartOpen: false });
+      toast.success(`Smart Fill applied on listing #${i + 1}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Smart Fill failed");
     }
   }
-
 
   async function submitJobs() {
     const payload = jobs
@@ -380,7 +488,7 @@ export default function BulkClient() {
                       <Wand2 className="h-3.5 w-3.5" />
                       Smart Fill
                       <span className="text-muted-foreground font-normal">
-                        — paste raw job text (same engine as Post a Job)
+                        — same engine as Post a Job (Apply all fields)
                       </span>
                     </button>
                     {row.smartOpen && (
@@ -391,18 +499,24 @@ export default function BulkClient() {
                           onChange={(e) =>
                             updateJob(i, { smartRaw: e.target.value })
                           }
-                          placeholder={"Job Title\nCompany: …\nCity: …\n\nDescription…"}
+                          placeholder={"Job Title: Helper\nCompany Name: Arabian Experts\nCity: Jubail\nCountry: Saudi Arabia\nDuration: Long Term\n\nJob Description:\n- Assist skilled workers…"}
                           spellCheck={false}
                         />
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="gap-1.5 bg-violet-600 hover:bg-violet-500 text-white"
-                          onClick={() => applySmartJob(i)}
-                        >
-                          <Wand2 className="h-3.5 w-3.5" />
-                          Fill this job from text
-                        </Button>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="gap-1.5 bg-violet-600 hover:bg-violet-500 text-white"
+                            onClick={() => applySmartJob(i)}
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Apply all detected fields
+                          </Button>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Paste into the box above <em>or</em> into Job title / description,
+                          then click Apply — same parser as Post a Job.
+                        </p>
                       </>
                     )}
                   </div>
@@ -450,6 +564,12 @@ export default function BulkClient() {
                         }
                       >
                         <option value="">Select category</option>
+                        {row.category &&
+                          !(JOB_CATEGORIES as readonly string[]).includes(
+                            row.category
+                          ) && (
+                            <option value={row.category}>{row.category}</option>
+                          )}
                         {JOB_CATEGORIES.map((c) => (
                           <option key={c} value={c}>
                             {c}
