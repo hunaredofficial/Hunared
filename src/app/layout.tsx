@@ -47,14 +47,17 @@ export const metadata: Metadata = {
     shortcut: "/assets/logos/hunared-mark-v4-32.png",
     apple: [{ url: "/assets/logos/hunared-mark-v4-192.png", sizes: "192x192", type: "image/png" }],
   },
+  // Site under development — block search indexing until launch
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
+    nocache: true,
     googleBot: {
-      index: true,
-      follow: true,
+      index: false,
+      follow: false,
+      noimageindex: true,
       "max-video-preview": -1,
-      "max-image-preview": "large",
+      "max-image-preview": "none",
       "max-snippet": -1,
     },
   },
@@ -97,7 +100,7 @@ export default function RootLayout({
         >
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="system"
             enableSystem
             themes={["light", "dark"]}
             disableTransitionOnChange
@@ -105,7 +108,7 @@ export default function RootLayout({
             <GeoProvider>
               <TooltipProvider>
                 <NextTopLoader
-                  color="#6366f1"
+                  color="#3b82f6"
                   height={3}
                   showSpinner={false}
                   easing="ease"
