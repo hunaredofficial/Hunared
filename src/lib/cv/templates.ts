@@ -10,9 +10,9 @@ export type CvTemplateMeta = {
   ats?: boolean;
 };
 
+/** Display list — Classic ATS and Minimal Image removed; photo names simplified. */
 export const CV_TEMPLATES: CvTemplateMeta[] = [
-  { id: "ats", name: "Classic ATS", desc: "Single column, max ATS safety", accent: "#0f172a", category: "ATS / Classic", ats: true },
-  { id: "classic", name: "Classic", desc: "Traditional corporate", accent: "#1e293b", category: "ATS / Classic", ats: true },
+  { id: "classic", name: "Classic", desc: "Traditional corporate · ATS safe", accent: "#1e293b", category: "ATS / Classic", ats: true },
   { id: "professional", name: "Corporate Blue", desc: "Enterprise & Gulf corporate", accent: "#1d4ed8", category: "ATS / Classic", ats: true },
   { id: "modern", name: "Modern", desc: "Contemporary professional", accent: "#4f46e5", category: "Modern" },
   { id: "minimal", name: "Minimal", desc: "Clean whitespace focus", accent: "#334155", category: "Modern", ats: true },
@@ -31,9 +31,18 @@ export const CV_TEMPLATES: CvTemplateMeta[] = [
   { id: "hospitality", name: "Hospitality", desc: "Hotels & service", accent: "#be185d", category: "Service", photo: true },
   { id: "logistics", name: "Logistics", desc: "Supply chain", accent: "#0f766e", category: "Operations" },
   { id: "trades", name: "Skilled Trades", desc: "Technical trades", accent: "#b45309", category: "Trades" },
-  { id: "photo_pro", name: "Header with Image", desc: "Professional layout with profile photo", accent: "#1d4ed8", category: "With Photo", photo: true },
-  { id: "photo_exec", name: "Leadership Image", desc: "Executive layout with profile photo", accent: "#0f172a", category: "With Photo", photo: true },
-  { id: "photo_modern", name: "Modern Image", desc: "Contemporary layout with profile photo", accent: "#4f46e5", category: "With Photo", photo: true },
-  { id: "photo_gulf", name: "Gulf Image", desc: "Gulf professional layout with profile photo", accent: "#0f766e", category: "With Photo", photo: true },
-  { id: "photo_minimal", name: "Minimal Image", desc: "Clean minimal layout with profile photo", accent: "#334155", category: "With Photo", photo: true },
+  // With Photo (names simplified — no "Image" suffix)
+  { id: "photo_pro", name: "Professional", desc: "Layout with profile photo", accent: "#1d4ed8", category: "With Photo", photo: true },
+  { id: "photo_exec", name: "Leadership", desc: "Executive layout with profile photo", accent: "#0f172a", category: "With Photo", photo: true },
+  { id: "photo_modern", name: "Modern", desc: "Contemporary layout with profile photo", accent: "#4f46e5", category: "With Photo", photo: true },
+  { id: "photo_gulf", name: "Gulf", desc: "Gulf professional with profile photo", accent: "#0f766e", category: "With Photo", photo: true },
 ];
+
+/** Resolve legacy / removed template ids to a live template. */
+export function normalizeTemplateId(id: string | undefined | null): CvTemplateId {
+  if (!id) return "professional";
+  if (id === "ats") return "classic";
+  if (id === "photo_minimal") return "photo_pro";
+  if (CV_TEMPLATES.some((t) => t.id === id)) return id as CvTemplateId;
+  return "professional";
+}

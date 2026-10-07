@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { CV_TEMPLATES } from "@/lib/cv/templates";
+import { CV_TEMPLATES, normalizeTemplateId } from "@/lib/cv/templates";
 import {
   DEFAULT_CV,
   EMPTY_EDUCATION,
@@ -701,7 +701,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed & { role?: string
                         const reader = new FileReader();
                         reader.onload = () => {
                           const url = String(reader.result || "");
-                          const photoTemplates = ["photo_pro","photo_exec","photo_modern","photo_gulf","photo_minimal","hospitality"];
+                          const photoTemplates = ["photo_pro","photo_exec","photo_modern","photo_gulf","hospitality"];
                           const nextTemplate = photoTemplates.includes(data.template)
                             ? data.template
                             : "photo_pro";
@@ -726,7 +726,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed & { role?: string
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => patch({ template: t.id })}
+                    onClick={() => patch({ template: normalizeTemplateId(t.id) })}
                     className={cn(
                       "text-left rounded-lg border p-2.5 transition-all",
                       data.template === t.id

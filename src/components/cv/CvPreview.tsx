@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { CvData, CvSectionKey } from "@/lib/cv/types";
-import { CV_TEMPLATES } from "@/lib/cv/templates";
+import { CV_TEMPLATES, normalizeTemplateId } from "@/lib/cv/templates";
 
 function templateAllowsPhoto(templateId: string): boolean {
   const meta = CV_TEMPLATES.find((x) => x.id === templateId);
@@ -54,13 +54,14 @@ export function CvPreview({
   data: CvData;
   className?: string;
 }) {
-  const meta = CV_TEMPLATES.find((t) => t.id === data.template) || CV_TEMPLATES[0];
+  const templateId = normalizeTemplateId(data.template);
+  const meta = CV_TEMPLATES.find((t) => t.id === templateId) || CV_TEMPLATES[0];
   const accent = meta.accent;
   const order = data.sectionOrder?.length
     ? data.sectionOrder
     : (Object.keys(SECTION_LABELS) as CvSectionKey[]);
 
-  const isAts = data.template === "ats" || data.template === "classic";
+  const isAts = templateId === "ats" || templateId === "classic" || !!meta.ats;
   const isSidebar =
     data.template === "modern" || data.template === "tech" || data.template === "hse";
 
@@ -228,7 +229,7 @@ export function CvPreview({
         }
       >
         <div className="flex items-start gap-3">
-          {data.photoUrl && templateAllowsPhoto(data.template) ? (
+          {data.photoUrl && templateAllowsPhoto(templateId) ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.photoUrl}
