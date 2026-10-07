@@ -321,9 +321,7 @@ export default function BulkClient() {
     if (val(r2.mapLocation)) patch.mapLocation = String(val(r2.mapLocation));
     if (val(r2.workLocation)) patch.workLocation = String(val(r2.workLocation));
     if (val(r2.positions)) patch.positions = String(val(r2.positions));
-    // Clean description if parser extracted body
-    if (val(r2.jobDescription))
-      patch.jobDescription = String(val(r2.jobDescription));
+    // Never overwrite description — user pasted text must stay as-is
     updateJob(i, { ...patch, smartDismissed: true });
     toast.success(`Smart Fill applied to job #${i + 1}`);
   }
