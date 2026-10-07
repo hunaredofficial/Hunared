@@ -1,11 +1,12 @@
 "use client";
 
 /**
- * Team Bulk Post — same field set as single Job / Marketplace forms.
- * Add multiple rows, then publish all at once (auto-approved).
+ * Team Bulk Post — full job & marketplace fields (same as single post forms).
+ * Multiple rows → publish all at once. Auto Smart Fill uses the same
+ * parseJobText + SmartJobFillPanel engine as Post a Job (no separate Magic box).
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -16,8 +17,6 @@ import {
   ChevronUp,
   Briefcase,
   Store,
-  Sparkles,
-  Wand2,
 } from "lucide-react";
 import {
   JOB_CATEGORIES,
@@ -39,6 +38,10 @@ import {
   parseListingText,
   type SmartListingParseResult,
 } from "@/lib/smartListingParser";
+import {
+  SmartJobFillPanel,
+  type SmartFillFieldKey,
+} from "@/components/jobs/SmartJobFill";
 
 type JobRow = {
   jobTitle: string;
@@ -59,8 +62,9 @@ type JobRow = {
   currency: string;
   mapLocation: string;
   open: boolean;
-  smartRaw: string;
-  smartOpen: boolean;
+  smartStatus: "idle" | "analyzing" | "found" | "empty";
+  smartResult: SmartJobParseResult | null;
+  smartDismissed: boolean;
 };
 
 type MarketRow = {
@@ -76,8 +80,6 @@ type MarketRow = {
   contact_phone: string;
   rentalPeriod: string;
   open: boolean;
-  smartRaw: string;
-  smartOpen: boolean;
 };
 
 const emptyJob = (): JobRow => ({
@@ -99,8 +101,9 @@ const emptyJob = (): JobRow => ({
   currency: "SAR",
   mapLocation: "",
   open: true,
-  smartRaw: "",
-  smartOpen: true,
+  smartStatus: "idle",
+  smartResult: null,
+  smartDismissed: false,
 });
 
 const emptyMarket = (): MarketRow => ({
@@ -116,15 +119,32 @@ const emptyMarket = (): MarketRow => ({
   contact_phone: "",
   rentalPeriod: "",
   open: true,
-  smartRaw: "",
-  smartOpen: false,
 });
 
 const inputCls =
   "w-full h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 const labelCls = "text-xs font-medium text-muted-foreground block mb-1";
 const areaCls =
-  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground min-h-[88px] resize-y focus:outline-none focus:ring-2 focus:ring-ring";
+  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground min-h-[100px] resize-y focus:outline-none focus:ring-2 focus:ring-ring";
+
+const CURRENCY_OPTS = [
+  "SAR",
+  "AED",
+  "QAR",
+  "KWD",
+  "BHD",
+  "OMR",
+  "USD",
+  "EUR",
+  "GBP",
+  "PKR",
+  "INR",
+  "EGP",
+];
+
+function val<T>(f?: { value: T } | null | undefined): T | undefined {
+  return f?.value;
+}
 
 export default function BulkClient() {
   const [jobs, setJobs] = useState<JobRow[]>([emptyJob()]);
@@ -132,6 +152,7 @@ export default function BulkClient() {
   const [jobsLoading, setJobsLoading] = useState(false);
   const [marketLoading, setMarketLoading] = useState(false);
   const [lastResult, setLastResult] = useState("");
+  const jobTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const jobCount = useMemo(
     () => jobs.filter((j) => j.jobTitle.trim() && j.jobDescription.trim()).length,
@@ -147,12 +168,11 @@ export default function BulkClient() {
       prev.map((row, idx) => {
         if (idx !== i) return row;
         const next = { ...row, ...patch };
-        // Keep employment type in sync with duration (same as job form)
         if (patch.duration !== undefined) {
           next.employmentType =
             patch.duration === "Permanent" ? "permanent" : "temporary";
         }
-        if (patch.employmentType === "permanent" && !patch.duration) {
+        if (patch.employmentType === "permanent" && patch.duration === undefined) {
           next.duration = "Permanent";
         }
         return next;
@@ -166,161 +186,146 @@ export default function BulkClient() {
     );
   }
 
-
-  function val<T>(f?: { value: T } | null | undefined): T | undefined {
-    return f?.value;
-  }
-
-  /** Same apply-all logic as Post a Job Smart Fill */
-  function fieldsFromJobParse(
-    result: SmartJobParseResult,
-    blob: string
-  ): Partial<JobRow> {
-    const patch: Partial<JobRow> = {};
-    const title = val(result.jobTitle);
-    if (title) patch.jobTitle = String(title).trim();
-
-    let desc = val(result.jobDescription);
-    if (desc) {
-      patch.jobDescription = String(desc).trim();
-    } else {
-      // Strip common labeled header lines from blob so description is clean
-      const cleaned = blob
-        .split("\n")
-        .filter((line) => {
-          const s = line.trim();
-          if (!s) return true;
-          return !/^(job\s*title|title|company(\s*name)?|category|categories|country|city|currency|salary|rate|duration|employment|job\s*type|phone|whatsapp|email|positions?|vacancies|work\s*location|location\s*link|office\s*location|map)\s*[:\-]/i.test(
-            s
-          );
-        })
-        .join("\n")
-        .trim();
-      if (cleaned) patch.jobDescription = cleaned;
+  /** Same engine as Post a Job — debounce on title/description */
+  const runJobSmart = useCallback((i: number, title: string, description: string) => {
+    if (jobTimers.current[i]) clearTimeout(jobTimers.current[i]);
+    const blob = `${title}\n${description}`.trim();
+    if (blob.length < 20) {
+      updateJob(i, { smartStatus: "idle", smartResult: null, smartDismissed: false });
+      return;
     }
+    updateJob(i, { smartStatus: "analyzing", smartDismissed: false });
+    jobTimers.current[i] = setTimeout(() => {
+      try {
+        const result = parseJobText(title.slice(0, 180), description || blob);
+        const found = hasSuggestions(result);
+        updateJob(i, {
+          smartStatus: found ? "found" : "empty",
+          smartResult: result,
+        });
+      } catch {
+        updateJob(i, { smartStatus: "empty", smartResult: null });
+      }
+    }, 450);
+  }, []);
 
-    if (val(result.companyName))
-      patch.companyName = String(val(result.companyName)).trim();
-    if (val(result.companyPhone))
-      patch.companyPhone = String(val(result.companyPhone)).trim();
-    if (val(result.companyEmail))
-      patch.companyEmail = String(val(result.companyEmail)).trim();
-    if (val(result.companyAddress))
-      patch.companyAddress = String(val(result.companyAddress)).trim();
-    if (val(result.country))
-      patch.country = String(val(result.country)).trim();
-    if (val(result.city)) patch.city = String(val(result.city)).trim();
-    if (val(result.workLocation))
-      patch.workLocation = String(val(result.workLocation)).trim();
-    if (val(result.mapLocation))
-      patch.mapLocation = String(val(result.mapLocation)).trim();
-    if (val(result.positions))
-      patch.positions = String(val(result.positions)).trim();
-    if (val(result.salaryRate))
-      patch.salaryRate = String(val(result.salaryRate)).trim();
-    if (val(result.salaryType))
-      patch.salaryType = String(val(result.salaryType)).trim();
-    if (val(result.currency))
-      patch.currency = String(val(result.currency)).trim();
-
-    const cats = val(result.categories);
-    const cat = val(result.category);
-    if (cats?.length) patch.category = String(cats[0]);
-    else if (cat) patch.category = String(cat);
-
-    let duration = val(result.duration)
-      ? String(val(result.duration)).trim()
-      : "";
-    let emp = val(result.employmentType)
-      ? String(val(result.employmentType)).toLowerCase().trim()
-      : "";
-    if (duration === "Permanent") emp = "permanent";
-    else if (duration && !emp) emp = "temporary";
-    if (emp === "permanent" || emp === "temporary") {
-      patch.employmentType = emp;
-    }
-    if (duration) patch.duration = duration;
-    else if (emp === "permanent") patch.duration = "Permanent";
-
-    return patch;
-  }
-
-  function applySmartJob(i: number) {
+  function applyJobField(i: number, key: SmartFillFieldKey) {
     const row = jobs[i];
-    if (!row) return;
-    // Prefer Smart Fill box; else title+description (same as Post a Job)
-    const blob = (
-      row.smartRaw.trim() ||
-      `${row.jobTitle}\n${row.jobDescription}`
-    ).trim();
-    if (blob.length < 12) {
-      toast.error("Paste job text into Smart Fill or description first");
-      return;
+    const r = row?.smartResult;
+    if (!r) return;
+    const patch: Partial<JobRow> = {};
+    if (key === "jobTitle" && val(r.jobTitle)) patch.jobTitle = String(val(r.jobTitle));
+    if (key === "category" && val(r.category)) patch.category = String(val(r.category));
+    if (key === "categories" && val(r.categories)?.length)
+      patch.category = String(val(r.categories)![0]);
+    if (key === "country" && val(r.country)) patch.country = String(val(r.country));
+    if (key === "city" && val(r.city)) patch.city = String(val(r.city));
+    if (key === "currency" && val(r.currency)) patch.currency = String(val(r.currency));
+    if (key === "salaryRate" && val(r.salaryRate))
+      patch.salaryRate = String(val(r.salaryRate));
+    if (key === "salaryType" && val(r.salaryType))
+      patch.salaryType = String(val(r.salaryType));
+    if (key === "duration" && val(r.duration)) {
+      patch.duration = String(val(r.duration));
+      patch.employmentType =
+        patch.duration === "Permanent" ? "permanent" : "temporary";
     }
-    try {
-      // Same engine as /dashboard/jobs/new
-      const firstLine =
-        blob.split("\n").map((l) => l.trim()).find(Boolean) || "";
-      const result = parseJobText(firstLine.slice(0, 180), blob);
-      if (!hasSuggestions(result) && !result.jobTitle && !result.jobDescription) {
-        toast.message("No fields detected — try labeled text (Company:, City:, …)");
-      }
-      const patch = fieldsFromJobParse(result, blob);
-      // Ensure title from first line if parser missed
-      if (!patch.jobTitle && firstLine && !/^job\s*title/i.test(firstLine)) {
-        patch.jobTitle = firstLine.replace(/^job\s*title\s*:\s*/i, "").slice(0, 180);
-      }
-      updateJob(i, {
-        ...patch,
-        smartOpen: false,
-        // keep smartRaw so user can re-run
-      });
-      const filled = Object.keys(patch).filter((k) => k !== "open").length;
-      toast.success(
-        filled
-          ? `Smart Fill applied ${filled} fields on job #${i + 1}`
-          : `Parsed job #${i + 1} — review fields`
-      );
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Smart Fill failed");
+    if (key === "employmentType" && val(r.employmentType)) {
+      const e = String(val(r.employmentType)).toLowerCase();
+      if (e === "permanent" || e === "temporary") patch.employmentType = e;
     }
+    if (key === "companyName" && val(r.companyName))
+      patch.companyName = String(val(r.companyName));
+    if (key === "companyPhone" && val(r.companyPhone))
+      patch.companyPhone = String(val(r.companyPhone));
+    if (key === "companyEmail" && val(r.companyEmail))
+      patch.companyEmail = String(val(r.companyEmail));
+    if (key === "companyAddress" && val(r.companyAddress))
+      patch.companyAddress = String(val(r.companyAddress));
+    if (key === "mapLocation" && val(r.mapLocation))
+      patch.mapLocation = String(val(r.mapLocation));
+    if (key === "workLocation" && val(r.workLocation))
+      patch.workLocation = String(val(r.workLocation));
+    if (key === "positions" && val(r.positions))
+      patch.positions = String(val(r.positions));
+    updateJob(i, patch);
   }
 
-  function applySmartListing(i: number) {
-    const row = listings[i];
-    if (!row) return;
-    const blob = (
-      row.smartRaw.trim() ||
-      `${row.title}\n${row.description}`
-    ).trim();
-    if (blob.length < 12) {
-      toast.error("Paste listing text into Smart Fill or description first");
-      return;
+  function applyAllJobSmart(i: number) {
+    const r = jobs[i]?.smartResult;
+    if (!r) return;
+    const keys: SmartFillFieldKey[] = [
+      "jobTitle",
+      "category",
+      "categories",
+      "country",
+      "city",
+      "currency",
+      "salaryRate",
+      "salaryType",
+      "duration",
+      "employmentType",
+      "companyName",
+      "companyPhone",
+      "companyEmail",
+      "companyAddress",
+      "mapLocation",
+      "workLocation",
+      "positions",
+    ];
+    // Apply sequentially into one patch
+    let patch: Partial<JobRow> = {};
+    const row = jobs[i];
+    const r2 = row.smartResult!;
+    if (val(r2.jobTitle)) patch.jobTitle = String(val(r2.jobTitle));
+    if (val(r2.categories)?.length) patch.category = String(val(r2.categories)![0]);
+    else if (val(r2.category)) patch.category = String(val(r2.category));
+    if (val(r2.country)) patch.country = String(val(r2.country));
+    if (val(r2.city)) patch.city = String(val(r2.city));
+    if (val(r2.currency)) patch.currency = String(val(r2.currency));
+    if (val(r2.salaryRate)) patch.salaryRate = String(val(r2.salaryRate));
+    if (val(r2.salaryType)) patch.salaryType = String(val(r2.salaryType));
+    if (val(r2.duration)) {
+      patch.duration = String(val(r2.duration));
+      patch.employmentType =
+        patch.duration === "Permanent" ? "permanent" : "temporary";
     }
+    if (val(r2.employmentType)) {
+      const e = String(val(r2.employmentType)).toLowerCase();
+      if (e === "permanent" || e === "temporary") patch.employmentType = e as "permanent" | "temporary";
+    }
+    if (val(r2.companyName)) patch.companyName = String(val(r2.companyName));
+    if (val(r2.companyPhone)) patch.companyPhone = String(val(r2.companyPhone));
+    if (val(r2.companyEmail)) patch.companyEmail = String(val(r2.companyEmail));
+    if (val(r2.companyAddress))
+      patch.companyAddress = String(val(r2.companyAddress));
+    if (val(r2.mapLocation)) patch.mapLocation = String(val(r2.mapLocation));
+    if (val(r2.workLocation)) patch.workLocation = String(val(r2.workLocation));
+    if (val(r2.positions)) patch.positions = String(val(r2.positions));
+    // Clean description if parser extracted body
+    if (val(r2.jobDescription))
+      patch.jobDescription = String(val(r2.jobDescription));
+    updateJob(i, { ...patch, smartDismissed: true });
+    toast.success(`Smart Fill applied to job #${i + 1}`);
+  }
+
+  /** Market: auto-apply high-confidence fields after paste (same parser as listing form) */
+  function onMarketDescriptionChange(i: number, description: string) {
+    updateListing(i, { description });
+    const row = listings[i];
+    const title = row?.title || "";
+    const blob = `${title}\n${description}`.trim();
+    if (blob.length < 24) return;
     try {
-      const firstLine =
-        blob.split("\n").map((l) => l.trim()).find(Boolean) || "";
       const result: SmartListingParseResult = parseListingText(
-        firstLine.slice(0, 180),
-        blob
+        title.slice(0, 180) || description.split("\n")[0]?.slice(0, 180) || "",
+        description
       );
       const patch: Partial<MarketRow> = {};
-      if (firstLine) {
-        patch.title = firstLine
-          .replace(/^(title|listing)\s*:\s*/i, "")
-          .slice(0, 180);
-      }
-      const body = blob
-        .split("\n")
-        .slice(1)
-        .join("\n")
-        .trim();
-      if (body) patch.description = body;
       if (val(result.category)) patch.category = String(val(result.category));
       if (val(result.subcategory))
         patch.subcategory = String(val(result.subcategory));
-      if (val(result.condition))
-        patch.condition = String(val(result.condition));
+      if (val(result.condition)) patch.condition = String(val(result.condition));
       if (val(result.price)) patch.price = String(val(result.price));
       if (val(result.currency)) patch.currency = String(val(result.currency));
       if (val(result.country)) patch.country = String(val(result.country));
@@ -329,20 +334,26 @@ export default function BulkClient() {
         patch.contact_phone = String(val(result.contactPhone));
       if (val(result.rentalPeriod))
         patch.rentalPeriod = String(val(result.rentalPeriod));
-      if (val(result.suggestedDescription))
-        patch.description = String(val(result.suggestedDescription));
-
-      updateListing(i, { ...patch, smartOpen: false });
-      toast.success(`Smart Fill applied on listing #${i + 1}`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Smart Fill failed");
+      if (Object.keys(patch).length) {
+        updateListing(i, patch);
+      }
+    } catch {
+      /* ignore */
     }
   }
 
   async function submitJobs() {
     const payload = jobs
       .filter((j) => j.jobTitle.trim() && j.jobDescription.trim())
-      .map(({ open: _o, smartRaw: _s, smartOpen: _so, ...rest }) => rest);
+      .map(
+        ({
+          open: _o,
+          smartStatus: _s,
+          smartResult: _r,
+          smartDismissed: _d,
+          ...rest
+        }) => rest
+      );
     if (!payload.length) {
       toast.error("Add at least one job with title and description");
       return;
@@ -373,7 +384,7 @@ export default function BulkClient() {
   async function submitMarket() {
     const payload = listings
       .filter((l) => l.title.trim() && l.description.trim())
-      .map(({ open: _o, smartRaw: _s, smartOpen: _so, ...rest }) => rest);
+      .map(({ open: _o, ...rest }) => rest);
     if (!payload.length) {
       toast.error("Add at least one listing with title and description");
       return;
@@ -408,14 +419,15 @@ export default function BulkClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Team bulk post</h1>
         <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-          Same fields as the normal job and marketplace forms. Add multiple posts,
-          then publish all at once. Jobs auto-link to{" "}
-          <strong className="text-foreground">team-created company profiles</strong>{" "}
-          when the company name matches. Max 50 per submit. Posts are auto-approved.
+          Same fields as Post a Job / Post a Listing. Add multiple rows, then
+          publish all at once. Paste into title or description —{" "}
+          <strong className="text-foreground">Smart Fill</strong> appears
+          automatically (same engine as single post). Jobs auto-link to
+          team-created companies when the name matches. Max 50 per submit.
         </p>
       </div>
 
-      {/* ── Jobs ───────────────────────────────────────────── */}
+      {/* Jobs */}
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-semibold flex items-center gap-2">
@@ -477,56 +489,17 @@ export default function BulkClient() {
 
               {row.open && (
                 <div className="p-4 space-y-4">
-                  <div className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-3 space-y-2">
-                    <button
-                      type="button"
-                      className="flex items-center gap-1.5 text-xs font-medium text-violet-300"
-                      onClick={() =>
-                        updateJob(i, { smartOpen: !row.smartOpen })
-                      }
-                    >
-                      <Wand2 className="h-3.5 w-3.5" />
-                      Smart Fill
-                      <span className="text-muted-foreground font-normal">
-                        — same engine as Post a Job (Apply all fields)
-                      </span>
-                    </button>
-                    {row.smartOpen && (
-                      <>
-                        <textarea
-                          className={cn(areaCls, "font-mono text-xs min-h-[100px]")}
-                          value={row.smartRaw}
-                          onChange={(e) =>
-                            updateJob(i, { smartRaw: e.target.value })
-                          }
-                          placeholder={"Job Title: Helper\nCompany Name: Arabian Experts\nCity: Jubail\nCountry: Saudi Arabia\nDuration: Long Term\n\nJob Description:\n- Assist skilled workers…"}
-                          spellCheck={false}
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            className="gap-1.5 bg-violet-600 hover:bg-violet-500 text-white"
-                            onClick={() => applySmartJob(i)}
-                          >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            Apply all detected fields
-                          </Button>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          Paste into the box above <em>or</em> into Job title / description,
-                          then click Apply — same parser as Post a Job.
-                        </p>
-                      </>
-                    )}
-                  </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                       <label className={labelCls}>Job title *</label>
                       <input
                         className={inputCls}
                         value={row.jobTitle}
-                        onChange={(e) => updateJob(i, { jobTitle: e.target.value })}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          updateJob(i, { jobTitle: v });
+                          runJobSmart(i, v, row.jobDescription);
+                        }}
                         placeholder="e.g. Senior HSE Engineer"
                       />
                     </div>
@@ -535,13 +508,29 @@ export default function BulkClient() {
                       <textarea
                         className={areaCls}
                         value={row.jobDescription}
-                        onChange={(e) =>
-                          updateJob(i, { jobDescription: e.target.value })
-                        }
-                        placeholder="Role, responsibilities, requirements…"
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          updateJob(i, { jobDescription: v });
+                          runJobSmart(i, row.jobTitle, v);
+                        }}
+                        placeholder="Paste full job text or write description…"
                       />
                     </div>
+                  </div>
 
+                  <SmartJobFillPanel
+                    status={row.smartStatus}
+                    result={row.smartResult}
+                    dismissed={row.smartDismissed}
+                    onApplyAll={() => applyAllJobSmart(i)}
+                    onApplyOne={(key) => applyJobField(i, key)}
+                    onDismiss={() => updateJob(i, { smartDismissed: true })}
+                    onRefresh={() =>
+                      runJobSmart(i, row.jobTitle, row.jobDescription)
+                    }
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <div>
                       <label className={labelCls}>
                         Company name (links if team company matches)
@@ -577,7 +566,6 @@ export default function BulkClient() {
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className={labelCls}>Employment type</label>
                       <select
@@ -617,7 +605,6 @@ export default function BulkClient() {
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className={labelCls}>Country</label>
                       <select
@@ -640,10 +627,8 @@ export default function BulkClient() {
                         className={inputCls}
                         value={row.city}
                         onChange={(e) => updateJob(i, { city: e.target.value })}
-                        placeholder="City"
                       />
                     </div>
-
                     <div>
                       <label className={labelCls}>Work location / site</label>
                       <input
@@ -652,7 +637,6 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { workLocation: e.target.value })
                         }
-                        placeholder="Plant, site, area…"
                       />
                     </div>
                     <div>
@@ -663,10 +647,8 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { positions: e.target.value })
                         }
-                        placeholder="1"
                       />
                     </div>
-
                     <div>
                       <label className={labelCls}>Salary type</label>
                       <select
@@ -692,10 +674,8 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { salaryRate: e.target.value })
                         }
-                        placeholder="e.g. 5000"
                       />
                     </div>
-
                     <div>
                       <label className={labelCls}>Currency</label>
                       <select
@@ -705,7 +685,7 @@ export default function BulkClient() {
                           updateJob(i, { currency: e.target.value })
                         }
                       >
-                        {["SAR", "AED", "QAR", "KWD", "BHD", "OMR", "USD", "EUR", "GBP", "PKR", "INR", "EGP"].map((c) => (
+                        {CURRENCY_OPTS.map((c) => (
                           <option key={c} value={c}>
                             {c}
                           </option>
@@ -720,10 +700,8 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { companyPhone: e.target.value })
                         }
-                        placeholder="Optional for Team"
                       />
                     </div>
-
                     <div>
                       <label className={labelCls}>Company email</label>
                       <input
@@ -772,7 +750,7 @@ export default function BulkClient() {
         </Button>
       </section>
 
-      {/* ── Marketplace ────────────────────────────────────── */}
+      {/* Marketplace */}
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-semibold flex items-center gap-2">
@@ -816,11 +794,6 @@ export default function BulkClient() {
                     <span className="truncate">
                       {row.title.trim() || `Listing #${i + 1}`}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      ·{" "}
-                      {LISTING_CATEGORIES.find((c) => c.value === row.category)
-                        ?.label || row.category}
-                    </span>
                   </button>
                   <Button
                     type="button"
@@ -838,43 +811,6 @@ export default function BulkClient() {
 
                 {row.open && (
                   <div className="p-4 space-y-4">
-                    <div className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-3 space-y-2">
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 text-xs font-medium text-violet-300"
-                        onClick={() =>
-                          updateListing(i, { smartOpen: !row.smartOpen })
-                        }
-                      >
-                        <Wand2 className="h-3.5 w-3.5" />
-                        Smart Fill
-                        <span className="text-muted-foreground font-normal">
-                          — paste raw listing text (same engine as Post a Listing)
-                        </span>
-                      </button>
-                      {row.smartOpen && (
-                        <>
-                          <textarea
-                            className={cn(areaCls, "font-mono text-xs min-h-[100px]")}
-                            value={row.smartRaw}
-                            onChange={(e) =>
-                              updateListing(i, { smartRaw: e.target.value })
-                            }
-                            placeholder={"Title\nPrice: 5000 SAR\nCity: Riyadh\n\nDetails…"}
-                            spellCheck={false}
-                          />
-                          <Button
-                            type="button"
-                            size="sm"
-                            className="gap-1.5 bg-violet-600 hover:bg-violet-500 text-white"
-                            onClick={() => applySmartListing(i)}
-                          >
-                            <Wand2 className="h-3.5 w-3.5" />
-                            Fill this listing from text
-                          </Button>
-                        </>
-                      )}
-                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="sm:col-span-2">
                         <label className={labelCls}>Title *</label>
@@ -884,7 +820,6 @@ export default function BulkClient() {
                           onChange={(e) =>
                             updateListing(i, { title: e.target.value })
                           }
-                          placeholder="Listing title"
                         />
                       </div>
                       <div className="sm:col-span-2">
@@ -893,12 +828,15 @@ export default function BulkClient() {
                           className={areaCls}
                           value={row.description}
                           onChange={(e) =>
-                            updateListing(i, { description: e.target.value })
+                            onMarketDescriptionChange(i, e.target.value)
                           }
-                          placeholder="Details, condition, terms…"
+                          placeholder="Paste listing text or write details…"
                         />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Category, price, city and more auto-fill from pasted text
+                          (same parser as Post a Listing).
+                        </p>
                       </div>
-
                       <div>
                         <label className={labelCls}>Category</label>
                         <select
@@ -936,7 +874,6 @@ export default function BulkClient() {
                           ))}
                         </select>
                       </div>
-
                       <div>
                         <label className={labelCls}>Condition</label>
                         <select
@@ -971,7 +908,6 @@ export default function BulkClient() {
                           ))}
                         </select>
                       </div>
-
                       <div>
                         <label className={labelCls}>Price</label>
                         <input
@@ -980,7 +916,6 @@ export default function BulkClient() {
                           onChange={(e) =>
                             updateListing(i, { price: e.target.value })
                           }
-                          placeholder="e.g. 5000"
                         />
                       </div>
                       <div>
@@ -992,14 +927,13 @@ export default function BulkClient() {
                             updateListing(i, { currency: e.target.value })
                           }
                         >
-                          {["SAR", "AED", "QAR", "KWD", "BHD", "OMR", "USD", "EUR", "GBP", "PKR", "INR", "EGP"].map((c) => (
+                          {CURRENCY_OPTS.map((c) => (
                             <option key={c} value={c}>
                               {c}
                             </option>
                           ))}
                         </select>
                       </div>
-
                       <div>
                         <label className={labelCls}>Country</label>
                         <select
@@ -1037,7 +971,6 @@ export default function BulkClient() {
                           onChange={(e) =>
                             updateListing(i, { contact_phone: e.target.value })
                           }
-                          placeholder="Optional for Team"
                         />
                       </div>
                     </div>
@@ -1060,8 +993,8 @@ export default function BulkClient() {
 
       {lastResult && (
         <details className="rounded-lg border border-border bg-muted/20 p-3 text-xs">
-          <summary className="cursor-pointer text-muted-foreground flex items-center gap-1">
-            <Sparkles className="h-3.5 w-3.5" /> Last API result
+          <summary className="cursor-pointer text-muted-foreground">
+            Last API result
           </summary>
           <pre className="mt-2 overflow-x-auto whitespace-pre-wrap font-mono">
             {lastResult}
