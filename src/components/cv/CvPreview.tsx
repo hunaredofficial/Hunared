@@ -240,34 +240,36 @@ export function CvPreview({
             />
           ) : null}
           <div className="min-w-0 flex-1">
-        <h1
-          className={cn(
-            "text-xl font-bold tracking-tight",
-            isAts ? "text-neutral-900" : "text-white"
-          )}
-        >
-          {data.fullName || "Your Name"}
-        </h1>
-        {data.title && (
-          <p
-            className={cn(
-              "text-sm mt-0.5",
-              isAts ? "text-neutral-600" : "text-white/90"
+            <h1
+              className={cn(
+                "text-xl font-bold tracking-tight",
+                isAts ? "text-neutral-900" : "text-white"
+              )}
+            >
+              {data.fullName || "Your Name"}
+            </h1>
+            {data.title && (
+              <p
+                className={cn(
+                  "text-sm mt-0.5",
+                  isAts ? "text-neutral-600" : "text-white/90"
+                )}
+              >
+                {data.title}
+              </p>
             )}
-          >
-            {data.title}
-          </p>
-        )}
-        {contact && (
-          <p
-            className={cn(
-              "text-[10.5px] mt-2 leading-relaxed",
-              isAts ? "text-neutral-500" : "text-white/80"
+            {contact && (
+              <p
+                className={cn(
+                  "text-[10.5px] mt-2 leading-relaxed",
+                  isAts ? "text-neutral-500" : "text-white/80"
+                )}
+              >
+                {contact}
+              </p>
             )}
-          >
-            {contact}
-          </p>
-        )}
+          </div>
+        </div>
       </header>
 
       <div
