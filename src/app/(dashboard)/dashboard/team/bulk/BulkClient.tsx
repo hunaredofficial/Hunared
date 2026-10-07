@@ -22,6 +22,7 @@ import {
   JOB_CATEGORIES,
   DURATIONS,
   SALARY_TYPES,
+  EXPERIENCE_LEVELS,
   LISTING_CATEGORIES,
   LISTING_CONDITION_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
@@ -42,6 +43,8 @@ import {
   SmartJobFillPanel,
   type SmartFillFieldKey,
 } from "@/components/jobs/SmartJobFill";
+import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 
 type JobRow = {
   jobTitle: string;
@@ -53,9 +56,12 @@ type JobRow = {
   country: string;
   city: string;
   workLocation: string;
-  employmentType: "permanent" | "temporary";
+  employmentType: "permanent" | "temporary" | "";
   duration: string;
   category: string;
+  categories: string[];
+  subcategory: string;
+  experienceLevel: string;
   positions: string;
   salaryType: string;
   salaryRate: string;
@@ -95,7 +101,10 @@ const emptyJob = (): JobRow => ({
   employmentType: "permanent",
   duration: "Permanent",
   category: "",
-  positions: "1",
+  categories: [],
+  subcategory: "",
+  experienceLevel: "any",
+  positions: "",
   salaryType: "",
   salaryRate: "",
   currency: "SAR",
@@ -215,9 +224,14 @@ export default function BulkClient() {
     if (!r) return;
     const patch: Partial<JobRow> = {};
     if (key === "jobTitle" && val(r.jobTitle)) patch.jobTitle = String(val(r.jobTitle));
-    if (key === "category" && val(r.category)) patch.category = String(val(r.category));
-    if (key === "categories" && val(r.categories)?.length)
+    if (key === "category" && val(r.category)) {
+      patch.category = String(val(r.category));
+      patch.categories = [String(val(r.category))];
+    }
+    if (key === "categories" && val(r.categories)?.length) {
+      patch.categories = val(r.categories)!.map(String);
       patch.category = String(val(r.categories)![0]);
+    }
     if (key === "country" && val(r.country)) patch.country = String(val(r.country));
     if (key === "city" && val(r.city)) patch.city = String(val(r.city));
     if (key === "currency" && val(r.currency)) patch.currency = String(val(r.currency));
@@ -278,8 +292,13 @@ export default function BulkClient() {
     const row = jobs[i];
     const r2 = row.smartResult!;
     if (val(r2.jobTitle)) patch.jobTitle = String(val(r2.jobTitle));
-    if (val(r2.categories)?.length) patch.category = String(val(r2.categories)![0]);
-    else if (val(r2.category)) patch.category = String(val(r2.category));
+    if (val(r2.categories)?.length) {
+      patch.categories = val(r2.categories)!.map(String);
+      patch.category = String(val(r2.categories)![0]);
+    } else if (val(r2.category)) {
+      patch.category = String(val(r2.category));
+      patch.categories = [String(val(r2.category))];
+    }
     if (val(r2.country)) patch.country = String(val(r2.country));
     if (val(r2.city)) patch.city = String(val(r2.city));
     if (val(r2.currency)) patch.currency = String(val(r2.currency));
@@ -531,6 +550,33 @@ export default function BulkClient() {
                   />
 
                   <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className={labelCls}>Job Categories *</label>
+                      <MultiSelectChips
+                        options={JOB_CATEGORIES}
+                        value={row.categories}
+                        onChange={(next) =>
+                          updateJob(i, {
+                            categories: next,
+                            category: next[0] ?? "",
+                          })
+                        }
+                        placeholder="Select one or more categories"
+                        searchPlaceholder="Search categories…"
+                        label="Job categories"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className={labelCls}>Subcategory</label>
+                      <input
+                        className={inputCls}
+                        value={row.subcategory}
+                        onChange={(e) =>
+                          updateJob(i, { subcategory: e.target.value })
+                        }
+                        placeholder="e.g. NEBOSH, IOSH"
+                      />
+                    </div>
                     <div>
                       <label className={labelCls}>
                         Company name (links if team company matches)
@@ -542,29 +588,6 @@ export default function BulkClient() {
                           updateJob(i, { companyName: e.target.value })
                         }
                       />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Category</label>
-                      <select
-                        className={inputCls}
-                        value={row.category}
-                        onChange={(e) =>
-                          updateJob(i, { category: e.target.value })
-                        }
-                      >
-                        <option value="">Select category</option>
-                        {row.category &&
-                          !(JOB_CATEGORIES as readonly string[]).includes(
-                            row.category
-                          ) && (
-                            <option value={row.category}>{row.category}</option>
-                          )}
-                        {JOB_CATEGORIES.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
                     </div>
                     <div>
                       <label className={labelCls}>Employment type</label>
@@ -623,10 +646,12 @@ export default function BulkClient() {
                     </div>
                     <div>
                       <label className={labelCls}>City</label>
-                      <input
-                        className={inputCls}
+                      <CityCombobox
+                        id={`bulk-job-city-${i}`}
+                        country={row.country}
                         value={row.city}
-                        onChange={(e) => updateJob(i, { city: e.target.value })}
+                        onChange={(v) => updateJob(i, { city: v })}
+                        size="md"
                       />
                     </div>
                     <div>
@@ -640,13 +665,33 @@ export default function BulkClient() {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>Positions</label>
+                      <label className={labelCls}>Experience level</label>
+                      <select
+                        className={inputCls}
+                        value={row.experienceLevel}
+                        onChange={(e) =>
+                          updateJob(i, { experienceLevel: e.target.value })
+                        }
+                      >
+                        {EXPERIENCE_LEVELS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Number of positions</label>
                       <input
                         className={inputCls}
+                        type="number"
+                        min={1}
+                        max={999}
                         value={row.positions}
                         onChange={(e) =>
                           updateJob(i, { positions: e.target.value })
                         }
+                        placeholder="e.g. 3"
                       />
                     </div>
                     <div>
@@ -955,12 +1000,12 @@ export default function BulkClient() {
                       </div>
                       <div>
                         <label className={labelCls}>City</label>
-                        <input
-                          className={inputCls}
+                        <CityCombobox
+                          id={`bulk-mkt-city-${i}`}
+                          country={row.country}
                           value={row.city}
-                          onChange={(e) =>
-                            updateListing(i, { city: e.target.value })
-                          }
+                          onChange={(v) => updateListing(i, { city: v })}
+                          size="md"
                         />
                       </div>
                       <div className="sm:col-span-2">

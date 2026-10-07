@@ -19,6 +19,8 @@ type BulkJob = {
   duration?: string;
   category?: string;
   categories?: string[];
+  subcategory?: string;
+  experienceLevel?: string;
   positions?: string | number;
   salaryRate?: string;
   salaryType?: string;
@@ -108,6 +110,10 @@ export async function POST(req: Request) {
         duration: j.duration?.trim() || (emp === "permanent" ? "Permanent" : "UnSpecified"),
         category: primary,
         categories: cats,
+        subcategory: j.subcategory?.trim() || null,
+        experience_level: j.experienceLevel && j.experienceLevel !== "any"
+          ? j.experienceLevel.trim()
+          : null,
         positions: j.positions != null && String(j.positions).trim() !== ""
           ? Number(j.positions) || String(j.positions)
           : null,
