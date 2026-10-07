@@ -66,7 +66,7 @@ function build(s: Spec): { meta: SampleCvMeta; data: CvData } {
       title: s.profession,
       email: "m.abdullah@example.com",
       phone: "+966 50 000 0000",
-      location: s.location || "Al Khobar, Saudi Arabia",
+      location: s.location || "Al Jubail, Saudi Arabia",
       summary: s.summary,
       skills: s.skills,
       certifications: s.certifications || "",
@@ -229,7 +229,7 @@ const SPECS: Spec[] = [
     skills: "HSEMS, Auditing, HAZID awareness, KPI reporting, Training coordination",
     certifications: "NEBOSH IGC, ISO 45001 awareness",
     experience: [
-      exp("HSE Engineer", "Gulf Energy Operations", "Khobar", "2018", "", true, [
+      exp("HSE Engineer", "Gulf Energy Operations", "Jubail", "2018", "", true, [
         "Supported HSE management system documentation and site audits",
         "Analyzed leading and lagging indicators for management review",
       ]),
@@ -433,7 +433,7 @@ const SPECS: Spec[] = [
     skills: "Routing/switching, Firewall policy, VPN, Wi-Fi, Monitoring",
     certifications: "CCNA",
     experience: [
-      exp("Network Engineer", "Telecom Solutions", "Khobar", "2018", "", true, [
+      exp("Network Engineer", "Telecom Solutions", "Jubail", "2018", "", true, [
         "Supported branch connectivity and VPN access",
         "Tuned firewall rules and documented network changes",
       ]),
@@ -550,7 +550,7 @@ const SPECS: Spec[] = [
       "Document Controller experienced in EDMS, transmittals, and controlled document distribution for engineering projects.",
     skills: "EDMS, Transmittals, Document numbering, Revision control, MS Office",
     experience: [
-      exp("Document Controller", "Engineering PMC", "Khobar", "2019", "", true, [
+      exp("Document Controller", "Engineering PMC", "Jubail", "2019", "", true, [
         "Managed document registers and transmittals",
         "Ensured correct revision control across disciplines",
       ]),
@@ -791,12 +791,10 @@ const SPECS: Spec[] = [
   },
 ];
 
-export const CV_SAMPLES: { meta: SampleCvMeta; data: CvData }[] = SPECS.map(build).sort((a, b) =>
-  a.meta.profession.localeCompare(b.meta.profession)
-);
+export const CV_SAMPLES: { meta: SampleCvMeta; data: CvData }[] = SPECS.map(build);
 
 export function listSampleCategories(): string[] {
-  return [...new Set(CV_SAMPLES.map((s) => s.meta.category))].sort((a, b) => a.localeCompare(b));
+  return [...new Set(CV_SAMPLES.map((s) => s.meta.category))].sort();
 }
 
 export function getSampleById(id: string) {

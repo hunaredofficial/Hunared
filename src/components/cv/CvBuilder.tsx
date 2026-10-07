@@ -60,21 +60,21 @@ import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { toast } from "sonner";
 
 const AI_SUGGESTIONS = [
-  "Make my CV more professional and ATS friendly",
-  "Rewrite my professional summary stronger and clearer",
-  "Improve work experience bullets with action verbs",
-  "Shorten my CV and remove weak wording",
-  "Make this suitable for international employers",
-  "Optimize for Gulf / Middle East job applications",
-  "Improve skills section structure and clarity",
-  "Check my CV and list what is missing",
-  "Make the tone more confident and professional",
-  "Reorganize sections for a cleaner structure",
+  "Rewrite my professional summary for senior ATS screening (3–4 lines, quantified impact)",
+  "Convert experience bullets to strong action-verb + result format (no weak phrases)",
+  "Align my CV to international employer standards (clear titles, dates, metrics)",
+  "Optimize wording for Gulf / Middle East roles while keeping facts accurate",
+  "Tighten the entire CV to one page without losing key achievements",
+  "Improve skills: group by Core / Tools / Soft and remove vague terms",
+  "Make language more confident and professional without inventing experience",
+  "Check completeness: missing sections, weak bullets, and ATS keyword gaps",
+  "Standardize dates, location format, and section order to global CV norms",
+  "Tailor tone for engineering / industrial hiring managers (precise and factual)",
 ];
 
 type View = "library" | "start" | "editor" | "samples";
 
-export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
+export function CvBuilder({ profile }: { profile?: ProfileSeed & { role?: string | null } }) {
   const [view, setView] = useState<View>("library");
   const [docs, setDocs] = useState<CvDocument[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -340,30 +340,42 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
   }
 
   async function addToProfile() {
+    if (profile?.role && profile.role !== "seeker") {
+      toast.error("Add to profile is only available for Seeker accounts.");
+      return;
+    }
     try {
-      const res = await fetch("/api/profile/save", {
+      const res = await fetch("/api/cv/add-to-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          fullName: data.fullName || undefined,
           profession: data.title || undefined,
           skills: data.skills
             ? data.skills.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean)
             : undefined,
-          // best-effort fields used by Hunared profiles
-          full_name: data.fullName || undefined,
           phone: data.phone || undefined,
-          city: data.location?.split(",")[0]?.trim() || undefined,
-          bio: data.summary || undefined,
+          location: data.location || undefined,
+          summary: data.summary || undefined,
+          languages: data.languages
+            ? data.languages.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean)
+            : undefined,
         }),
       });
+      const j = await res.json().catch(() => ({}));
       if (res.ok) {
-        toast.success("Key CV details saved to your Hunared profile.");
+        toast.success(
+          (j as { message?: string }).message ||
+            "CV details added to your candidate profile."
+        );
       } else {
-        const j = await res.json().catch(() => ({}));
-        toast.error((j as { error?: string }).error || "Could not update profile. You can still download your CV.");
+        toast.error(
+          (j as { error?: string }).error ||
+            "Could not update candidate profile."
+        );
       }
     } catch {
-      toast.error("Could not reach profile save. Download your CV and upload it from My Profile if needed.");
+      toast.error("Could not reach profile service. Try again or edit My Profile.");
     }
   }
 
@@ -607,15 +619,17 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
             <Download className="h-3.5 w-3.5" />
             PDF
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 gap-1"
-            onClick={() => void addToProfile()}
-          >
-            <User className="h-3.5 w-3.5" />
-            Add to profile
-          </Button>
+          {(!profile?.role || profile.role === "seeker") && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 gap-1"
+              onClick={() => void addToProfile()}
+            >
+              <User className="h-3.5 w-3.5" />
+              Add to profile
+            </Button>
+          )}
         </div>
       </div>
 
@@ -651,9 +665,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
           {editorTab === "document" && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Edit your CV on the page like Microsoft Word or Google Docs.
-                Select any text and use <strong>AI Improve selection</strong> in the toolbar.
-                Switch to Fields for structured form editing, or Design for templates.
+                Select text and use <strong>AI Improve selection</strong> in the toolbar.
               </p>
               <CvDocumentEditor data={data} onChange={setData} />
             </div>
@@ -694,7 +706,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                             ? data.template
                             : "photo_pro";
                           patch({ photoUrl: url, template: nextTemplate as typeof data.template });
-                          toast.success("Profile image added — visible on portrait templates");
+                          toast.success("Profile image added — use a With Photo template to show it");
                         };
                         reader.readAsDataURL(f);
                       }}
@@ -752,17 +764,16 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
                 AI CV Assistant
               </p>
               <p className="text-xs text-muted-foreground">
-                Describe your role, location, skills, and experience in plain
-                language — or upload your CV. AI structures a professional CV and
-                improves wording. It will not invent employers, degrees, or
-                certifications you did not provide.
+                Describe goals in plain language. AI improves structure and wording
+                to global professional standards. It will not invent employers,
+                degrees, or certifications you did not provide.
               </p>
               <div className="relative">
                 <textarea
                   value={aiCmd}
                   onChange={(e) => setAiCmd(e.target.value)}
                   rows={3}
-                  placeholder="e.g. Make my summary more professional and ATS friendly"
+                  placeholder="e.g. Rewrite summary with quantified impact for ATS screening"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-y min-h-[72px]"
                 />
                 <div className="absolute right-2 bottom-2">
@@ -1423,7 +1434,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
             Live preview
           </p>
           <div className="max-h-[calc(100vh-8rem)] overflow-y-auto print:max-h-none print:overflow-visible">
-            <CvPreview data={data} className="min-h-[600px]" />
+            <CvPreview data={data} className="min-h-0 print:min-h-0" />
           </div>
         </div>
       </div>
@@ -1431,11 +1442,13 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
       <style jsx global>{`
         @media print {
           @page {
-            margin: 12mm;
-            size: auto;
+            margin: 10mm;
+            size: A4;
           }
           html, body {
             background: white !important;
+            height: auto !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -1447,18 +1460,27 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed }) {
             visibility: visible !important;
           }
           #cv-print-root {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 0;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 0 !important;
+            height: auto !important;
             box-shadow: none !important;
             border: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
           }
           .print\:hidden {
             display: none !important;
             visibility: hidden !important;
+          }
+          /* Avoid phantom second blank page */
+          #cv-print-root::after {
+            display: none !important;
           }
         }
       `}</style>

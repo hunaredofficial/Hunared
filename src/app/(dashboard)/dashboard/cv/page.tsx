@@ -23,9 +23,14 @@ export default async function CvPage() {
     city?: string | null;
     skills?: string | null;
     languages?: string | null;
+    role?: string | null;
   } = {
-    fullName: user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(" "),
-    email: user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress,
+    fullName:
+      user?.fullName ||
+      [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+    email:
+      user?.primaryEmailAddress?.emailAddress ||
+      user?.emailAddresses?.[0]?.emailAddress,
   };
 
   try {
@@ -33,7 +38,7 @@ export default async function CvPage() {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "full_name, phone, city, country, profession, job_interests, skills, languages"
+        "full_name, phone, city, country, profession, job_interests, skills, languages, role"
       )
       .eq("id", userId)
       .maybeSingle();
@@ -58,6 +63,7 @@ export default async function CvPage() {
           : typeof data.languages === "string"
             ? data.languages
             : null,
+        role: data.role,
       };
     }
   } catch {

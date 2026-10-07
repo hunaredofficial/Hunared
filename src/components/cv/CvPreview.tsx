@@ -210,7 +210,7 @@ export function CvPreview({
     <div
       className={cn(
         "bg-white text-neutral-900 shadow-lg rounded-sm overflow-hidden",
-        "print:shadow-none print:rounded-none",
+        "print:shadow-none print:rounded-none print:min-h-0 print:h-auto",
         className
       )}
       id="cv-print-root"
@@ -228,7 +228,7 @@ export function CvPreview({
         }
       >
         <div className="flex items-start gap-3">
-          {data.photoUrl ? (
+          {data.photoUrl && templateAllowsPhoto(data.template) ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.photoUrl}
@@ -240,36 +240,34 @@ export function CvPreview({
             />
           ) : null}
           <div className="min-w-0 flex-1">
-            <h1
-              className={cn(
-                "text-xl font-bold tracking-tight",
-                isAts ? "text-neutral-900" : "text-white"
-              )}
-            >
-              {data.fullName || "Your Name"}
-            </h1>
-            {data.title && (
-              <p
-                className={cn(
-                  "text-sm mt-0.5",
-                  isAts ? "text-neutral-600" : "text-white/90"
-                )}
-              >
-                {data.title}
-              </p>
+        <h1
+          className={cn(
+            "text-xl font-bold tracking-tight",
+            isAts ? "text-neutral-900" : "text-white"
+          )}
+        >
+          {data.fullName || "Your Name"}
+        </h1>
+        {data.title && (
+          <p
+            className={cn(
+              "text-sm mt-0.5",
+              isAts ? "text-neutral-600" : "text-white/90"
             )}
-            {contact && (
-              <p
-                className={cn(
-                  "text-[10.5px] mt-2 leading-relaxed",
-                  isAts ? "text-neutral-500" : "text-white/80"
-                )}
-              >
-                {contact}
-              </p>
+          >
+            {data.title}
+          </p>
+        )}
+        {contact && (
+          <p
+            className={cn(
+              "text-[10.5px] mt-2 leading-relaxed",
+              isAts ? "text-neutral-500" : "text-white/80"
             )}
-          </div>
-        </div>
+          >
+            {contact}
+          </p>
+        )}
       </header>
 
       <div

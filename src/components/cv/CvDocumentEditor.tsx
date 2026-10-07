@@ -204,10 +204,6 @@ export function CvDocumentEditor({ data, onChange, className }: Props) {
             !ready && "opacity-50"
           )}
         />
-        <p className="mx-auto max-w-[48rem] mt-3 text-[11px] text-muted-foreground text-center">
-          Edit this document like Word / Google Docs. Select text → AI Improve.
-          Print uses the live preview / Print button for PDF export.
-        </p>
       </div>
     </div>
   );
