@@ -18,7 +18,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://hunared.com"),
   title: {
-    default: "Hunared — Global Jobs, Property, Marketplace & Learning",
+    default: "Hunared",
     template: "%s | Hunared",
   },
   description:
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Hunared — Global Jobs, Property, Marketplace & Learning",
+    title: "Hunared",
     description:
       "Find jobs, property, marketplace deals, and learning opportunities worldwide on Hunared.",
     url: "https://hunared.com",
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hunared — Global Jobs, Property, Marketplace & Learning",
+    title: "Hunared",
     description:
       "Find jobs, property, marketplace deals, and learning opportunities worldwide on Hunared.",
     site: "@hunared",
