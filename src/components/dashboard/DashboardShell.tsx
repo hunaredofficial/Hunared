@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Settings,
   LayoutDashboard,
   User,
   Briefcase,
@@ -60,6 +61,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/profile",
         label: "Company Profile",
         icon: <User className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/settings",
+        label: "Settings",
+        icon: <Settings className="h-4 w-4" />,
       },
       {
         href: "/dashboard/cv",
@@ -119,14 +125,14 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <User className="h-4 w-4" />,
       },
       {
+        href: "/dashboard/settings",
+        label: "Settings",
+        icon: <Settings className="h-4 w-4" />,
+      },
+      {
         href: "/post",
         label: "Post",
         icon: <Plus className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/team/profiles",
-        label: "Team Profiles",
-        icon: <Users className="h-4 w-4" />,
       },
       {
         href: "/dashboard/team/bulk",
@@ -163,6 +169,11 @@ function getNavItems(role: UserRole): NavItem[] {
         label: "Overview",
         icon: <LayoutDashboard className="h-4 w-4" />,
         exact: true,
+      },
+      {
+        href: "/dashboard/settings",
+        label: "Settings",
+        icon: <Settings className="h-4 w-4" />,
       },
       {
         href: "/dashboard/admin/users",
@@ -215,6 +226,11 @@ function getNavItems(role: UserRole): NavItem[] {
       label: "My Profile",
       icon: <User className="h-4 w-4" />,
     },
+      {
+        href: "/dashboard/settings",
+        label: "Settings",
+        icon: <Settings className="h-4 w-4" />,
+      },
     {
       href: "/dashboard/cv",
       label: "CV Builder",

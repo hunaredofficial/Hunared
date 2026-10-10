@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { PreferencesApplier } from "@/components/providers/PreferencesApplier";
 import { GeoProvider } from "@/components/providers/GeoProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -105,6 +106,7 @@ export default function RootLayout({
             themes={["light", "dark"]}
             disableTransitionOnChange
           >
+            <PreferencesApplier />
             <GeoProvider>
               <TooltipProvider>
                 <NextTopLoader
