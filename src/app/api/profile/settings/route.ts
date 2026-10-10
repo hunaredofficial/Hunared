@@ -24,6 +24,7 @@ export type UserSettings = {
   email_messages: boolean;
   show_online_status: boolean;
   compact_mode: boolean;
+  migrationRequired?: boolean;
 };
 
 const defaults: UserSettings = {
@@ -71,6 +72,33 @@ function normalize(data: Record<string, unknown> | null): UserSettings {
   };
 }
 
+/** Remove one missing column from select list and retry. */
+async function selectProfile(supabase: ReturnType<typeof createAdminClient>, userId: string) {
+  let cols = SELECT_COLS;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(cols)
+      .eq("id", userId)
+      .maybeSingle();
+    if (!error) return { data, migrationRequired: attempt > 0 };
+    const msg = error.message || "";
+    const m = msg.match(/column\s+[\w.]*?(\w+)\s+does not exist/i)
+      || msg.match(/Could not find the '(\w+)' column/i);
+    if (m) {
+      const bad = m[1];
+      cols = cols
+        .split(",")
+        .map((c) => c.trim())
+        .filter((c) => c !== bad && !c.endsWith("." + bad))
+        .join(", ");
+      continue;
+    }
+    return { data: null, migrationRequired: true, error: msg };
+  }
+  return { data: null, migrationRequired: true };
+}
+
 export async function GET() {
   const { userId } = await auth();
   if (!userId) {
@@ -78,19 +106,12 @@ export async function GET() {
   }
   try {
     const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(SELECT_COLS)
-      .eq("id", userId)
-      .maybeSingle();
-    if (error) {
-      return NextResponse.json({
-        ...defaults,
-        migrationRequired: true,
-        error: error.message,
-      });
-    }
-    return NextResponse.json(normalize(data as Record<string, unknown> | null));
+    const result = await selectProfile(supabase, userId);
+    const settings = normalize(result.data as Record<string, unknown> | null);
+    return NextResponse.json({
+      ...settings,
+      migrationRequired: result.migrationRequired || undefined,
+    });
   } catch {
     return NextResponse.json({ ...defaults, migrationRequired: true });
   }
@@ -133,37 +154,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No settings provided" }, { status: 400 });
   }
 
-  patch.updated_at = new Date().toISOString();
-
   try {
     const supabase = createAdminClient();
-    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
-    if (error) {
+
+    // Apply keys one-by-one so a missing column does not block the rest
+    const applied: string[] = [];
+    const skipped: string[] = [];
+    for (const [key, value] of Object.entries(patch)) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ [key]: value })
+        .eq("id", userId);
+      if (error) {
+        skipped.push(key);
+      } else {
+        applied.push(key);
+      }
+    }
+
+    if (!applied.length) {
       return NextResponse.json(
         {
           error:
-            error.message.includes("column")
-              ? "Run supabase/015_user_settings.sql in Supabase, then try again."
-              : error.message,
+            "Could not save preferences. Run supabase/015_user_settings.sql in Supabase SQL Editor, then refresh.",
+          skipped,
         },
         { status: 500 }
       );
     }
 
-    // Keep agent local flag in sync for guests of this browser
-    if (typeof patch.ai_enabled === "boolean") {
-      // client will set localStorage; nothing to do server-side
-    }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select(SELECT_COLS)
-      .eq("id", userId)
-      .maybeSingle();
-
+    const result = await selectProfile(supabase, userId);
     return NextResponse.json({
       ok: true,
-      settings: normalize(data as Record<string, unknown> | null),
+      settings: normalize(result.data as Record<string, unknown> | null),
+      applied,
+      skipped: skipped.length ? skipped : undefined,
+      migrationRequired: skipped.length > 0 || result.migrationRequired,
     });
   } catch (e) {
     return NextResponse.json(

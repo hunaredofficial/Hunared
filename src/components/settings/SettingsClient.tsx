@@ -14,7 +14,6 @@ import {
   Shield,
   Loader2,
   Check,
-  ExternalLink,
   Moon,
   Sun,
   Monitor,
@@ -107,11 +106,14 @@ export function SettingsClient() {
       });
       const j = await res.json();
       if (!res.ok) {
-        toast.error(j.error || "Could not save");
+        toast.error(j.error || "Could not save. Run 015_user_settings.sql in Supabase if columns are missing.");
         return;
       }
       const next = (j.settings as SettingsState) || { ...s, ...patch };
-      setS(next);
+      setS({ ...next, migrationRequired: j.migrationRequired || next.migrationRequired });
+      if (Array.isArray(j.skipped) && j.skipped.length) {
+        toast.message("Some options need database update (run 015_user_settings.sql).");
+      }
       if (patch.preferred_theme) setTheme(patch.preferred_theme);
       if (typeof patch.ai_enabled === "boolean") {
         localStorage.setItem(
@@ -235,18 +237,18 @@ export function SettingsClient() {
                     ? "Seeker"
                     : s.role === "employer"
                       ? "Company"
-                      : s.role || "—"
+                      : s.role === "team"
+                        ? "Team"
+                        : s.role === "admin"
+                          ? "Admin"
+                          : s.role || "—"
                 }
               />
               <div className="flex flex-wrap gap-2 pt-1">
                 <Button asChild variant="outline" size="sm">
                   <Link href="/dashboard/profile">Edit profile</Link>
                 </Button>
-                <Button asChild variant="ghost" size="sm" className="gap-1">
-                  <Link href="/candidates">
-                    Browse talent <ExternalLink className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
+
               </div>
             </div>
           </Section>
@@ -442,6 +444,36 @@ export function SettingsClient() {
               . Account deletion is also available there under Danger Zone.
             </div>
           </Section>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <p className="text-[11px] text-muted-foreground max-w-md">
+              Changes save automatically. Theme and agent visibility apply on this
+              device immediately.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={saving}
+              onClick={() =>
+                void save({
+                  preferred_theme: "system",
+                  preferred_timezone: "Asia/Riyadh",
+                  preferred_country: null,
+                  ai_enabled: true,
+                  ai_personalization: true,
+                  ai_cv_analysis: true,
+                  ai_notifications: false,
+                  email_job_alerts: true,
+                  email_messages: true,
+                  show_online_status: true,
+                  compact_mode: false,
+                })
+              }
+            >
+              Reset to defaults
+            </Button>
+          </div>
         </div>
       </div>
     </div>
