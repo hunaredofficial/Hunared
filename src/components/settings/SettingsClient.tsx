@@ -120,6 +120,11 @@ export function SettingsClient() {
           "hunared_ai_enabled",
           patch.ai_enabled ? "1" : "0"
         );
+        try {
+          window.dispatchEvent(new Event("hunared-ai-settings-changed"));
+        } catch {
+          /* ignore */
+        }
       }
       if (patch.preferred_country !== undefined) {
         if (patch.preferred_country) {

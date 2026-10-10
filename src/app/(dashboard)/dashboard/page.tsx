@@ -205,18 +205,13 @@ function SeekerDashboard({
             Here&apos;s an overview of your activity and opportunities.
           </p>
         </div>
-        <Button asChild size="sm" className="gap-1.5">
-          <Link href="/jobs">
-            <SearchIcon className="h-3.5 w-3.5" /> Browse Jobs
-          </Link>
-        </Button>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         <StatCard
-          icon={<Briefcase className="h-5 w-5 text-primary" />}
-          iconBg="bg-primary/10"
+          icon={<Briefcase className="h-5 w-5 text-blue-600" />}
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
           label="Jobs Available"
           value={approvedJobs.toLocaleString()}
           link={{ href: "/jobs", label: "View" }}
@@ -239,19 +234,19 @@ function SeekerDashboard({
       {completeness < 80 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent px-5 py-4 sm:py-5">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-warning/15 flex items-center justify-center shrink-0">
-              <Sparkles className="h-4 w-4 text-warning" />
+            <div className="h-9 w-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+              <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <p className="font-semibold text-warning text-sm">
+              <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
                 Complete your profile
               </p>
-              <p className="text-xs text-warning mt-0.5">
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
                 A complete profile gets up to 3× more views from employers.
               </p>
             </div>
           </div>
-          <Button size="sm" variant="outline" asChild className="shrink-0 border-warning/40 text-warning hover:bg-warning/1000 dark:border-amber-700 dark:text-amber-300">
+          <Button size="sm" variant="outline" asChild className="shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300">
             <Link href="/dashboard/profile">
               Complete now <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </Link>
@@ -265,10 +260,10 @@ function SeekerDashboard({
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <ActionCard
             href="/jobs"
-            icon={<SearchIcon className="h-5 w-5 text-primary" />}
-            iconBg="bg-primary/10"
+            icon={<SearchIcon className="h-5 w-5 text-blue-600" />}
+            iconBg="bg-blue-100 dark:bg-blue-900/30"
             title="Browse Jobs"
-            desc="Discover opportunities worldwide"
+            desc="Discover thousands of expat opportunities"
           />
           <ActionCard
             href="/dashboard/profile"
@@ -282,7 +277,7 @@ function SeekerDashboard({
             icon={<Users className="h-5 w-5 text-emerald-600" />}
             iconBg="bg-emerald-100 dark:bg-emerald-900/30"
             title="Browse Candidates"
-            desc="Connect with skilled professionals"
+            desc="Connect with expat professionals"
           />
           <ActionCard
             href="/dashboard/market"
@@ -351,8 +346,8 @@ function EmployerDashboard({
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         <StatCard
-          icon={<Briefcase className="h-5 w-5 text-primary" />}
-          iconBg="bg-primary/10"
+          icon={<Briefcase className="h-5 w-5 text-blue-600" />}
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
           label="Total Posts"
           value={total.toString()}
         />
@@ -425,17 +420,17 @@ function EmployerDashboard({
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <ActionCard
             href="/dashboard/jobs/new"
-            icon={<Plus className="h-5 w-5 text-primary" />}
-            iconBg="bg-primary/10"
+            icon={<Plus className="h-5 w-5 text-blue-600" />}
+            iconBg="bg-blue-100 dark:bg-blue-900/30"
             title="Post a New Job"
-            desc="Reach professionals worldwide"
+            desc="Reach thousands of expat professionals"
           />
           <ActionCard
             href="/candidates"
             icon={<Users className="h-5 w-5 text-violet-600" />}
             iconBg="bg-violet-100 dark:bg-violet-900/30"
             title="Browse Candidates"
-            desc="Find skilled talent"
+            desc="Find skilled expat talent"
           />
           <ActionCard
             href="/dashboard/market"
@@ -481,8 +476,8 @@ function AdminDashboard({
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
-          icon={<Users className="h-5 w-5 text-primary" />}
-          iconBg="bg-primary/10"
+          icon={<Users className="h-5 w-5 text-blue-600" />}
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
           label="Total Users"
           value={usersCount.toLocaleString()}
         />
@@ -518,8 +513,8 @@ function AdminDashboard({
           />
           <ActionCard
             href="/dashboard/admin/users"
-            icon={<Users className="h-5 w-5 text-primary" />}
-            iconBg="bg-primary/10"
+            icon={<Users className="h-5 w-5 text-blue-600" />}
+            iconBg="bg-blue-100 dark:bg-blue-900/30"
             title="Manage Users"
             desc="View and manage all platform users"
           />
@@ -668,7 +663,7 @@ function RecentActivity({ items }: { items: ActivityItem[] }) {
                 className={cn(
                   "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
                   item.type === "order_received" && "bg-emerald-100 dark:bg-emerald-900/30",
-                  item.type === "order_placed" && "bg-primary/10",
+                  item.type === "order_placed" && "bg-blue-100 dark:bg-blue-900/30",
                   item.type === "listing_posted" && "bg-orange-100 dark:bg-orange-900/30"
                 )}
               >
@@ -676,7 +671,7 @@ function RecentActivity({ items }: { items: ActivityItem[] }) {
                   <PackageOpen className="h-3.5 w-3.5 text-emerald-600" />
                 )}
                 {item.type === "order_placed" && (
-                  <ShoppingBag className="h-3.5 w-3.5 text-primary" />
+                  <ShoppingBag className="h-3.5 w-3.5 text-blue-600" />
                 )}
                 {item.type === "listing_posted" && (
                   <Tag className="h-3.5 w-3.5 text-orange-600" />
