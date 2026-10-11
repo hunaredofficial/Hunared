@@ -1,9 +1,7 @@
 "use client";
 
 /**
- * Hunared Sign-In
- * Single clear states: loading → already signed in → sign-in form
- * Never show login form while a valid session exists.
+ * Hunared Sign-In — clean, minimal, professional.
  */
 
 import { useEffect, useState } from "react";
@@ -19,39 +17,30 @@ export default function SignInPage() {
   const [phase, setPhase] = useState<"loading" | "signed_in" | "form">(
     "loading"
   );
-  const [msg, setMsg] = useState("");
 
   useEffect(() => {
     if (!isLoaded) return;
-
     if (isSignedIn && userId) {
       setPhase("signed_in");
-      setMsg("You're already signed in.");
       return;
     }
-
     setPhase("form");
   }, [isLoaded, isSignedIn, userId]);
 
-  async function goDashboard() {
-    setMsg("Opening dashboard…");
+  function goDashboard() {
     window.location.replace("/dashboard");
   }
 
   async function forceRefreshSession() {
-    setMsg("Checking session…");
     try {
       await clerk.session?.reload();
       const token = await getToken({ skipCache: true });
       if (token) {
-        setMsg("Session found. Opening dashboard…");
         window.location.replace("/dashboard");
         return;
       }
-      setMsg("No active session. Please sign in below.");
       setPhase("form");
     } catch {
-      setMsg("Could not refresh session. Please sign in.");
       setPhase("form");
     }
   }
@@ -62,7 +51,7 @@ export default function SignInPage() {
         <HunaredLogo size="lg" href="/" />
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Checking your session…
+          Loading…
         </div>
       </div>
     );
@@ -72,31 +61,25 @@ export default function SignInPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-5 bg-background px-4">
         <HunaredLogo size="lg" href="/" />
-        <div className="w-full max-w-sm rounded-2xl border border-border bg-card/80 p-6 text-center space-y-4">
-          <h1 className="text-xl font-bold gradient-text">
-            You&apos;re signed in
-          </h1>
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center space-y-4">
+          <h1 className="text-xl font-bold text-foreground">You&apos;re signed in</h1>
           <p className="text-sm text-muted-foreground">
-            Continue to your dashboard, or sign out from the menu if you need a
-            different account.
+            Continue to your dashboard to manage jobs, messages and profile.
           </p>
           <Button className="w-full h-11 rounded-xl" onClick={goDashboard}>
             Go to Dashboard
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full"
-            onClick={forceRefreshSession}
+          <button
+            type="button"
+            onClick={() => void forceRefreshSession()}
+            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
           >
-            Refresh session
-          </Button>
+            Having trouble? Refresh session
+          </button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          <Link href="/" className="text-primary hover:underline">
-            Back to home
-          </Link>
-        </p>
+        <Link href="/" className="text-sm text-primary hover:underline">
+          Back to home
+        </Link>
       </div>
     );
   }
@@ -104,28 +87,21 @@ export default function SignInPage() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-12 overflow-hidden bg-background">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[520px] w-[520px] rounded-full bg-[var(--brand-from)] opacity-[0.12] blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-[360px] w-[360px] rounded-full bg-[var(--brand-via)] opacity-[0.08] blur-3xl" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
       <div className="w-full max-w-[420px] space-y-6">
-        <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex flex-col items-center gap-3 text-center">
           <HunaredLogo size="lg" href="/" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight gradient-text">
-              Welcome back
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Sign in
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in to continue to Hunared
+              Access your Hunared account
             </p>
           </div>
         </div>
-
-        {msg && (
-          <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-center text-muted-foreground">
-            {msg}
-          </div>
-        )}
 
         <div className="flex justify-center">
           <SignIn
@@ -145,7 +121,8 @@ export default function SignInPage() {
               },
               elements: {
                 rootBox: "w-full mx-auto",
-                card: "w-full shadow-none border border-border rounded-2xl bg-card/80 backdrop-blur-sm",
+                card:
+                  "w-full shadow-none border border-border rounded-2xl bg-card",
                 headerTitle: "hidden",
                 headerSubtitle: "hidden",
                 socialButtonsBlockButton:
@@ -160,20 +137,15 @@ export default function SignInPage() {
           />
         </div>
 
-        <div className="flex flex-col items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={forceRefreshSession}>
-            Already signed in? Refresh session
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            New to Hunared?{" "}
-            <Link
-              href="/register"
-              className="text-primary font-medium hover:underline"
-            >
-              Create an account
-            </Link>
-          </p>
-        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          New to Hunared?{" "}
+          <Link
+            href="/register"
+            className="text-primary font-medium hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   );

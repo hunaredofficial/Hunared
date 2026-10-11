@@ -216,7 +216,7 @@ function RegisterInner() {
   }, [sessionConfirmed, user, goal]);
   // Auto country/city from geo — COMPANY only (seeker selects manually)
   useEffect(() => {
-    if (goal === "seeker") return; // Seekers pick country/city themselves
+    if (goal === "seeker") return; // Job seekers pick country/city themselves
     if (!geo || geo.loading || geo.error || locationTouched) return;
     if (geo.countryCode) {
       setCountry((prev) => prev || geo.countryCode!);
@@ -524,7 +524,7 @@ function RegisterInner() {
     },
     {
       id: "seeker",
-      title: "Seeker",
+      title: "Job Seeker",
       desc: "Find your next opportunity",
       icon: User,
     },
@@ -671,10 +671,10 @@ function RegisterInner() {
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {goal === "employer"
-                  ? "Register your company"
+                  ? "Register your company on Hunared"
                   : goal === "seeker"
-                    ? "Start your job search"
-                    : "Join Hunared"}
+                    ? "Create your professional profile"
+                    : "Join the global opportunity platform"}
               </p>
             </div>
 

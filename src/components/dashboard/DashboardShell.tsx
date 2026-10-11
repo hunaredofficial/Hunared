@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Settings,
+  MessageSquare,
   LayoutDashboard,
   User,
   Briefcase,
@@ -103,7 +104,12 @@ function getNavItems(role: UserRole): NavItem[] {
         label: "Incoming Orders",
         icon: <PackageOpen className="h-4 w-4" />,
       },
-      {
+            {
+        href: "/dashboard/messages",
+        label: "Messages",
+        icon: <MessageSquare className="h-4 w-4" />,
+      },
+{
         href: "/dashboard/settings",
         label: "Settings",
         icon: <Settings className="h-4 w-4" />,
@@ -154,7 +160,12 @@ function getNavItems(role: UserRole): NavItem[] {
         label: "Marketplace",
         icon: <ShoppingBag className="h-4 w-4" />,
       },
-      {
+            {
+        href: "/dashboard/messages",
+        label: "Messages",
+        icon: <MessageSquare className="h-4 w-4" />,
+      },
+{
         href: "/dashboard/settings",
         label: "Settings",
         icon: <Settings className="h-4 w-4" />,
@@ -205,7 +216,12 @@ function getNavItems(role: UserRole): NavItem[] {
         label: "Backups",
         icon: <DatabaseBackup className="h-4 w-4" />,
       },
-      {
+            {
+        href: "/dashboard/messages",
+        label: "Messages",
+        icon: <MessageSquare className="h-4 w-4" />,
+      },
+{
         href: "/dashboard/settings",
         label: "Settings",
         icon: <Settings className="h-4 w-4" />,
@@ -272,7 +288,12 @@ function getNavItems(role: UserRole): NavItem[] {
       label: "Incoming Orders",
       icon: <PackageOpen className="h-4 w-4" />,
     },
-    {
+        {
+      href: "/dashboard/messages",
+      label: "Messages",
+      icon: <MessageSquare className="h-4 w-4" />,
+    },
+{
       href: "/dashboard/settings",
       label: "Settings",
       icon: <Settings className="h-4 w-4" />,

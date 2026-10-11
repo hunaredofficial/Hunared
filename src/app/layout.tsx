@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { SessionKeepAlive } from "@/components/providers/SessionKeepAlive";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PreferencesApplier } from "@/components/providers/PreferencesApplier";
 import { GeoProvider } from "@/components/providers/GeoProvider";
@@ -99,6 +100,7 @@ export default function RootLayout({
           signUpFallbackRedirectUrl="/register?mode=complete"
           afterSignOutUrl="/"
         >
+          <SessionKeepAlive />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

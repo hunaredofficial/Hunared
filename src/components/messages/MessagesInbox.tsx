@@ -15,7 +15,6 @@ import {
   User,
   Trash2,
   Paperclip,
-  MapPin,
   FileText,
   ImageIcon,
 } from "lucide-react";
@@ -72,10 +71,6 @@ type Msg = {
     fileName?: string;
     fileType?: string;
     fileSize?: number;
-    lat?: number;
-    lng?: number;
-    mapsUrl?: string;
-    label?: string;
   } | null;
   sender?: {
     id: string;
@@ -111,99 +106,6 @@ const QUICK: Record<string, string[]> = {
 };
 
 
-
-/** Suggestions for BOTH sides: seeker/buyer vs employer/seller */
-function roleAwareSuggestions(
-  contextType: string | undefined,
-  title: string | undefined,
-  iAmSenderOfLast: boolean,
-  lastBody: string | undefined
-): string[] {
-  const t = title || "this";
-  const ct = (contextType || "general").toLowerCase();
-  const last = (lastBody || "").toLowerCase();
-
-  // Reply-aware chips based on last message
-  if (last.includes("still open") || last.includes("still available")) {
-    return iAmSenderOfLast
-      ? ["Thank you — looking forward to your reply.", "I can share more details if helpful."]
-      : [
-          `Yes, ${t} is still available.`,
-          "Could you share your relevant experience or requirements?",
-          "Thank you for your interest. What is your timeline?",
-        ];
-  }
-  if (last.includes("experience") || last.includes("cv") || last.includes("resume")) {
-    return iAmSenderOfLast
-      ? ["I have attached my CV.", "I have 3+ years of relevant experience."]
-      : [
-          "Thank you. Please share your CV and a short summary of experience.",
-          "What certifications or tools are you familiar with?",
-        ];
-  }
-  if (last.includes("price") || last.includes("salary") || last.includes("negotiable")) {
-    return iAmSenderOfLast
-      ? ["Is the rate negotiable?", "What is the budget range?"]
-      : [
-          "The rate is as listed — open to discussion for the right fit.",
-          "Please share your expected range.",
-        ];
-  }
-  if (last.includes("location") || last.includes("where") || last.includes("maps")) {
-    return iAmSenderOfLast
-      ? ["I can share my location.", "Where should we meet?"]
-      : ["I will share the location shortly.", "Are you able to come to the site?"];
-  }
-
-  if (ct === "job") {
-    return iAmSenderOfLast
-      ? [
-          `Hi, I'm interested in the ${t} role. Is this position still open?`,
-          `Could you share more details about ${t}?`,
-          "Is accommodation or transportation provided?",
-          "What is the expected start date and contract type?",
-          "I have relevant experience — may I share my CV?",
-        ]
-      : [
-          `Yes, the ${t} position is still open. Are you available for a short discussion?`,
-          "Thank you for your interest. Please share your experience and CV.",
-          "Could you outline your key skills related to this role?",
-          "What is your notice period / availability?",
-          "This position is currently under review. May I have your experience summary?",
-        ];
-  }
-  if (ct === "marketplace" || ct === "product" || ct === "vehicle" || ct === "property" || ct === "accommodation") {
-    return iAmSenderOfLast
-      ? [
-          `Is ${t} still available?`,
-          "Is the price negotiable?",
-          "Can I see more photos or details?",
-          "Where is it located? Can we meet?",
-          "What is the condition and reason for selling?",
-        ]
-      : [
-          `Yes, ${t} is still available.`,
-          "Price is as listed — open to reasonable offers.",
-          "I can share more photos. What would you like to see?",
-          "Location can be shared after we agree to meet.",
-          "Feel free to ask any questions.",
-        ];
-  }
-  if (ct === "service") {
-    return iAmSenderOfLast
-      ? ["Are you available this week?", "What is your service rate?", "Can you provide a quotation?"]
-      : ["Yes, I am available. When do you need the service?", "Please share the scope so I can quote accurately."];
-  }
-  if (ct === "talent") {
-    return iAmSenderOfLast
-      ? ["Hi, I saw your profile and would like to discuss an opportunity.", "Are you open to new roles?"]
-      : ["Thank you for reaching out. Please share more about the role.", "Yes, I am open to opportunities."];
-  }
-  return iAmSenderOfLast
-    ? ["Hello!", "Thank you.", "Looking forward to your reply."]
-    : ["Hello! How can I help?", "Thank you for your message.", "I will get back to you shortly."];
-}
-
 function attachmentHref(m: {
   id: string;
   metadata?: {
@@ -212,11 +114,26 @@ function attachmentHref(m: {
     fileName?: string;
   } | null;
 }): string {
+  // Always short Hunared URL — never expose long signed storage URLs
   if (m.id && !String(m.id).startsWith("tmp-")) {
     return `/api/messages/file?messageId=${encodeURIComponent(m.id)}`;
   }
   if (m.metadata?.storagePath) {
     return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
+  }
+  return "#";
+}): string {
+  if (m.metadata?.storagePath) {
+    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
+  }
+  // Prefer messageId so server can resolve + auth
+  if (m.id && !m.id.startsWith("tmp-")) {
+    const q = new URLSearchParams({ messageId: m.id });
+    if (m.metadata?.fileUrl) q.set("url", m.metadata.fileUrl);
+    return `/api/messages/file?${q.toString()}`;
+  }
+  if (m.metadata?.fileUrl) {
+    return `/api/messages/file?url=${encodeURIComponent(m.metadata.fileUrl)}`;
   }
   return "#";
 }
@@ -230,7 +147,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
 
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
-  const [filterQ, setFilterQ] = useState("");
   const [list, setList] = useState<Conv[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -254,31 +170,21 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   }, [messages]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const loadList = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = !!opts?.silent;
-    if (!silent) setLoadingList(true);
+  const loadList = useCallback(async () => {
+    setLoadingList(true);
     try {
       const res = await fetch(
-        `/api/messages/conversations?filter=${encodeURIComponent(filter)}&q=${encodeURIComponent(filterQ)}`
+        `/api/messages/conversations?filter=${encodeURIComponent(filter)}&q=${encodeURIComponent(q)}`
       );
-      const j = await res.json().catch(() => ({}));
+      const j = await res.json();
       setList(j.conversations || []);
-    } catch {
-      /* keep previous list */
     } finally {
-      if (!silent) setLoadingList(false);
+      setLoadingList(false);
     }
-  }, [filter, filterQ]);
+  }, [filter, q]);
 
-  // Debounce search so typing does not spin the list
   useEffect(() => {
-    const tmr = setTimeout(() => setFilterQ(q.trim()), 350);
-    return () => clearTimeout(tmr);
-  }, [q]);
-
-  // Initial + filter change only (not every poll)
-  useEffect(() => {
-    void loadList({ silent: false });
+    void loadList();
   }, [loadList]);
 
   useEffect(() => {
@@ -315,7 +221,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   }, [messages]);
 
   useEffect(() => {
-    if (draftFromUrl) setText(draftFromUrl);
+    if (draftFromUrl && !text) setText(draftFromUrl);
+    // only seed empty composer — do not overwrite user typing or post-send empty state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftFromUrl]);
 
   // Live chat: poll new messages every 2.5s while conversation is open
@@ -339,7 +247,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             const add = (j.messages as Msg[]).filter((m) => !ids.has(m.id));
             return add.length ? [...prev, ...add] : prev;
           });
-          void loadList({ silent: true });
+          void loadList();
         } else if (!after && Array.isArray(j.messages)) {
           // full sync rarely
         }
@@ -348,7 +256,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         /* ignore */
       }
     };
-    const iv = setInterval(() => void tick(), 4000);
+    const iv = setInterval(() => void tick(), 2500);
     return () => {
       stopped = true;
       clearInterval(iv);
@@ -441,8 +349,18 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
           prev.map((m) => (m.id === optimistic.id ? { ...m, id: j.messageId } : m))
         );
       }
-      // Refresh list in background (do not block chat)
-      void loadList({ silent: true });
+      // Clear draft query so compose box stays empty (two-way chat UX)
+      try {
+        if (typeof window !== "undefined" && window.location.search.includes("draft=")) {
+          const u = new URL(window.location.href);
+          u.searchParams.delete("draft");
+          window.history.replaceState({}, "", u.pathname + (u.search || "") + u.hash);
+        }
+      } catch {
+        /* ignore */
+      }
+      // Refresh list so recipient-side preview updates for both parties
+      void loadList();
     } catch {
       toast.error("Send failed");
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
@@ -469,37 +387,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       window.open(url, "_blank", "noopener,noreferrer");
     } catch {
       toast.error("Cannot open this file. Ask the sender to share it again.");
-    }
-  }
-
-
-  async function shareLocation() {
-    if (!activeId || sending) return;
-    if (!navigator.geolocation) {
-      toast.error("Location is not supported on this device");
-      return;
-    }
-    setSending(true);
-    try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15000,
-        });
-      });
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-      await send({
-        body: `📍 Shared location`,
-        messageType: "location",
-        metadata: { lat, lng, mapsUrl, label: "Shared location" },
-      });
-      toast.success("Location shared");
-    } catch {
-      toast.error("Could not get location. Allow location permission and try again.");
-    } finally {
-      setSending(false);
     }
   }
 
@@ -551,7 +438,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     });
     toast.success(on ? "Archived" : "Removed from archive");
     if (on) router.push("/dashboard/messages");
-    void loadList({ silent: true });
+    void loadList();
   }
 
   async function loadBlocked() {
@@ -567,9 +454,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       body: JSON.stringify({ blockedId }),
     });
     if (res.ok) {
-      toast.success("User unblocked — you can message them again");
+      toast.success("User unblocked");
       void loadBlocked();
-      void loadList({ silent: true });
     } else {
       const j = await res.json().catch(() => ({}));
       toast.error(j.error || "Could not unblock");
@@ -595,7 +481,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success("User blocked");
-      void loadList({ silent: true });
         void deleteChat();
       } else {
         toast.error(j.error || "Could not block user");
@@ -653,7 +538,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     }
     toast.success("Conversation removed");
     router.push("/dashboard/messages");
-    void loadList({ silent: true });
+    void loadList();
   }
 
   async function deleteMsg(messageId: string) {
@@ -670,19 +555,21 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     toast.success("Message deleted");
   }
 
-  // Smart chips for BOTH users — based on role + last message context
-  const lastMsg = messages.length ? messages[messages.length - 1] : null;
-  const iAmSenderOfLast = !!(lastMsg && lastMsg.sender_id === currentUserId);
-  const quick = roleAwareSuggestions(
-    conv?.context_type,
-    conv?.context_title || undefined,
-    iAmSenderOfLast,
-    lastMsg?.body
-  );
-  // Prefer session openers when chat is empty (starter side)
-  const starterQuick =
-    messages.length === 0 && contextQuick?.length ? contextQuick : null;
-  const chips = starterQuick || quick;
+  // Smart chips: reply to last inbound message, else context openers
+  const lastInbound = [...messages].reverse().find((m) => m.sender_id !== currentUserId);
+  const replyChips = lastInbound
+    ? buildReplySuggestions({
+        lastMessage: lastInbound.body,
+        contextType: conv?.context_type,
+        contextTitle: conv?.context_title,
+      })
+    : [];
+  const quick =
+    replyChips.length > 0
+      ? replyChips
+      : contextQuick?.length
+        ? contextQuick
+        : QUICK[conv?.context_type || ""] || QUICK.default;
 
   const listPane = (
     <div className="flex flex-col h-full border-r border-border bg-card/40">
@@ -705,11 +592,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             type="button"
             className="text-[10px] text-muted-foreground hover:text-foreground underline"
             onClick={() => {
-              setShowBlocked((v) => {
-                const next = !v;
-                if (next) void loadBlocked();
-                return next;
-              });
+              setShowBlocked((v) => !v);
+              void loadBlocked();
             }}
           >
             {showBlocked ? "Hide blocked" : "Blocked users"}
@@ -795,10 +679,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     <User className="h-4 w-4" />
                   )}
                   {c.other?.id && onlineMap[c.other.id] ? (
-                    <span
-                      className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-background shadow-[0_0_0_1px_rgba(16,185,129,0.35)]"
-                      title="Online"
-                    />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" title="Online" />
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -854,16 +735,13 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="relative h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden text-muted-foreground">
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden text-muted-foreground">
               {other?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={other.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
                 <User className="h-4 w-4" />
               )}
-              {other?.id && onlineMap[other.id] ? (
-                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-background" title="Online" />
-              ) : null}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold truncate flex items-center gap-1.5">
@@ -942,22 +820,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     >
                       {displayName}
                     </p>
-                    {(m.message_type === "location" || m.metadata?.mapsUrl) && (
-                      <a
-                        href={
-                          m.metadata?.mapsUrl ||
-                          (m.metadata?.lat != null && m.metadata?.lng != null
-                            ? `https://www.google.com/maps?q=${m.metadata.lat},${m.metadata.lng}`
-                            : "#")
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mb-1.5 flex items-center gap-2 rounded-lg border border-white/15 bg-black/10 px-2.5 py-2 text-[12px] hover:bg-black/20"
-                      >
-                        <MapPin className="h-4 w-4 shrink-0" />
-                        <span className="font-medium">Open in Google Maps</span>
-                      </a>
-                    )}
                     {(m.metadata?.fileUrl || m.metadata?.storagePath) && (
                       <div className="mb-1.5">
                         {m.message_type === "image" ||
@@ -1000,14 +862,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                     )}
                     {m.body &&
                     !(
-                      m.message_type === "location" ||
-                      !!m.metadata?.mapsUrl ||
-                      (!!m.metadata?.fileName &&
-                        (m.body === m.metadata.fileName ||
-                          m.body === `📎 ${m.metadata.fileName}` ||
-                          m.body === `Shared file: ${m.metadata.fileName}` ||
-                          m.body.startsWith("📎 ") ||
-                          m.body.startsWith("Shared file:")))
+                      m.metadata?.fileName &&
+                      (m.body === m.metadata.fileName ||
+                        m.body === `📎 ${m.metadata.fileName}` ||
+                        m.body === `Shared file: ${m.metadata.fileName}` ||
+                        m.body.startsWith("📎 ") ||
+                        m.body.startsWith("Shared file:"))
                     ) ? (
                       <p className="whitespace-pre-wrap break-words">{m.body}</p>
                     ) : null}
@@ -1042,7 +902,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
 
           <div className="border-t border-border p-2 space-y-1.5">
             <div className="flex flex-wrap gap-1 px-0.5">
-              {chips.map((s) => (
+              {quick.map((s) => (
                 <button
                   key={s}
                   type="button"
@@ -1079,15 +939,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 ) : (
                   <Paperclip className="h-4 w-4" />
                 )}
-              </button>
-              <button
-                type="button"
-                className="p-2 rounded-xl text-muted-foreground hover:bg-muted shrink-0"
-                title="Share my location (Google Maps)"
-                disabled={sending}
-                onClick={() => void shareLocation()}
-              >
-                <MapPin className="h-4 w-4" />
               </button>
               <input
                 value={text}
