@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase";
 const THEMES = new Set(["system", "light", "dark"]);
 
 const SELECT_COLS =
-  "username, full_name, email, role, country, preferred_theme, preferred_timezone, preferred_country, ai_enabled, ai_personalization, ai_cv_analysis, ai_notifications, email_job_alerts, email_messages, show_online_status, compact_mode";
+  "username, full_name, email, role, country, preferred_theme, preferred_timezone, preferred_country, ai_enabled, ai_personalization, ai_cv_analysis, ai_notifications, email_job_alerts, email_messages, show_online_status, compact_mode, history_enabled";
 
 export type UserSettings = {
   username: string | null;
@@ -44,6 +44,7 @@ const defaults: UserSettings = {
   email_messages: true,
   show_online_status: true,
   compact_mode: false,
+  history_enabled: true,
 };
 
 function normalize(data: Record<string, unknown> | null): UserSettings {
@@ -69,6 +70,7 @@ function normalize(data: Record<string, unknown> | null): UserSettings {
     email_messages: data.email_messages !== false,
     show_online_status: data.show_online_status !== false,
     compact_mode: data.compact_mode === true,
+    history_enabled: data.history_enabled !== false,
   };
 }
 
@@ -146,6 +148,7 @@ export async function POST(req: NextRequest) {
     "email_messages",
     "show_online_status",
     "compact_mode",
+    "history_enabled",
   ] as const) {
     if (typeof body[key] === "boolean") patch[key] = body[key];
   }

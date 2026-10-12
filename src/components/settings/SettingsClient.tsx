@@ -39,6 +39,7 @@ type SettingsState = {
   email_messages: boolean;
   show_online_status: boolean;
   compact_mode: boolean;
+  history_enabled: boolean;
   migrationRequired?: boolean;
 };
 
@@ -83,6 +84,10 @@ export function SettingsClient() {
           "hunared_compact_mode",
           j.compact_mode ? "1" : "0"
         );
+        localStorage.setItem(
+          "hunared_history_enabled",
+          j.history_enabled === false ? "0" : "1"
+        );
       }
     } catch {
       toast.error("Could not load settings");
@@ -115,16 +120,17 @@ export function SettingsClient() {
         toast.message("Some options need database update (run 015_user_settings.sql).");
       }
       if (patch.preferred_theme) setTheme(patch.preferred_theme);
+      if (typeof patch.history_enabled === "boolean") {
+        localStorage.setItem(
+          "hunared_history_enabled",
+          patch.history_enabled ? "1" : "0"
+        );
+      }
       if (typeof patch.ai_enabled === "boolean") {
         localStorage.setItem(
           "hunared_ai_enabled",
           patch.ai_enabled ? "1" : "0"
         );
-        try {
-          window.dispatchEvent(new Event("hunared-ai-settings-changed"));
-        } catch {
-          /* ignore */
-        }
       }
       if (patch.preferred_country !== undefined) {
         if (patch.preferred_country) {
@@ -436,6 +442,21 @@ export function SettingsClient() {
                 disabled={saving}
                 onChange={(v) => void save({ show_online_status: v })}
               />
+              <Toggle
+                label="Save activity history"
+                desc="Remember pages, jobs, and listings you open. Turn off to stop recording."
+                checked={s.history_enabled !== false}
+                disabled={saving}
+                onChange={(v) => void save({ history_enabled: v })}
+              />
+            </div>
+            <div className="mt-3">
+              <Link
+                href="/dashboard/history"
+                className="text-xs text-primary hover:underline"
+              >
+                View or clear your activity history →
+              </Link>
             </div>
             <div className="mt-4 rounded-xl border border-border bg-muted/20 p-4 text-xs text-muted-foreground leading-relaxed">
               Profile visibility (listed publicly / available for hire) is

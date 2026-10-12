@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ActivityTracker } from "@/components/activity/ActivityTracker";
 import { SessionKeepAlive } from "@/components/providers/SessionKeepAlive";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PreferencesApplier } from "@/components/providers/PreferencesApplier";
@@ -101,6 +102,7 @@ export default function RootLayout({
           afterSignOutUrl="/"
         >
           <SessionKeepAlive />
+          <ActivityTracker />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
