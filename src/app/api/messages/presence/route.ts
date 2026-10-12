@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 
-const ONLINE_MS = 2 * 60 * 1000; // 2 minutes
+/** Consider online if seen within 3 minutes */
+const ONLINE_MS = 3 * 60 * 1000;
 
 export async function POST() {
   const { userId } = await auth();
@@ -17,12 +18,12 @@ export async function POST() {
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ presence: {} });
   const ids = (req.nextUrl.searchParams.get("ids") || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
-    .slice(0, 50);
+    .slice(0, 40);
   if (!ids.length) return NextResponse.json({ presence: {} });
 
   const supabase = createAdminClient();
@@ -32,13 +33,12 @@ export async function GET(req: NextRequest) {
     .in("id", ids);
 
   const now = Date.now();
-  const presence: Record<string, { online: boolean; lastSeenAt: string | null }> = {};
-  for (const id of ids) {
-    const row = (data || []).find((d) => d.id === id);
-    const ts = row?.last_seen_at ? new Date(row.last_seen_at).getTime() : 0;
-    presence[id] = {
-      online: ts > 0 && now - ts < ONLINE_MS,
-      lastSeenAt: row?.last_seen_at || null,
+  const presence: Record<string, { online: boolean; lastSeen: string | null }> = {};
+  for (const p of data ?? []) {
+    const t = p.last_seen_at ? new Date(p.last_seen_at).getTime() : 0;
+    presence[p.id] = {
+      online: t > 0 && now - t < ONLINE_MS,
+      lastSeen: p.last_seen_at,
     };
   }
   return NextResponse.json({ presence });

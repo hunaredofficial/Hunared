@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Ban,
   Flag,
+  Settings,
   Loader2,
   MessageSquare,
   Search,
@@ -114,14 +115,23 @@ function attachmentHref(m: {
     fileName?: string;
   } | null;
 }): string {
-  // Prefer short Hunared URL via messageId (server resolves + auth)
+  // Always short Hunared URL — never expose long signed storage URLs
   if (m.id && !String(m.id).startsWith("tmp-")) {
-    const q = new URLSearchParams({ messageId: String(m.id) });
-    if (m.metadata?.fileUrl) q.set("url", m.metadata.fileUrl);
-    return `/api/messages/file?${q.toString()}`;
+    return `/api/messages/file?messageId=${encodeURIComponent(m.id)}`;
   }
   if (m.metadata?.storagePath) {
     return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
+  }
+  return "#";
+}): string {
+  if (m.metadata?.storagePath) {
+    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
+  }
+  // Prefer messageId so server can resolve + auth
+  if (m.id && !m.id.startsWith("tmp-")) {
+    const q = new URLSearchParams({ messageId: m.id });
+    if (m.metadata?.fileUrl) q.set("url", m.metadata.fileUrl);
+    return `/api/messages/file?${q.toString()}`;
   }
   if (m.metadata?.fileUrl) {
     return `/api/messages/file?url=${encodeURIComponent(m.metadata.fileUrl)}`;
@@ -149,6 +159,35 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   const [contextQuick, setContextQuick] = useState<string[] | null>(null);
   const [uploading, setUploading] = useState(false);
   const [onlineMap, setOnlineMap] = useState<Record<string, boolean>>({});
+  const [chatSettingsOpen, setChatSettingsOpen] = useState(false);
+  const [chatSettings, setChatSettings] = useState({
+    sound: true,
+    showOnline: true,
+    enterToSend: true,
+    compact: false,
+  });
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("hunared_chat_settings");
+      if (raw) {
+        const j = JSON.parse(raw);
+        setChatSettings((s) => ({ ...s, ...j }));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  function saveChatSettings(patch: Partial<typeof chatSettings>) {
+    setChatSettings((s) => {
+      const next = { ...s, ...patch };
+      try {
+        localStorage.setItem("hunared_chat_settings", JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
   const [showBlocked, setShowBlocked] = useState(false);
   const [blockedList, setBlockedList] = useState<
     { userId: string; profile: { full_name?: string | null; username?: string | null } | null }[]
@@ -217,42 +256,82 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftFromUrl]);
 
-  // Live chat: poll new messages every 2.5s while conversation is open
+  // Live chat: light incremental poll (no full history reload)
   useEffect(() => {
     if (!activeId) return;
     let stopped = false;
+    let busy = false;
     const tick = async () => {
-      if (stopped) return;
+      if (stopped || busy) return;
+      busy = true;
       try {
         const last = messagesRef.current[messagesRef.current.length - 1];
-        const after = last?.created_at && !String(last.id).startsWith("tmp-") ? last.created_at : "";
-        const url = after
-          ? `/api/messages/${activeId}?after=${encodeURIComponent(after)}`
-          : `/api/messages/${activeId}`;
+        const after =
+          last?.created_at && !String(last.id).startsWith("tmp-") ? last.created_at : "";
+        if (!after) return; // wait until initial load finishes
+        const url = `/api/messages/${activeId}?after=${encodeURIComponent(after)}&light=1`;
         const res = await fetch(url);
         if (!res.ok) return;
         const j = await res.json();
-        if (after && Array.isArray(j.messages) && j.messages.length) {
+        if (Array.isArray(j.messages) && j.messages.length) {
+          const add = j.messages as Msg[];
           setMessages((prev) => {
             const ids = new Set(prev.map((m) => m.id));
-            const add = (j.messages as Msg[]).filter((m) => !ids.has(m.id));
-            return add.length ? [...prev, ...add] : prev;
+            const fresh = add.filter((m) => !ids.has(m.id));
+            return fresh.length ? [...prev, ...fresh] : prev;
           });
-          void loadList();
-        } else if (!after && Array.isArray(j.messages)) {
-          // full sync rarely
+          // Patch conversation list preview locally — avoid full list refetch
+          const preview = String(add[add.length - 1]?.body || "").slice(0, 80);
+          setList((prev) =>
+            prev.map((c) =>
+              c.id === activeId
+                ? {
+                    ...c,
+                    last_message_preview: preview || c.last_message_preview,
+                    last_message_at: add[add.length - 1]?.created_at || c.last_message_at,
+                    unread: false,
+                  }
+                : c
+            )
+          );
+          try {
+            if (chatSettings.sound && typeof window !== "undefined") {
+              // soft click without external asset
+              const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+              if (Ctx) {
+                const ctx = new Ctx();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.connect(g);
+                g.connect(ctx.destination);
+                o.frequency.value = 880;
+                g.gain.value = 0.03;
+                o.start();
+                o.stop(ctx.currentTime + 0.06);
+              }
+            }
+          } catch {
+            /* ignore sound */
+          }
         }
-        if (j.other) setOther(j.other);
       } catch {
         /* ignore */
+      } finally {
+        busy = false;
       }
     };
-    const iv = setInterval(() => void tick(), 2500);
+    const iv = setInterval(() => void tick(), 1500);
     return () => {
       stopped = true;
       clearInterval(iv);
     };
-  }, [activeId, loadList]);
+  }, [activeId, chatSettings.sound]);
+
+  // List refresh on a slower cadence (not every message)
+  useEffect(() => {
+    const iv = setInterval(() => void loadList(), 15000);
+    return () => clearInterval(iv);
+  }, [loadList]);
 
   // Presence heartbeat + other user online status
   useEffect(() => {
@@ -261,7 +340,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       void fetch("/api/messages/presence", { method: "POST" }).catch(() => {});
     };
     beat();
-    const iv = setInterval(beat, 30000);
+    const iv = setInterval(beat, 25000);
     return () => {
       stopped = true;
       clearInterval(iv);
@@ -290,7 +369,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         .catch(() => {});
     };
     load();
-    const iv = setInterval(load, 20000);
+    const iv = setInterval(load, 12000);
     return () => {
       stopped = true;
       clearInterval(iv);
@@ -472,7 +551,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       const j = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success("User blocked");
-        void deleteChat();
+        void deleteChat(false);
       } else {
         toast.error(j.error || "Could not block user");
       }
@@ -515,35 +594,42 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     }
   }
 
-  async function deleteChat() {
+  async function deleteChat(forEveryone = false) {
     if (!activeId) return;
-    if (!confirm("Remove this conversation from your inbox? The other person will keep their copy.")) return;
+    const msg = forEveryone
+      ? "Delete this conversation for everyone? Messages will be removed for both people."
+      : "Remove this conversation from your inbox only? The other person will keep their copy.";
+    if (!confirm(msg)) return;
     const res = await fetch(`/api/messages/${activeId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ deleteForMe: true }),
+      body: JSON.stringify(
+        forEveryone ? { deleteForEveryone: true } : { deleteForMe: true }
+      ),
     });
     if (!res.ok) {
       toast.error("Could not delete conversation");
       return;
     }
-    toast.success("Conversation removed");
+    toast.success(forEveryone ? "Conversation deleted for everyone" : "Conversation removed");
     router.push("/dashboard/messages");
     void loadList();
   }
 
   async function deleteMsg(messageId: string) {
-    if (!activeId || !confirm("Delete this message?")) return;
-    const res = await fetch(`/api/messages/${activeId}?messageId=${encodeURIComponent(messageId)}`, {
-      method: "DELETE",
-    });
+    if (!activeId) return;
+    if (!confirm("Delete this message for everyone? It will be removed for both of you.")) return;
+    const res = await fetch(
+      `/api/messages/${activeId}?messageId=${encodeURIComponent(messageId)}`,
+      { method: "DELETE" }
+    );
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
       toast.error(j.error || "Could not delete");
       return;
     }
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
-    toast.success("Message deleted");
+    toast.success("Message deleted for everyone");
   }
 
   // Smart chips: reply to last inbound message, else context openers
@@ -565,10 +651,49 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   const listPane = (
     <div className="flex flex-col h-full border-r border-border bg-card/40">
       <div className="p-3 border-b border-border space-y-2">
-        <h1 className="text-sm font-semibold flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-primary" />
-          Messages
-        </h1>
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-sm font-semibold flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            Messages
+          </h1>
+          <button
+            type="button"
+            onClick={() => setChatSettingsOpen((v) => !v)}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
+            title="Chat settings"
+            aria-label="Chat settings"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
+        {chatSettingsOpen && (
+          <div className="rounded-xl border border-border bg-background/80 p-3 space-y-2.5 text-xs">
+            <p className="font-semibold text-foreground text-[11px] uppercase tracking-wide">
+              Chat preferences
+            </p>
+            {(
+              [
+                ["sound", "Sound on new message"],
+                ["showOnline", "Show online status"],
+                ["enterToSend", "Enter to send"],
+                ["compact", "Compact message bubbles"],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="flex items-center justify-between gap-2 cursor-pointer">
+                <span className="text-muted-foreground">{label}</span>
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 accent-primary"
+                  checked={chatSettings[key]}
+                  onChange={(e) => saveChatSettings({ [key]: e.target.checked })}
+                />
+              </label>
+            ))}
+            <p className="text-[10px] text-muted-foreground pt-1">
+              Preferences are saved on this device.
+            </p>
+          </div>
+        )}
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <input
@@ -662,15 +787,18 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               )}
             >
               <div className="flex items-start gap-2">
-                <div className="relative h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden text-muted-foreground">
+                <div className="relative h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0 text-muted-foreground">
                   {c.other?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.other.avatar_url} alt="" className="h-full w-full object-cover" />
+                    <img src={c.other.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
                   ) : (
                     <User className="h-4 w-4" />
                   )}
-                  {c.other?.id && onlineMap[c.other.id] ? (
-                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" title="Online" />
+                  {chatSettings.showOnline && c.other?.id && onlineMap[c.other.id] ? (
+                    <span
+                      className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card z-10 translate-x-[1px] translate-y-[1px]"
+                      title="Online"
+                    />
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -726,18 +854,24 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden text-muted-foreground">
+            <div className="relative h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
               {other?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={other.avatar_url} alt="" className="h-full w-full object-cover" />
+                <img src={other.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
               ) : (
                 <User className="h-4 w-4" />
               )}
+              {chatSettings.showOnline && other?.id && onlineMap[other.id] ? (
+                <span
+                  className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background z-10"
+                  title="Online"
+                />
+              ) : null}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold truncate flex items-center gap-1.5">
                 {other?.full_name || other?.username || "Conversation"}
-                {other?.id && onlineMap[other.id] ? (
+                {chatSettings.showOnline && other?.id && onlineMap[other.id] ? (
                   <span className="text-[10px] font-medium text-emerald-500">Online</span>
                 ) : other?.id ? (
                   <span className="text-[10px] font-normal text-muted-foreground">Offline</span>
@@ -756,8 +890,16 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title={filter === "archived" ? "Unarchive" : "Archive"} onClick={() => void archive(filter !== "archived")}>
               <Archive className="h-4 w-4 text-muted-foreground" />
             </button>
-            <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Delete conversation" onClick={() => void deleteChat()}>
+            <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Remove from my inbox" onClick={() => void deleteChat(false)}>
               <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded-lg hover:bg-destructive/10"
+              title="Delete for everyone"
+              onClick={() => void deleteChat(true)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
             </button>
             <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Block" onClick={() => void blockUser()}>
               <Ban className="h-4 w-4 text-muted-foreground" />

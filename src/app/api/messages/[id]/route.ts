@@ -27,13 +27,15 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
   const before = req.nextUrl.searchParams.get("before");
   const after = req.nextUrl.searchParams.get("after");
+  const light = req.nextUrl.searchParams.get("light") === "1";
+
   let mq = supabase
     .from("messages")
     .select("id, conversation_id, sender_id, body, message_type, metadata, created_at, deleted_at")
     .eq("conversation_id", id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(light && after ? 30 : 50);
   if (before) mq = mq.lt("created_at", before);
   if (after) {
     mq = mq.gt("created_at", after).order("created_at", { ascending: true });
@@ -41,44 +43,49 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
   const { data: messages } = await mq;
 
-  // Mark read
-  await supabase
-    .from("conversation_participants")
-    .update({ last_read_at: new Date().toISOString() })
-    .eq("conversation_id", id)
-    .eq("user_id", userId);
-
-  const { data: parts } = await supabase
-    .from("conversation_participants")
-    .select("user_id")
-    .eq("conversation_id", id);
-  const otherId = (parts ?? []).map((p) => p.user_id).find((u) => u !== userId);
-  let other = null;
-  if (otherId) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name, username, avatar_url, profession, role")
-      .eq("id", otherId)
-      .maybeSingle();
-    other = data;
+  // Full open marks read; light poll only marks when new messages arrived
+  if (!light || (after && (messages?.length ?? 0) > 0)) {
+    await supabase
+      .from("conversation_participants")
+      .update({ last_read_at: new Date().toISOString() })
+      .eq("conversation_id", id)
+      .eq("user_id", userId);
   }
 
-  const msgs = after
-    ? (messages ?? [])
-    : (messages ?? []).reverse();
+  let other = null;
+  if (!light) {
+    const { data: parts } = await supabase
+      .from("conversation_participants")
+      .select("user_id")
+      .eq("conversation_id", id);
+    const otherId = (parts ?? []).map((p) => p.user_id).find((u) => u !== userId);
+    if (otherId) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, username, avatar_url, profession, role")
+        .eq("id", otherId)
+        .maybeSingle();
+      other = data;
+    }
+  }
+
+  const msgs = after ? (messages ?? []) : (messages ?? []).reverse();
   const senderIds = [...new Set(msgs.map((m) => m.sender_id))];
-  const { data: senders } = await supabase
-    .from("profiles")
-    .select("id, full_name, username, avatar_url")
-    .in("id", senderIds.length ? senderIds : ["__none__"]);
-  const senderMap = new Map((senders ?? []).map((s) => [s.id, s]));
-  const enriched = msgs.map((m) => ({
-    ...m,
-    sender: senderMap.get(m.sender_id) || null,
-  }));
+  let enriched = msgs;
+  if (senderIds.length) {
+    const { data: senders } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, avatar_url")
+      .in("id", senderIds);
+    const senderMap = new Map((senders ?? []).map((s) => [s.id, s]));
+    enriched = msgs.map((m) => ({
+      ...m,
+      sender: senderMap.get(m.sender_id) || null,
+    }));
+  }
 
   return NextResponse.json({
-    conversation: conv,
+    conversation: light ? undefined : conv,
     messages: enriched,
     other,
   });
@@ -112,6 +119,25 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     .eq("user_id", userId)
     .maybeSingle();
   if (!part) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  
+  if (body.deleteForEveryone === true) {
+    // Soft-delete all messages + remove both participants' access
+    await supabase
+      .from("messages")
+      .update({ deleted_at: new Date().toISOString(), body: "" })
+      .eq("conversation_id", id)
+      .is("deleted_at", null);
+    await supabase
+      .from("conversation_participants")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("conversation_id", id);
+    await supabase
+      .from("conversations")
+      .update({ status: "closed", last_message_preview: "Chat deleted" })
+      .eq("id", id);
+    return NextResponse.json({ ok: true, deletedForEveryone: true });
+  }
 
   if (body.archive === true) {
     await supabase
