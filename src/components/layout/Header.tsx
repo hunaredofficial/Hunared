@@ -371,7 +371,7 @@ export function Header() {
             <ThemeToggle />
 
             {/* Messages — signed-in only, unread badge */}
-            <MessagesHeaderIcon className="hidden sm:inline-flex" showLabel />
+            <MessagesHeaderIcon />
 
             <div className="hidden lg:flex items-center gap-1.5">
               <Show when="signed-out">
@@ -419,8 +419,6 @@ export function Header() {
                 </div>
               </Show>
             </div>
-
-            <MessagesHeaderIcon className="sm:hidden" />
 
             <Button
               variant="ghost"
