@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton } from "@clerk/nextjs";
@@ -155,7 +156,7 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-];
+];];
 
 export function Header() {
   const pathname = usePathname();
@@ -369,6 +370,9 @@ export function Header() {
 
             <ThemeToggle />
 
+            {/* Messages — signed-in only, unread badge */}
+            <MessagesHeaderIcon className="hidden sm:inline-flex" showLabel />
+
             <div className="hidden lg:flex items-center gap-1.5">
               <Show when="signed-out">
                 <Button
@@ -415,6 +419,8 @@ export function Header() {
                 </div>
               </Show>
             </div>
+
+            <MessagesHeaderIcon className="sm:hidden" />
 
             <Button
               variant="ghost"
@@ -516,6 +522,9 @@ export function Header() {
             <Show when="signed-in">
               <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start h-11" asChild>
+                <Link href="/dashboard/messages">Messages</Link>
               </Button>
               <div className="flex items-center justify-center flex-1">
                 <UserButton />
