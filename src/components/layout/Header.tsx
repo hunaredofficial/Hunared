@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   Menu,
   X,
@@ -34,7 +34,7 @@ type MegaItem = {
   label: string;
   href: string;
   desc?: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string }>;
 };
 type MegaGroup = {
   type: "mega";
@@ -370,7 +370,6 @@ export function Header() {
 
             <ThemeToggle />
 
-            {/* Messages — signed-in only, unread badge */}
             <MessagesHeaderIcon />
 
             <div className="hidden lg:flex items-center gap-1.5">
@@ -521,10 +520,10 @@ export function Header() {
               <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start h-11" asChild>
+              <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link href="/dashboard/messages">Messages</Link>
               </Button>
-              <div className="flex items-center justify-center flex-1">
+              <div className="flex items-center justify-center shrink-0">
                 <UserButton />
               </div>
             </Show>
