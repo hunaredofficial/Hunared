@@ -115,23 +115,13 @@ function attachmentHref(m: {
     fileName?: string;
   } | null;
 }): string {
-  // Always short Hunared URL — never expose long signed storage URLs
   if (m.id && !String(m.id).startsWith("tmp-")) {
-    return `/api/messages/file?messageId=${encodeURIComponent(m.id)}`;
-  }
-  if (m.metadata?.storagePath) {
-    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
-  }
-  return "#";
-}): string {
-  if (m.metadata?.storagePath) {
-    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
-  }
-  // Prefer messageId so server can resolve + auth
-  if (m.id && !m.id.startsWith("tmp-")) {
-    const q = new URLSearchParams({ messageId: m.id });
+    const q = new URLSearchParams({ messageId: String(m.id) });
     if (m.metadata?.fileUrl) q.set("url", m.metadata.fileUrl);
     return `/api/messages/file?${q.toString()}`;
+  }
+  if (m.metadata?.storagePath) {
+    return `/api/messages/file?path=${encodeURIComponent(m.metadata.storagePath)}`;
   }
   if (m.metadata?.fileUrl) {
     return `/api/messages/file?url=${encodeURIComponent(m.metadata.fileUrl)}`;
