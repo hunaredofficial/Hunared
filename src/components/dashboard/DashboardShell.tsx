@@ -294,6 +294,11 @@ function getNavItems(role: UserRole): NavItem[] {
       icon: <History className="h-4 w-4" />,
     },
     {
+      href: "/dashboard/premium-ads",
+      label: "Premium Ads",
+      icon: <Megaphone className="h-4 w-4" />,
+    },
+    {
       href: "/dashboard/settings",
       label: "Settings",
       icon: <Settings className="h-4 w-4" />,
