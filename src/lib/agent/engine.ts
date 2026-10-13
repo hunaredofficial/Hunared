@@ -302,17 +302,14 @@ export const COMMAND_PACKS: {
       { label: "Career tips", text: "Show career tips articles" },
       { label: "HSE safety", text: "HSE safety learning articles" },
       { label: "Programs", text: "Open Hunared programs" },
-      { label: "Finder", text: "Open Hunared Finder lost and found" },
+      { label: "Finder", text: "Open Finder Center" },
       { label: "Contact support", text: "Contact Hunared support" },
       { label: "What can you do?", text: "What can you do on Hunared?" },
     ],
   },
-,
-
   {
-    id: "guide",
-    label: "Guide",
-    items: [
+    title: "Guide",
+    commands: [
       { label: "How Hunared works", text: "How does Hunared work?" },
       { label: "How to message", text: "How do I message a seller?" },
       { label: "CV Builder help", text: "How do I create a CV?" },
@@ -322,9 +319,8 @@ export const COMMAND_PACKS: {
     ],
   },
   {
-    id: "navigate",
-    label: "Go to",
-    items: [
+    title: "Go to",
+    commands: [
       { label: "Messages", text: "Open my messages" },
       { label: "CV Builder", text: "Open CV Builder" },
       { label: "History", text: "Open activity history" },
@@ -335,7 +331,7 @@ export const COMMAND_PACKS: {
   },
 ];
 
-export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[
+export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
   {
     match: /^\/dashboard\/messages/,
     items: [
@@ -360,7 +356,6 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[
       "Open sample CV library tips",
     ],
   },
-] }[] = [
   {
     match: /^\/$/,
     items: [
@@ -403,14 +398,18 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[
   {
     match: /^\/companies/,
     items: [
-      "Companies in Dammam",
       "Oil and gas companies",
-      "Create company profile",
+      "Companies hiring now",
+      "Verified companies",
     ],
   },
   {
-    match: /^\/education/,
+    match: /^\/(learning|education|articles)/,
     items: ["Career tips", "HSE safety articles", "Engineering guides"],
+  },
+  {
+    match: /^\/program/,
+    items: ["Open Hunared programs", "Explore courses", "What can you do?"],
   },
   {
     match: /^\/dashboard/,
