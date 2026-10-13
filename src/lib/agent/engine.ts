@@ -40,6 +40,14 @@ export type AgentIntent =
   | "support"
   | "pricing"
   | "safety"
+  | "messages"
+  | "history"
+  | "settings"
+  | "finder"
+  | "team"
+  | "bulk_post"
+  | "lost_found"
+  | "offers"
   | "unknown";
 
 export type AgentAction = {
@@ -273,7 +281,7 @@ export const COMMAND_PACKS: {
       { label: "Browse talent", text: "Show candidates available for hire" },
       { label: "Companies", text: "Show companies in Saudi Arabia" },
       { label: "Oil & Gas firms", text: "Find oil and gas companies" },
-      { label: "Create profile", text: "Create my job seeker profile" },
+      { label: "Create profile", text: "Create my seeker profile" },
       { label: "Company profile", text: "Create company profile" },
     ],
   },
@@ -299,9 +307,60 @@ export const COMMAND_PACKS: {
       { label: "What can you do?", text: "What can you do on Hunared?" },
     ],
   },
+,
+
+  {
+    id: "guide",
+    label: "Guide",
+    items: [
+      { label: "How Hunared works", text: "How does Hunared work?" },
+      { label: "How to message", text: "How do I message a seller?" },
+      { label: "CV Builder help", text: "How do I create a CV?" },
+      { label: "Post a job", text: "How do I post a job?" },
+      { label: "Privacy & history", text: "How do I turn off activity history?" },
+      { label: "Is it free?", text: "Is Hunared free?" },
+    ],
+  },
+  {
+    id: "navigate",
+    label: "Go to",
+    items: [
+      { label: "Messages", text: "Open my messages" },
+      { label: "CV Builder", text: "Open CV Builder" },
+      { label: "History", text: "Open activity history" },
+      { label: "Settings", text: "Open settings" },
+      { label: "Finder Center", text: "Open Finder Center" },
+      { label: "Programs", text: "Open Hunared programs" },
+    ],
+  },
 ];
 
-export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
+export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[
+  {
+    match: /^\/dashboard\/messages/,
+    items: [
+      "How do I message a seller?",
+      "Open jobs to start a chat",
+      "Show blocked users help",
+    ],
+  },
+  {
+    match: /^\/dashboard\/(settings|history)/,
+    items: [
+      "How do I turn off activity history?",
+      "How do I hide the AI agent?",
+      "Open activity history",
+    ],
+  },
+  {
+    match: /^\/dashboard\/cv/,
+    items: [
+      "How do I upload my old CV?",
+      "Make my CV ATS-friendly",
+      "Open sample CV library tips",
+    ],
+  },
+] }[] = [
   {
     match: /^\/$/,
     items: [
@@ -464,7 +523,7 @@ export function parseUserMessage(
       intent: "help",
       label: "What I can do",
       message:
-        "I'm **Hunared AI** — your guide to the entire Hunared platform.\n\n**Discover**\n• Jobs by role, city, country, permanent/temporary\n• Talent (candidates), companies, marketplace listings\n• Learning articles, programs, certifications\n\n**Create & manage**\n• CV Builder · post a job or ad · profile · saved items\n\n**Learn the site**\n• Ask *How do I post a job?* · *How does Hunared work?* · *Is Hunared free?*\n\n**Support**\n• Contact page · Privacy & AI settings\n\nTry any natural request — no special commands needed.",
+        "I'm **Hunared AI** — guide to the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning · Finder Center\n• Permanent / temporary roles · Lost & Found · Offers\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · History · Settings\n\n**Account types**\n• Personal · Seeker · Company · Team (admin-assigned)\n\n**Ask me**\n• *Instrument tech jobs in Jubail*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *Turn off activity history*\n• *How does Hunared work?*\n\nNo special commands needed — plain language is fine.",
       secondary: [
         { label: "Jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },
@@ -531,7 +590,7 @@ export function parseUserMessage(
     };
   }
   if (
-    /\b(my profile|complete (my )?profile|update (my )?profile|edit profile|job seeker profile)\b/.test(
+    /\b(my profile|complete (my )?profile|update (my )?profile|edit profile|seeker profile)\b/.test(
       t
     )
   ) {
@@ -544,15 +603,130 @@ export function parseUserMessage(
       entities,
     };
   }
-  if (/\b(cv|resume|curriculum)\b/.test(t)) {
+  if (/\b(cv builder|resume builder|build (a |my )?cv|create (a |my )?cv|open cv)\b/.test(t) ||
+      (/\b(cv|resume|curriculum)\b/.test(t) && !/\bcv analysis\b/.test(t))) {
     return {
       intent: "cv",
-      href: "/dashboard/profile",
-      label: "Profile / CV",
+      href: "/dashboard/cv",
+      label: "CV Builder",
       message:
-        "CV is managed on your profile. I’ll open it so you can upload or update your CV.",
+        "**Hunared CV Builder** — create, upload, AI-improve, and export professional CVs.\n\n• Multiple templates · sample library · upload PDF/DOCX\n• AI assistant for writing & ATS tips\n• Add finished CV to your Seeker profile when ready\n\nOpening CV Builder (sign in required).",
       autoNavigate: true,
       entities,
+      secondary: [
+        { label: "CV Builder", href: "/dashboard/cv" },
+        { label: "My profile", href: "/dashboard/profile" },
+        { label: "Jobs", href: "/jobs" },
+      ],
+    };
+  }
+
+
+  // ── Messages / History / Settings / Finder ───────────────────────────
+  if (/\b(messages?|inbox|chat|start (a )?conversation|message (someone|user|seller|employer))\b/.test(t)) {
+    return {
+      intent: "messages",
+      href: "/dashboard/messages",
+      label: "Messages",
+      message:
+        "**Hunared Messages** — one inbox for jobs, talent, companies, and marketplace.\n\n• Open a job, listing, or profile → **Message**\n• Live chat, file share, online status\n• Block / report when needed\n\nOpening your inbox (sign in required).",
+      autoNavigate: true,
+      secondary: [
+        { label: "Messages", href: "/dashboard/messages" },
+        { label: "Jobs", href: "/jobs" },
+        { label: "Marketplace", href: "/market" },
+      ],
+    };
+  }
+  if (/\b(activity history|browsing history|my history|view history|clear history)\b/.test(t)) {
+    return {
+      intent: "history",
+      href: "/dashboard/history",
+      label: "Activity history",
+      message:
+        "**Activity history** stores pages, jobs, and listings you open (when enabled).\n\n• View or filter history in Dashboard → History\n• Turn off anytime: Settings → Privacy → Save activity history\n• Clear all from the History page\n\nOpening History (sign in required).",
+      autoNavigate: true,
+      secondary: [
+        { label: "History", href: "/dashboard/history" },
+        { label: "Privacy settings", href: "/dashboard/settings" },
+      ],
+    };
+  }
+  if (/\b(account settings|site settings|privacy settings|theme settings|my settings)\b/.test(t) ||
+      (/^\s*settings\s*$/.test(t) || /\bopen settings\b/.test(t))) {
+    return {
+      intent: "settings",
+      href: "/dashboard/settings",
+      label: "Settings",
+      message:
+        "**Account settings** — theme, country, timezone, AI agent on/off, notifications, privacy (online status & activity history).",
+      autoNavigate: true,
+      secondary: [
+        { label: "Settings", href: "/dashboard/settings" },
+        { label: "AI settings", href: "/ai-settings" },
+        { label: "History", href: "/dashboard/history" },
+      ],
+    };
+  }
+  if (/\b(finder center|hunared finder|finder)\b/.test(t)) {
+    return {
+      intent: "finder",
+      href: "/finder",
+      label: "Finder Center",
+      message:
+        "**Finder Center** helps you discover opportunities across jobs, talent, companies, and marketplace in one place.",
+      autoNavigate: true,
+      secondary: [
+        { label: "Finder Center", href: "/finder" },
+        { label: "Jobs", href: "/jobs" },
+        { label: "Marketplace", href: "/market" },
+      ],
+    };
+  }
+  if (/\b(bulk post|bulk jobs|team bulk|magic post)\b/.test(t)) {
+    return {
+      intent: "bulk_post",
+      href: "/dashboard/bulk",
+      label: "Bulk Post",
+      message:
+        "**Bulk Post** is available for **Team** accounts — post multiple jobs or marketplace listings at once with the same full forms and smart fill.",
+      autoNavigate: true,
+      secondary: [
+        { label: "Bulk Post", href: "/dashboard/bulk" },
+        { label: "Post a job", href: "/dashboard/jobs/new" },
+      ],
+    };
+  }
+  if (/\b(team role|team account|team profile)\b/.test(t)) {
+    return {
+      intent: "team",
+      href: "/dashboard",
+      label: "Team dashboard",
+      message:
+        "**Team** role can create candidate/company profiles without verification, bulk post jobs & listings, and manage team tools from the dashboard.\n\nTeam access is assigned by admins.",
+      autoNavigate: false,
+      secondary: [
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Bulk Post", href: "/dashboard/bulk" },
+      ],
+    };
+  }
+  if (/\b(lost\s*&\s*found|lost and found|lost found)\b/.test(t)) {
+    return {
+      intent: "lost_found",
+      href: "/market?category=lost_found",
+      label: "Lost & Found",
+      message: "Opening **Lost & Found** in the marketplace.",
+      autoNavigate: true,
+    };
+  }
+  if (/\b(offers?|deals?|promotions?)\b/.test(t) && !/\b(job offer)\b/.test(t)) {
+    return {
+      intent: "offers",
+      href: "/market?category=offers",
+      label: "Offers & Deals",
+      message: "Opening **Offers & Deals** in the marketplace.",
+      autoNavigate: true,
     };
   }
 
@@ -807,7 +981,7 @@ export function parseUserMessage(
     intent: "unknown",
     label: "Try an example",
     message:
-      "I want to help, but that request was unclear.\n\nTry something like:\n• *Instrument technician jobs in Jubail*\n• *Apartment for rent in Dammam*\n• *Show candidates available for hire*\n• *Open CV Builder*\n• *What can you do?*",
+      "I want to help, but that was unclear.\n\nTry:\n• *Instrument technician jobs in Jubail*\n• *Apartment for rent in Dammam*\n• *Open CV Builder*\n• *Open my messages*\n• *How do I post a job?*\n• *What can you do?*",
     secondary: [
       { label: "Jobs", href: "/jobs" },
       { label: "Marketplace", href: "/market" },
@@ -905,7 +1079,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/register",
       label: "Register",
       message:
-        "**Create a Hunared account**\n\n1. Open **Register**\n2. Choose Personal, Job Seeker, or Company\n3. Complete required profile fields\n4. Verify email if prompted\n\nSeekers can list as available for hire. Companies can post jobs.",
+        "**Create a Hunared account**\n\n1. Open **Register**\n2. Choose Personal, Seeker, or Company\n3. Complete required profile fields\n4. Verify email if prompted\n\nSeekers can list as available for hire. Companies can post jobs.",
       secondary: [
         { label: "Register", href: "/register" },
         { label: "Sign in", href: "/sign-in" },
@@ -927,6 +1101,51 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
         { label: "Home", href: "/" },
         { label: "Jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },
+      ],
+    };
+  }
+
+
+  if (/how (do i|to) (message|chat|contact).*(seller|employer|company|candidate|user|someone)/i.test(lower) ||
+      /how (do i|to) (use )?messages/i.test(lower)) {
+    return {
+      intent: "how_to",
+      href: "/dashboard/messages",
+      label: "Messages",
+      message:
+        "**How messaging works**\n\n1. Open a **job**, **marketplace listing**, **company**, or **talent** profile\n2. Click **Message** (sign in required)\n3. Write in Hunared Messages — one unified inbox\n4. Share files when needed; use Block/Report for safety\n\nTeam/system posts are not messageable by design.",
+      secondary: [
+        { label: "Messages", href: "/dashboard/messages" },
+        { label: "Jobs", href: "/jobs" },
+        { label: "Marketplace", href: "/market" },
+      ],
+    };
+  }
+
+  if (/how (do i|to) (stop|disable|turn off).*(history|tracking|activity)/i.test(lower)) {
+    return {
+      intent: "how_to",
+      href: "/dashboard/settings",
+      label: "Privacy settings",
+      message:
+        "**Stop saving activity history**\n\n1. Open **Dashboard → Settings**\n2. Go to **Privacy**\n3. Turn off **Save activity history**\n4. Optional: open **History** and **Clear all**\n\nNew visits will not be recorded while this is off.",
+      secondary: [
+        { label: "Settings", href: "/dashboard/settings" },
+        { label: "History", href: "/dashboard/history" },
+      ],
+    };
+  }
+
+  if (/how (do i|to) (hide|turn off|disable).*(agent|ai|assistant)/i.test(lower)) {
+    return {
+      intent: "how_to",
+      href: "/dashboard/settings",
+      label: "Settings",
+      message:
+        "**Hide Hunared AI**\n\n1. **Dashboard → Settings → AI & agent**\n2. Turn off the AI agent toggle\n3. The floating assistant hides on the homepage and site\n\nYou can turn it back on anytime in Settings.",
+      secondary: [
+        { label: "Settings", href: "/dashboard/settings" },
+        { label: "AI settings", href: "/ai-settings" },
       ],
     };
   }

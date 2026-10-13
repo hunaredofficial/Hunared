@@ -18,6 +18,10 @@ import {
   FileText,
   Building2,
   Users,
+  MessageSquare,
+  History,
+  Settings,
+  MapPin,
   ArrowRight,
   Loader2,
   Mic,
@@ -39,9 +43,13 @@ const QUICK_START = [
   { icon: Briefcase, label: "Find jobs", text: "Find instrument technician jobs in Saudi Arabia" },
   { icon: FileText, label: "CV Builder", text: "Open CV Builder" },
   { icon: ShoppingBag, label: "Marketplace", text: "Browse marketplace for sale" },
-  { icon: GraduationCap, label: "Learning", text: "Find courses to improve my skills" },
-  { icon: Building2, label: "Companies", text: "Show companies in Saudi Arabia" },
   { icon: Users, label: "Talent", text: "Show candidates available for hire" },
+  { icon: Building2, label: "Companies", text: "Show companies hiring in Saudi Arabia" },
+  { icon: MessageSquare, label: "Messages", text: "Open my messages" },
+  { icon: GraduationCap, label: "Programs", text: "Open Hunared programs" },
+  { icon: MapPin, label: "Finder", text: "Open Finder Center" },
+  { icon: History, label: "History", text: "Open activity history" },
+  { icon: Settings, label: "Settings", text: "Open settings" },
 ];
 
 function contextualSuggestions(path: string): string[] {
@@ -76,11 +84,34 @@ function contextualSuggestions(path: string): string[] {
   if (path.startsWith("/learning") || path.startsWith("/program") || path.startsWith("/education")) {
     return ["Will this help my career?", "Find related jobs"];
   }
+  if (path.startsWith("/dashboard/messages")) {
+    return [
+      "How do I message a seller?",
+      "Open jobs to start a chat",
+      "What can you do?",
+    ];
+  }
+  if (path.startsWith("/dashboard/history") || path.startsWith("/dashboard/settings")) {
+    return [
+      "How do I turn off activity history?",
+      "How do I hide the AI agent?",
+      "Open activity history",
+    ];
+  }
+  if (path.includes("/cv")) {
+    return [
+      "How do I upload my old CV?",
+      "Make my CV ATS-friendly",
+      "Open CV Builder",
+    ];
+  }
   return [
-    "Instrument technician jobs in Jubail",
+    "How does Hunared work?",
+    "Find jobs in Jubail",
     "Open CV Builder",
-    "Apartment for rent in Dammam",
-    "What can you do?",
+    "Open my messages",
+    "How do I post a job?",
+    "Is Hunared free?",
   ];
 }
 
@@ -128,7 +159,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
     {
       id: "welcome",
       role: "assistant",
-      text: "I'm **Hunared AI** — your guide for jobs, CV, marketplace, companies, and learning.\n\nTell me what you need in plain language, or pick a shortcut below.",
+      text: "I'm **Hunared AI** — your guide to the whole platform.\n\nAsk about **jobs**, **marketplace**, **CV**, **companies**, **learning**, or **how to use Hunared**. No login required for guidance.\n\nPick a shortcut or type anything.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -154,7 +185,6 @@ export function HunaredAgent({ variant = "float", className }: Props) {
     } catch {
       /* ignore */
     }
-    // Prefer unified settings API; fall back to legacy ai-settings
     void (async () => {
       try {
         const res = await fetch("/api/profile/settings");
@@ -179,7 +209,6 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       }
     })();
 
-    // Live updates when Settings page toggles agent (same tab via custom event + storage)
     const onStorage = (e: StorageEvent) => {
       if (e.key === "hunared_ai_enabled" && e.newValue != null) {
         setAiEnabled(e.newValue !== "0");
@@ -219,7 +248,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             text: "Hunared AI is **OFF** for your account.\n\nJobs, Marketplace, and other features still work. Turn AI on anytime in Privacy & AI settings.",
             action: {
               intent: "ai_settings",
-              href: "/dashboard/settings/ai",
+              href: "/ai-settings",
               label: "Privacy & AI settings",
               message: "",
             },
@@ -345,6 +374,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
   const suggestions = contextualSuggestions(pathname);
 
+  // Respect Settings → AI agent off (floating widget only)
+  if (variant === "float" && !aiEnabled) return null;
+
   const panel = (
     <div
       className={cn(
@@ -383,7 +415,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            onClick={() => router.push("/dashboard/settings/ai")}
+            onClick={() => router.push("/ai-settings")}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
             title="Privacy & AI"
             aria-label="Privacy and AI settings"
@@ -425,7 +457,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           <p className="text-xs text-muted-foreground max-w-[16rem] leading-relaxed">
             AI assistance is disabled for your account. Everything else on Hunared still works.
           </p>
-          <Button size="sm" className="mt-1" onClick={() => router.push("/dashboard/settings/ai")}>
+          <Button size="sm" className="mt-1" onClick={() => router.push("/ai-settings")}>
             Turn on in settings
           </Button>
         </div>
@@ -449,10 +481,16 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           </div>
           <div className="space-y-2 pt-1">
             {[
+              "How does Hunared work?",
+              "How do I post a job?",
+              "How do I post a marketplace ad?",
               "Find permanent jobs in Jubail",
               "Apartment for rent under 2000 in Dammam",
-              "Show my saved items",
-              "Career roadmap for Instrument Technician",
+              "How do I create a CV?",
+              "Show candidates available for hire",
+              "Is Hunared free?",
+              "How do I stay safe on Hunared?",
+              "Contact support",
               "What can you do?",
             ].map((t) => (
               <button
@@ -610,9 +648,6 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
   if (variant === "page") return panel;
 
-  // Settings → AI off: hide floating agent on homepage and all public pages
-  if (!aiEnabled) return null;
-
   return (
     <>
       {open && panel}
@@ -620,7 +655,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg shadow-primary/20 flex items-center justify-center transition-all",
+          "fixed bottom-4 right-4 z-50 h-13 w-13 h-12 w-12 rounded-full shadow-lg shadow-primary/20 flex items-center justify-center transition-all",
           open
             ? "bg-muted text-foreground border border-border"
             : "bg-primary text-primary-foreground hover:scale-105"
