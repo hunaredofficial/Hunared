@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { HunaredAgent } from "@/components/agent/HunaredAgent";
 import {
@@ -11,7 +12,12 @@ import {
   Shield,
   HelpCircle,
   LifeBuoy,
+  Loader2,
 } from "lucide-react";
+
+/** Avoid static prerender failures (usePathname / client hooks in HunaredAgent). */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Hunared AI",
@@ -29,6 +35,15 @@ const CAPS = [
   { icon: HelpCircle, title: "How to use", desc: "Post jobs/ads, register, save items" },
   { icon: LifeBuoy, title: "Support", desc: "Safety tips and contact help" },
 ];
+
+function AgentFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[280px] text-muted-foreground gap-2 rounded-xl border border-border/60 bg-card/40">
+      <Loader2 className="h-5 w-5 animate-spin" />
+      <span className="text-sm">Loading Hunared AI…</span>
+    </div>
+  );
+}
 
 export default function AgentPage() {
   return (
@@ -70,7 +85,9 @@ export default function AgentPage() {
         ))}
       </div>
 
-      <HunaredAgent variant="page" />
+      <Suspense fallback={<AgentFallback />}>
+        <HunaredAgent variant="page" />
+      </Suspense>
 
       <p className="text-[11px] text-muted-foreground text-center max-w-lg mx-auto leading-relaxed">
         Guidance only — verify important details. You stay in control of applications, listings, and
