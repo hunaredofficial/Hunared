@@ -1,12 +1,26 @@
+import { Suspense } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { CvBuilder } from "@/components/cv/CvBuilder";
 import { createAdminClient } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata = {
   title: "CV Builder | Hunared",
   description: "Create and manage professional CVs with AI assistance.",
 };
+
+function CvFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[40vh] text-muted-foreground gap-2">
+      <Loader2 className="h-5 w-5 animate-spin" />
+      <span className="text-sm">Loading CV Builder…</span>
+    </div>
+  );
+}
 
 export default async function CvPage() {
   const { userId } = await auth();
@@ -72,7 +86,9 @@ export default async function CvPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <CvBuilder profile={profileSeed} />
+      <Suspense fallback={<CvFallback />}>
+        <CvBuilder profile={profileSeed} />
+      </Suspense>
     </div>
   );
 }
