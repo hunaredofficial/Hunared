@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search, Home, Briefcase, ShoppingBag } from "lucide-react";
 
+/** Avoid static export issues when root layout has client search hooks. */
+export const dynamic = "force-dynamic";
+
 export default function NotFound() {
   return (
     <main className="min-h-[70vh] flex items-center justify-center px-4 py-16">

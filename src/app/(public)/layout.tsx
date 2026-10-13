@@ -5,10 +5,6 @@ import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { HunaredAgent } from "@/components/agent/HunaredAgent";
 import { AdSlot } from "@/components/ads/AdSlot";
 
-/**
- * Public pages shell only.
- * Do NOT import globals.css / Clerk / fonts here — those belong in src/app/layout.tsx (root).
- */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

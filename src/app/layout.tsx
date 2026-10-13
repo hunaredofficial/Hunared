@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import Script from "next/script";
@@ -17,6 +18,9 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://hunared.com"),
@@ -102,7 +106,9 @@ export default function RootLayout({
           afterSignOutUrl="/"
         >
           <SessionKeepAlive />
-          <ActivityTracker />
+          <Suspense fallback={null}>
+                  <ActivityTracker />
+                </Suspense>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
