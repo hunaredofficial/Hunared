@@ -94,10 +94,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} h-full`}
+      className={`${poppins.variable} h-full min-h-dvh bg-background`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col antialiased font-[var(--font-poppins)]">
+      <body className="min-h-dvh flex flex-col antialiased font-[var(--font-poppins)] bg-background text-foreground">
         <ClerkProvider
           signInUrl="/sign-in"
           signUpUrl="/register"

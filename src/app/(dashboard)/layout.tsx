@@ -32,7 +32,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <DashboardShell role={profile.role} fullName={profile.full_name}>
+    <DashboardShell role={profile.role} fullName={profile.full_name || "User"}>
       {children}
     </DashboardShell>
   );

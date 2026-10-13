@@ -376,9 +376,9 @@ export function DashboardShell({
   const navItems = getNavItems(role);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-card md:flex md:flex-col">
+    <div className="min-h-dvh w-full bg-background text-foreground">
+      {/* Desktop sidebar — pin to viewport top (no gap above) */}
+      <aside className="fixed top-0 left-0 z-30 hidden h-dvh w-64 border-r border-border bg-card md:flex md:flex-col">
         <SidebarContent
           role={role}
           fullName={fullName}
@@ -388,7 +388,7 @@ export function DashboardShell({
       </aside>
 
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -408,10 +408,10 @@ export function DashboardShell({
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-card md:hidden">
+          <aside className="fixed top-0 left-0 z-50 h-dvh w-64 border-r border-border bg-card md:hidden">
             <SidebarContent
               role={role}
               fullName={fullName}
@@ -424,8 +424,10 @@ export function DashboardShell({
       )}
 
       {/* Main content */}
-      <main className="md:pl-64">
-        <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 pb-12 max-w-[90rem] mx-auto w-full">{children}</div>
+      <main className="min-h-dvh md:pl-64">
+        <div className="min-h-dvh px-4 py-6 sm:px-6 lg:px-8 pb-12 max-w-[90rem] mx-auto w-full">
+          {children}
+        </div>
       </main>
     </div>
   );
