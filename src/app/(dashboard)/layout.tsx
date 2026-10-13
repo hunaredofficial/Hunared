@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Dashboard",
   description: "Manage your jobs, listings, profile, and activity on Hunared.",
 };
-
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 export default async function DashboardLayout({
   children,

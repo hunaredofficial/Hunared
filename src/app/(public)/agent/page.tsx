@@ -15,7 +15,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-/** Avoid static prerender failures (usePathname / client hooks in HunaredAgent). */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
