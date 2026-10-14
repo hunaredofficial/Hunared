@@ -396,9 +396,9 @@ export function DashboardShell({
   const navItems = getNavItems(role);
 
   return (
-    <div className="relative min-h-dvh w-full bg-background text-foreground">
-      {/* Desktop sidebar — 240px, flush top */}
-      <aside className="fixed top-0 left-0 z-30 hidden h-dvh w-[240px] flex-col border-r border-border bg-card md:flex">
+    <div className="flex min-h-dvh w-full bg-background text-foreground">
+      {/* Desktop sidebar — in document flow (no fixed+padding gap) */}
+      <aside className="sticky top-0 hidden h-dvh w-[240px] shrink-0 flex-col border-r border-border bg-card md:flex">
         <SidebarContent
           role={role}
           fullName={fullName}
@@ -408,7 +408,7 @@ export function DashboardShell({
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4 md:hidden">
+      <div className="fixed top-0 left-0 right-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4 md:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -422,7 +422,7 @@ export function DashboardShell({
           <ThemeToggle />
           <UserButton afterSignOutUrl="/" />
         </div>
-      </header>
+      </div>
 
       {/* Mobile drawer */}
       {mobileOpen && (
@@ -443,15 +443,12 @@ export function DashboardShell({
         </>
       )}
 
-      {/*
-        Main: exact 240px offset to match sidebar — no extra gutter.
-        Content left-aligned (no mx-auto) so no empty band next to sidebar.
-      */}
-      <div className="min-h-dvh w-full md:pl-[240px]">
-        <main className="w-full px-4 py-5 sm:px-5 lg:px-6 pb-10">
+      {/* Main — flex-1 fills remaining width; sits flush against sidebar */}
+      <main className="min-h-dvh min-w-0 flex-1 pt-14 md:pt-0">
+        <div className="w-full px-4 py-5 sm:px-5 lg:px-6 pb-10">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
