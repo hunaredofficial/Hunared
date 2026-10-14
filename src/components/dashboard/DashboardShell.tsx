@@ -110,6 +110,11 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <History className="h-4 w-4" />,
       },
       {
+        href: "/dashboard/premium-ads",
+        label: "Premium Ads",
+        icon: <Megaphone className="h-4 w-4" />,
+      },
+      {
         href: "/dashboard/settings",
         label: "Settings",
         icon: <Settings className="h-4 w-4" />,
@@ -166,6 +171,11 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <History className="h-4 w-4" />,
       },
       {
+        href: "/dashboard/premium-ads",
+        label: "Premium Ads",
+        icon: <Megaphone className="h-4 w-4" />,
+      },
+      {
         href: "/dashboard/settings",
         label: "Settings",
         icon: <Settings className="h-4 w-4" />,
@@ -220,6 +230,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/history",
         label: "History",
         icon: <History className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/premium-ads",
+        label: "Premium Ads",
+        icon: <Megaphone className="h-4 w-4" />,
       },
       {
         href: "/dashboard/settings",
@@ -381,9 +396,9 @@ export function DashboardShell({
   const navItems = getNavItems(role);
 
   return (
-    <div className="min-h-dvh w-full bg-background text-foreground">
-      {/* Desktop sidebar — pin to viewport top (no gap above) */}
-      <aside className="fixed top-0 left-0 z-30 hidden h-dvh w-64 border-r border-border bg-card md:flex md:flex-col">
+    <div className="relative min-h-dvh w-full bg-background text-foreground">
+      {/* Desktop sidebar — 240px, flush top */}
+      <aside className="fixed top-0 left-0 z-30 hidden h-dvh w-[240px] flex-col border-r border-border bg-card md:flex">
         <SidebarContent
           role={role}
           fullName={fullName}
@@ -393,11 +408,11 @@ export function DashboardShell({
       </aside>
 
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4 md:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="p-1.5 rounded-md hover:bg-muted"
+          className="rounded-md p-1.5 hover:bg-muted"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
@@ -407,7 +422,7 @@ export function DashboardShell({
           <ThemeToggle />
           <UserButton afterSignOutUrl="/" />
         </div>
-      </div>
+      </header>
 
       {/* Mobile drawer */}
       {mobileOpen && (
@@ -416,7 +431,7 @@ export function DashboardShell({
             className="fixed inset-0 z-40 bg-black/50 md:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="fixed top-0 left-0 z-50 h-dvh w-64 border-r border-border bg-card md:hidden">
+          <aside className="fixed top-0 left-0 z-50 flex h-dvh w-[240px] flex-col border-r border-border bg-card md:hidden">
             <SidebarContent
               role={role}
               fullName={fullName}
@@ -428,12 +443,15 @@ export function DashboardShell({
         </>
       )}
 
-      {/* Main content */}
-      <main className="min-h-dvh md:pl-64">
-        <div className="min-h-dvh px-4 py-6 sm:px-6 lg:px-8 pb-12 max-w-[90rem] mx-auto w-full">
+      {/*
+        Main: exact 240px offset to match sidebar — no extra gutter.
+        Content left-aligned (no mx-auto) so no empty band next to sidebar.
+      */}
+      <div className="min-h-dvh w-full md:pl-[240px]">
+        <main className="w-full px-4 py-5 sm:px-6 lg:px-8 pb-12">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
