@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -14,8 +14,10 @@ import {
 
 export function PremiumAdEditForm({ adId }: { adId: string }) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
   const [kind, setKind] = useState<PremiumAdKind>("standalone");
   const [title, setTitle] = useState("");
@@ -51,6 +53,23 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
     })();
   }, [adId, router]);
 
+  async function onUpload(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/premium-ads/upload", { method: "POST", body: fd });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || "Upload failed");
+      setImageUrl(j.url);
+      toast.success("Image uploaded");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !targetUrl.trim()) {
@@ -79,11 +98,7 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || "Failed");
-      toast.success(
-        status === "active"
-          ? "Updated — pending re-approval"
-          : "Ad updated"
-      );
+      toast.success(status === "active" ? "Updated — pending re-approval" : "Ad updated");
       router.push("/dashboard/premium-ads");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed");
@@ -101,113 +116,113 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="w-full max-w-2xl space-y-6">
       <Button variant="ghost" size="sm" asChild>
         <Link href="/dashboard/premium-ads">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Link>
       </Button>
       <div>
-        <h1 className="text-xl font-bold">Edit premium ad</h1>
+        <h1 className="text-xl font-bold">Edit campaign</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Slot: {slotLabel} · Status: {status}
-          {status === "active" && " — saving will send the ad for re-approval"}
+          {slotLabel} · {status}
+          {status === "active" ? " — save sends for re-approval" : ""}
         </p>
       </div>
-
-      <form onSubmit={onSubmit} className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Promote</label>
-          <div className="grid sm:grid-cols-3 gap-2">
-            {PREMIUM_AD_KINDS.map((k) => (
-              <button
-                key={k.id}
-                type="button"
-                onClick={() => setKind(k.id)}
-                className={
-                  kind === k.id
-                    ? "rounded-xl border border-primary bg-primary/10 px-3 py-3 text-left"
-                    : "rounded-xl border border-border bg-card/40 px-3 py-3 text-left hover:bg-muted/40"
-                }
-              >
-                <p className="text-sm font-semibold">{k.label}</p>
-              </button>
-            ))}
-          </div>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid sm:grid-cols-3 gap-2">
+          {PREMIUM_AD_KINDS.map((k) => (
+            <button
+              key={k.id}
+              type="button"
+              onClick={() => setKind(k.id)}
+              className={
+                kind === k.id
+                  ? "rounded-xl border border-primary bg-primary/10 px-3 py-2 text-left text-sm font-semibold"
+                  : "rounded-xl border border-border px-3 py-2 text-left text-sm"
+              }
+            >
+              {k.label}
+            </button>
+          ))}
         </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Ad title</label>
+        <input
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          maxLength={120}
+          placeholder="Headline"
+        />
+        <input
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          value={targetUrl}
+          onChange={(e) => setTargetUrl(e.target.value)}
+          required
+          placeholder="Destination URL"
+        />
+        <div className="flex flex-wrap gap-2 items-center">
           <input
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            maxLength={120}
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onUpload(f);
+              e.target.value = "";
+            }}
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Click target URL</label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+            Upload image
+          </Button>
           <input
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            value={targetUrl}
-            onChange={(e) => setTargetUrl(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Creative image URL</label>
-          <input
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="flex-1 min-w-[180px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://…"
+            placeholder="Image URL"
           />
         </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Design notes</label>
-          <textarea
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm min-h-[72px]"
-            value={designNotes}
-            onChange={(e) => setDesignNotes(e.target.value)}
-          />
-        </div>
-
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt="" className="max-h-32 rounded-lg border border-border object-contain" />
+        )}
+        <textarea
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[64px]"
+          value={designNotes}
+          onChange={(e) => setDesignNotes(e.target.value)}
+          placeholder="Design notes"
+        />
         <div className="grid sm:grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Duration</label>
-            <select
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-            >
-              {DURATION_OPTIONS.map((d) => (
-                <option key={d.days} value={d.days}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+          >
+            {DURATION_OPTIONS.map((d) => (
+              <option key={d.days} value={d.days}>
+                {d.label}
+              </option>
+            ))}
+          </select>
           {status !== "active" && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Offer price (SAR)</label>
-              <input
-                type="number"
-                min={1}
-                step="1"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                value={price}
-                onChange={(e) =>
-                  setPrice(e.target.value === "" ? "" : Number(e.target.value))
-                }
-              />
-            </div>
+            <input
+              type="number"
+              min={1}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              value={price}
+              onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="Bid SAR"
+            />
           )}
         </div>
-
         <Button type="submit" disabled={saving}>
           {saving ? "Saving…" : "Save changes"}
         </Button>

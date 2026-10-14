@@ -1,19 +1,18 @@
-/** Standard bookable premium ad sizes (IAB-inspired) for UI copy */
 export const PREMIUM_AD_KINDS = [
   {
     id: "job" as const,
     label: "Promote a Job",
-    description: "Boost visibility of one of your job posts",
+    description: "Boost one of your job posts to top placements",
   },
   {
     id: "market" as const,
-    label: "Promote a Marketplace listing",
-    description: "Highlight a sale, rent, service, or other listing",
+    label: "Promote a Listing",
+    description: "Highlight a marketplace item, service, or property",
   },
   {
     id: "standalone" as const,
-    label: "Standalone premium ad",
-    description: "Custom creative linking to any URL (company, offer, external)",
+    label: "Brand / Custom ad",
+    description: "Any creative linking to your page or external URL",
   },
 ];
 
@@ -31,7 +30,7 @@ export type PremiumAdStatus =
 export const PREMIUM_AD_STATUS_LABEL: Record<PremiumAdStatus, string> = {
   draft: "Draft",
   pending_payment: "Awaiting payment",
-  pending_approval: "Awaiting admin approval",
+  pending_approval: "Under review",
   active: "Live",
   rejected: "Rejected",
   expired: "Expired",
@@ -39,16 +38,24 @@ export const PREMIUM_AD_STATUS_LABEL: Record<PremiumAdStatus, string> = {
 };
 
 export const DURATION_OPTIONS = [
-  { days: 7, label: "7 days" },
-  { days: 14, label: "14 days" },
-  { days: 30, label: "30 days" },
-  { days: 60, label: "60 days" },
+  { days: 7, label: "7 days", hint: "Test campaign" },
+  { days: 14, label: "14 days", hint: "Standard" },
+  { days: 30, label: "30 days", hint: "Best value" },
+  { days: 60, label: "60 days", hint: "Extended reach" },
 ];
 
-/** Shown on payment step — admin contact for bank transfer / confirmation */
 export const PREMIUM_ADS_ADMIN_CONTACT = {
   email: process.env.NEXT_PUBLIC_PREMIUM_ADS_EMAIL || "ads@hunared.com",
   whatsapp: process.env.NEXT_PUBLIC_PREMIUM_ADS_WHATSAPP || "",
   note:
-    "Pay the offered amount, then submit payment reference. An admin reviews and publishes your ad after confirmation.",
+    "Complete payment, then submit your reference. An admin reviews the creative and publishes after confirmation.",
 };
+
+/** Max creative upload size */
+export const PREMIUM_AD_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5MB
+export const PREMIUM_AD_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
