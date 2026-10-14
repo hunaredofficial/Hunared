@@ -190,7 +190,7 @@ function SeekerDashboard({
   const firstName = profile.full_name.split(" ")[0];
 
   return (
-    <div className="space-y-7 sm:space-y-9 w-full max-w-6xl mx-auto pb-8">
+    <div className="space-y-6 sm:space-y-8 w-full pb-8">
       {/* Greeting */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
@@ -321,7 +321,7 @@ function EmployerDashboard({
   const firstName = profile.full_name.split(" ")[0];
 
   return (
-    <div className="space-y-7 sm:space-y-9 w-full max-w-6xl mx-auto pb-8">
+    <div className="space-y-6 sm:space-y-8 w-full pb-8">
       {/* Greeting */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
@@ -460,7 +460,7 @@ function AdminDashboard({
   pendingListings: number;
 }) {
   return (
-    <div className="space-y-7 sm:space-y-9 w-full max-w-6xl mx-auto pb-8">
+    <div className="space-y-6 sm:space-y-8 w-full pb-8">
       <div>
         <p className="text-sm text-muted-foreground mb-1">Platform overview</p>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">

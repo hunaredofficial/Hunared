@@ -448,7 +448,7 @@ export function DashboardShell({
         Content left-aligned (no mx-auto) so no empty band next to sidebar.
       */}
       <div className="min-h-dvh w-full md:pl-[240px]">
-        <main className="w-full px-4 py-5 sm:px-6 lg:px-8 pb-12">
+        <main className="w-full px-4 py-5 sm:px-5 lg:px-6 pb-10">
           {children}
         </main>
       </div>
