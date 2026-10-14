@@ -263,16 +263,6 @@ function getNavItems(role: UserRole): NavItem[] {
       icon: <FileText className="h-4 w-4" />,
     },
     {
-      href: "/jobs",
-      label: "Browse Jobs",
-      icon: <Briefcase className="h-4 w-4" />,
-    },
-    {
-      href: "/candidates",
-      label: "Browse Candidates",
-      icon: <Users className="h-4 w-4" />,
-    },
-    {
       href: "/dashboard/saved",
       label: "My Saved",
       icon: <Bookmark className="h-4 w-4" />,
