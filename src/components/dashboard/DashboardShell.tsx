@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -386,16 +386,27 @@ interface DashboardShellProps {
   children: React.ReactNode;
 }
 
+
+/** Prevents double sidebar when shell is mounted twice (nested layouts). */
+const DashboardShellContext = createContext(false);
+
 export function DashboardShell({
   role,
   fullName,
   children,
 }: DashboardShellProps) {
+  const alreadyInShell = useContext(DashboardShellContext);
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = getNavItems(role);
 
+  // Nested layout also rendered DashboardShell — only render children once
+  if (alreadyInShell) {
+    return <>{children}</>;
+  }
+
   return (
+    <DashboardShellContext.Provider value={true}>
     <div className="flex min-h-dvh w-full bg-background text-foreground">
       {/* Desktop sidebar — in document flow (no fixed+padding gap) */}
       <aside className="sticky top-0 hidden h-dvh w-[240px] shrink-0 flex-col border-r border-border bg-card md:flex">
@@ -450,5 +461,6 @@ export function DashboardShell({
         </div>
       </main>
     </div>
+    </DashboardShellContext.Provider>
   );
 }

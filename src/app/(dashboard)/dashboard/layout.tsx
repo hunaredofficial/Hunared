@@ -1,44 +1,11 @@
-import type { Metadata } from "next";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
-
 /**
- * All dashboard routes are auth-bound and client-heavy.
- * Force dynamic so Next does not static-prerender /dashboard/* pages
- * (avoids useSearchParams / auth prerender build failures).
+ * Nested under (dashboard)/layout.tsx which already provides DashboardShell.
+ * Do NOT wrap DashboardShell here or you get a double sidebar.
  */
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Manage your jobs, listings, profile, and activity on Hunared.",
-};
-
-export default async function DashboardLayout({
+export default function DashboardSectionLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const supabase = createAdminClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, full_name")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (!profile) {
-    redirect("/register?mode=complete");
-  }
-
-  return (
-    <DashboardShell role={profile.role} fullName={profile.full_name}>
-      {children}
-    </DashboardShell>
-  );
+  return children;
 }
