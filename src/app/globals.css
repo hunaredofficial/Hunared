@@ -296,3 +296,18 @@
   background-color: var(--header-hover);
   color: var(--header-foreground);
 }
+
+
+/* Header control cluster (icon buttons on navy) */
+.site-header [data-header-control] {
+  color: var(--header-foreground);
+}
+.site-header button[class*="ghost"],
+.site-header a[class*="ghost"] {
+  color: rgba(255, 255, 255, 0.85);
+}
+.site-header button[class*="ghost"]:hover,
+.site-header a[class*="ghost"]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}

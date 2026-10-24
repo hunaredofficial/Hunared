@@ -189,22 +189,14 @@ export function Header() {
   return (
     <header
       className={cn(
-        "site-header fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
-        "transition-all duration-300 ease-out",
-        scrolled
-          ? "top-2 sm:top-3 w-[min(96%,76rem)] max-w-7xl rounded-xl border shadow-lg"
-          : "top-0 w-full max-w-full rounded-none border-b shadow-none"
+        "site-header fixed z-50 inset-x-0 top-0 w-full border-b",
+        scrolled ? "shadow-md" : "shadow-none"
       )}
     >
-      <div
-        className={cn(
-          "mx-auto w-full px-3 sm:px-5 lg:px-6",
-          scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
-        )}
-      >
-        <div className="flex h-14 sm:h-15 items-center justify-between gap-2 min-w-0">
+      <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
+        <div className="flex h-14 items-center justify-between gap-2 min-w-0">
           <div className="shrink-0 min-w-0 flex items-center self-center">
-            <HunaredLogo size={scrolled ? "md" : "lg"} />
+            <HunaredLogo size="md" />
           </div>
 
           <nav
@@ -221,15 +213,15 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
+                      "relative px-2.5 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
                       isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "text-white"
+                        : "text-white/75 hover:text-white hover:bg-white/10"
                     )}
                   >
                     {item.label}
                     {isActive && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-primary" />
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-white" />
                     )}
                   </Link>
                 );
@@ -254,8 +246,8 @@ export function Header() {
                     className={cn(
                       "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
                       isActive || isOpen
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "text-white bg-white/10"
+                        : "text-white/75 hover:text-white hover:bg-white/10"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
@@ -279,10 +271,11 @@ export function Header() {
                   {isOpen && (
                     <div
                       className={cn(
-                        "absolute top-full mt-2 rounded-xl border border-border bg-card shadow-xl p-3 z-50",
+                        "absolute top-full left-0 mt-1.5 z-50 rounded-lg border border-border/80 bg-card text-card-foreground shadow-lg",
+                        "p-2.5 max-h-[min(70vh,28rem)] overflow-y-auto",
                         item.columns && item.columns.length > 1
-                          ? "left-1/2 -translate-x-1/2 w-[min(92vw,28rem)]"
-                          : "left-0 w-64"
+                          ? "w-[min(92vw,22rem)]"
+                          : "w-56"
                       )}
                       role="menu"
                       onMouseLeave={() => setOpenMega(null)}
@@ -304,7 +297,7 @@ export function Header() {
                                   key={sub.href + sub.label}
                                   href={sub.href}
                                   role="menuitem"
-                                  className="flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+                                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-foreground hover:bg-muted/80 transition-colors"
                                   {...(sub.href.startsWith("http")
                                     ? { target: "_blank", rel: "noopener noreferrer" }
                                     : {})}
@@ -349,8 +342,8 @@ export function Header() {
               className={cn(
                 "hidden md:block transition-all duration-300 overflow-hidden",
                 scrolled
-                  ? "max-w-0 opacity-0 pointer-events-none scale-95"
-                  : "max-w-[12rem] opacity-100"
+                  ? "max-w-0 opacity-0 pointer-events-none"
+                  : "max-w-[10.5rem] opacity-100"
               )}
             >
               <LocationPicker />
@@ -359,10 +352,10 @@ export function Header() {
             <Button
               size="sm"
               variant="outline"
-              className="hidden md:inline-flex h-8 text-[13px] font-medium border-border/80"
+              className="hidden md:inline-flex h-8 text-[13px] font-medium border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white"
               asChild
             >
-              <Link href="/post">
+              <Link href="/post" title="Post a listing or job">
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Post
               </Link>
@@ -378,7 +371,7 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-[13px] font-medium"
+                  className="h-8 text-[13px] font-medium text-white/85 hover:text-white hover:bg-white/10"
                   asChild
                 >
                   <Link href="/sign-in">Sign In</Link>
