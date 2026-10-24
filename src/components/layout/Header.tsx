@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
@@ -34,7 +34,7 @@ type MegaItem = {
   label: string;
   href: string;
   desc?: string;
-  icon?: ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
 };
 type MegaGroup = {
   type: "mega";
@@ -189,11 +189,11 @@ export function Header() {
   return (
     <header
       className={cn(
-        "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
-        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        "site-header fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
+        "transition-all duration-300 ease-out",
         scrolled
-          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)]"
-          : "top-0 w-full max-w-full rounded-none border-b border-border/60 bg-background/95"
+          ? "top-2 sm:top-3 w-[min(96%,76rem)] max-w-7xl rounded-xl border shadow-lg"
+          : "top-0 w-full max-w-full rounded-none border-b shadow-none"
       )}
     >
       <div
@@ -370,6 +370,7 @@ export function Header() {
 
             <ThemeToggle />
 
+            {/* Messages — signed-in only, unread badge */}
             <MessagesHeaderIcon />
 
             <div className="hidden lg:flex items-center gap-1.5">
@@ -440,7 +441,7 @@ export function Header() {
           mobileOpen ? "max-h-[42rem] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[38rem]">
+        <div className="border-t border-white/10 bg-[var(--header)] px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[38rem] text-[var(--header-foreground)]">
           <div className="px-3 py-2">
             <LocationPicker />
           </div>
@@ -520,10 +521,10 @@ export function Header() {
               <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <Button variant="outline" size="sm" className="flex-1" asChild>
+              <Button variant="outline" className="w-full justify-start h-11" asChild>
                 <Link href="/dashboard/messages">Messages</Link>
               </Button>
-              <div className="flex items-center justify-center shrink-0">
+              <div className="flex items-center justify-center flex-1">
                 <UserButton />
               </div>
             </Show>
