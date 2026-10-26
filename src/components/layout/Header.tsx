@@ -158,16 +158,9 @@ const NAV_ITEMS: NavItem[] = [
 
 export function Header() {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const megaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -185,24 +178,11 @@ export function Header() {
   }, []);
 
   return (
-    <header
-      className={cn(
-        "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
-        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        scrolled
-          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)]"
-          : "top-0 w-full max-w-full rounded-none border-b border-border/60 bg-background/95"
-      )}
-    >
-      <div
-        className={cn(
-          "mx-auto w-full px-3 sm:px-5 lg:px-6",
-          scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
-        )}
-      >
-        <div className="flex h-14 sm:h-15 items-center justify-between gap-2 min-w-0">
+    <header className="fixed z-50 inset-x-0 top-0 w-full border-b border-border/60 bg-background/95">
+      <div className="mx-auto w-full max-w-7xl px-3 sm:px-5 lg:px-6">
+        <div className="flex h-14 items-center justify-between gap-2 min-w-0">
           <div className="shrink-0 min-w-0 flex items-center self-center">
-            <HunaredLogo size={scrolled ? "md" : "lg"} />
+            <HunaredLogo size="md" />
           </div>
 
           <nav
@@ -326,14 +306,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
-            <div
-              className={cn(
-                "hidden md:block transition-all duration-300 overflow-hidden",
-                scrolled
-                  ? "max-w-0 opacity-0 pointer-events-none scale-95"
-                  : "max-w-[12rem] opacity-100"
-              )}
-            >
+            <div className="hidden md:block max-w-[12rem]">
               <LocationPicker />
             </div>
 
@@ -375,16 +348,12 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={cn("h-8 shrink-0", scrolled && "px-2")}
+                  className="h-8 shrink-0"
                   asChild
                 >
                   <Link href="/dashboard" className="inline-flex items-center">
                     <LayoutDashboard className="h-4 w-4 sm:mr-1.5" />
-                    <span
-                      className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}
-                    >
-                      Dashboard
-                    </span>
+                    <span className="hidden sm:inline">Dashboard</span>
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
