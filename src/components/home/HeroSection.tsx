@@ -86,7 +86,7 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative flex flex-col items-center justify-center overflow-hidden pt-[4.5rem] sm:pt-20 md:pt-24 pb-10 sm:pb-14">
+    <section className="relative min-h-[auto] sm:min-h-[70vh] flex flex-col items-center justify-center overflow-hidden pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
         <div className="absolute top-[14%] left-1/2 -translate-x-1/2 h-[380px] w-[620px] rounded-full bg-primary opacity-[0.04] blur-[110px]" />
@@ -100,7 +100,7 @@ export function HeroSection() {
       >
         <form
           onSubmit={handleSearch}
-          className="relative overflow-visible rounded-2xl bg-card border border-border shadow-sm p-5 sm:p-7 md:p-8 space-y-5"
+          className="relative overflow-visible rounded-2xl bg-card border border-border brand-glow p-6 sm:p-8 md:p-10 space-y-6"
         >
           <div className="text-center space-y-2.5">
             <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/8 px-3 py-0.5 text-[11px] sm:text-xs font-semibold tracking-wide text-primary uppercase">
@@ -123,7 +123,7 @@ export function HeroSection() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What are you looking for? Search here…"
-              className="w-full h-12 sm:h-13 pl-11 sm:pl-12 pr-12 rounded-xl border border-border bg-background text-foreground text-sm sm:text-base placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/40 transition"
+              className="w-full h-14 sm:h-16 pl-12 sm:pl-14 pr-14 rounded-2xl border border-border bg-background text-foreground text-base sm:text-lg placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/40 transition shadow-sm"
               autoComplete="off"
             />
             <div className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2">
@@ -140,8 +140,8 @@ export function HeroSection() {
                   setCountry(e.target.value);
                   setCity("");
                 }}
-                
-                className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                data-color-scheme="dark"
+                className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
               >
                 <option value="" className="bg-background text-foreground">
                   All Countries
@@ -172,8 +172,8 @@ export function HeroSection() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                
-                className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+                data-color-scheme="dark"
+                className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
               >
                 {CATEGORIES.map((c) => (
                   <option

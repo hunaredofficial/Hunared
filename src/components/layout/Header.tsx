@@ -189,14 +189,22 @@ export function Header() {
   return (
     <header
       className={cn(
-        "site-header fixed z-50 inset-x-0 top-0 w-full border-b",
-        scrolled ? "shadow-md" : "shadow-none"
+        "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
+        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        scrolled
+          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)]"
+          : "top-0 w-full max-w-full rounded-none border-b border-border/60 bg-background/95"
       )}
     >
-      <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
-        <div className="flex h-14 items-center justify-between gap-2 min-w-0">
+      <div
+        className={cn(
+          "mx-auto w-full px-3 sm:px-5 lg:px-6",
+          scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
+        )}
+      >
+        <div className="flex h-14 sm:h-15 items-center justify-between gap-2 min-w-0">
           <div className="shrink-0 min-w-0 flex items-center self-center">
-            <HunaredLogo size="md" />
+            <HunaredLogo size={scrolled ? "md" : "lg"} />
           </div>
 
           <nav
@@ -213,15 +221,15 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-2.5 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
+                      "relative px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
                       isActive
-                        ? "text-white"
-                        : "text-white/75 hover:text-white hover:bg-white/10"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {item.label}
                     {isActive && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-white" />
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-primary" />
                     )}
                   </Link>
                 );
@@ -244,10 +252,10 @@ export function Header() {
                     onClick={() => setOpenMega(isOpen ? null : item.label)}
                     onMouseEnter={() => setOpenMega(item.label)}
                     className={cn(
-                      "flex items-center gap-0.5 px-2.5 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
+                      "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
                       isActive || isOpen
-                        ? "text-white bg-white/10"
-                        : "text-white/75 hover:text-white hover:bg-white/10"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
@@ -271,11 +279,10 @@ export function Header() {
                   {isOpen && (
                     <div
                       className={cn(
-                        "absolute top-full left-0 mt-1.5 z-50 rounded-lg border border-border/80 bg-card text-card-foreground shadow-lg",
-                        "p-2.5 max-h-[min(70vh,28rem)] overflow-y-auto",
+                        "absolute top-full mt-2 rounded-xl border border-border bg-card shadow-xl p-3 z-50",
                         item.columns && item.columns.length > 1
-                          ? "w-[min(92vw,22rem)]"
-                          : "w-56"
+                          ? "left-1/2 -translate-x-1/2 w-[min(92vw,28rem)]"
+                          : "left-0 w-64"
                       )}
                       role="menu"
                       onMouseLeave={() => setOpenMega(null)}
@@ -297,7 +304,7 @@ export function Header() {
                                   key={sub.href + sub.label}
                                   href={sub.href}
                                   role="menuitem"
-                                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-foreground hover:bg-muted/80 transition-colors"
+                                  className="flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
                                   {...(sub.href.startsWith("http")
                                     ? { target: "_blank", rel: "noopener noreferrer" }
                                     : {})}
@@ -342,8 +349,8 @@ export function Header() {
               className={cn(
                 "hidden md:block transition-all duration-300 overflow-hidden",
                 scrolled
-                  ? "max-w-0 opacity-0 pointer-events-none"
-                  : "max-w-[10.5rem] opacity-100"
+                  ? "max-w-0 opacity-0 pointer-events-none scale-95"
+                  : "max-w-[12rem] opacity-100"
               )}
             >
               <LocationPicker />
@@ -352,10 +359,10 @@ export function Header() {
             <Button
               size="sm"
               variant="outline"
-              className="hidden md:inline-flex h-8 text-[13px] font-medium border-white/25 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              className="hidden md:inline-flex h-8 text-[13px] font-medium border-border/80"
               asChild
             >
-              <Link href="/post" title="Post a listing or job">
+              <Link href="/post">
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Post
               </Link>
@@ -370,7 +377,7 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-[13px] font-medium text-white/85 hover:text-white hover:bg-white/10"
+                  className="h-8 text-[13px] font-medium"
                   asChild
                 >
                   <Link href="/sign-in">Sign In</Link>
@@ -433,7 +440,7 @@ export function Header() {
           mobileOpen ? "max-h-[42rem] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="border-t border-white/10 bg-[var(--header)] px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[38rem] text-[var(--header-foreground)]">
+        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[38rem]">
           <div className="px-3 py-2">
             <LocationPicker />
           </div>
