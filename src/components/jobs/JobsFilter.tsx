@@ -57,6 +57,7 @@ const DATE_POSTED_OPTIONS = [
   { value: "3d", label: "Last 3 Days" },
   { value: "7d", label: "Last 7 Days" },
   { value: "15d", label: "Last 15 Days" },
+  { value: "30d", label: "Last 30 Days" },
 ] as const;
 
 const EXPERIENCE_OPTIONS = [
@@ -341,7 +342,7 @@ export function JobsFilter({
       </Section>
 
       <Section
-        title="Payout / Pay Frequency"
+        title="Payout Frequency"
         open={!!openSections.payout}
         onToggle={() => toggleSection("payout")}
       >

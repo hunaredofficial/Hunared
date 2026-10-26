@@ -20,7 +20,6 @@ import {
   Calendar,
   Users,
   Building2,
-  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -141,17 +140,16 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     type: "mega",
-    label: "More",
+    label: "Program",
     href: "/program",
     columns: [
       {
-        title: "Programs & community",
+        title: "Programs",
         items: [
-          { label: "Programs & Training", href: "/program", desc: "Pathways & learning" },
-          { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
+          { label: "All Programs", href: "/program", desc: "Hunared programs overview" },
+          { label: "Trainings", href: "/program", desc: "Training & certification pathways" },
           { label: "CV Builder", href: "/dashboard/cv", desc: "Build a professional CV" },
-          { label: "About Hunared", href: "/about", desc: "Our mission" },
-          { label: "Contact", href: "/contact", desc: "Help & support" },
+          { label: "Talash Center", href: "/finder", desc: "Finder & community tools" },
         ],
       },
     ],
@@ -160,9 +158,16 @@ const NAV_ITEMS: NavItem[] = [
 
 export function Header() {
   const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const megaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -180,11 +185,24 @@ export function Header() {
   }, []);
 
   return (
-    <header className="fixed z-50 inset-x-0 top-0 w-full border-b border-border/60 bg-background/95">
-      <div className="mx-auto w-full max-w-7xl px-3 sm:px-5 lg:px-6">
-        <div className="flex h-14 items-center justify-between gap-2 min-w-0">
+    <header
+      className={cn(
+        "fixed z-50 left-1/2 -translate-x-1/2 transform-gpu will-change-[width,transform,top]",
+        "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        scrolled
+          ? "top-3 sm:top-3.5 w-[min(96%,76rem)] max-w-7xl rounded-xl border border-border/80 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.06)]"
+          : "top-0 w-full max-w-full rounded-none border-b border-border/60 bg-background/95"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto w-full px-3 sm:px-5 lg:px-6",
+          scrolled ? "max-w-full" : "max-w-7xl px-4 sm:px-6 lg:px-8"
+        )}
+      >
+        <div className="flex h-14 sm:h-15 items-center justify-between gap-2 min-w-0">
           <div className="shrink-0 min-w-0 flex items-center self-center">
-            <HunaredLogo size="md" />
+            <HunaredLogo size={scrolled ? "md" : "lg"} />
           </div>
 
           <nav
@@ -219,11 +237,10 @@ export function Header() {
               const isActive =
                 pathname === item.href ||
                 pathname.startsWith(item.href + "/") ||
-                (item.label === "More" &&
+                (item.label === "Program" &&
                   (pathname.startsWith("/program") ||
                     pathname.startsWith("/finder") ||
-                    pathname.startsWith("/about") ||
-                    pathname.startsWith("/contact")));
+                    pathname.startsWith("/dashboard/cv")));
 
               return (
                 <div key={item.label} className="relative">
@@ -240,14 +257,7 @@ export function Header() {
                     aria-expanded={isOpen}
                     aria-haspopup="true"
                   >
-                    {item.label === "More" ? (
-                      <>
-                        <MoreHorizontal className="h-3.5 w-3.5 lg:hidden" />
-                        <span>More</span>
-                      </>
-                    ) : (
-                      item.label
-                    )}
+                    {item.label}
                     <ChevronDown
                       className={cn(
                         "h-3.5 w-3.5 transition-transform duration-200",
@@ -308,15 +318,6 @@ export function Header() {
                           ))}
                         </div>
                       )}
-                      {item.label !== "More" && (
-                        <Link
-                          href={item.href}
-                          role="menuitem"
-                          className="block px-2.5 py-2 mt-2 text-sm font-semibold rounded-lg text-primary border-t border-border/70 hover:bg-accent transition-colors"
-                        >
-                          View all {item.label} →
-                        </Link>
-                      )}
                     </div>
                   )}
                 </div>
@@ -325,7 +326,14 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
-            <div className="hidden md:block max-w-[12rem]">
+            <div
+              className={cn(
+                "hidden md:block transition-all duration-300 overflow-hidden",
+                scrolled
+                  ? "max-w-0 opacity-0 pointer-events-none scale-95"
+                  : "max-w-[12rem] opacity-100"
+              )}
+            >
               <LocationPicker />
             </div>
 
@@ -367,12 +375,16 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 shrink-0"
+                  className={cn("h-8 shrink-0", scrolled && "px-2")}
                   asChild
                 >
                   <Link href="/dashboard" className="inline-flex items-center">
                     <LayoutDashboard className="h-4 w-4 sm:mr-1.5" />
-                    <span className="hidden sm:inline">Dashboard</span>
+                    <span
+                      className={cn(scrolled ? "hidden xl:inline" : "hidden sm:inline")}
+                    >
+                      Dashboard
+                    </span>
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
@@ -463,14 +475,6 @@ export function Header() {
                       {sub.label}
                     </Link>
                   ))}
-                  {item.label !== "More" && (
-                    <Link
-                      href={item.href}
-                      className="block px-3 py-2 text-sm font-semibold rounded-md text-primary"
-                    >
-                      View all {item.label} →
-                    </Link>
-                  )}
                 </div>
               </details>
             );

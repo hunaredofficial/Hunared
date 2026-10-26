@@ -95,6 +95,7 @@ function postedCutoff(posted: string): Date | null {
     "3d": 24 * 3,
     "7d": 24 * 7,
     "15d": 24 * 15,
+    "30d": 24 * 30,
   };
   const h = hours[posted];
   if (!h) return null;
