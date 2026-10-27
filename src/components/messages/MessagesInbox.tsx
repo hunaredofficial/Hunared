@@ -199,8 +199,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   }, [messages]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const loadList = useCallback(async () => {
-    setLoadingList(true);
+  const loadList = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = !!opts?.silent;
+    if (!silent) setLoadingList(true);
     try {
       const res = await fetch(
         `/api/messages/conversations?filter=${encodeURIComponent(filter)}&q=${encodeURIComponent(q)}`
@@ -208,12 +209,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       const j = await res.json();
       setList(j.conversations || []);
     } finally {
-      setLoadingList(false);
+      if (!silent) setLoadingList(false);
     }
   }, [filter, q]);
 
   useEffect(() => {
-    void loadList();
+    void loadList({ silent: false });
   }, [loadList]);
 
   useEffect(() => {
@@ -326,9 +327,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     };
   }, [activeId, chatSettings.sound]);
 
-  // List refresh on a slower cadence (not every message)
+  // List refresh — silent (no spinner / no "syncing" motion)
   useEffect(() => {
-    const iv = setInterval(() => void loadList(), 15000);
+    const iv = setInterval(() => void loadList({ silent: true }), 8000);
     return () => clearInterval(iv);
   }, [loadList]);
 
@@ -1016,9 +1017,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             </div>
             <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title={filter === "archived" ? "Unarchive" : "Archive"} onClick={() => void archive(filter !== "archived")}>
               <Archive className="h-4 w-4 text-muted-foreground" />
-            </button>
-            <button type="button" className="p-1.5 rounded-lg hover:bg-muted" title="Remove from my inbox" onClick={() => void deleteChat(false)}>
-              <Trash2 className="h-4 w-4 text-muted-foreground" />
             </button>
             <button
               type="button"
