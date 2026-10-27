@@ -2,8 +2,8 @@
 
 /**
  * Company Directory
- * Matches Jobs / Marketplace page pattern:
- * gradient hero · icon + gradient title · horizontal filter bar · results grid
+ * Matches Jobs page pattern:
+ * page header · left sticky filters · results grid
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -844,26 +844,52 @@ export function CompaniesDirectory() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero — same pattern as Jobs / Marketplace */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b border-border py-12 pt-30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            <span className="gradient-text">Companies</span>
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            Discover verified employers, contractors and service providers worldwide.
-          </p>
+      {/* Page header — matches Jobs */}
+      <section className="border-b border-border bg-muted/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Companies
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {filtered.length > 0
+                  ? `${filtered.length.toLocaleString()} compan${filtered.length !== 1 ? "ies" : "y"} found`
+                  : "Discover verified employers and contractors"}
+              </p>
+            </div>
+            <Button size="sm" className="shrink-0 font-semibold" asChild>
+              <Link href="/register?goal=employer">Register company</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-          {/* Horizontal filter bar — Marketplace style */}
-          <div className="space-y-3">
-            <div className="flex flex-col lg:flex-row gap-2 lg:gap-3 lg:items-end">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Desktop left filters — Jobs pattern */}
+          <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-1">
+              <div className="flex items-center justify-between pb-2 mb-1 border-b border-border/60">
+                <span className="text-sm font-semibold">Filters</span>
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="text-xs text-muted-foreground hover:text-primary"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
               {/* Search */}
-              <div className="flex-1 min-w-0">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <div className="py-2.5 border-b border-border/60">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                   Search
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                   <input
                     type="search"
                     value={search}
@@ -872,9 +898,9 @@ export function CompaniesDirectory() {
                       if (e.key === "Enter") applySearch();
                     }}
                     placeholder="Search companies…"
-                    className={cn(fieldClass, "pl-9 pr-10")}
+                    className={cn(fieldClass, "h-9 pl-8 pr-9 text-sm")}
                   />
-                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
                     <VoiceSearchButton
                       onResult={(text) => {
                         setSearch(text);
@@ -884,22 +910,32 @@ export function CompaniesDirectory() {
                     />
                   </div>
                 </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full mt-2 h-8"
+                  onClick={applySearch}
+                >
+                  Search
+                </Button>
               </div>
 
               {/* Industry */}
-              <div className="w-full lg:w-44">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              <div className="py-2.5 border-b border-border/60">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                   Industry
                 </label>
-                <select data-color-scheme="dark"
+                <select
                   value={industry}
                   onChange={(e) => {
                     setIndustry(e.target.value);
                     setPage(1);
                   }}
-                  className={fieldClass}
+                  className={cn(fieldClass, "h-9 text-sm")}
                 >
-                  <option className="bg-background text-foreground" value="">All Industries</option>
+                  <option className="bg-background text-foreground" value="">
+                    All industries
+                  </option>
                   {INDUSTRIES.map((i) => (
                     <option className="bg-background text-foreground" key={i} value={i}>
                       {i}
@@ -908,36 +944,31 @@ export function CompaniesDirectory() {
                 </select>
               </div>
 
-              {/* Country */}
-              <div className="w-full lg:w-44">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                  Country
+              {/* Location */}
+              <div className="py-2.5 border-b border-border/60 space-y-2">
+                <label className="text-xs font-medium text-muted-foreground block">
+                  Location
                 </label>
-                <select data-color-scheme="dark"
+                <select
                   value={country}
                   onChange={(e) => {
                     setCountry(e.target.value);
                     setCity("");
                     setPage(1);
                   }}
-                  className={fieldClass}
+                  className={cn(fieldClass, "h-9 text-sm")}
                 >
-                  <option className="bg-background text-foreground" value="">All countries</option>
+                  <option className="bg-background text-foreground" value="">
+                    All countries
+                  </option>
                   {COUNTRIES.map((c) => (
                     <option className="bg-background text-foreground" key={c.code} value={c.code}>
                       {c.flag} {c.name}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* City — optional, writable + dropdown suggestions (same as Jobs) */}
-              <div className="w-full lg:w-40">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                  City
-                </label>
                 <CityCombobox
-                  id="companies-city"
+                  id="companies-city-sidebar"
                   country={country}
                   value={city}
                   onChange={(v) => {
@@ -946,264 +977,281 @@ export function CompaniesDirectory() {
                   }}
                   size="md"
                   variant="select"
-                  inputClassName="rounded-md border-input h-10"
+                  inputClassName="rounded-md border-input h-9 text-sm"
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 lg:pb-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-md gap-1.5"
-                  onClick={() => setSheetOpen(true)}
+              {/* Company type */}
+              <div className="py-2.5 border-b border-border/60">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Company type
+                </label>
+                <select
+                  value={companyType}
+                  onChange={(e) => {
+                    setCompanyType(e.target.value);
+                    setPage(1);
+                  }}
+                  className={cn(fieldClass, "h-9 text-sm")}
                 >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filters
-                  {advancedCount > 0 && (
-                    <span className="ml-0.5 rounded-full bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5">
-                      {advancedCount}
-                    </span>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  className="h-10 rounded-md px-5"
-                  onClick={applySearch}
+                  <option className="bg-background text-foreground" value="">
+                    Any type
+                  </option>
+                  {COMPANY_TYPES.map((ct) => (
+                    <option className="bg-background text-foreground" key={ct} value={ct}>
+                      {ct}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Size */}
+              <div className="py-2.5 border-b border-border/60">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Business size
+                </label>
+                <select
+                  value={size}
+                  onChange={(e) => {
+                    setSize(e.target.value);
+                    setPage(1);
+                  }}
+                  className={cn(fieldClass, "h-9 text-sm")}
                 >
-                  Search
-                </Button>
-                {hasFilters && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-10 rounded-md text-muted-foreground"
-                    onClick={clearAll}
+                  <option className="bg-background text-foreground" value="">
+                    Any size
+                  </option>
+                  {BUSINESS_SIZES.map((s) => (
+                    <option className="bg-background text-foreground" key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Service */}
+              <div className="py-2.5 border-b border-border/60">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Service
+                </label>
+                <select
+                  value={service}
+                  onChange={(e) => {
+                    setService(e.target.value);
+                    setPage(1);
+                  }}
+                  className={cn(fieldClass, "h-9 text-sm")}
+                >
+                  <option className="bg-background text-foreground" value="">
+                    Any service
+                  </option>
+                  {COMMON_SERVICES.map((s) => (
+                    <option className="bg-background text-foreground" key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Toggles */}
+              <div className="py-2.5 border-b border-border/60 space-y-2">
+                <label className="text-xs font-medium text-muted-foreground block">
+                  Status
+                </label>
+                {(
+                  [
+                    ["Hiring now", hiringOnly, setHiringOnly],
+                    ["Verified only", verifiedOnly, setVerifiedOnly],
+                    ["Featured", featuredOnly, setFeaturedOnly],
+                  ] as const
+                ).map(([label, val, setVal]) => (
+                  <label
+                    key={label}
+                    className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary"
                   >
-                    Clear
+                    <input
+                      type="checkbox"
+                      checked={val}
+                      onChange={(e) => {
+                        setVal(e.target.checked);
+                        setPage(1);
+                      }}
+                      className="rounded border-border"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+
+              {/* Sort */}
+              <div className="py-2.5">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Sort by
+                </label>
+                <select
+                  value={sort}
+                  onChange={(e) => {
+                    setSort(e.target.value as SortOption);
+                    setPage(1);
+                  }}
+                  className={cn(fieldClass, "h-9 text-sm")}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option className="bg-background text-foreground" key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main results */}
+          <div className="flex-1 min-w-0">
+            {/* Mobile filter trigger */}
+            <div className="lg:hidden mb-4 flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") applySearch();
+                  }}
+                  placeholder="Search companies…"
+                  className={cn(fieldClass, "pl-9 pr-10 h-10")}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 gap-1.5 shrink-0"
+                onClick={() => setSheetOpen(true)}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                Filters
+                {advancedCount > 0 && (
+                  <span className="ml-0.5 rounded-full bg-primary text-primary-foreground text-[10px] px-1.5">
+                    {advancedCount}
+                  </span>
+                )}
+              </Button>
+            </div>
+
+            {/* Results meta */}
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {remoteLoading
+                  ? "Loading…"
+                  : `${filtered.length.toLocaleString()} result${filtered.length !== 1 ? "s" : ""}`}
+              </p>
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Sort</span>
+                <select
+                  value={sort}
+                  onChange={(e) => {
+                    setSort(e.target.value as SortOption);
+                    setPage(1);
+                  }}
+                  className={cn(fieldClass, "h-8 w-auto text-xs min-w-[8rem]")}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option className="bg-background text-foreground" key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Hiring chips when no filters */}
+            {!hasFilters && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Flame className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold">Hiring now</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(remoteCompanies ?? MOCK_COMPANIES)
+                    .filter((c) => c.is_hiring)
+                    .slice(0, 8)
+                    .map((c) => (
+                      <Link
+                        key={"hire-" + c.id}
+                        href={"/companies/" + c.slug}
+                        className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                      >
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {c.jobs_count} jobs
+                        </span>
+                        {c.is_verified && (
+                          <BadgeCheck className="h-3.5 w-3.5 text-primary" />
+                        )}
+                      </Link>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {pageItems.length === 0 ? (
+              <div className="text-center py-16 rounded-xl border border-border bg-card">
+                <Building2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No companies found.</p>
+                {hasFilters && (
+                  <Button variant="outline" className="mt-4" onClick={clearAll}>
+                    Clear filters
                   </Button>
                 )}
               </div>
-            </div>
-
-            {/* Active chips */}
-            {hasFilters && (
-              <div className="flex flex-wrap gap-1.5">
-                {appliedSearch && (
-                  <Chip
-                    label={`“${appliedSearch}”`}
-                    onClear={() => {
-                      setSearch("");
-                      setAppliedSearch("");
-                    }}
-                  />
-                )}
-                {industry && (
-                  <Chip label={industry} onClear={() => setIndustry("")} />
-                )}
-                {companyType && (
-                  <Chip label={companyType} onClear={() => setCompanyType("")} />
-                )}
-                {service && (
-                  <Chip label={service} onClear={() => setService("")} />
-                )}
-                {size && <Chip label={size} onClear={() => setSize("")} />}
-                {locationLabel && (
-                  <Chip
-                    label={locationLabel}
-                    onClear={() => {
-                      setCountry("");
-                      setCity("");
-                    }}
-                  />
-                )}
-                {city && <Chip label={city} onClear={() => setCity("")} />}
-                {verifiedOnly && (
-                  <Chip
-                    label="Verified"
-                    onClear={() => setVerifiedOnly(false)}
-                  />
-                )}
-                {featuredOnly && (
-                  <Chip
-                    label="Featured"
-                    onClear={() => setFeaturedOnly(false)}
-                  />
-                )}
-                {hiringOnly && (
-                  <Chip label="Hiring" onClear={() => setHiringOnly(false)} />
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Results ──────────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        {/* Featured (only when no active filters) */}
-        {!hasFilters && featured.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-base font-semibold tracking-tight">Featured companies</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {featured.map((c) => (
-                <Link
-                  key={c.id}
-                  href={"/companies/" + c.slug}
-                  className="group rounded-lg border border-border bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-lg border border-border bg-muted flex items-center justify-center shrink-0 text-sm font-bold text-primary">
-                      {c.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                          {c.name}
-                        </span>
-                        {c.is_verified && (
-                          <BadgeCheck className="h-3.5 w-3.5 text-primary shrink-0" />
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {c.headquarters_city} · {c.jobs_count} jobs
-                      </p>
-                    </div>
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {pageItems.map((c) => (
+                    <CompanyCard key={c.id} company={c} />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground px-2">
+                      Page {page} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      Next
+                    </Button>
                   </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Hiring now */}
-        {!hasFilters && (
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Flame className="h-4 w-4 text-primary" />
-              <h2 className="text-base font-semibold tracking-tight">Hiring now</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {MOCK_COMPANIES.filter((c) => c.is_hiring).map((c) => (
-                <Link
-                  key={"hire-" + c.id}
-                  href={"/companies/" + c.slug}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-sm hover:border-primary/40 hover:bg-primary/5 transition-colors duration-200"
-                >
-                  <span className="font-medium">{c.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {c.jobs_count} jobs
-                  </span>
-                  {c.is_verified && (
-                    <BadgeCheck className="h-3.5 w-3.5 text-primary" />
-                  )}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Count + sort */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <p className="text-sm text-muted-foreground">
-            {filtered.length} compan{filtered.length === 1 ? "y" : "ies"} found
-            {appliedSearch && ` for "${appliedSearch}"`}
-            {industry && ` · ${industry}`}
-            {locationLabel && ` · ${locationLabel}`}
-            {city && ` · ${city}`}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground hidden sm:inline">
-              Sort
-            </span>
-            <select data-color-scheme="dark"
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortOption)}
-              className="h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground"
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option className="bg-background text-foreground" key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {pageItems.length === 0 ? (
-          <div className="text-center py-20">
-            <Building2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-lg">No companies found.</p>
-            {hasFilters && (
-              <Button variant="outline" className="mt-4" onClick={clearAll}>
-                Clear filters
-              </Button>
+                )}
+              </>
             )}
           </div>
-        ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {pageItems.map((c) => (
-                <CompanyCard key={c.id} company={c} />
-              ))}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-10">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground px-2">
-                  Page {page} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </section>
-
-      {/* CTA strip — like Marketplace */}
-      <section className="border-t border-border bg-muted/30 py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">
-            Represent a company?
-          </h2>
-          <p className="text-muted-foreground text-sm mb-5 max-w-md mx-auto">
-            Create your company profile, post jobs, and reach talent on Hunared.
-          </p>
-          <Button asChild className="rounded-md">
-            <Link href="/register?goal=employer">Register your company</Link>
-          </Button>
         </div>
-      </section>
+      </div>
 
-      {/* Advanced filters sheet */}
+      {/* Mobile filters sheet */}
       {sheetOpen && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setSheetOpen(false)}
             aria-hidden
           />
-          <div className="absolute inset-y-0 right-0 w-full max-w-sm bg-background border-l border-border shadow-xl flex flex-col">
+          <div className="absolute inset-y-0 left-0 w-full max-w-sm bg-background border-r border-border shadow-xl flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="font-semibold">More filters</h2>
+              <h2 className="font-semibold">Filters</h2>
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}
@@ -1215,122 +1263,144 @@ export function CompaniesDirectory() {
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Industry
+                </label>
+                <select
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  className={cn(fieldClass, "h-10")}
+                >
+                  <option value="">All industries</option>
+                  {INDUSTRIES.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Country
+                </label>
+                <select
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setCity("");
+                  }}
+                  className={cn(fieldClass, "h-10")}
+                >
+                  <option value="">All countries</option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  City
+                </label>
+                <CityCombobox
+                  id="companies-city-sheet"
+                  country={country}
+                  value={city}
+                  onChange={setCity}
+                  size="md"
+                  variant="select"
+                  inputClassName="rounded-md border-input h-10"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                   Company type
                 </label>
-                <select data-color-scheme="dark"
+                <select
                   value={companyType}
                   onChange={(e) => setCompanyType(e.target.value)}
-                  className={fieldClass}
+                  className={cn(fieldClass, "h-10")}
                 >
-                  <option className="bg-background text-foreground" value="">All types</option>
-                  {COMPANY_TYPES.map((t) => (
-                    <option className="bg-background text-foreground" key={t} value={t}>
-                      {t}
+                  <option value="">Any type</option>
+                  {COMPANY_TYPES.map((ct) => (
+                    <option key={ct} value={ct}>
+                      {ct}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">
-                  Services
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Business size
                 </label>
-                <select data-color-scheme="dark"
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  className={fieldClass}
-                >
-                  <option className="bg-background text-foreground" value="">All services</option>
-                  {COMMON_SERVICES.map((s) => (
-                    <option className="bg-background text-foreground" key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">
-                  Company size
-                </label>
-                <select data-color-scheme="dark"
+                <select
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
-                  className={fieldClass}
+                  className={cn(fieldClass, "h-10")}
                 >
-                  <option className="bg-background text-foreground" value="">All sizes</option>
+                  <option value="">Any size</option>
                   {BUSINESS_SIZES.map((s) => (
-                    <option className="bg-background text-foreground" key={s} value={s}>
+                    <option key={s} value={s}>
                       {s}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="space-y-2 pt-1">
-                <p className="text-sm font-medium">Status</p>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  Verified only
+              <div className="space-y-2">
+                {(
+                  [
+                    ["Hiring now", hiringOnly, setHiringOnly],
+                    ["Verified only", verifiedOnly, setVerifiedOnly],
+                    ["Featured", featuredOnly, setFeaturedOnly],
+                  ] as const
+                ).map(([label, val, setVal]) => (
+                  <label key={label} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={val}
+                      onChange={(e) => setVal(e.target.checked)}
+                      className="rounded border-border"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Sort
                 </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={featuredOnly}
-                    onChange={(e) => setFeaturedOnly(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  Featured
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hiringOnly}
-                    onChange={(e) => setHiringOnly(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  Hiring now
-                </label>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortOption)}
+                  className={cn(fieldClass, "h-10")}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="p-4 border-t border-border flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-md"
-                onClick={clearAll}
-              >
+              <Button variant="outline" className="flex-1" onClick={clearAll}>
                 Clear
               </Button>
               <Button
-                className="flex-1 rounded-md"
+                className="flex-1"
                 onClick={() => {
                   setPage(1);
                   setSheetOpen(false);
                 }}
               >
-                Show {filtered.length}
+                Apply
               </Button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-function Chip({ label, onClear }: { label: string; onClear: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClear}
-      className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-[11px] font-medium hover:bg-muted"
-    >
-      {label}
-      <X className="h-3 w-3" />
-    </button>
   );
 }
 
