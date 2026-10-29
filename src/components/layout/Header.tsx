@@ -72,6 +72,7 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
           { label: "Available for Hire", href: "/candidates?available=yes", desc: "Open to opportunities only" },
           { label: "Expert Level", href: "/candidates?level=expert", desc: "Senior & expert talent" },
+          { label: "CV Builder", href: "/dashboard/cv", desc: "Build a professional CV" },
           { label: "Create Candidate Profile", href: "/register?goal=seeker", desc: "Join as a job seeker" },
         ],
       },
@@ -148,7 +149,6 @@ const NAV_ITEMS: NavItem[] = [
         items: [
           { label: "All Programs", href: "/program", desc: "Hunared programs overview" },
           { label: "Trainings", href: "/program", desc: "Training & certification pathways" },
-          { label: "CV Builder", href: "/dashboard/cv", desc: "Build a professional CV" },
           { label: "Talash Center", href: "/finder", desc: "Finder & community tools" },
         ],
       },
@@ -219,8 +219,8 @@ export function Header() {
                 pathname.startsWith(item.href + "/") ||
                 (item.label === "Program" &&
                   (pathname.startsWith("/program") ||
-                    pathname.startsWith("/finder") ||
-                    pathname.startsWith("/dashboard/cv")));
+                    pathname.startsWith("/finder"))) ||
+                (item.label === "Talent" && pathname.startsWith("/dashboard/cv"));
 
               return (
                 <div key={item.label} className="relative">
