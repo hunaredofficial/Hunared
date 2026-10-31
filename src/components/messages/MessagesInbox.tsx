@@ -186,6 +186,9 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     { userId: string; profile: { full_name?: string | null; username?: string | null } | null }[]
   >([]);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState("spam");
+  const [reportDetails, setReportDetails] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const voiceChunksRef = useRef<BlobPart[]>([]);
@@ -688,6 +691,21 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     }
   }
 
+  const REPORT_REASONS = [
+    { id: "spam", label: "Spam" },
+    { id: "scam", label: "Scam / fraud" },
+    { id: "harassment", label: "Harassment" },
+    { id: "threats", label: "Threats or intimidation" },
+    { id: "fake_job", label: "Fake job" },
+    { id: "fake_listing", label: "Fake listing" },
+    { id: "impersonation", label: "Impersonation" },
+    { id: "offensive_content", label: "Offensive content" },
+    { id: "privacy_violation", label: "Privacy violation" },
+    { id: "abuse", label: "Abuse" },
+    { id: "inappropriate", label: "Inappropriate behaviour" },
+    { id: "other", label: "Other" },
+  ] as const;
+
   async function reportUser() {
     const reportedUserId =
       other?.id ||
@@ -697,26 +715,30 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       toast.error("Cannot identify user to report. Re-open the conversation and try again.");
       return;
     }
-    const reason = prompt(
-      "Report reason (type one):\nspam | scam | harassment | fake_job | fake_listing | abuse | inappropriate | other",
-      "spam"
-    );
-    if (!reason) return;
-    const details = prompt("Optional details for moderators:") || "";
+    setReportTargetId(reportedUserId);
+    setReportReason("spam");
+    setReportDetails("");
+    setReportOpen(true);
+  }
+
+  async function submitReport() {
+    if (!reportTargetId || !reportReason) return;
     try {
       const res = await fetch("/api/messages/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId: activeId,
-          reportedUserId,
-          reason,
-          details,
+          reportedUserId: reportTargetId,
+          reason: reportReason,
+          details: reportDetails.trim(),
         }),
       });
       const j = await res.json().catch(() => ({}));
-      if (res.ok) toast.success("Report submitted. Thank you.");
-      else toast.error(j.error || "Could not submit report");
+      if (res.ok) {
+        toast.success("Report submitted. Moderators will review it.");
+        setReportOpen(false);
+      } else toast.error(j.error || "Could not submit report");
     } catch {
       toast.error("Could not submit report");
     }
@@ -786,7 +808,13 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
           </h1>
           <button
             type="button"
-            onClick={() => setChatSettingsOpen((v) => !v)}
+            onClick={() => {
+              setChatSettingsOpen((v) => {
+                const next = !v;
+                if (next) void loadBlocked();
+                return next;
+              });
+            }}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
             title="Chat settings"
             aria-label="Chat settings"
@@ -820,6 +848,37 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             <p className="text-[10px] text-muted-foreground pt-1">
               Preferences are saved on this device.
             </p>
+            <div className="border-t border-border pt-2.5 mt-1 space-y-1.5">
+              <p className="font-semibold text-foreground text-[11px] uppercase tracking-wide">
+                Blocked users
+              </p>
+              {blockedList.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground">No blocked users</p>
+              ) : (
+                <div className="max-h-36 overflow-y-auto space-y-1">
+                  {blockedList.map((b) => (
+                    <div
+                      key={b.userId}
+                      className="flex items-center justify-between gap-2 text-[11px] rounded-md border border-border/60 px-2 py-1.5 bg-muted/20"
+                    >
+                      <span className="truncate">
+                        {b.profile?.full_name || b.profile?.username || b.userId.slice(0, 8)}
+                      </span>
+                      <button
+                        type="button"
+                        className="text-primary shrink-0 font-medium hover:underline"
+                        onClick={() => void unblockUser(b.userId)}
+                      >
+                        Unblock
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                You can unblock a user anytime. They will not see that you blocked them.
+              </p>
+            </div>
           </div>
         )}
         <div className="relative">
@@ -831,40 +890,6 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            className="text-[10px] text-muted-foreground hover:text-foreground underline"
-            onClick={() => {
-              setShowBlocked((v) => !v);
-              void loadBlocked();
-            }}
-          >
-            {showBlocked ? "Hide blocked" : "Blocked users"}
-          </button>
-        </div>
-        {showBlocked && (
-          <div className="rounded-lg border border-border bg-muted/20 p-2 space-y-1 max-h-32 overflow-y-auto">
-            {blockedList.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground">No blocked users</p>
-            ) : (
-              blockedList.map((b) => (
-                <div key={b.userId} className="flex items-center justify-between gap-2 text-[11px]">
-                  <span className="truncate">
-                    {b.profile?.full_name || b.profile?.username || b.userId.slice(0, 8)}
-                  </span>
-                  <button
-                    type="button"
-                    className="text-primary shrink-0"
-                    onClick={() => void unblockUser(b.userId)}
-                  >
-                    Unblock
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
         <div className="flex flex-wrap gap-1">
           {FILTERS.map((f) => (
             <button
@@ -1284,6 +1309,59 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       <div className={cn("min-h-0", !activeId ? "hidden md:flex md:flex-col" : "flex flex-col")}>
         {chatPane}
       </div>
+
+      {reportOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setReportOpen(false)}
+            aria-hidden
+          />
+          <div className="relative w-full max-w-md rounded-xl border border-border bg-card shadow-xl p-4 space-y-3">
+            <h2 className="text-sm font-semibold">Report user</h2>
+            <p className="text-xs text-muted-foreground">
+              Select a reason. Reports go to moderators for review.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
+              {REPORT_REASONS.map((r) => (
+                <label
+                  key={r.id}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs cursor-pointer",
+                    reportReason === r.id
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:bg-muted/40"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="report-reason"
+                    className="accent-primary"
+                    checked={reportReason === r.id}
+                    onChange={() => setReportReason(r.id)}
+                  />
+                  {r.label}
+                </label>
+              ))}
+            </div>
+            <textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              placeholder="Optional details for moderators…"
+              rows={3}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="outline" size="sm" onClick={() => setReportOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" size="sm" onClick={() => void submitReport()}>
+                Submit report
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
