@@ -7,23 +7,29 @@ import { HunaredLogo } from "@/components/brand/HunaredLogo";
 const FOOTER_LINKS = {
   Portal: [
     { href: "/jobs", label: "Browse Jobs" },
-    { href: "/candidates", label: "Find Candidates" },
+    { href: "/candidates", label: "Find Talent" },
+    { href: "/companies", label: "Companies" },
     { href: "/market", label: "Marketplace" },
-    { href: "/about", label: "About Us" },
+    { href: "/education", label: "Learning" },
+    { href: "/finder", label: "Finder Center" },
+    { href: "/dashboard/cv", label: "CV Builder" },
+    { href: "/dashboard/premium-ads", label: "Premium Ads" },
   ],
-  Resources: [
+  Programs: [
+    { href: "https://hunared.org/programs", label: "Program", external: true },
+    { href: "https://hunared.org/courses", label: "Training Courses", external: true },
     { href: "/education", label: "Education Hub" },
-    { href: "/education/safety-hse", label: "Safety & HSE" },
-    { href: "/education/engineering", label: "Engineering" },
     { href: "/education/career-tips", label: "Career Tips" },
   ],
   Company: [
+    { href: "/about", label: "About Us" },
     { href: "/help", label: "Help Center" },
     { href: "/contact", label: "Contact Us" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
   ],
 };
+
 
 const SOCIAL_LINKS = [
   { href: "https://www.linkedin.com/in/hunaredorganization", label: "in" },
@@ -74,13 +80,24 @@ export function Footer() {
               </h3>
               <ul className="space-y-2">
                 {links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                    >
-                      {link.label}
-                    </Link>
+                  <li key={link.href + link.label}>
+                    {"external" in link && link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
