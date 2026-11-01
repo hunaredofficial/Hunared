@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Sparkles,
@@ -153,6 +154,10 @@ type Props = {
 };
 
 export function HunaredAgent({ variant = "float", className }: Props) {
+  const [portalReady, setPortalReady] = useState(false);
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
   const router = useRouter();
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(variant === "page");
@@ -382,10 +387,22 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "fixed bottom-[4.5rem] right-4 z-50 w-[min(100vw-1.5rem,26rem)] h-[min(78vh,36rem)] rounded-2xl"
+          ? "w-[min(100vw-1.5rem,26rem)] h-[min(78vh,36rem)] rounded-2xl shadow-2xl"
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
+      style={
+        variant === "float"
+          ? {
+              position: "fixed",
+              right: 20,
+              left: "auto",
+              bottom: 160,
+              zIndex: 9998,
+              margin: 0,
+            }
+          : undefined
+      }
     >
       {/* Header */}
       <header className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
@@ -648,26 +665,45 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
   if (variant === "page") return panel;
 
-  return (
+  // Portal to document.body so fixed is always relative to the viewport
+  // (not stuck under the footer or trapped by parent transforms).
+  const fab = (
     <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+@keyframes hunared-agent-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+`,
+        }}
+      />
       {open && panel}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "group fixed bottom-5 right-5 z-[100] h-14 w-14 flex items-center justify-center",
+          "group h-14 w-14 flex items-center justify-center",
           "rounded-full relative transition-transform duration-300",
           open
             ? "bg-card text-foreground border border-border shadow-lg scale-95"
             : "hover:scale-110 active:scale-95"
         )}
+        style={{
+          position: "fixed",
+          right: 20,
+          left: "auto",
+          bottom: 88,
+          zIndex: 9999,
+          margin: 0,
+        }}
         aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
       >
         {open ? (
           <X className="h-6 w-6 relative z-[2]" />
         ) : (
           <>
-            {/* Soft expanding rings */}
             <span
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-full bg-[#D4AF37]/25 animate-ping"
@@ -678,7 +714,6 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               className="pointer-events-none absolute -inset-1 rounded-full border border-[#D4AF37]/35 animate-pulse"
               style={{ animationDuration: "2s" }}
             />
-            {/* Main orb — gold brand accent, AI circle shape */}
             <span
               aria-hidden
               className="absolute inset-0 rounded-full shadow-lg shadow-[#D4AF37]/40"
@@ -695,24 +730,15 @@ export function HunaredAgent({ variant = "float", className }: Props) {
                   "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0%, transparent 45%)",
               }}
             />
-            {/* Subtle float via CSS animation class */}
             <span className="relative z-[2] flex h-full w-full items-center justify-center animate-[hunared-agent-float_3s_ease-in-out_infinite]">
               <Sparkles className="h-6 w-6 text-[#0a0a0a] drop-shadow-sm" />
             </span>
           </>
         )}
       </button>
-      {/* Local keyframes for gentle float */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-@keyframes hunared-agent-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-`,
-        }}
-      />
     </>
   );
+
+  if (!portalReady) return null;
+  return createPortal(fab, document.body);
 }
