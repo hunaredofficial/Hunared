@@ -376,9 +376,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
   const suggestions = contextualSuggestions(pathname);
 
-  // Respect Settings → AI agent off (floating widget only)
-  if (variant === "float" && !aiEnabled) return null;
-
+  // Always show the floating launcher. When AI is off, panel explains how to turn it on.
   const panel = (
     <div
       className={cn(
@@ -392,23 +390,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       {/* Header */}
       <header className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center">
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-[-10%] rounded-[22%] opacity-40 blur-[6px]"
-              style={{
-                background:
-                  "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.5) 0%, transparent 70%)",
-              }}
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/assets/logos/hunared-mark.png?v=20260905"
-              alt=""
-              width={36}
-              height={36}
-              className="relative z-[1] h-9 w-9 object-contain rounded-[18%] drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
-            />
+          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37] via-[#c9a227] to-[#8b7355] shadow-md shadow-[#D4AF37]/25">
+            <Sparkles className="h-4 w-4 text-[#0a0a0a] relative z-[1]" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
@@ -672,37 +655,64 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "fixed bottom-4 right-4 z-50 h-12 w-12 flex items-center justify-center transition-all duration-200",
-          "rounded-[22%] shadow-lg relative overflow-visible",
+          "group fixed bottom-5 right-5 z-[100] h-14 w-14 flex items-center justify-center",
+          "rounded-full relative transition-transform duration-300",
           open
-            ? "bg-muted/95 text-foreground border border-border scale-95"
-            : "border border-[#D4AF37]/40 hover:scale-105 hover:shadow-[0_4px_20px_rgba(212,175,55,0.35)] bg-[#0a0a0a]"
+            ? "bg-card text-foreground border border-border shadow-lg scale-95"
+            : "hover:scale-110 active:scale-95"
         )}
         aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
       >
         {open ? (
-          <X className="h-5 w-5 relative z-[1]" />
+          <X className="h-6 w-6 relative z-[2]" />
         ) : (
           <>
+            {/* Soft expanding rings */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-[-14%] rounded-[22%] opacity-50 blur-[8px]"
+              className="pointer-events-none absolute inset-0 rounded-full bg-[#D4AF37]/25 animate-ping"
+              style={{ animationDuration: "2.4s" }}
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -inset-1 rounded-full border border-[#D4AF37]/35 animate-pulse"
+              style={{ animationDuration: "2s" }}
+            />
+            {/* Main orb — gold brand accent, AI circle shape */}
+            <span
+              aria-hidden
+              className="absolute inset-0 rounded-full shadow-lg shadow-[#D4AF37]/40"
               style={{
                 background:
-                  "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.55) 0%, transparent 70%)",
+                  "linear-gradient(145deg, #F0D78C 0%, #D4AF37 42%, #A8892D 78%, #6B5A2A 100%)",
               }}
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/assets/logos/hunared-mark.png?v=20260905"
-              alt=""
-              width={40}
-              height={40}
-              className="relative z-[1] h-10 w-10 object-contain rounded-[18%]"
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-[2px] rounded-full opacity-80"
+              style={{
+                background:
+                  "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0%, transparent 45%)",
+              }}
             />
+            {/* Subtle float via CSS animation class */}
+            <span className="relative z-[2] flex h-full w-full items-center justify-center animate-[hunared-agent-float_3s_ease-in-out_infinite]">
+              <Sparkles className="h-6 w-6 text-[#0a0a0a] drop-shadow-sm" />
+            </span>
           </>
         )}
       </button>
+      {/* Local keyframes for gentle float */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+@keyframes hunared-agent-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+`,
+        }}
+      />
     </>
   );
 }
