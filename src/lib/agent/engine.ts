@@ -253,7 +253,7 @@ export const COMMAND_PACKS: {
     title: "Jobs",
     commands: [
       { label: "Instrument Tech jobs", text: "Find instrument technician jobs in Saudi Arabia" },
-      { label: "HSE Officer", text: "HSE Officer jobs in Dammam" },
+      { label: "HSE Officer", text: "Search jobs by skill" },
       { label: "Temporary work", text: "Temporary jobs in Riyadh" },
       { label: "Permanent roles", text: "Permanent jobs in Saudi Arabia" },
       { label: "Jobs near me", text: "Find jobs near Khobar" },
@@ -265,7 +265,7 @@ export const COMMAND_PACKS: {
   {
     title: "Marketplace",
     commands: [
-      { label: "Apartment rent", text: "Apartment for rent in Dammam under 1500 SAR" },
+      { label: "Apartment rent", text: "Browse property and rentals" },
       { label: "Used laptops", text: "Search used laptops for sale" },
       { label: "Cars for sale", text: "Cars for sale in Riyadh" },
       { label: "Furniture", text: "Furniture for sale" },
@@ -301,7 +301,7 @@ export const COMMAND_PACKS: {
     commands: [
       { label: "Career tips", text: "Show career tips articles" },
       { label: "HSE safety", text: "HSE safety learning articles" },
-      { label: "Programs", text: "Open Hunared programs" },
+      { label: "Programs", text: "Open Programs" },
       { label: "Finder", text: "Open Finder Center" },
       { label: "Contact support", text: "Contact Hunared support" },
       { label: "What can you do?", text: "What can you do on Hunared?" },
@@ -314,7 +314,7 @@ export const COMMAND_PACKS: {
       { label: "How to message", text: "How do I message a seller?" },
       { label: "CV Builder help", text: "How do I create a CV?" },
       { label: "Post a job", text: "How do I post a job?" },
-      { label: "Privacy & history", text: "How do I turn off activity history?" },
+      { label: "Privacy & AI", text: "How do I hide the AI agent?" },
       { label: "Is it free?", text: "Is Hunared free?" },
     ],
   },
@@ -323,10 +323,10 @@ export const COMMAND_PACKS: {
     commands: [
       { label: "Messages", text: "Open my messages" },
       { label: "CV Builder", text: "Open CV Builder" },
-      { label: "History", text: "Open activity history" },
+      { label: "History", text: "Open account settings" },
       { label: "Settings", text: "Open settings" },
       { label: "Finder Center", text: "Open Finder Center" },
-      { label: "Programs", text: "Open Hunared programs" },
+      { label: "Programs", text: "Open Programs" },
     ],
   },
 ];
@@ -343,9 +343,9 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
   {
     match: /^\/dashboard\/(settings|history)/,
     items: [
-      "How do I turn off activity history?",
       "How do I hide the AI agent?",
-      "Open activity history",
+      "How do I hide the AI agent?",
+      "Open account settings",
     ],
   },
   {
@@ -360,7 +360,7 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
     match: /^\/$/,
     items: [
       "Find instrument technician jobs in Saudi Arabia",
-      "Apartment for rent in Dammam",
+      "Browse marketplace listings",
       "Electrical services near Khobar",
       "Show candidates available for hire",
       "What can you do?",
@@ -371,7 +371,7 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
     items: [
       "Temporary jobs in Riyadh",
       "HSE Officer jobs",
-      "Mechanical Engineer jobs in Jubail",
+      "Search engineering jobs",
       "Show my saved jobs",
       "Post a job",
     ],
@@ -409,7 +409,7 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
   },
   {
     match: /^\/program/,
-    items: ["Open Hunared programs", "Explore courses", "What can you do?"],
+    items: ["Open Programs", "Explore courses", "What can you do?"],
   },
   {
     match: /^\/dashboard/,
@@ -522,7 +522,7 @@ export function parseUserMessage(
       intent: "help",
       label: "What I can do",
       message:
-        "I'm **Hunared AI** — your guide across the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning\n• Finder Center (lost & found) · Programs & Training Courses (hunared.org)\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · History · Settings · Premium Ads\n\n**Account types**\n• Personal · Seeker · Company · Team (assigned)\n• To switch type: register again with a new goal — data is kept\n\n**Ask me**\n• *Instrument tech jobs in Jubail*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *How do I change account type?*\n• *Open Premium Ads*\n• *How does Hunared work?*\n\nPlain language is fine — no special commands.",
+        "I'm **Hunared AI** — your guide across the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning\n• Finder Center (lost & found) · Programs & Training Courses (hunared.org)\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · Settings · Premium Ads\n\n**Account types**\n• Personal · Seeker · Company · Team (assigned)\n• To switch type: register again with a new goal — data is kept\n\n**Ask me**\n• *Search jobs by profession*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *How do I change account type?*\n• *Open Premium Ads*\n• *How does Hunared work?*\n\nPlain language is fine — no special commands.",
       secondary: [
         { label: "Jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },
@@ -760,7 +760,7 @@ export function parseUserMessage(
   if (/\b(program|training pathway|credential)\b/.test(t) && !/\bjob\b/.test(t)) {
     return {
       intent: "program",
-      href: "/program",
+      href: "https://hunared.org/programs",
       label: "Programs",
       message: "Opening Hunared Programs & training pathways.",
       autoNavigate: true,
@@ -921,10 +921,10 @@ export function parseUserMessage(
     const bits: string[] = [];
     if (entities.q) bits.push(`**${entities.q}**`);
     if (city) bits.push(`in **${city}**`);
-    else if (country) bits.push(`country filter applied`);
+    else if (country) bits.push(`in your selected country`);
     if (entities.employmentType) bits.push(entities.employmentType);
-    const focus = bits.length ? bits.join(" · ") : "open roles";
-    const msg = `I set up a job search for ${focus}.\n\nOpen **View jobs** to see live results on Hunared. You can refine with filters (location, employment type, category) on the jobs page.${
+    const focus = bits.length ? bits.join(" · ") : "roles across Hunared";
+    const msg = `Here is a job search for ${focus}.\n\nOpen **View jobs** Use filters on the jobs page for location, employment type, category, and more.${
       salaryMin
         ? `\n\nYou mentioned a salary around **${salaryMin}** — apply salary filters on the results page if available.`
         : ""
@@ -980,7 +980,7 @@ export function parseUserMessage(
     intent: "unknown",
     label: "Try an example",
     message:
-      "I want to help, but that was unclear.\n\nTry:\n• *Instrument technician jobs in Jubail*\n• *Apartment for rent in Dammam*\n• *Open CV Builder*\n• *Open my messages*\n• *How do I post a job?*\n• *What can you do?*",
+      "I want to help, but that was unclear.\n\nTry:\n• *Search jobs by profession*\n• *Browse marketplace listings*\n• *Open CV Builder*\n• *Open my messages*\n• *How do I post a job?*\n• *What can you do?*",
     secondary: [
       { label: "Jobs", href: "/jobs" },
       { label: "Marketplace", href: "/market" },
@@ -1006,7 +1006,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/about",
       label: "About Hunared",
       message:
-        "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — permanent & temporary roles with filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Marketplace** — products, services, property, vehicles, electronics, lost & found, offers\n• **Learning** — career articles and skill guides\n• **Programs** — official programs & training on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse without an account. Sign in to save, post, message, build a CV, and manage settings.\n\nTry: *Find HSE jobs in Jubail* · *How do I post an ad?* · *Open CV Builder*",
+        "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — permanent & temporary roles with filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Marketplace** — products, services, property, vehicles, electronics, lost & found, offers\n• **Learning** — career articles and skill guides\n• **Programs** — official programs & training on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse without an account. Sign in to save, post, message, build a CV, and manage settings.\n\nTry: *How do I search for jobs?* · *How do I post an ad?* · *Open CV Builder*",
       secondary: [
         { label: "Browse jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },

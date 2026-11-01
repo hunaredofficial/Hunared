@@ -20,7 +20,6 @@ import {
   Building2,
   Users,
   MessageSquare,
-  History,
   Settings,
   MapPin,
   ArrowRight,
@@ -49,54 +48,24 @@ const QUICK_START = [
   { icon: MessageSquare, label: "Messages", text: "Open my messages" },
   { icon: GraduationCap, label: "Programs", text: "Open Hunared programs" },
   { icon: MapPin, label: "Finder", text: "Open Finder Center" },
-  { icon: History, label: "History", text: "Open activity history" },
   { icon: Settings, label: "Settings", text: "Open settings" },
 ];
 
 function contextualSuggestions(path: string): string[] {
-  if (path.startsWith("/jobs/")) {
-    return [
-      "Am I qualified for this job?",
-      "Find similar jobs",
-      "Improve my CV for this role",
-      "Help me prepare for an interview",
-    ];
-  }
   if (path.startsWith("/jobs")) {
     return [
-      "HSE Officer jobs in Dammam",
-      "Permanent jobs in Jubail",
-      "Jobs matching my profile",
+      "How do I search for jobs?",
+      "Show permanent roles",
+      "Open temporary jobs",
+      "How do I post a job?",
     ];
   }
   if (path.startsWith("/market")) {
-    return ["Apartment for rent in Dammam", "Used laptops for sale", "Electrical services"];
-  }
-  if (path.includes("/cv")) {
     return [
-      "Improve my professional summary",
-      "Make my CV ATS-friendly",
-      "Help me write a cover letter",
-    ];
-  }
-  if (path.startsWith("/companies")) {
-    return ["Show company jobs", "Find oil and gas companies"];
-  }
-  if (path.startsWith("/learning") || path.startsWith("/program") || path.startsWith("/education")) {
-    return ["Will this help my career?", "Find related jobs"];
-  }
-  if (path.startsWith("/dashboard/messages")) {
-    return [
-      "How do I message a seller?",
-      "Open jobs to start a chat",
-      "What can you do?",
-    ];
-  }
-  if (path.startsWith("/dashboard/history") || path.startsWith("/dashboard/settings")) {
-    return [
-      "How do I turn off activity history?",
-      "How do I hide the AI agent?",
-      "Open activity history",
+      "How does the marketplace work?",
+      "Browse services",
+      "How do I post a listing?",
+      "Open Finder Center",
     ];
   }
   if (path.includes("/cv")) {
@@ -104,16 +73,59 @@ function contextualSuggestions(path: string): string[] {
       "How do I upload my old CV?",
       "Make my CV ATS-friendly",
       "Open CV Builder",
+      "Improve my professional summary",
+    ];
+  }
+  if (path.startsWith("/companies")) {
+    return [
+      "How do I find companies?",
+      "Show hiring companies",
+      "How do I post a job?",
+    ];
+  }
+  if (path.startsWith("/candidates")) {
+    return [
+      "How does Talent work?",
+      "Who is available for hire?",
+      "Create candidate profile",
+    ];
+  }
+  if (path.startsWith("/learning") || path.startsWith("/education")) {
+    return [
+      "Open Training Courses",
+      "Open Programs",
+      "How does learning help my career?",
+    ];
+  }
+  if (path.startsWith("/dashboard/messages")) {
+    return [
+      "How do I message a seller?",
+      "How do messages work?",
+      "What can you do?",
+    ];
+  }
+  if (path.startsWith("/dashboard/settings") || path.startsWith("/ai-settings")) {
+    return [
+      "How do I hide the AI agent?",
+      "Open account settings",
+      "What can you do?",
+    ];
+  }
+  if (path.startsWith("/finder")) {
+    return [
+      "How does Finder Center work?",
+      "Report a lost item",
+      "Report a found item",
     ];
   }
   return [
     "How does Hunared work?",
-    "Find jobs in Jubail",
+    "Find jobs",
     "Open CV Builder",
     "Open Finder Center",
     "How do I post a job?",
     "How do I change account type?",
-    "Open Premium Ads",
+    "Open Programs",
     "Is Hunared free?",
   ];
 }
@@ -387,7 +399,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "w-[min(100vw-1.5rem,26rem)] h-[min(78vh,36rem)] rounded-2xl shadow-2xl"
+          ? "w-[min(100vw-1.5rem,22rem)] h-[min(70vh,32rem)] rounded-2xl shadow-2xl"
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
@@ -395,11 +407,12 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         variant === "float"
           ? {
               position: "fixed",
-              right: 20,
+              right: 16,
               left: "auto",
-              bottom: 160,
+              bottom: 76,
               zIndex: 9998,
               margin: 0,
+              maxHeight: "min(70vh, 32rem)",
             }
           : undefined
       }
@@ -501,8 +514,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               "How does Hunared work?",
               "How do I post a job?",
               "How do I post a marketplace ad?",
-              "Find permanent jobs in Jubail",
-              "Apartment for rent under 2000 in Dammam",
+              "How does Hunared work?",
+              "How do I post a job?",
               "How do I create a CV?",
               "Show candidates available for hire",
               "Is Hunared free?",
@@ -684,7 +697,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "group h-14 w-14 flex items-center justify-center",
+          "group h-11 w-11 flex items-center justify-center",
           "rounded-full relative transition-transform duration-300",
           open
             ? "bg-card text-foreground border border-border shadow-lg scale-95"
@@ -694,14 +707,14 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           position: "fixed",
           right: 20,
           left: "auto",
-          bottom: 88,
+          bottom: 24,
           zIndex: 9999,
           margin: 0,
         }}
         aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
       >
         {open ? (
-          <X className="h-6 w-6 relative z-[2]" />
+          <X className="h-5 w-5 relative z-[2]" />
         ) : (
           <>
             <span
@@ -731,7 +744,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               }}
             />
             <span className="relative z-[2] flex h-full w-full items-center justify-center animate-[hunared-agent-float_3s_ease-in-out_infinite]">
-              <Sparkles className="h-6 w-6 text-[#0a0a0a] drop-shadow-sm" />
+              <Sparkles className="h-5 w-5 text-[#0a0a0a] drop-shadow-sm" />
             </span>
           </>
         )}
