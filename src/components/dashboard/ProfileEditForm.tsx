@@ -253,8 +253,7 @@ export function ProfileEditForm({
           {roleLabel}
         </div>
         <p className="text-xs text-muted-foreground mt-1.5">
-          Account type cannot be changed here. To switch type, complete signup again with a different goal.
-          Your existing listings and data are kept.
+          To switch account types, complete the signup process again and select your new account purpose. Your existing data will be preserved.
         </p>
       </div>
 
@@ -755,18 +754,18 @@ export function ProfileEditForm({
               Permanently Delete Account?
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              This will permanently delete your account and all associated data,
-              including profiles, jobs, listings, articles, reviews, saves,
-              follows, shares, orders, and subscriptions.
+              This action will permanently delete your Hunared account and all
+              associated data, including profiles, pages, jobs, listings,
+              articles, reviews, saved items, follows, shares, orders, and
+              subscriptions.
             </p>
             <p className="text-sm font-medium text-destructive/90">
               This action cannot be undone or recovered.
             </p>
             <p className="text-xs text-muted-foreground pt-1">
-              Applies to every account type (Personal, Candidate / Seeker, or
-              Company). Your public profile is removed from Candidates and
-              Companies directories, and your company page is deleted if you have
-              one.
+              Applies to all account types: Personal, Candidate, and Company.
+              Your public profile is removed from Candidates and Companies
+              directories.
             </p>
           </div>
           <Button
@@ -777,7 +776,7 @@ export function ProfileEditForm({
             onClick={async () => {
               if (
                 !window.confirm(
-                  "Permanently Delete Account?\n\nThis will permanently delete your account and all associated data, including profiles, jobs, listings, articles, reviews, saves, follows, shares, orders, and subscriptions.\n\nThis action cannot be undone or recovered."
+                  "Permanently Delete Account?\n\nThis action will permanently delete your Hunared account and all associated data, including profiles, pages, jobs, listings, articles, reviews, saved items, follows, shares, orders, and subscriptions.\n\nThis action cannot be undone or recovered."
                 )
               ) {
                 return;
