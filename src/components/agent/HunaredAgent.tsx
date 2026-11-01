@@ -109,8 +109,10 @@ function contextualSuggestions(path: string): string[] {
     "How does Hunared work?",
     "Find jobs in Jubail",
     "Open CV Builder",
-    "Open my messages",
+    "Open Finder Center",
     "How do I post a job?",
+    "How do I change account type?",
+    "Open Premium Ads",
     "Is Hunared free?",
   ];
 }
@@ -390,8 +392,23 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       {/* Header */}
       <header className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative h-9 w-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-md shadow-primary/25">
-            <Sparkles className="h-4.5 w-4.5 text-primary-foreground" />
+          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-[-10%] rounded-[22%] opacity-40 blur-[6px]"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.5) 0%, transparent 70%)",
+              }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/logos/hunared-mark.png?v=20260905"
+              alt=""
+              width={36}
+              height={36}
+              className="relative z-[1] h-9 w-9 object-contain rounded-[18%] drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
+            />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
@@ -408,7 +425,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               </span>
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
-              Jobs · CV · Marketplace · Career
+              Jobs · Talent · Market · CV · Guide
             </p>
           </div>
         </div>
@@ -655,14 +672,36 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "fixed bottom-4 right-4 z-50 h-13 w-13 h-12 w-12 rounded-full shadow-lg shadow-primary/20 flex items-center justify-center transition-all",
+          "fixed bottom-4 right-4 z-50 h-12 w-12 flex items-center justify-center transition-all duration-200",
+          "rounded-[22%] shadow-lg relative overflow-visible",
           open
-            ? "bg-muted text-foreground border border-border"
-            : "bg-primary text-primary-foreground hover:scale-105"
+            ? "bg-muted/95 text-foreground border border-border scale-95"
+            : "border border-[#D4AF37]/40 hover:scale-105 hover:shadow-[0_4px_20px_rgba(212,175,55,0.35)] bg-[#0a0a0a]"
         )}
         aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
       >
-        {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+        {open ? (
+          <X className="h-5 w-5 relative z-[1]" />
+        ) : (
+          <>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-[-14%] rounded-[22%] opacity-50 blur-[8px]"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.55) 0%, transparent 70%)",
+              }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/logos/hunared-mark.png?v=20260905"
+              alt=""
+              width={40}
+              height={40}
+              className="relative z-[1] h-10 w-10 object-contain rounded-[18%]"
+            />
+          </>
+        )}
       </button>
     </>
   );

@@ -522,7 +522,7 @@ export function parseUserMessage(
       intent: "help",
       label: "What I can do",
       message:
-        "I'm **Hunared AI** — guide to the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning · Finder Center\n• Permanent / temporary roles · Lost & Found · Offers\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · History · Settings\n\n**Account types**\n• Personal · Seeker · Company · Team (admin-assigned)\n\n**Ask me**\n• *Instrument tech jobs in Jubail*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *Turn off activity history*\n• *How does Hunared work?*\n\nNo special commands needed — plain language is fine.",
+        "I'm **Hunared AI** — your guide across the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning\n• Finder Center (lost & found) · Programs & Training Courses (hunared.org)\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · History · Settings · Premium Ads\n\n**Account types**\n• Personal · Seeker · Company · Team (assigned)\n• To switch type: register again with a new goal — data is kept\n\n**Ask me**\n• *Instrument tech jobs in Jubail*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *How do I change account type?*\n• *Open Premium Ads*\n• *How does Hunared work?*\n\nPlain language is fine — no special commands.",
       secondary: [
         { label: "Jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },
@@ -673,7 +673,7 @@ export function parseUserMessage(
       href: "/finder",
       label: "Finder Center",
       message:
-        "**Finder Center** helps you discover opportunities across jobs, talent, companies, and marketplace in one place.",
+        "**Finder Center** is Hunared's lost & found community board.\n\n• Report a **lost** or **found** item\n• Search by country and city\n• Help reconnect items with owners\n\nOpen **/finder** to search or post.",
       autoNavigate: true,
       secondary: [
         { label: "Finder Center", href: "/finder" },
@@ -1006,7 +1006,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/about",
       label: "About Hunared",
       message:
-        "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — search and post roles (permanent & temporary)\n• **Talent** — professionals available for hire\n• **Companies** — employer directory\n• **Marketplace** — products, services, property, vehicles, accommodation\n• **Learning** — career articles, programs, skills\n• **CV Builder** — create and improve your CV\n• **Finder Center** — lost & found community\n\nBrowse without an account. Sign in to save items, post listings, build a CV, and manage your profile.\n\nTry: *Find HSE jobs in Jubail* or *How do I post an ad?*",
+        "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — permanent & temporary roles with filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Marketplace** — products, services, property, vehicles, electronics, lost & found, offers\n• **Learning** — career articles and skill guides\n• **Programs** — official programs & training on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse without an account. Sign in to save, post, message, build a CV, and manage settings.\n\nTry: *Find HSE jobs in Jubail* · *How do I post an ad?* · *Open CV Builder*",
       secondary: [
         { label: "Browse jobs", href: "/jobs" },
         { label: "Marketplace", href: "/market" },
@@ -1245,7 +1245,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
         "Career roadmap: 1) Target role on profile 2) Skills from recent work 3) Gaps vs job ads 4) Learning/Program resources 5) Update CV. Tell me current and target role for a tailored outline.",
       secondary: [
         { label: "Learning", href: "/education" },
-        { label: "Program", href: "/program" },
+        { label: "Programs", href: "https://hunared.org/programs" },
         { label: "Jobs", href: "/jobs" },
       ],
     };
@@ -1276,7 +1276,49 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
     };
   }
 
-  if (/turn (on|off) (hunared )?ai|ai settings|disable ai|enable ai|privacy.?ai/i.test(lower)) {
+  if (/change (my )?account type|switch (my )?(account|role|goal)|how (do i|to) (change|switch) (account|role)/i.test(lower)) {
+    return {
+      intent: "how_to",
+      href: "/register",
+      label: "Account types",
+      message:
+        "**Account type on Hunared**\n\nTypes: **Personal**, **Seeker (Candidate)**, **Company**.\n\nYou cannot change type from My Profile. To switch:\n1. Open **Sign up / Register**\n2. Choose your new goal (Personal / Job Seeker / Company)\n3. Complete the form\n\nYour existing data and listings are **kept** — only the account purpose is updated.\n\nTeam and Admin roles are assigned by Hunared, not via self-signup.",
+      secondary: [
+        { label: "Register", href: "/register" },
+        { label: "My Profile", href: "/dashboard/profile" },
+      ],
+    };
+  }
+
+  if (/premium ads?|promote (my )?(job|listing|ad)|boost (my )?(ad|listing)/i.test(lower)) {
+    return {
+      intent: "how_to",
+      href: "/dashboard/premium-ads",
+      label: "Premium Ads",
+      message:
+        "**Premium Ads** let you promote a job, marketplace listing, or campaign from your dashboard.\n\n1. Sign in → **Dashboard → Premium Ads**\n2. Create an ad, choose size/placement, optional image\n3. Submit for admin review/payment contact\n4. Approved ads appear in premium slots\n\nYou can edit your campaign later from the same page.",
+      secondary: [
+        { label: "Premium Ads", href: "/dashboard/premium-ads" },
+        { label: "Post an Ad", href: "/post" },
+      ],
+    };
+  }
+
+  if (/training courses?|hunared\.org\/courses|certification pathway/i.test(lower)) {
+    return {
+      intent: "program",
+      href: "https://hunared.org/courses",
+      label: "Training Courses",
+      message:
+        "**Training Courses** are on the official Hunared learning site.\n\nOpen **hunared.org/courses** for training and certification pathways. Programs overview: **hunared.org/programs**.",
+      secondary: [
+        { label: "Courses", href: "https://hunared.org/courses" },
+        { label: "Programs", href: "https://hunared.org/programs" },
+      ],
+    };
+  }
+
+    if (/turn (on|off) (hunared )?ai|ai settings|disable ai|enable ai|privacy.?ai/i.test(lower)) {
     return {
       intent: "ai_settings",
       href: "/ai-settings",
