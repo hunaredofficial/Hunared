@@ -38,13 +38,26 @@ export function ProfileEditForm({
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Account type (role) — personal | seeker | employer (Company)
-  const [role, setRole] = useState<"personal" | "seeker" | "employer">(() => {
-    const r = initialProfile.role;
-    if (r === "employer") return "employer";
-    if (r === "personal") return "personal";
+  // Account type is fixed here — change only via a new signup goal (API locks role on profile save)
+  const lockedRole = String(initialProfile.role || "seeker");
+  const [role] = useState<"personal" | "seeker" | "employer">(() => {
+    if (lockedRole === "employer") return "employer";
+    if (lockedRole === "personal") return "personal";
+    if (lockedRole === "team" || lockedRole === "admin") return "personal";
     return "seeker";
   });
+  const roleLabel =
+    lockedRole === "employer"
+      ? "Company"
+      : lockedRole === "seeker"
+        ? "Seeker"
+        : lockedRole === "personal"
+          ? "Personal"
+          : lockedRole === "team"
+            ? "Team"
+            : lockedRole === "admin"
+              ? "Admin"
+              : lockedRole;
 
   // Basic info
   const [fullName, setFullName] = useState(initialProfile.full_name ?? "");
@@ -233,29 +246,15 @@ export function ProfileEditForm({
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          {isEmployer ? "Company Profile" : "My Profile"}
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Keep your information up to date to improve visibility.
-        </p>
-      </div>
-
-      {/* Account type */}
+      {/* Account type — read only */}
       <div className="w-full p-5 rounded-xl border border-border bg-card">
         <label className="text-sm font-medium block mb-1.5">Account type</label>
-        <select data-color-scheme="dark"
-          value={role}
-          onChange={(e) => setRole(e.target.value as "personal" | "seeker" | "employer")}
-          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-        >
-          <option className="bg-background text-foreground" value="personal">Personal</option>
-          <option className="bg-background text-foreground" value="seeker">Seeker</option>
-          <option className="bg-background text-foreground" value="employer">Company</option>
-        </select>
-        <p className="text-xs text-muted-foreground mt-1">
-          You can change this anytime. Personal = browse &amp; learn. Seeker = find jobs. Company = post jobs &amp; hire.
+        <div className="w-full h-10 px-3 rounded-md border border-input bg-muted/40 text-sm flex items-center font-medium">
+          {roleLabel}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          Account type cannot be changed here. To switch type, complete signup again with a different goal.
+          Your existing listings and data are kept.
         </p>
       </div>
 

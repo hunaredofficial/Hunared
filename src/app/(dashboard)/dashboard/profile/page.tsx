@@ -45,7 +45,7 @@ export default async function ProfilePage() {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Profile</h1>
         <p className="text-sm text-muted-foreground mt-1.5">
-          Keep your information up to date. Switch account type anytime.
+          Keep your information up to date to improve visibility.
         </p>
       </div>
       <ProfileEditForm

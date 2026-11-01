@@ -60,6 +60,8 @@ export async function POST(req: Request) {
     );
   }
 
+  const supabase = createAdminClient();
+
   let body: SaveProfileBody;
   try {
     body = (await req.json()) as SaveProfileBody;
@@ -74,8 +76,22 @@ export async function POST(req: Request) {
     );
   }
 
-  const validRoles: UserRole[] = ["seeker", "employer", "personal", "admin"];
-  if (!validRoles.includes(body.role) || body.role === "admin") {
+  const validRoles: UserRole[] = ["seeker", "employer", "personal", "team"];
+  // Role changes only when completing signup (fromRegister). Profile page cannot change role.
+  const fromRegister = !!(body as { fromRegister?: boolean }).fromRegister;
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  const existingRole = existingProfile?.role as UserRole | undefined;
+
+  // Always preserve admin/team unless official admin email path sets admin below
+  if (existingRole === "admin" || existingRole === "team") {
+    body.role = existingRole;
+  } else if (existingRole && !fromRegister) {
+    body.role = existingRole;
+  } else if (!validRoles.includes(body.role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
 
@@ -193,7 +209,6 @@ export async function POST(req: Request) {
     }
   }
 
-  const supabase = createAdminClient();
 
   const { data: existingUser } = await supabase
     .from("profiles")
@@ -355,12 +370,8 @@ export async function POST(req: Request) {
       console.error("[profile/save] company upsert non-fatal:", e);
     }
   } else {
-    // Leaving Company role → remove company directory entry
-    try {
-      await supabase.from("companies").delete().eq("owner_id", userId);
-    } catch (e) {
-      console.error("[profile/save] company delete non-fatal:", e);
-    }
+    // Do not delete company directory or listings when role changes.
+    // Data is preserved so users can switch type via signup without losing posts.
   }
 
   return NextResponse.json({ success: true });

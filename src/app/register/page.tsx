@@ -391,6 +391,7 @@ function RegisterInner() {
 
       const payload: Record<string, unknown> = {
         role,
+        fromRegister: true,
         fullName: fullName.trim(),
         username: handle,
         phone: phone.trim(),
@@ -583,7 +584,7 @@ function RegisterInner() {
         {!waitingSession && step === "goal" && (
           <div className="space-y-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold gradient-text">
                 What&apos;s your goal?
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
