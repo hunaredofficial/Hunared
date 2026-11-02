@@ -105,7 +105,8 @@ export default async function ResourceDetailPage({ params }: Props) {
             <div className="min-w-0 flex-1">
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">
                 {(row.category || "general").replace(/_/g, " ")}
-                {typeof row.download_count === "number" ? ` · ${row.download_count} downloads` : ""}
+                {" · "}
+                {typeof row.download_count === "number" ? row.download_count : 0} downloads
               </p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{row.title}</h1>
               {row.description && (
@@ -129,7 +130,6 @@ export default async function ResourceDetailPage({ params }: Props) {
             id={row.id}
             title={row.title}
             isOwner={isOwner}
-            viewUrl={viewUrl}
           />
         </div>
 

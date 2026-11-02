@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-type ItemType = "job" | "listing" | "article";
+type ItemType = "job" | "listing" | "article" | "resource";
 
 export function SaveButton({
   itemType,

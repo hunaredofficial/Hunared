@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { rateLimit } from "@/lib/rateLimit";
 
-type ItemType = "job" | "listing" | "article";
+type ItemType = "job" | "listing" | "article" | "resource";
 
 function parseBody(
   body: unknown
@@ -13,7 +13,7 @@ function parseBody(
   if (b.removeAll === true) return { removeAll: true };
   const itemType = b.itemType;
   const itemId = b.itemId;
-  if (itemType !== "job" && itemType !== "listing" && itemType !== "article") return null;
+  if (itemType !== "job" && itemType !== "listing" && itemType !== "article" && itemType !== "resource") return null;
   if (typeof itemId !== "string" || !itemId.trim()) return null;
   return { itemType, itemId: itemId.trim() };
 }
@@ -45,10 +45,14 @@ export async function GET() {
   const articleIds = list
     .filter((r) => r.item_type === "article")
     .map((r) => r.item_id);
+  const resourceIds = list
+    .filter((r) => r.item_type === "resource")
+    .map((r) => r.item_id);
 
   const jobsMap = new Map<string, Record<string, unknown>>();
   const listingsMap = new Map<string, Record<string, unknown>>();
   const articlesMap = new Map<string, Record<string, unknown>>();
+  const resourcesMap = new Map<string, Record<string, unknown>>();
 
   if (jobIds.length) {
     const { data: jobs } = await supabase.from("jobs").select("*").in("id", jobIds);
@@ -70,8 +74,42 @@ export async function GET() {
     for (const a of articles ?? [])
       articlesMap.set(a.id as string, a as Record<string, unknown>);
   }
+  if (resourceIds.length) {
+    const { data: resources } = await supabase
+      .from("learning_resources")
+      .select("id, title, description, category, file_name, status, download_count, created_at")
+      .in("id", resourceIds);
+    for (const r of resources ?? [])
+      resourcesMap.set(r.id as string, r as Record<string, unknown>);
+  }
 
   const items = list.map((row) => {
+    if (row.item_type === "resource") {
+      const resource = resourcesMap.get(row.item_id);
+      if (!resource) {
+        return {
+          type: "resource" as const,
+          unavailable: true,
+          resource: {
+            id: row.item_id,
+            title: "Unavailable resource",
+            category: null,
+          },
+        };
+      }
+      return {
+        type: "resource" as const,
+        unavailable: resource.status !== "approved",
+        resource: {
+          id: resource.id,
+          title: resource.title,
+          category: resource.category,
+          file_name: resource.file_name,
+          download_count: resource.download_count,
+          created_at: resource.created_at,
+        },
+      };
+    }
     if (row.item_type === "article") {
       const article = articlesMap.get(row.item_id);
       if (!article) {

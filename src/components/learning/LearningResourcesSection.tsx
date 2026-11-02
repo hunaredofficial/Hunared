@@ -15,6 +15,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ShareButton } from "@/components/shared/ShareButton";
+import { SaveButton } from "@/components/shared/SaveButton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -243,26 +245,15 @@ function ResourceLibrary({
                   <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>
                 )}
                 <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-auto">
-                    {(r.category || "general").replace(/_/g, " ")}
-                    {typeof r.download_count === "number" && r.download_count > 0
-                      ? ` · ${r.download_count}`
-                      : ""}
+                  <span className="text-[10px] tracking-wide text-muted-foreground mr-auto">
+                    {typeof r.download_count === "number" ? r.download_count : 0} downloads
                   </span>
-                  <Button size="sm" variant="ghost" className="h-8 px-2" asChild>
-                    <Link href={`/education/resources/${r.id}`} title="Open on site">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 px-2"
-                    title="Share"
-                    onClick={() => void handleShare(r.id, r.title)}
-                  >
-                    <Share2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <ShareButton
+                    url={`/education/resources/${r.id}`}
+                    title={r.title}
+                    size="icon"
+                  />
+                  <SaveButton itemType="resource" itemId={r.id} size="icon" />
                   <Button
                     size="sm"
                     variant="outline"
