@@ -128,31 +128,14 @@ const NAV_ITEMS: NavItem[] = [
     href: "/education",
     columns: [
       {
-        title: "Learning Hub",
+        title: "Learning",
         items: [
-          { label: "All Articles", href: "/education", desc: "Browse knowledge" },
-          { label: "Resource Library", href: "/education#resources", desc: "Download guides & files" },
-          { label: "Write an Article", href: "/dashboard/articles/new", desc: "Share your expertise" },
-          { label: "Upload Resource", href: "/education#upload-resource", desc: "Contribute a document" },
-        ],
-      },
-      {
-        title: "Topics",
-        items: [
+          { label: "Learning Hub", href: "/education", desc: "Articles & knowledge" },
+          { label: "Resources", href: "/education#resources", desc: "Download & share files" },
           { label: "Safety & HSE", href: "/education?category=safety_hse", desc: "Workplace safety" },
-          { label: "Engineering", href: "/education?category=engineering", desc: "Technical guides" },
           { label: "Career Tips", href: "/education?category=career_tips", desc: "Grow your career" },
-          { label: "Rights & Work", href: "/education?category=rights_responsibilities", desc: "Contracts & clarity" },
-          { label: "Soft Skills", href: "/education?category=soft_skills", desc: "Communication & leadership" },
-          { label: "Industry News", href: "/education?category=industry_news", desc: "Trends & updates" },
-        ],
-      },
-      {
-        title: "Programs & tools",
-        items: [
-          { label: "Programs", href: "https://hunared.org/programs", desc: "Official pathways" },
-          { label: "Training Courses", href: "https://hunared.org/courses", desc: "Certification" },
-          { label: "CV Builder", href: "/dashboard/cv", desc: "Professional resumes" },
+          { label: "Write Article", href: "/dashboard/articles/new", desc: "Share expertise" },
+          { label: "CV Builder", href: "/dashboard/cv", desc: "Professional resume" },
         ],
       },
     ],

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import {
   Download,
   FileText,
@@ -9,6 +10,9 @@ import {
   Search,
   Upload,
   FolderOpen,
+  Share2,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,6 +29,7 @@ export type LearningResource = {
   download_count?: number;
   created_at: string;
   status?: string;
+  uploaded_by?: string | null;
 };
 
 export const RESOURCE_CATEGORY_OPTIONS: { value: string; label: string }[] = [
@@ -55,15 +60,18 @@ function formatSize(n?: number | null) {
 function ResourceLibrary({
   signedIn,
   refreshKey,
+  onRefresh,
 }: {
   signedIn: boolean;
   refreshKey: number;
+  onRefresh: () => void;
 }) {
+  const { userId } = useAuth();
   const [resources, setResources] = useState<LearningResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("");
   const [q, setQ] = useState("");
-  const [downloading, setDownloading] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,7 +94,7 @@ function ResourceLibrary({
   }, [load, refreshKey]);
 
   async function handleDownload(id: string) {
-    setDownloading(id);
+    setBusyId(id);
     try {
       const res = await fetch(`/api/learning/resources/${id}/download`);
       const data = await res.json();
@@ -99,7 +107,46 @@ function ResourceLibrary({
     } catch {
       toast.error("Download failed");
     } finally {
-      setDownloading(null);
+      setBusyId(null);
+    }
+  }
+
+  async function handleShare(id: string, title: string) {
+    const url = `${window.location.origin}/education/resources/${id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url, text: `Learning resource on Hunared: ${title}` });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      } catch {
+        toast.error("Could not share");
+      }
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this resource permanently?")) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/learning/resources/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "Delete failed");
+        return;
+      }
+      toast.success("Resource deleted");
+      onRefresh();
+      void load();
+    } catch {
+      toast.error("Delete failed");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -112,7 +159,7 @@ function ResourceLibrary({
             Resource library
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Professional templates, checklists, guides, and study files — free to download.
+            Open, download, and share professional guides and study files.
           </p>
         </div>
         {signedIn ? (
@@ -171,52 +218,83 @@ function ResourceLibrary({
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {resources.map((r) => (
-            <li
-              key={r.id}
-              className="rounded-xl border border-border bg-card/60 p-4 flex flex-col gap-3 hover:border-primary/40 transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm leading-snug line-clamp-2">{r.title}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                    {r.file_name}
-                    {r.file_size ? ` · ${formatSize(r.file_size)}` : ""}
-                  </p>
-                </div>
-              </div>
-              {r.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>
-              )}
-              <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {(r.category || "general").replace(/_/g, " ")}
-                  {typeof r.download_count === "number" && r.download_count > 0
-                    ? ` · ${r.download_count} downloads`
-                    : ""}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8"
-                  disabled={downloading === r.id}
-                  onClick={() => void handleDownload(r.id)}
-                >
-                  {downloading === r.id ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <>
-                      <Download className="h-3.5 w-3.5 mr-1" />
-                      Download
-                    </>
+          {resources.map((r) => {
+            const mine = !!userId && r.uploaded_by === userId;
+            return (
+              <li
+                key={r.id}
+                className="rounded-xl border border-border bg-card/60 p-4 flex flex-col gap-3 hover:border-primary/40 transition-colors"
+              >
+                <Link href={`/education/resources/${r.id}`} className="flex items-start gap-3 group">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                      {r.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                      {r.file_name}
+                      {r.file_size ? ` · ${formatSize(r.file_size)}` : ""}
+                    </p>
+                  </div>
+                </Link>
+                {r.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>
+                )}
+                <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-auto">
+                    {(r.category || "general").replace(/_/g, " ")}
+                    {typeof r.download_count === "number" && r.download_count > 0
+                      ? ` · ${r.download_count}`
+                      : ""}
+                  </span>
+                  <Button size="sm" variant="ghost" className="h-8 px-2" asChild>
+                    <Link href={`/education/resources/${r.id}`} title="Open on site">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-2"
+                    title="Share"
+                    onClick={() => void handleShare(r.id, r.title)}
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    disabled={busyId === r.id}
+                    onClick={() => void handleDownload(r.id)}
+                  >
+                    {busyId === r.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <>
+                        <Download className="h-3.5 w-3.5 mr-1" />
+                        Download
+                      </>
+                    )}
+                  </Button>
+                  {mine && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2 text-destructive hover:text-destructive"
+                      title="Delete"
+                      disabled={busyId === r.id}
+                      onClick={() => void handleDelete(r.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   )}
-                </Button>
-              </div>
-            </li>
-          ))}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -297,8 +375,7 @@ function ResourceUploadForm({ onPublished }: { onPublished: () => void }) {
           Share a learning resource
         </h3>
         <p className="text-xs text-muted-foreground mt-1">
-          PDF, Word, PowerPoint, Excel, or images up to 15MB. Published resources appear in the
-          library immediately.
+          PDF, Word, PowerPoint, Excel, or images up to 15MB. Appears in the library after publish.
         </p>
       </div>
 
@@ -367,12 +444,13 @@ function ResourceUploadForm({ onPublished }: { onPublished: () => void }) {
 
 export function LearningResourcesSection({ signedIn }: { signedIn: boolean }) {
   const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = () => setRefreshKey((k) => k + 1);
   return (
     <div className="space-y-10" id="resources">
-      <ResourceLibrary signedIn={signedIn} refreshKey={refreshKey} />
+      <ResourceLibrary signedIn={signedIn} refreshKey={refreshKey} onRefresh={refresh} />
       {signedIn && (
         <div className="max-w-2xl">
-          <ResourceUploadForm onPublished={() => setRefreshKey((k) => k + 1)} />
+          <ResourceUploadForm onPublished={refresh} />
         </div>
       )}
     </div>
