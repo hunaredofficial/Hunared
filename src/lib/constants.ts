@@ -723,6 +723,8 @@ export const ARTICLE_CATEGORIES = [
   { value: "engineering", label: "Engineering" },
   { value: "career_tips", label: "Career Tips" },
   { value: "rights_responsibilities", label: "Rights & Responsibilities" },
+  { value: "soft_skills", label: "Soft Skills" },
+  { value: "industry_news", label: "Industry News" },
 ] as const;
 
 export type ArticleCategoryValue = (typeof ARTICLE_CATEGORIES)[number]["value"];
@@ -736,6 +738,10 @@ export const ARTICLE_CATEGORY_COLORS: Record<string, string> = {
     "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
   rights_responsibilities:
     "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  soft_skills:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+  industry_news:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
 };
 
 export const LISTING_CATEGORIES = [

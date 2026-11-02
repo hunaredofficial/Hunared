@@ -13,21 +13,23 @@ import {
   Wrench,
   Briefcase,
   Scale,
+  Users,
+  Newspaper,
+  ClipboardList,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
 import { SaveButton } from "@/components/shared/SaveButton";
-import { ResourceLibrary } from "@/components/learning/ResourceLibrary";
-import { ResourceUploadForm } from "@/components/learning/ResourceUploadForm";
+import { LearningResourcesSection } from "@/components/learning/LearningResourcesSection";
 import type { Article } from "@/types/database";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Learning Hub",
   description:
-    "Hunared Learning Hub — career articles, safety & HSE, engineering guides, downloadable resources, programs and training for global professionals.",
+    "Hunared Learning Hub — professional articles, downloadable resources, programs and training for global careers.",
 };
 
 interface SearchParams {
@@ -60,6 +62,18 @@ const PATHS = [
     desc: "Contracts, responsibilities, and workplace clarity.",
     href: "/education?category=rights_responsibilities",
     icon: Scale,
+  },
+  {
+    title: "Soft skills",
+    desc: "Communication, leadership, and teamwork at work.",
+    href: "/education?category=soft_skills",
+    icon: Users,
+  },
+  {
+    title: "Industry news",
+    desc: "Sector trends and practical updates for professionals.",
+    href: "/education?category=industry_news",
+    icon: Newspaper,
   },
 ];
 
@@ -116,7 +130,6 @@ export default async function EducationPage({
 
   return (
     <div className="min-h-screen pb-16">
-      {/* Hero */}
       <section className="relative border-b border-border bg-gradient-to-b from-primary/10 via-background to-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="max-w-3xl">
@@ -128,11 +141,15 @@ export default async function EducationPage({
               <span className="text-primary">Advance your career.</span>
             </h1>
             <p className="mt-4 text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl">
-              Practical articles, downloadable guides, and official programs — built for global
-              professionals in jobs, industry, and career development.
+              Professional articles, downloadable templates, and official programs — built for
+              global talent, employers, and industry professionals.
             </p>
 
-            <form action="/education" method="get" className="mt-6 flex flex-col sm:flex-row gap-2 max-w-xl">
+            <form
+              action="/education"
+              method="get"
+              className="mt-6 flex flex-col sm:flex-row gap-2 max-w-xl"
+            >
               {category ? <input type="hidden" name="category" value={category} /> : null}
               <input
                 name="q"
@@ -147,6 +164,12 @@ export default async function EducationPage({
 
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild variant="secondary" size="sm">
+                <a href="#resources">
+                  <ClipboardList className="h-4 w-4 mr-1.5" />
+                  Resource library
+                </a>
+              </Button>
+              <Button asChild variant="outline" size="sm">
                 <a href="https://hunared.org/programs" target="_blank" rel="noopener noreferrer">
                   <GraduationCap className="h-4 w-4 mr-1.5" />
                   Programs
@@ -174,10 +197,9 @@ export default async function EducationPage({
       </section>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-14 mt-10">
-        {/* Learning paths */}
         <section>
           <h2 className="text-lg font-semibold mb-4">Learning paths</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {PATHS.map((p) => {
               const Icon = p.icon;
               return (
@@ -187,7 +209,7 @@ export default async function EducationPage({
                   className="group rounded-xl border border-border bg-card/50 p-4 hover:border-primary/40 hover:bg-card transition-colors"
                 >
                   <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                    <Icon className="h-4.5 w-4.5 text-primary" />
+                    <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <p className="font-medium text-sm group-hover:text-primary transition-colors">
                     {p.title}
@@ -199,21 +221,18 @@ export default async function EducationPage({
           </div>
         </section>
 
-        {/* Articles */}
         <section className="space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                Articles
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {activeCategory
-                  ? `Category: ${activeCategory.label}`
-                  : "Expert reading for safety, engineering, and careers"}
-                {q ? ` · “${q}”` : ""}
-              </p>
-            </div>
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Articles
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {activeCategory
+                ? `Category: ${activeCategory.label}`
+                : "Expert reading for safety, engineering, careers, and more"}
+              {q ? ` · “${q}”` : ""}
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -238,9 +257,9 @@ export default async function EducationPage({
           {articles.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border py-14 text-center px-4">
               <BookOpen className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm font-medium">No articles published yet</p>
+              <p className="text-sm font-medium">No articles in this view yet</p>
               <p className="text-xs text-muted-foreground mt-1 mb-4">
-                Be the first to share knowledge with the community.
+                Share practical knowledge with the community.
               </p>
               <Button asChild size="sm">
                 <Link href="/dashboard/articles/new">Write an article</Link>
@@ -290,19 +309,10 @@ export default async function EducationPage({
           )}
         </section>
 
-        {/* Resource library */}
         <section className="border-t border-border pt-12">
-          <ResourceLibrary signedIn={!!userId} />
+          <LearningResourcesSection signedIn={!!userId} />
         </section>
 
-        {/* Upload */}
-        {userId && (
-          <section className="max-w-2xl">
-            <ResourceUploadForm />
-          </section>
-        )}
-
-        {/* Bottom CTAs */}
         <section className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:p-8">
           <div className="grid gap-6 md:grid-cols-3">
             <div>
