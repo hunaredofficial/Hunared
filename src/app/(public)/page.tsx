@@ -8,6 +8,7 @@ import { TrustSafety } from "@/components/home/TrustSafety";
 import { CtaBanner } from "@/components/home/CtaBanner";
 import type { Metadata } from "next";
 
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -35,6 +36,9 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       <HeroSection />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+        <PremiumAdSlot slotId="home_hero" legacySlotName="homepage_hero" />
+      </div>
       <UserPathSection />
       <MarketplacePreview />
       <LearningPreview />

@@ -13,6 +13,7 @@ import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 import { auth } from "@clerk/nextjs/server";
 import {
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
   rankByPersonalization,
   scoreJob,
   type PersonalizationProfile,
@@ -95,7 +96,6 @@ function postedCutoff(posted: string): Date | null {
     "3d": 24 * 3,
     "7d": 24 * 7,
     "15d": 24 * 15,
-    "30d": 24 * 30,
   };
   const h = hours[posted];
   if (!h) return null;
@@ -344,12 +344,17 @@ export default async function JobsPage({
         </div>
       </section>
 
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
+        <PremiumAdSlot slotId="jobs_list_top" legacySlotName="jobs_list_top" className="mb-2" />
+      </div>
+
       {/* Marketplace layout: sidebar filters + results */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop sidebar */}
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
-            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4">
+              <PremiumAdSlot slotId="jobs_sidebar" legacySlotName="job_sidebar" />
               <JobsFilter
                 variant="sidebar"
                 defaultSearch={search}

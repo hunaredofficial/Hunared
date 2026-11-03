@@ -8,6 +8,7 @@ import { COUNTRIES } from "@/lib/countries";
 import type { Profile } from "@/types/database";
 
 import type { Metadata } from "next";
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 
 export const metadata: Metadata = {
   title: "Candidates",
@@ -110,6 +111,10 @@ export default async function CandidatesPage({
           </div>
         </div>
       </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
+        <PremiumAdSlot slotId="candidates_top" legacySlotName="candidates_top" className="mb-2" />
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
