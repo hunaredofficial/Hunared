@@ -7,10 +7,10 @@ import { ShoppingBag, MapPin, ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
 } from "@/lib/constants";
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
 import { MarketFilter } from "@/components/market/MarketFilter";

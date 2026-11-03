@@ -13,11 +13,11 @@ import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 import { auth } from "@clerk/nextjs/server";
 import {
-import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
   rankByPersonalization,
   scoreJob,
   type PersonalizationProfile,
 } from "@/lib/personalization";
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 
 interface SearchParams {
   search?: string;

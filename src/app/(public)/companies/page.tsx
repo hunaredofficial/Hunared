@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { CompaniesDirectory } from "@/components/companies/CompaniesDirectory";
-
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+
 export const metadata = {
   title: "Companies",
   description:
@@ -15,17 +15,23 @@ export const metadata = {
 
 export default function CompaniesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">
+    <>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="companies_top" legacySlotName="companies_top" className="mb-2" />
+        <PremiumAdSlot
+          slotId="companies_top"
+          legacySlotName="companies_top"
+          className="mb-2"
+        />
       </div>
-          Loading companies…
-        </div>
-      }
-    >
-      <CompaniesDirectory />
-    </Suspense>
+      <Suspense
+        fallback={
+          <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">
+            Loading companies…
+          </div>
+        }
+      >
+        <CompaniesDirectory />
+      </Suspense>
+    </>
   );
 }
