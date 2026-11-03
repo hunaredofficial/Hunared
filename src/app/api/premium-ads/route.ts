@@ -96,10 +96,14 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   const currentTop = active ? Number(active.offered_price_sar) : 0;
+  const days = Math.min(90, Math.max(1, Number(duration_days) || 7));
+  const mult =
+    days >= 90 ? 7.5 : days >= 60 ? 5.5 : days >= 30 ? 3.2 : days >= 14 ? 1.8 : 1;
+  const packageFloor = Math.round(Number(slot.base_price_sar) * mult);
   const minPrice =
     currentTop > 0
-      ? currentTop + Number(slot.min_bid_increment_sar)
-      : Number(slot.base_price_sar);
+      ? Math.max(packageFloor, currentTop + Number(slot.min_bid_increment_sar))
+      : packageFloor;
 
   const price = Number(offered_price_sar);
   if (!Number.isFinite(price) || price < minPrice) {
@@ -109,7 +113,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const days = Math.min(90, Math.max(1, Number(duration_days) || 7));
   const status = submit_for_payment ? "pending_payment" : "draft";
 
   const { data: ad, error } = await supabase

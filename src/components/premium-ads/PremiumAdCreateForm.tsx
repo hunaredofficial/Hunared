@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   PREMIUM_AD_KINDS,
   DURATION_OPTIONS,
+  packagePrice,
   PREMIUM_ADS_ADMIN_CONTACT,
   type PremiumAdKind,
 } from "@/lib/premium-ads/constants";
@@ -75,10 +76,14 @@ export function PremiumAdCreateForm() {
 
   const minPrice = useMemo(() => {
     if (!selected) return 0;
+    const pkg = packagePrice(Number(selected.base_price_sar), duration);
     const top = topBySlot[selected.id];
-    if (top?.price) return top.price + Number(selected.min_bid_increment_sar);
-    return Number(selected.base_price_sar);
-  }, [selected, topBySlot]);
+    // Package floor, or top bid + increment when someone is already live
+    if (top?.price) {
+      return Math.max(pkg, top.price + Number(selected.min_bid_increment_sar));
+    }
+    return pkg;
+  }, [selected, topBySlot, duration]);
 
   useEffect(() => {
     if (selected) setPrice(minPrice);
@@ -211,9 +216,10 @@ export function PremiumAdCreateForm() {
             <div className="grid sm:grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
               {slots.map((s) => {
                 const top = topBySlot[s.id];
+                const pkg = packagePrice(Number(s.base_price_sar), duration);
                 const min = top?.price
-                  ? top.price + Number(s.min_bid_increment_sar)
-                  : Number(s.base_price_sar);
+                  ? Math.max(pkg, top.price + Number(s.min_bid_increment_sar))
+                  : pkg;
                 return (
                   <button
                     key={s.id}
@@ -384,36 +390,45 @@ export function PremiumAdCreateForm() {
         <div className="xl:col-span-5 space-y-4">
           <div className="xl:sticky xl:top-6 space-y-4">
             <section className="rounded-2xl border border-border/70 bg-card/50 p-4 sm:p-5 space-y-3">
-              <h2 className="text-sm font-semibold flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" /> Preview
-              </h2>
-              <div
-                className="rounded-xl border border-dashed border-border/80 bg-muted/20 overflow-hidden flex items-center justify-center min-h-[100px]"
-                style={{
-                  aspectRatio: selected
-                    ? `${selected.width_px} / ${selected.height_px}`
-                    : "16/5",
-                  maxHeight: 220,
-                }}
-              >
-                {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={imageUrl}
-                    alt="Ad preview"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-center px-4 py-6 text-muted-foreground text-xs">
-                    <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                    Upload a creative to preview
-                    {selected && (
-                      <p className="mt-1 font-mono opacity-70">
-                        {selected.width_px}×{selected.height_px}px
-                      </p>
-                    )}
-                  </div>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" /> Preview
+                </h2>
+                {selected && (
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    {selected.width_px}×{selected.height_px}px · {selected.size_label}
+                  </span>
                 )}
+              </div>
+              <div className="rounded-xl border border-border bg-background/80 overflow-hidden">
+                <div className="bg-muted/40 px-2 py-1 text-[10px] text-muted-foreground border-b border-border/60">
+                  {selected?.label || "Select a placement"} — live size ratio
+                </div>
+                <div
+                  className="w-full bg-muted/10 flex items-center justify-center"
+                  style={{
+                    aspectRatio: selected
+                      ? `${Math.max(1, selected.width_px)} / ${Math.max(1, selected.height_px)}`
+                      : "16 / 5",
+                    minHeight: 120,
+                    maxHeight: 360,
+                  }}
+                >
+                  {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt="Ad preview"
+                      className="max-w-full max-h-full w-auto h-auto object-contain"
+                      style={{ maxHeight: 360 }}
+                    />
+                  ) : (
+                    <div className="text-center px-4 py-10 text-muted-foreground text-xs">
+                      <ImageIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                      Upload a creative to preview at placement size
+                    </div>
+                  )}
+                </div>
               </div>
               {title && (
                 <p className="text-sm font-medium line-clamp-2">{title}</p>
