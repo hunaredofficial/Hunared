@@ -29,16 +29,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ITEM_TYPES = [
-  { label: "Mobile Phones", href: "/market?type=lost_found&sub=phones", icon: Phone },
-  { label: "Laptops & Tablets", href: "/market?type=lost_found&sub=laptops", icon: Laptop },
-  { label: "Electronics", href: "/market?type=lost_found&sub=electronics", icon: Laptop },
-  { label: "Documents", href: "/market?type=lost_found&sub=documents", icon: FileText },
-  { label: "IDs & Cards", href: "/market?type=lost_found&sub=ids", icon: CreditCard },
-  { label: "Keys", href: "/market?type=lost_found&sub=keys", icon: Key },
-  { label: "Wallets", href: "/market?type=lost_found&sub=wallets", icon: Wallet },
-  { label: "Bags & Luggage", href: "/market?type=lost_found&sub=bags", icon: Briefcase },
-  { label: "Jewelry", href: "/market?type=lost_found&sub=jewelry", icon: Gem },
-  { label: "Other", href: "/market?type=lost_found", icon: MoreHorizontal },
+  { label: "Mobile Phones", href: "/market?category=lost_found&subcategory=Mobile+Phones", icon: Phone },
+  { label: "Laptops & Tablets", href: "/market?category=lost_found&subcategory=Laptops+%26+Tablets", icon: Laptop },
+  { label: "Electronics", href: "/market?category=lost_found&subcategory=Electronics", icon: Laptop },
+  { label: "Documents", href: "/market?category=lost_found&subcategory=Documents", icon: FileText },
+  { label: "IDs & Cards", href: "/market?category=lost_found&subcategory=IDs+%26+Cards", icon: CreditCard },
+  { label: "Keys", href: "/market?category=lost_found&subcategory=Keys", icon: Key },
+  { label: "Wallets", href: "/market?category=lost_found&subcategory=Wallets", icon: Wallet },
+  { label: "Bags & Luggage", href: "/market?category=lost_found&subcategory=Bags+%26+Luggage", icon: Briefcase },
+  { label: "Jewelry", href: "/market?category=lost_found&subcategory=Jewelry", icon: Gem },
+  { label: "Other", href: "/market?category=lost_found&subcategory=Other+Lost+%26+Found", icon: MoreHorizontal },
 ];
 
 export function FinderExperience() {
@@ -57,7 +57,7 @@ export function FinderExperience() {
   function handleSearch(e?: FormEvent) {
     e?.preventDefault();
     const params = new URLSearchParams();
-    params.set("type", "lost_found");
+    params.set("category", "lost_found");
     if (query.trim()) params.set("q", query.trim());
     if (country) params.set("country", country);
     if (city) params.set("city", city);
@@ -88,7 +88,7 @@ export function FinderExperience() {
       <section className="pb-8 px-4 sm:px-6">
         <div className="mx-auto max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link
-            href="/post?type=lost_found&status=lost"
+            href="/dashboard/market/new?category=lost_found&status=lost"
             className="group flex items-start gap-4 rounded-xl border-2 border-border bg-card p-5 hover:border-primary/40 hover:shadow-sm transition-all"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
@@ -104,7 +104,7 @@ export function FinderExperience() {
             </div>
           </Link>
           <Link
-            href="/post?type=lost_found&status=found"
+            href="/dashboard/market/new?category=lost_found&status=found"
             className="group flex items-start gap-4 rounded-xl border-2 border-border bg-card p-5 hover:border-primary/40 hover:shadow-sm transition-all"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
@@ -214,7 +214,7 @@ export function FinderExperience() {
           </div>
           <div className="mt-5">
             <Link
-              href="/market?type=lost_found"
+              href="/market?category=lost_found"
               className="text-sm font-semibold text-primary hover:underline"
             >
               View all lost & found listings →

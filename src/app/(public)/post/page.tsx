@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
   Briefcase,
@@ -159,6 +161,21 @@ const GROUPS: { key: AdType["group"]; label: string; blurb: string }[] = [
 ];
 
 export default function CreateAdPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Deep links from Finder Center → go straight to Lost & Found listing form
+  useEffect(() => {
+    const type = searchParams.get("type") || searchParams.get("category");
+    const status = searchParams.get("status") || "";
+    if (type === "lost_found") {
+      const q = new URLSearchParams();
+      q.set("category", "lost_found");
+      if (status === "lost" || status === "found") q.set("status", status);
+      router.replace(`/dashboard/market/new?${q.toString()}`);
+    }
+  }, [searchParams, router]);
+
   const { isSignedIn } = useAuth();
 
   function hrefFor(type: AdType): string {

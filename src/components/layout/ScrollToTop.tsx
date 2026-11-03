@@ -1,17 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ScrollToTop() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Always start at the top when the route or query changes
+  useEffect(() => {
+    // Instant jump avoids mid-page flash from previous scroll position
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     function onScroll() {
       setVisible(window.scrollY > 400);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
