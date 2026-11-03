@@ -36,7 +36,11 @@ export default async function AdminAdsPage() {
           <div>
             <h1 className="text-xl font-bold">Ad Placements</h1>
             <p className="text-xs text-muted-foreground">
-              Manage Google AdSense and custom banner ads across the site.
+              Manage Google AdSense and custom banner slots sitewide. User-paid campaigns are reviewed under{" "}
+              <a href="/dashboard/premium-ads/admin" className="text-primary underline">
+                Premium Ads
+              </a>
+              .
             </p>
           </div>
         </div>

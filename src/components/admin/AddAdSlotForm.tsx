@@ -18,13 +18,32 @@ import { upsertAdPlacement } from "@/app/(dashboard)/dashboard/admin/ads/actions
 import type { AdType } from "@/types/database";
 
 const SUGGESTED_SLOTS = [
+  // Site-wide
   "header",
+  "header_mobile",
+  "footer",
+  // Home
   "homepage_hero",
   "homepage_mid",
+  "homepage_inline",
+  // Jobs
+  "jobs_list_top",
   "job_sidebar",
+  "jobs_inline",
   "job_below_description",
-  "blog_sidebar",
+  // Marketplace
+  "market_list_top",
+  "market_sidebar",
   "market_top",
+  // Talent / Companies / Learning
+  "candidates_top",
+  "companies_top",
+  "learning_top",
+  "blog_sidebar",
+  // Align with premium_ad_slots ids (for custom fallback display)
+  "header_leaderboard",
+  "home_hero",
+  "jobs_sidebar",
 ];
 
 export function AddAdSlotForm() {
