@@ -11,6 +11,7 @@ import {
   Home,
   ShoppingBag,
   Megaphone,
+  FileText,
   Car,
   Laptop,
   Building2,
@@ -117,6 +118,14 @@ const AD_TYPES: AdType[] = [
     description: "Publish career tips, HSE, engineering, and community news.",
     href: "/dashboard/articles/new",
     examples: ["Career Tips", "HSE", "News"],
+    group: "knowledge",
+  },
+  {
+    icon: FileText,
+    title: "Share Files",
+    description: "Upload guides, templates, checklists, and documents to the Learning Hub.",
+    href: "/education#resources",
+    examples: ["Guides", "Templates", "Checklists", "Forms"],
     group: "knowledge",
   },
   {

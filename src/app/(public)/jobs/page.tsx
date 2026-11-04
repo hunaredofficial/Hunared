@@ -363,7 +363,7 @@ export default async function JobsPage({
                 defaultCity={city}
                 defaultSort={sort}
                 defaultPayout={payout}
-                defaultDuration={durationFilter}
+                defaultDuration={durationFilter || (employmentType === "permanent" || employmentType === "temporary" ? employmentType : "")}
                 defaultPosted={posted}
                 defaultDateOrder={dateOrder}
                 defaultExperience={experience}
@@ -384,7 +384,7 @@ export default async function JobsPage({
                 defaultCity={city}
                 defaultSort={sort}
                 defaultPayout={payout}
-                defaultDuration={durationFilter}
+                defaultDuration={durationFilter || (employmentType === "permanent" || employmentType === "temporary" ? employmentType : "")}
                 defaultPosted={posted}
                 defaultDateOrder={dateOrder}
                 defaultExperience={experience}

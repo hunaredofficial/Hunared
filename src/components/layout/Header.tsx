@@ -27,13 +27,15 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
-import { Show, UserButton } from "@clerk/nextjs";
+import { Show, UserButton, useAuth } from "@clerk/nextjs";
 
 type MegaItem = {
   label: string;
   href: string;
   desc?: string;
   icon?: ComponentType<{ className?: string }>;
+  /** Show only when visitor is not signed in */
+  guestOnly?: boolean;
 };
 type MegaGroup = {
   type: "mega";
@@ -55,8 +57,8 @@ const NAV_ITEMS: NavItem[] = [
         title: "Explore",
         items: [
           { label: "Browse Jobs", href: "/jobs", desc: "All open roles" },
-          { label: "Permanent Roles", href: "/jobs?employmentType=permanent", desc: "Permanent employment only" },
-          { label: "Temporary Work", href: "/jobs?employmentType=temporary", desc: "Short-term & contract roles" },
+          { label: "Temporary Work", href: "/jobs?duration=temporary", desc: "Short-term & contract roles" },
+          { label: "Permanent Roles", href: "/jobs?duration=permanent", desc: "Permanent employment only" },
         ],
       },
     ],
@@ -72,7 +74,7 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
           { label: "Available for Hire", href: "/candidates?available=yes", desc: "Open to opportunities only" },
           { label: "Expert Level", href: "/candidates?level=expert", desc: "Senior & expert talent" },
-          { label: "Create Candidate Profile", href: "/register?goal=seeker", desc: "Join as a job seeker" },
+          { label: "Create Candidate Profile", href: "/register?goal=seeker", desc: "Join as a job seeker", guestOnly: true },
         ],
       },
     ],
@@ -88,7 +90,7 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Company Directory", href: "/companies", desc: "Explore organizations" },
           { label: "Hiring Now", href: "/companies?hiring=1", desc: "Companies actively hiring" },
           { label: "Verified Only", href: "/companies?verified=1", desc: "Verified employers" },
-          { label: "Create Company Profile", href: "/register?goal=employer", desc: "Get listed" },
+          { label: "Create Company Profile", href: "/register?goal=employer", desc: "Get listed", guestOnly: true },
         ],
       },
     ],
@@ -146,7 +148,7 @@ const NAV_ITEMS: NavItem[] = [
       {
         title: "Programs",
         items: [
-          { label: "Program", href: "https://hunared.org/programs", desc: "Hunared programs overview" },
+          { label: "Hunared Program", href: "https://hunared.org/programs", desc: "Hunared programs overview" },
           { label: "Training Courses", href: "https://hunared.org/courses", desc: "Training & certification pathways" },
           { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
         ],
@@ -157,6 +159,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function Header() {
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const megaRef = useRef<HTMLDivElement>(null);
@@ -267,7 +270,9 @@ export function Header() {
                               <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                 {col.title}
                               </p>
-                              {col.items.map((sub) => (
+                              {col.items
+                                .filter((sub) => !sub.guestOnly || !isSignedIn)
+                                .map((sub) => (
                                 <Link
                                   key={sub.href + sub.label}
                                   href={sub.href}
@@ -430,7 +435,9 @@ export function Header() {
                   {(item.columns
                     ? item.columns.flatMap((c) => c.items)
                     : []
-                  ).map((sub) => (
+                  )
+                    .filter((sub) => !sub.guestOnly || !isSignedIn)
+                    .map((sub) => (
                     <Link
                       key={sub.href + sub.label}
                       href={sub.href}
