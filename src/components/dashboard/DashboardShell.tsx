@@ -146,6 +146,11 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Layers className="h-4 w-4" />,
       },
       {
+        href: "/dashboard/team/profiles",
+        label: "Team Profiles",
+        icon: <Users className="h-4 w-4" />,
+      },
+      {
         href: "/jobs",
         label: "Jobs",
         icon: <Briefcase className="h-4 w-4" />,
@@ -195,6 +200,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/dashboard/admin/users",
         label: "Users",
         icon: <Users className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/team/profiles",
+        label: "Team Profiles",
+        icon: <Building2 className="h-4 w-4" />,
       },
       {
         href: "/dashboard/admin/jobs",

@@ -97,8 +97,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "company_name is required for Company profiles" }, { status: 400 });
   }
 
+  // Employer display name falls back to company name
+  if (role === "employer" && body.company_name && body.full_name === body.company_name) {
+    /* ok */
+  } else if (role === "employer" && !body.full_name && body.company_name) {
+    body.full_name = body.company_name;
+  }
+
   const placeholderId = `team_${randomUUID().replace(/-/g, "")}`;
-  const email = body.email || `${placeholderId}@team-managed.hunared.local`;
+  let email = body.email || `${placeholderId}@team-managed.hunared.local`;
+  // Avoid unique-email conflicts with real accounts
+  if (body.email) {
+    const { data: emailTaken } = await supabase
+      .from("profiles")
+      .select("id, team_managed")
+      .ilike("email", body.email)
+      .limit(1)
+      .maybeSingle();
+    if (emailTaken && !emailTaken.team_managed) {
+      return NextResponse.json(
+        {
+          error:
+            "This email already belongs to a real user account. Use a different contact or leave email empty for a team placeholder.",
+        },
+        { status: 400 }
+      );
+    }
+    if (emailTaken?.team_managed) {
+      email = `${placeholderId}@team-managed.hunared.local`;
+    }
+  }
   let username = body.username.length >= 3 ? body.username : null;
   if (username) {
     const { data: existing } = await supabase

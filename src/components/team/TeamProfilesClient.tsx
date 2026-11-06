@@ -266,6 +266,10 @@ export function TeamProfilesClient() {
           Same fields as normal My Profile — including searchable categories —
           without email or phone verification. Create or edit anytime.
         </p>
+        <p className="text-xs text-amber-600/90 dark:text-amber-400/90 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2">
+          Team-created profiles appear in Candidates / Companies directories when listed publicly.
+          If a real user later signs up with the same email or phone, the team placeholder is removed and their account takes over.
+        </p>
       </div>
 
       <section
