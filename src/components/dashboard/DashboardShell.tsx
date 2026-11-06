@@ -202,11 +202,6 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Users className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/team/profiles",
-        label: "Team Profiles",
-        icon: <Building2 className="h-4 w-4" />,
-      },
-      {
         href: "/dashboard/admin/jobs",
         label: "Job Queue",
         icon: <Briefcase className="h-4 w-4" />,

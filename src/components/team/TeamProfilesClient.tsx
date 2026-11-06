@@ -233,7 +233,13 @@ export function TeamProfilesClient() {
       }
 
       const isEdit = Boolean(editId);
-      if (isEdit) payload.id = editId;
+      // CRITICAL: only attach id when editing an existing team-managed placeholder.
+      // Never send the signed-in team user's id — that would risk overwriting your account.
+      if (isEdit && editId) {
+        payload.id = editId;
+      } else {
+        delete payload.id;
+      }
 
       const res = await fetch("/api/team/create-profile", {
         method: isEdit ? "PATCH" : "POST",
@@ -242,7 +248,7 @@ export function TeamProfilesClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      toast.success(isEdit ? "Profile updated" : "Profile created (no verification)");
+      toast.success(isEdit ? "Team profile updated" : "Separate team profile created — your Team account was not changed");
       resetForm();
       void load();
     } catch (e) {
@@ -263,12 +269,9 @@ export function TeamProfilesClient() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Same fields as normal My Profile — including searchable categories —
-          without email or phone verification. Create or edit anytime.
-        </p>
-        <p className="text-xs text-amber-600/90 dark:text-amber-400/90 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2">
-          Team-created profiles appear in Candidates / Companies directories when listed publicly.
-          If a real user later signs up with the same email or phone, the team placeholder is removed and their account takes over.
+          Create <strong>separate</strong> candidate or company profiles for publishing —
+          without email/phone verification. This never changes your own Team login profile
+          (use <strong>My Profile</strong> only for your account).
         </p>
       </div>
 
