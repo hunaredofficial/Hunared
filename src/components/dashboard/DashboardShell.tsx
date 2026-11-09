@@ -25,6 +25,7 @@ import {
   FileText,
   Building2,
   Layers,
+  FolderOpen,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -94,6 +95,11 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <BookOpen className="h-4 w-4" />,
       },
       {
+        href: "/dashboard/resources",
+        label: "My Resources",
+        icon: <FolderOpen className="h-4 w-4" />,
+      },
+      {
         href: "/dashboard/market",
         label: "My Listings",
         icon: <ShoppingBag className="h-4 w-4" />,
@@ -139,6 +145,11 @@ function getNavItems(role: UserRole): NavItem[] {
         href: "/post",
         label: "Post",
         icon: <Plus className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/resources",
+        label: "My Resources",
+        icon: <FolderOpen className="h-4 w-4" />,
       },
       {
         href: "/dashboard/team/bulk",
@@ -286,6 +297,11 @@ function getNavItems(role: UserRole): NavItem[] {
       href: "/dashboard/articles",
       label: "My Articles",
       icon: <BookOpen className="h-4 w-4" />,
+    },
+    {
+      href: "/dashboard/resources",
+      label: "My Resources",
+      icon: <FolderOpen className="h-4 w-4" />,
     },
     {
       href: "/dashboard/market",

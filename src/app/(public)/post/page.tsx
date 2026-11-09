@@ -115,7 +115,7 @@ const AD_TYPES: AdType[] = [
     icon: FileText,
     title: "Share Files",
     description: "Upload guides, templates, checklists, and documents to Resources.",
-    href: "/education/resources/upload",
+    href: "/dashboard/resources/new",
     examples: ["Guides", "Templates", "Checklists", "Forms"],
     group: "knowledge",
   },

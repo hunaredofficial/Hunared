@@ -169,7 +169,7 @@ function ResourceLibrary({
           </div>
           {signedIn ? (
             <Button asChild size="sm" className="shrink-0">
-              <Link href="/education/resources/upload">
+              <Link href="/dashboard/resources/new">
                 <Upload className="h-4 w-4 mr-1.5" />
                 Upload resource
               </Link>
