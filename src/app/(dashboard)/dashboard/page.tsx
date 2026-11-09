@@ -258,13 +258,27 @@ function SeekerDashboard({
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          <ActionCard
-            href="/jobs"
-            icon={<SearchIcon className="h-5 w-5 text-blue-600" />}
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            title="Browse Jobs"
-            desc="Discover thousands of expat opportunities"
-          />
+          {profile.role === "team" || profile.role === "employer" ? (
+            <ActionCard
+              href={profile.role === "employer" ? "/dashboard/jobs" : "/dashboard/market"}
+              icon={<Briefcase className="h-5 w-5 text-blue-600" />}
+              iconBg="bg-blue-100 dark:bg-blue-900/30"
+              title={profile.role === "employer" ? "My Job Posts" : "My Listings"}
+              desc={
+                profile.role === "employer"
+                  ? "View and manage your job listings"
+                  : "View and manage your marketplace listings"
+              }
+            />
+          ) : (
+            <ActionCard
+              href="/jobs"
+              icon={<SearchIcon className="h-5 w-5 text-blue-600" />}
+              iconBg="bg-blue-100 dark:bg-blue-900/30"
+              title="Browse Jobs"
+              desc="Discover thousands of expat opportunities"
+            />
+          )}
           <ActionCard
             href="/dashboard/profile"
             icon={<User className="h-5 w-5 text-violet-600" />}
@@ -419,9 +433,16 @@ function EmployerDashboard({
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           <ActionCard
-            href="/dashboard/jobs/new"
-            icon={<Plus className="h-5 w-5 text-blue-600" />}
+            href="/dashboard/jobs"
+            icon={<Briefcase className="h-5 w-5 text-blue-600" />}
             iconBg="bg-blue-100 dark:bg-blue-900/30"
+            title="My Job Posts"
+            desc="View and manage your job listings"
+          />
+          <ActionCard
+            href="/dashboard/jobs/new"
+            icon={<Plus className="h-5 w-5 text-sky-600" />}
+            iconBg="bg-sky-100 dark:bg-sky-900/30"
             title="Post a New Job"
             desc="Reach thousands of expat professionals"
           />

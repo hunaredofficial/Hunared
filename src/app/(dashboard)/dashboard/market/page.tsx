@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ShoppingBag, Plus, Pencil } from "lucide-react";
+import { ListingRowActions } from "@/components/market/ListingRowActions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,7 @@ export default async function MyListingsPage() {
                             <Link href={`/market/${listing.id}`} target="_blank">View</Link>
                           </Button>
                         )}
+                        <ListingRowActions id={listing.id} title={listing.title} />
                       </div>
                     </div>
                   </div>

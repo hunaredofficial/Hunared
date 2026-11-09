@@ -139,7 +139,7 @@ function JobRow({ job }: { job: Job }) {
               <Briefcase className="h-4 w-4" />
             </Link>
           </Button>
-          <JobRowActions jobId={job.id} jobStatus={job.status} />
+          <JobRowActions jobId={job.id} jobStatus={job.status} jobTitle={job.job_title} />
         </div>
       </CardContent>
     </Card>

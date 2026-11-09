@@ -20,6 +20,7 @@ import {
   Calendar,
   Users,
   Building2,
+  BedDouble,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,7 @@ const NAV_ITEMS: NavItem[] = [
         items: [
           { label: "For Sale", href: "/market?category=for_sale", icon: Tag },
           { label: "For Rent", href: "/market?category=for_rent", icon: Home },
+          { label: "Accommodation", href: "/market?category=accommodation", icon: BedDouble },
           { label: "Services", href: "/market?category=services", icon: Wrench },
           { label: "Property", href: "/market?category=property", icon: Building2 },
           { label: "Vehicles", href: "/market?category=vehicles", icon: Car },
@@ -118,6 +120,7 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Lost & Found", href: "/market?category=lost_found", icon: Search },
           { label: "Free Items", href: "/market?category=free_items", icon: Gift },
           { label: "Offers & Deals", href: "/market?category=offers_deals", icon: Calendar },
+          { label: "Wanted", href: "/market?category=wanted", icon: Search },
           { label: "Community", href: "/market?category=community", icon: Users },
           { label: "All listings", href: "/market", icon: Tag },
         ],
