@@ -63,10 +63,12 @@ function ResourceLibrary({
   signedIn,
   refreshKey,
   onRefresh,
+  showHeader = true,
 }: {
   signedIn: boolean;
   refreshKey: number;
   onRefresh: () => void;
+  showHeader?: boolean;
 }) {
   const { userId } = useAuth();
   const [resources, setResources] = useState<LearningResource[]>([]);
@@ -154,29 +156,31 @@ function ResourceLibrary({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-primary" />
-            Resource library
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Open, download, and share professional guides and study files.
-          </p>
+      {showHeader && (
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-primary" />
+              Resource library
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Open, download, and share professional guides and study files.
+            </p>
+          </div>
+          {signedIn ? (
+            <Button asChild size="sm" className="shrink-0">
+              <Link href="/education/resources/upload">
+                <Upload className="h-4 w-4 mr-1.5" />
+                Upload resource
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="outline" className="shrink-0">
+              <Link href="/sign-in">Sign in to upload</Link>
+            </Button>
+          )}
         </div>
-        {signedIn ? (
-          <Button asChild size="sm" className="shrink-0">
-            <a href="#upload-resource">
-              <Upload className="h-4 w-4 mr-1.5" />
-              Upload resource
-            </a>
-          </Button>
-        ) : (
-          <Button asChild size="sm" variant="outline" className="shrink-0">
-            <Link href="/sign-in">Sign in to upload</Link>
-          </Button>
-        )}
-      </div>
+      )}
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -215,7 +219,7 @@ function ResourceLibrary({
           <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm font-medium">No resources in this view yet</p>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-            Upload a PDF, Word, or guide below — it will appear here right after submit.
+            Upload a PDF, Word, or guide from the Upload page — it will appear here after publish.
           </p>
         </div>
       ) : (
@@ -292,7 +296,11 @@ function ResourceLibrary({
   );
 }
 
-function ResourceUploadForm({ onPublished }: { onPublished: () => void }) {
+function ResourceUploadForm({
+  onPublished,
+}: {
+  onPublished?: () => void;
+}) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
@@ -346,7 +354,7 @@ function ResourceUploadForm({ onPublished }: { onPublished: () => void }) {
       setDescription("");
       setFile(null);
       setCategory("general");
-      onPublished();
+      onPublished?.();
     } catch {
       toast.error("Something went wrong");
     } finally {
@@ -433,17 +441,26 @@ function ResourceUploadForm({ onPublished }: { onPublished: () => void }) {
   );
 }
 
-export function LearningResourcesSection({ signedIn }: { signedIn: boolean }) {
+export function LearningResourcesSection({
+  signedIn,
+  showHeader = true,
+}: {
+  signedIn: boolean;
+  showHeader?: boolean;
+}) {
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = () => setRefreshKey((k) => k + 1);
   return (
     <div className="space-y-10" id="resources">
-      <ResourceLibrary signedIn={signedIn} refreshKey={refreshKey} onRefresh={refresh} />
-      {signedIn && (
-        <div className="max-w-2xl" id="upload">
-          <ResourceUploadForm onPublished={refresh} />
-        </div>
-      )}
+      <ResourceLibrary
+        signedIn={signedIn}
+        refreshKey={refreshKey}
+        onRefresh={refresh}
+        showHeader={showHeader}
+      />
     </div>
   );
 }
+
+/** Exported for the dedicated upload page */
+export { ResourceUploadForm };

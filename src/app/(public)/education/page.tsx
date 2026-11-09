@@ -22,7 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
 import { SaveButton } from "@/components/shared/SaveButton";
-import { LearningResourcesSection } from "@/components/learning/LearningResourcesSection";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 import type { Article } from "@/types/database";
 import type { Metadata } from "next";
@@ -308,26 +307,6 @@ export default async function EducationPage({
               )}
             </>
           )}
-        </section>
-
-        <section className="border-t border-border pt-12 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-                Resource library
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Download templates, guides, and training files — or open the full Resources page.
-              </p>
-            </div>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href="/education/resources">
-                <ClipboardList className="h-4 w-4 mr-1.5" />
-                Open Resources page
-              </Link>
-            </Button>
-          </div>
-          <LearningResourcesSection signedIn={!!userId} />
         </section>
 
         <section className="rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:p-8">
