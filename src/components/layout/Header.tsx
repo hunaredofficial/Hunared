@@ -133,7 +133,7 @@ const NAV_ITEMS: NavItem[] = [
         title: "Learning",
         items: [
           { label: "Learning Hub", href: "/education", desc: "Articles & knowledge" },
-          { label: "Resources", href: "/education#resources", desc: "Download & share files" },
+          { label: "Resources", href: "/education/resources", desc: "Download & share files" },
           { label: "Write Article", href: "/dashboard/articles/new", desc: "Share expertise" },
           { label: "CV Builder", href: "/dashboard/cv", desc: "Professional resume" },
         ],

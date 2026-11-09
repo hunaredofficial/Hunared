@@ -24,6 +24,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "Tools",
     links: [
       { href: "/education", label: "Learning" },
+      { href: "/education/resources", label: "Resources" },
       { href: "/finder", label: "Finder Center" },
       { href: "/dashboard/cv", label: "CV Builder" },
       { href: "/dashboard/premium-ads", label: "Premium Ads" },
@@ -43,7 +44,8 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
         external: true,
       },
       { href: "/education", label: "Education Hub" },
-      { href: "/education/career-tips", label: "Career Tips" },
+      { href: "/education/resources", label: "Resources" },
+      { href: "/education?category=career_tips", label: "Career Tips" },
     ],
   },
   {

@@ -165,10 +165,10 @@ export default async function EducationPage({
 
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild variant="secondary" size="sm">
-                <a href="#resources">
+                <Link href="/education/resources">
                   <ClipboardList className="h-4 w-4 mr-1.5" />
                   Resource library
-                </a>
+                </Link>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <a href="https://hunared.org/programs" target="_blank" rel="noopener noreferrer">
@@ -310,7 +310,23 @@ export default async function EducationPage({
           )}
         </section>
 
-        <section className="border-t border-border pt-12">
+        <section className="border-t border-border pt-12 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                Resource library
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Download templates, guides, and training files — or open the full Resources page.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <Link href="/education/resources">
+                <ClipboardList className="h-4 w-4 mr-1.5" />
+                Open Resources page
+              </Link>
+            </Button>
+          </div>
           <LearningResourcesSection signedIn={!!userId} />
         </section>
 

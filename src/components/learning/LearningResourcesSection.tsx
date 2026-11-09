@@ -440,7 +440,7 @@ export function LearningResourcesSection({ signedIn }: { signedIn: boolean }) {
     <div className="space-y-10" id="resources">
       <ResourceLibrary signedIn={signedIn} refreshKey={refreshKey} onRefresh={refresh} />
       {signedIn && (
-        <div className="max-w-2xl">
+        <div className="max-w-2xl" id="upload">
           <ResourceUploadForm onPublished={refresh} />
         </div>
       )}
