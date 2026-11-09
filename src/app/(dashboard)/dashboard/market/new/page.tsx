@@ -192,18 +192,26 @@ function NewListingForm() {
       const result = parseListingText(t, "");
       const filled: string[] = [];
 
-      const nextCategory =
+      // High-confidence title signals correct a wrong manual category
+      const strongCat =
         result.category &&
-        (result.category.confidence === "high" || result.category.confidence === "medium") &&
-        !userLocked.current.has("category")
-          ? result.category.value
+        (result.category.confidence === "high" || result.category.confidence === "medium");
+      if (strongCat && result.category!.confidence === "high") {
+        userLocked.current.delete("category");
+        userLocked.current.delete("subcategory");
+      }
+
+      const nextCategory =
+        strongCat &&
+        (result.category!.confidence === "high" || !userLocked.current.has("category"))
+          ? result.category!.value
           : null;
       const nextSubcategory =
         result.subcategory &&
         (result.subcategory.confidence === "high" ||
           result.subcategory.confidence === "medium" ||
           result.subcategory.confidence === "low") &&
-        !userLocked.current.has("subcategory")
+        (result.category?.confidence === "high" || !userLocked.current.has("subcategory"))
           ? result.subcategory.value
           : null;
 
@@ -213,6 +221,8 @@ function NewListingForm() {
             // Category changed — clear dependent fields first
             if (!userLocked.current.has("condition")) setCondition("");
             if (!userLocked.current.has("rentalPeriod")) setRentalPeriod("");
+            // Subcategory from previous category is invalid
+            if (!userLocked.current.has("subcategory")) setSubcategory("");
           }
           return nextCategory;
         });
@@ -895,43 +905,37 @@ function NewListingForm() {
                 placeholder="Describe your listing in detail..."
               />
               {showDescSuggest && descSuggestion ? (
-                <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
-                  <p className="text-xs font-medium text-primary">
-                    Description ready from your form details
-                  </p>
-                  <p className="text-xs text-muted-foreground line-clamp-3">
-                    {descSuggestion.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="h-8"
-                      onClick={() => {
-                        setDescription(descSuggestion);
-                        descFromSmart.current = true;
-                        toast.success("Description applied");
-                      }}
-                    >
-                      Use this description
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8"
-                      onClick={() => {
-                        refreshDescriptionSuggestion({ autoApply: false });
-                        toast.message("Description refreshed");
-                      }}
-                    >
-                      Refresh
-                    </Button>
-                  </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => {
+                      setDescription(descSuggestion);
+                      descFromSmart.current = true;
+                      toast.success("Suggested description applied");
+                    }}
+                  >
+                    Use suggested description
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => {
+                      setDescription("");
+                      descFromSmart.current = false;
+                      setShowDescSuggest(false);
+                      toast.message("Write your own description below");
+                    }}
+                  >
+                    Write my own
+                  </Button>
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Fill title, category, subcategory & city — a full description is written for you automatically.
+                  Fill title and category to unlock a suggested description, or write your own.
                 </p>
               )}
             </div>

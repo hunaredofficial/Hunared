@@ -91,10 +91,14 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   kids_baby: ["stroller", "baby crib", "car seat", "toys for kids", "nursery"],
   food_agriculture: ["fresh dates", "vegetables", "wholesale rice", "fertilizer", "farm produce"],
   health_medical: ["wheelchair", "blood pressure monitor", "medical equipment", "first aid"],
-  accommodation: ["apartment for rent", "room for rent", "bed space", "villa for rent", "shared room", "staff accommodation"],
+  accommodation: [
+    "apartment for rent", "room for rent", "bed space", "bedspace", "bed-space",
+    "villa for rent", "shared room", "sharedroom", "staff accommodation", "staff housing",
+    "bachelor room", "master room", "partition", "studio for rent", "flat for rent",
+  ],
   property: ["villa for sale", "land for sale", "plot for sale", "commercial building", "shop for sale"],
-  for_rent: ["for rent", "rental", "per day", "per month", "daily rate", "monthly rent"],
-  for_sale: ["for sale", "selling", "brand new", "used for sale"],
+  for_rent: ["for rent", "forrent", "rental", "per day", "per month", "daily rate", "monthly rent", "available for rent"],
+  for_sale: ["for sale", "forsale", "selling", "brand new", "brandnew", "used for sale"],
   services: ["service", "repair", "installation", "maintenance", "plumber", "electrician", "cleaning service"],
   wanted: ["wanted", "looking for", "need to buy", "seeking"],
   free_items: ["free ", "giveaway", "free of charge", "pickup free"],
@@ -118,11 +122,12 @@ function scoreCategory(text: string): { value: string; score: number } | null {
     if (cat === "services_extra") continue;
     let score = 0;
     for (const k of keys) {
-      if (lower.includes(k)) score += k.length + 2;
+      if (textMatchesPhrase(text, k)) score += k.length + 3;
+      else if (lower.includes(k)) score += k.length + 2;
     }
     // also match official label
     const label = LISTING_CATEGORIES.find((c) => c.value === cat)?.label?.toLowerCase();
-    if (label && lower.includes(label)) score += 8;
+    if (label && textMatchesPhrase(text, label)) score += 8;
     if (score > 0 && (!best || score > best.score)) {
       best = { value: cat, score };
     }
@@ -138,6 +143,16 @@ function scoreCategory(text: string): { value: string; score: number } | null {
   }
   if (/\bfor\s+sale\b|\bselling\b/i.test(text) && (!best || best.value === "other")) {
     best = { value: "for_sale", score: Math.max(best?.score ?? 0, 10) };
+  }
+  // Bed space / shared room — strong accommodation signal (space optional)
+  if (
+    textMatchesPhrase(text, "bed space") ||
+    textMatchesPhrase(text, "bedspace") ||
+    textMatchesPhrase(text, "shared room") ||
+    textMatchesPhrase(text, "staff accommodation") ||
+    /\b(bachelor|master)\s*room\b/i.test(text)
+  ) {
+    best = { value: "accommodation", score: Math.max(best?.score ?? 0, 18) };
   }
   if (/\bwanted\b|\blooking\s+for\b|\bneed\s+to\s+buy\b/i.test(text)) {
     best = { value: "wanted", score: 16 };
@@ -160,27 +175,103 @@ function normalizeWord(w: string): string {
   return x;
 }
 
+/** Lowercase letters+digits only — matches "bed space" ↔ "bedspace" ↔ "bed-space" */
+function compactText(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+/**
+ * Phrase match that tolerates spaces, hyphens, and missing spaces.
+ * e.g. "bed space", "bedspace", "bed-space", "Bed  Space"
+ */
+function textMatchesPhrase(text: string, phrase: string): boolean {
+  const p = (phrase || "").trim().toLowerCase();
+  if (!p || p.length < 2) return false;
+  const lower = text.toLowerCase();
+  if (lower.includes(p)) return true;
+  const hyphen = p.replace(/\s+/g, "-");
+  if (hyphen !== p && lower.includes(hyphen)) return true;
+  const spaced = p.replace(/-/g, " ");
+  if (spaced !== p && lower.includes(spaced)) return true;
+  const cPhrase = compactText(p);
+  if (cPhrase.length >= 4 && compactText(text).includes(cPhrase)) return true;
+  // flexible whitespace: "bed  space" / "bed\tspace"
+  const flexible = p.replace(/\s+/g, "\\s+").replace(/-/g, "[-\\s]*");
+  try {
+    if (new RegExp(`\\b${flexible}\\b`, "i").test(text)) return true;
+  } catch {
+    /* ignore bad patterns */
+  }
+  return false;
+}
+
+/** Common marketplace spelling / spacing variants */
+const PHRASE_ALIASES: Record<string, string[]> = {
+  "bed space": ["bedspace", "bed-space", "bed spaces", "bedspaces", "bed space available"],
+  "shared room": ["sharedroom", "shared-room"],
+  "staff accommodation": ["staffaccommodation", "staff-accommodation", "staff housing", "staffhousing"],
+  "room for rent": ["roomforrent", "room-for-rent"],
+  "apartment for rent": ["apartmentforrent", "flat for rent", "flatforrent"],
+  "for rent": ["forrent", "for-rent"],
+  "for sale": ["forsale", "for-sale"],
+  "air conditioner": ["airconditioner", "a/c", "ac unit", "split ac"],
+  "washing machine": ["washingmachine", "washer"],
+  "power bank": ["powerbank"],
+  "safety boots": ["safetyboots", "safety shoes", "safetyshoes"],
+  "work from home": ["workfromhome", "wfh"],
+  "brand new": ["brandnew", "brand-new"],
+  "second hand": ["secondhand", "second-hand", "pre owned", "preowned", "pre-owned"],
+  "lost and found": ["lostandfound", "lost & found"],
+};
+
+function expandPhraseVariants(phrase: string): string[] {
+  const base = phrase.toLowerCase().trim();
+  const out = new Set<string>([base, base.replace(/\s+/g, ""), base.replace(/\s+/g, "-")]);
+  for (const [canon, aliases] of Object.entries(PHRASE_ALIASES)) {
+    const group = [canon, ...aliases];
+    if (group.some((g) => compactText(g) === compactText(base) || textMatchesPhrase(g, base))) {
+      group.forEach((g) => out.add(g));
+    }
+  }
+  return [...out];
+}
+
+function textMatchesAnyPhrase(text: string, phrases: string[]): boolean {
+  for (const p of phrases) {
+    if (textMatchesPhrase(text, p)) return true;
+    for (const v of expandPhraseVariants(p)) {
+      if (textMatchesPhrase(text, v)) return true;
+    }
+  }
+  return false;
+}
+
 function scoreSubcategory(category: string, text: string): { value: string; score: number } | null {
   const subs = LISTING_SUBCATEGORIES[category] ?? [];
   if (!subs.length) return null;
   const lower = text.toLowerCase();
+  const compact = compactText(text);
   const words = new Set(lower.split(/[^a-z0-9+]+/).filter(Boolean).map(normalizeWord));
   let best: { value: string; score: number } | null = null;
   for (const sub of subs) {
     const subLower = sub.toLowerCase();
     let score = 0;
-    // full phrase
-    if (lower.includes(subLower)) score += subLower.length + 8;
+    // full phrase + spacing variants
+    if (textMatchesPhrase(text, subLower)) score += subLower.length + 10;
+    if (compactText(subLower).length >= 4 && compact.includes(compactText(subLower))) {
+      score += subLower.length + 8;
+    }
     const tokens = subLower.split(/[&,/]| and /).map((s) => s.trim()).filter((s) => s.length > 2);
     for (const t of tokens) {
-      if (lower.includes(t)) score += t.length + 2;
+      if (textMatchesPhrase(text, t)) score += t.length + 3;
       const nt = normalizeWord(t);
       if (words.has(nt)) score += nt.length + 3;
+      if (compactText(t).length >= 4 && compact.includes(compactText(t))) score += t.length + 2;
     }
     for (const w of subLower.split(/\s+/)) {
       if (w.length <= 2) continue;
       const nw = normalizeWord(w);
-      if (words.has(nw) || lower.includes(w)) score += 3;
+      if (words.has(nw) || lower.includes(w) || compact.includes(compactText(w))) score += 3;
     }
     if (score > 0 && (!best || score > best.score)) best = { value: sub, score };
   }
@@ -524,9 +615,8 @@ export function parseListingText(
     let best: { cat: string; sub: string; score: number } | null = null;
     for (const [cat, subs] of Object.entries(LISTING_SUBCATEGORIES)) {
       for (const sub of subs) {
-        const lower = text.toLowerCase();
-        if (lower.includes(sub.toLowerCase())) {
-          const score = sub.length + 5;
+        if (textMatchesPhrase(text, sub)) {
+          const score = sub.length + 6;
           if (!best || score > best.score) best = { cat, sub, score };
         }
       }
