@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
   Briefcase,
-  GraduationCap,
   Wrench,
   Home,
   ShoppingBag,
@@ -105,26 +104,18 @@ const AD_TYPES: AdType[] = [
     group: "marketplace",
   },
   {
-    icon: GraduationCap,
-    title: "Learning",
-    description: "Courses, certifications, internships, and scholarships.",
-    href: "/dashboard/articles/new",
-    examples: ["Courses", "Certifications", "Internships"],
-    group: "knowledge",
-  },
-  {
     icon: Megaphone,
-    title: "Article / News",
-    description: "Publish career tips, HSE, engineering, and community news.",
+    title: "Article / Learning",
+    description: "Publish career tips, HSE, engineering, courses, and professional articles.",
     href: "/dashboard/articles/new",
-    examples: ["Career Tips", "HSE", "News"],
+    examples: ["Career Tips", "HSE", "Courses", "News"],
     group: "knowledge",
   },
   {
     icon: FileText,
     title: "Share Files",
-    description: "Upload guides, templates, checklists, and documents to the Learning Hub.",
-    href: "/education#resources",
+    description: "Upload guides, templates, checklists, and documents to Resources.",
+    href: "/education/resources/upload",
     examples: ["Guides", "Templates", "Checklists", "Forms"],
     group: "knowledge",
   },
@@ -165,7 +156,7 @@ const AD_TYPES: AdType[] = [
 const GROUPS: { key: AdType["group"]; label: string; blurb: string }[] = [
   { key: "work", label: "Work & Talent", blurb: "Hire or find opportunities" },
   { key: "marketplace", label: "Marketplace", blurb: "Buy, sell, rent, services & property" },
-  { key: "knowledge", label: "Learning & Content", blurb: "Courses, articles and knowledge" },
+  { key: "knowledge", label: "Learning & Resources", blurb: "Articles and shareable files" },
   { key: "community", label: "Community", blurb: "Wanted, free, events and local" },
 ];
 

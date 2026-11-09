@@ -1,7 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Upload } from "lucide-react";
 import type { Metadata } from "next";
 import { ResourceUploadClient } from "./ResourceUploadClient";
 
@@ -17,35 +15,15 @@ export default async function UploadResourcePage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <section className="border-b border-border bg-card/40">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-          <nav className="mb-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Link
-              href="/education/resources"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Resources
-            </Link>
-            <span aria-hidden>/</span>
-            <span className="text-foreground font-medium">Upload</span>
-          </nav>
-
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Upload className="h-7 w-7 text-primary shrink-0" />
-            Publish a resource
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-            Upload a PDF, Word, PowerPoint, Excel, or image (up to 15MB). It appears in the
-            library after publish.
-          </p>
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        <ResourceUploadClient />
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Publish a Resource</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Share guides, templates, checklists, and training files with the community.
+        </p>
       </div>
+
+      <ResourceUploadClient />
     </div>
   );
 }
