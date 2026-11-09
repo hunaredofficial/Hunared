@@ -79,91 +79,230 @@ const CITY_HINTS = [
 
 // Strong category signals from title/description
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  mobiles_accessories: ["iphone", "samsung galaxy", "smartphone", "mobile phone", "phone case", "power bank", "airpods"],
-  electronics: ["laptop", "macbook", "desktop", "monitor", "gaming pc", "playstation", "xbox", "tv ", "television", "camera", "drone"],
-  vehicles: ["toyota", "honda", "nissan", "bmw", "mercedes", "car for sale", "suv", "pickup", "motorcycle", "scooter"],
-  home_furniture: ["sofa", "mattress", "wardrobe", "dining table", "office chair", "refrigerator", "washing machine", "air conditioner"],
-  personel_workwear: ["safety boots", "workwear", "uniform", "ppe", "helmet", "safety shoes", "coverall"],
-  tools_equipment: ["drill", "generator", "compressor", "welder", "power tool", "scaffolding", "forklift"],
-  industrial_materials: ["steel", "cement", "cables", "pipes", "valves", "building materials", "copper wire"],
-  pets_animals: ["persian cat", "puppy", "dog for", "parrot", "aquarium", "pet food"],
-  sports_outdoors: ["football boots", "gym equipment", "treadmill", "camping tent", "bicycle"],
-  kids_baby: ["stroller", "baby crib", "car seat", "toys for kids", "nursery"],
-  food_agriculture: ["fresh dates", "vegetables", "wholesale rice", "fertilizer", "farm produce"],
-  health_medical: ["wheelchair", "blood pressure monitor", "medical equipment", "first aid"],
+  mobiles_accessories: [
+    "iphone", "samsung galaxy", "smartphone", "mobile phone", "phone case", "power bank", "powerbank",
+    "airpods", "earbuds", "android phone", "huawei", "xiaomi", "oppo", "vivo", "realme", "oneplus",
+    "mobile cover", "screen protector", "charger cable", "wireless charger",
+  ],
+  electronics: [
+    "laptop", "macbook", "desktop", "monitor", "gaming pc", "playstation", "xbox", "nintendo",
+    "television", "smart tv", "led tv", "camera", "dslr", "drone", "projector", "printer",
+    "router", "graphics card", "gpu", "ssd", "hard drive", "keyboard", "mouse", "tablet", "ipad",
+  ],
+  vehicles: [
+    "toyota", "honda", "nissan", "bmw", "mercedes", "hyundai", "kia", "ford", "chevrolet", "lexus",
+    "car for sale", "suv", "pickup", "motorcycle", "scooter", "sedan", "hatchback", "4x4",
+    "camry", "corolla", "land cruiser", "prado", "hilux", "accord", "civic", "altima", "patrol",
+    "motorbike", "bike for sale", "van for sale", "bus for sale", "truck for sale",
+  ],
+  home_furniture: [
+    "sofa", "sofa set", "mattress", "wardrobe", "dining table", "office chair", "refrigerator",
+    "fridge", "washing machine", "air conditioner", "ac unit", "split ac", "furniture set",
+    "bed frame", "bunk bed", "coffee table", "tv stand", "bookshelf", "curtain", "carpet",
+  ],
+  personel_workwear: [
+    "safety boots", "workwear", "uniform", "ppe", "helmet", "safety shoes", "coverall",
+    "safety gloves", "high visibility", "hi vis", "steel toe", "respirator",
+  ],
+  tools_equipment: [
+    "drill", "generator", "compressor", "welder", "power tool", "scaffolding", "forklift",
+    "angle grinder", "circular saw", "welding machine", "tool kit", "toolbox", "crane",
+  ],
+  industrial_materials: [
+    "steel", "cement", "cables", "pipes", "valves", "building materials", "copper wire",
+    "rebar", "plywood", "insulation", "gypsum", "tiles bulk", "paint drums",
+  ],
+  pets_animals: [
+    "persian cat", "puppy", "dog for", "parrot", "aquarium", "pet food", "kitten", "pet cage",
+    "bird for sale", "fish tank",
+  ],
+  sports_outdoors: [
+    "football boots", "gym equipment", "treadmill", "camping tent", "bicycle", "dumbbell",
+    "exercise bike", "yoga mat", "fishing rod", "hiking",
+  ],
+  kids_baby: [
+    "stroller", "baby crib", "car seat", "toys for kids", "nursery", "baby clothes", "pram",
+    "diaper", "high chair",
+  ],
+  food_agriculture: [
+    "fresh dates", "vegetables", "wholesale rice", "fertilizer", "farm produce", "olive oil bulk",
+  ],
+  health_medical: [
+    "wheelchair", "blood pressure monitor", "medical equipment", "first aid", "hospital bed",
+    "oximeter", "nebulizer",
+  ],
   accommodation: [
-    "apartment for rent", "room for rent", "bed space", "bedspace", "bed-space",
+    "apartment for rent", "room for rent", "bed space", "bedspace", "bed-space", "bed spaces",
     "villa for rent", "shared room", "sharedroom", "staff accommodation", "staff housing",
     "bachelor room", "master room", "partition", "studio for rent", "flat for rent",
+    "worker accommodation", "family accommodation", "student accommodation", "shared housing",
+    "room available", "rooms available", "sharing accommodation",
   ],
-  property: ["villa for sale", "land for sale", "plot for sale", "commercial building", "shop for sale"],
-  for_rent: ["for rent", "forrent", "rental", "per day", "per month", "daily rate", "monthly rent", "available for rent"],
-  for_sale: ["for sale", "forsale", "selling", "brand new", "brandnew", "used for sale"],
-  services: ["service", "repair", "installation", "maintenance", "plumber", "electrician", "cleaning service"],
-  wanted: ["wanted", "looking for", "need to buy", "seeking"],
-  free_items: ["free ", "giveaway", "free of charge", "pickup free"],
-  lost_found: ["lost ", "found ", "missing ", "lost my"],
-  events: ["workshop", "seminar", "conference", "meetup", "job fair"],
-  business_commercial: ["business for sale", "franchise", "partnership", "investment opportunity"],
-  offers_deals: ["% off", "discount", "clearance", "buy 1 get", "flash sale"],
+  property: [
+    "house for sale", "villa for sale", "apartment for sale", "flat for sale", "land for sale",
+    "plot for sale", "commercial building", "shop for sale", "office for sale", "warehouse for sale",
+    "townhouse for sale", "duplex for sale", "penthouse for sale", "building for sale",
+    "residential plot", "commercial plot", "real estate", "property for sale",
+    "house", "villa", "apartment", "flat", "townhouse", "duplex", "penthouse", "bungalow",
+    "plot", "land", "farm house", "farmhouse",
+  ],
+  for_rent: [
+    "for rent", "forrent", "rental", "per day", "per month", "daily rate", "monthly rent",
+    "available for rent", "rent only", "leasing", "lease",
+  ],
+  for_sale: [
+    "for sale", "forsale", "selling", "brand new", "brandnew", "used for sale", "asking price",
+  ],
+  services: [
+    "service", "repair", "installation", "maintenance", "plumber", "electrician", "cleaning service",
+    "ac repair", "pest control", "moving service", "driver available", "tutoring service",
+  ],
+  wanted: ["wanted", "looking for", "need to buy", "seeking", "required urgently"],
+  free_items: ["free ", "giveaway", "free of charge", "pickup free", "free to collect"],
+  lost_found: ["lost ", "found ", "missing ", "lost my", "found near"],
+  events: ["workshop", "seminar", "conference", "meetup", "job fair", "open day"],
+  business_commercial: [
+    "business for sale", "franchise", "partnership", "investment opportunity", "company for sale",
+  ],
+  offers_deals: ["% off", "discount", "clearance", "buy 1 get", "flash sale", "special offer"],
   announcements: ["announcement", "notice", "public notice"],
   donations: ["donation", "donate", "charity"],
   community: ["looking for partner", "carpool", "volunteer"],
-  education_training: ["course", "training", "nebosh", "certification", "tutoring", "diploma"],
+  education_training: [
+    "course", "training", "nebosh", "certification", "tutoring", "diploma", "online class",
+  ],
   wholesale: ["wholesale", "bulk order", "distributor", "importer"],
-  services_extra: [], // placeholder
+  services_extra: [],
 };
+
+/** Real-estate nouns — used to prefer Property / Accommodation over generic For Sale / For Rent */
+const REAL_ESTATE_TERMS = [
+  "house", "houses", "villa", "villas", "apartment", "apartments", "flat", "flats",
+  "townhouse", "townhouses", "duplex", "duplexes", "penthouse", "penthouses", "bungalow",
+  "studio", "studios", "building", "buildings", "plot", "plots", "land", "warehouse",
+  "warehouses", "showroom", "showrooms", "farmhouse", "farm house", "compound",
+  "residential", "commercial building", "office space", "shop for", "real estate", "property",
+];
+
+const ROOM_RENT_TERMS = [
+  "bed space", "bedspace", "bed-space", "bed spaces", "shared room", "master room",
+  "bachelor room", "partition", "staff accommodation", "staff housing", "worker accommodation",
+  "room for rent", "rooms for rent", "sharing",
+];
+
+const VEHICLE_TERMS = [
+  "car", "cars", "suv", "sedan", "hatchback", "pickup", "truck", "van", "bus", "motorcycle",
+  "motorbike", "scooter", "bike", "toyota", "honda", "nissan", "bmw", "mercedes", "hyundai",
+  "kia", "ford", "camry", "corolla", "land cruiser", "prado", "hilux",
+];
+
+function hasAnyPhrase(text: string, phrases: string[]): boolean {
+  return phrases.some((p) => textMatchesPhrase(text, p));
+}
 
 function scoreCategory(text: string): { value: string; score: number } | null {
   const lower = text.toLowerCase();
-  let best: { value: string; score: number } | null = null;
+  const scores: Record<string, number> = {};
 
   for (const [cat, keys] of Object.entries(CATEGORY_KEYWORDS)) {
     if (cat === "services_extra") continue;
     let score = 0;
     for (const k of keys) {
-      if (textMatchesPhrase(text, k)) score += k.length + 3;
-      else if (lower.includes(k)) score += k.length + 2;
+      if (textMatchesPhrase(text, k)) {
+        // Longer phrases are stronger signals
+        score += Math.max(6, k.length + 4);
+      }
     }
-    // also match official label
     const label = LISTING_CATEGORIES.find((c) => c.value === cat)?.label?.toLowerCase();
-    if (label && textMatchesPhrase(text, label)) score += 8;
-    if (score > 0 && (!best || score > best.score)) {
-      best = { value: cat, score };
-    }
+    if (label && textMatchesPhrase(text, label)) score += 10;
+    if (score > 0) scores[cat] = (scores[cat] ?? 0) + score;
   }
 
-  // Prefer explicit for_sale / for_rent intent when both match product words
-  if (/\bfor\s+rent\b|\brental\b|\bper\s+(day|month|week|hour)\b/i.test(text)) {
-    if (!best || best.score < 12) best = { value: "for_rent", score: 14 };
-    else if (best.value !== "accommodation" && best.value !== "property") {
-      // keep product cat but if strong rent signal and generic sale, switch
-      if (best.value === "for_sale" || best.score < 10) best = { value: "for_rent", score: 14 };
+  const isRent =
+    /\bfor\s*rent\b|\brental\b|\bper\s*(day|month|week|hour)\b|\bmonthly\s+rent\b|\bleas(e|ing)\b/i.test(
+      text
+    ) || hasAnyPhrase(text, ["for rent", "forrent", "available for rent"]);
+  const isSale =
+    /\bfor\s*sale\b|\bselling\b|\basking\s+price\b/i.test(text) ||
+    hasAnyPhrase(text, ["for sale", "forsale"]);
+  const isRealEstate = hasAnyPhrase(text, REAL_ESTATE_TERMS);
+  const isRoomRent = hasAnyPhrase(text, ROOM_RENT_TERMS);
+  const isVehicle = hasAnyPhrase(text, VEHICLE_TERMS);
+
+  // ── Domain priority overrides (fixes "house for sale" → Property, not For Sale) ──
+  if (isRoomRent) {
+    scores.accommodation = Math.max(scores.accommodation ?? 0, 28);
+  } else if (isRealEstate && isRent) {
+    // House/apartment for rent → accommodation (living) or for_rent; prefer accommodation for residential
+    if (
+      hasAnyPhrase(text, [
+        "apartment",
+        "flat",
+        "villa",
+        "house",
+        "studio",
+        "room",
+        "townhouse",
+        "duplex",
+      ])
+    ) {
+      scores.accommodation = Math.max(scores.accommodation ?? 0, 26);
+    } else {
+      scores.for_rent = Math.max(scores.for_rent ?? 0, 24);
     }
+  } else if (isRealEstate && (isSale || !isRent)) {
+    // house / villa / plot / land (± for sale) → property
+    scores.property = Math.max(scores.property ?? 0, 30);
+    // demote generic for_sale so it cannot win
+    if (scores.for_sale) scores.for_sale = Math.min(scores.for_sale, 8);
   }
-  if (/\bfor\s+sale\b|\bselling\b/i.test(text) && (!best || best.value === "other")) {
-    best = { value: "for_sale", score: Math.max(best?.score ?? 0, 10) };
+
+  if (isVehicle && (isSale || !isRent)) {
+    scores.vehicles = Math.max(scores.vehicles ?? 0, 22);
+    if (scores.for_sale) scores.for_sale = Math.min(scores.for_sale, 8);
   }
-  // Bed space / shared room — strong accommodation signal (space optional)
+
+  // Generic sale/rent only if no strong domain category
+  const domainCats = new Set([
+    "property",
+    "accommodation",
+    "vehicles",
+    "electronics",
+    "mobiles_accessories",
+    "home_furniture",
+    "tools_equipment",
+    "pets_animals",
+    "services",
+    "industrial_materials",
+  ]);
+  const topDomain = Object.entries(scores)
+    .filter(([c]) => domainCats.has(c))
+    .sort((a, b) => b[1] - a[1])[0];
+
+  if (isSale && (!topDomain || topDomain[1] < 10)) {
+    scores.for_sale = Math.max(scores.for_sale ?? 0, 12);
+  }
+  if (isRent && (!topDomain || topDomain[1] < 10)) {
+    scores.for_rent = Math.max(scores.for_rent ?? 0, 12);
+  }
+
+  if (/\bwanted\b|\blooking\s+for\b|\bneed\s+to\s+buy\b|\bseeking\b/i.test(text)) {
+    scores.wanted = Math.max(scores.wanted ?? 0, 20);
+  }
+  if (/\bfree\b.*\b(item|giveaway|pickup|collect)\b|\bgiveaway\b/i.test(text)) {
+    scores.free_items = Math.max(scores.free_items ?? 0, 18);
+  }
   if (
-    textMatchesPhrase(text, "bed space") ||
-    textMatchesPhrase(text, "bedspace") ||
-    textMatchesPhrase(text, "shared room") ||
-    textMatchesPhrase(text, "staff accommodation") ||
-    /\b(bachelor|master)\s*room\b/i.test(text)
+    /\blost\b|\bfound\b|\bmissing\b/i.test(text) &&
+    /phone|wallet|key|passport|id|bag|pet|document/i.test(text)
   ) {
-    best = { value: "accommodation", score: Math.max(best?.score ?? 0, 18) };
-  }
-  if (/\bwanted\b|\blooking\s+for\b|\bneed\s+to\s+buy\b/i.test(text)) {
-    best = { value: "wanted", score: 16 };
-  }
-  if (/\bfree\b.*\b(item|giveaway|pickup)\b|\bgiveaway\b/i.test(text)) {
-    best = { value: "free_items", score: 14 };
-  }
-  if (/\blost\b|\bfound\b|\bmissing\b/i.test(text) && /phone|wallet|key|passport|id|bag|pet/i.test(text)) {
-    best = { value: "lost_found", score: 15 };
+    scores.lost_found = Math.max(scores.lost_found ?? 0, 18);
   }
 
+  let best: { value: string; score: number } | null = null;
+  for (const [value, score] of Object.entries(scores)) {
+    if (score > 0 && (!best || score > best.score)) best = { value, score };
+  }
   return best;
 }
 
@@ -214,6 +353,12 @@ const PHRASE_ALIASES: Record<string, string[]> = {
   "apartment for rent": ["apartmentforrent", "flat for rent", "flatforrent"],
   "for rent": ["forrent", "for-rent"],
   "for sale": ["forsale", "for-sale"],
+  "house for sale": ["houseforsale", "house-for-sale", "houses for sale"],
+  "villa for sale": ["villaforsale", "villa-for-sale"],
+  "apartment for sale": ["apartmentforsale", "flat for sale", "flatforsale"],
+  "house": ["houses", "home", "homes"],
+  "villa": ["villas"],
+  "apartment": ["apartments", "flat", "flats"],
   "air conditioner": ["airconditioner", "a/c", "ac unit", "split ac"],
   "washing machine": ["washingmachine", "washer"],
   "power bank": ["powerbank"],
@@ -246,6 +391,67 @@ function textMatchesAnyPhrase(text: string, phrases: string[]): boolean {
   return false;
 }
 
+/** Map title words → preferred subcategory labels per category */
+const SUBCATEGORY_HINTS: Record<string, Record<string, string[]>> = {
+  property: {
+    Houses: ["house", "houses", "home", "homes", "bungalow"],
+    Villas: ["villa", "villas"],
+    Apartments: ["apartment", "apartments", "flat", "flats"],
+    Studios: ["studio", "studios"],
+    Townhouses: ["townhouse", "townhouses", "town house"],
+    Duplexes: ["duplex", "duplexes"],
+    Penthouses: ["penthouse", "penthouses"],
+    "Residential Plots": ["residential plot", "plot", "plots", "land"],
+    "Commercial Buildings": ["commercial building", "commercial"],
+    "Shops & Retail Spaces": ["shop for sale", "retail", "shop"],
+    Warehouses: ["warehouse", "warehouses"],
+    "Office Buildings & Spaces": ["office for sale", "office building"],
+  },
+  accommodation: {
+    Houses: ["house", "houses"],
+    Apartments: ["apartment", "apartments", "flat", "flats"],
+    Studios: ["studio", "studios"],
+    Villas: ["villa", "villas"],
+    Rooms: ["room for rent", "room", "rooms"],
+    "Bed Spaces": ["bed space", "bedspace", "bed spaces", "bedspaces"],
+    "Shared Rooms": ["shared room", "sharedroom"],
+    "Master Rooms": ["master room"],
+    "Staff Accommodation": ["staff accommodation", "staff housing"],
+    "Worker Accommodation": ["worker accommodation", "labour camp", "labor camp"],
+    "Bachelor Accommodation": ["bachelor", "bachelor room"],
+    "Family Accommodation": ["family accommodation", "family room"],
+  },
+  for_rent: {
+    Houses: ["house", "houses"],
+    Apartments: ["apartment", "apartments", "flat"],
+    Rooms: ["room"],
+    "Bed Spaces": ["bed space", "bedspace"],
+    Villas: ["villa", "villas"],
+    Studios: ["studio"],
+    Offices: ["office for rent", "office"],
+    Warehouses: ["warehouse"],
+  },
+  vehicles: {
+    Cars: ["car", "cars", "sedan", "hatchback"],
+    "SUVs & 4x4": ["suv", "4x4", "4wd"],
+    "Pickup Trucks": ["pickup", "hilux", "pickup truck"],
+    Motorcycles: ["motorcycle", "motorbike"],
+    Scooters: ["scooter"],
+    Trucks: ["truck", "trucks"],
+    Vans: ["van", "vans"],
+  },
+  electronics: {
+    Laptops: ["laptop", "macbook", "notebook"],
+    "Desktop Computers": ["desktop", "pc"],
+    Televisions: ["tv", "television", "smart tv"],
+    "Gaming PCs & Consoles": ["playstation", "xbox", "gaming pc", "ps5", "ps4"],
+    Tablets: ["tablet", "ipad"],
+  },
+  mobiles_accessories: {
+    // soft match via keywords only
+  },
+};
+
 function scoreSubcategory(category: string, text: string): { value: string; score: number } | null {
   const subs = LISTING_SUBCATEGORIES[category] ?? [];
   if (!subs.length) return null;
@@ -253,19 +459,32 @@ function scoreSubcategory(category: string, text: string): { value: string; scor
   const compact = compactText(text);
   const words = new Set(lower.split(/[^a-z0-9+]+/).filter(Boolean).map(normalizeWord));
   let best: { value: string; score: number } | null = null;
+
+  // Explicit hint map (singular title words → plural subcategory labels)
+  const hints = SUBCATEGORY_HINTS[category] ?? {};
+  for (const [subLabel, phrases] of Object.entries(hints)) {
+    if (!subs.includes(subLabel)) continue;
+    let score = 0;
+    for (const p of phrases) {
+      if (textMatchesPhrase(text, p)) score += p.length + 12;
+      if (words.has(normalizeWord(p))) score += 8;
+    }
+    if (score > 0 && (!best || score > best.score)) best = { value: subLabel, score };
+  }
+
   for (const sub of subs) {
     const subLower = sub.toLowerCase();
     let score = 0;
-    // full phrase + spacing variants
     if (textMatchesPhrase(text, subLower)) score += subLower.length + 10;
     if (compactText(subLower).length >= 4 && compact.includes(compactText(subLower))) {
       score += subLower.length + 8;
     }
+    // singularize last token: "Houses" ↔ "house"
     const tokens = subLower.split(/[&,/]| and /).map((s) => s.trim()).filter((s) => s.length > 2);
     for (const t of tokens) {
       if (textMatchesPhrase(text, t)) score += t.length + 3;
       const nt = normalizeWord(t);
-      if (words.has(nt)) score += nt.length + 3;
+      if (words.has(nt)) score += nt.length + 4;
       if (compactText(t).length >= 4 && compact.includes(compactText(t))) score += t.length + 2;
     }
     for (const w of subLower.split(/\s+/)) {
@@ -592,10 +811,12 @@ export function parseListingText(
       const related: Record<string, string[]> = {
         for_rent: ["accommodation", "property", "vehicles", "tools_equipment"],
         accommodation: ["for_rent", "property"],
-        property: ["for_rent", "accommodation"],
-        for_sale: ["electronics", "mobiles_accessories", "vehicles", "home_furniture"],
+        property: ["for_rent", "accommodation", "for_sale"],
+        for_sale: ["electronics", "mobiles_accessories", "vehicles", "home_furniture", "property"],
         electronics: ["mobiles_accessories", "for_sale"],
         mobiles_accessories: ["electronics", "for_sale"],
+        vehicles: ["for_sale", "for_rent"],
+        home_furniture: ["for_sale"],
       };
       for (const alt of related[catForSub] ?? []) {
         const altHit = scoreSubcategory(alt, text);
