@@ -23,7 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Profile, Job } from "@/types/database";
+import type { Profile, Job, UserRole } from "@/types/database";
+import { CustomizableQuickActions } from "@/components/dashboard/CustomizableQuickActions";
 
 type ActivityItem = {
   id: string;
@@ -138,6 +139,7 @@ export default async function DashboardPage() {
 
     return (
       <AdminDashboard
+        userId={userId}
         usersCount={usersCount ?? 0}
         jobsCount={jobsCount ?? 0}
         pendingCount={pendingCount ?? 0}
@@ -202,7 +204,11 @@ function SeekerDashboard({
             <span className="text-foreground">👋</span>
           </h1>
           <p className="text-muted-foreground mt-1.5 text-sm">
-            Here&apos;s an overview of your activity and opportunities.
+            {profile.role === "team"
+              ? "Team workspace — post, bulk tools, and marketplace listings."
+              : profile.role === "personal"
+                ? "Your personal hub — jobs, marketplace, and learning."
+                : "Here&apos;s an overview of your activity and opportunities."}
           </p>
         </div>
       </div>
@@ -254,61 +260,7 @@ function SeekerDashboard({
         </div>
       )}
 
-      {/* Quick actions */}
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          {profile.role === "team" || profile.role === "employer" ? (
-            <ActionCard
-              href={profile.role === "employer" ? "/dashboard/jobs" : "/dashboard/market"}
-              icon={<Briefcase className="h-5 w-5 text-blue-600" />}
-              iconBg="bg-blue-100 dark:bg-blue-900/30"
-              title={profile.role === "employer" ? "My Job Posts" : "My Listings"}
-              desc={
-                profile.role === "employer"
-                  ? "View and manage your job listings"
-                  : "View and manage your marketplace listings"
-              }
-            />
-          ) : (
-            <ActionCard
-              href="/jobs"
-              icon={<SearchIcon className="h-5 w-5 text-blue-600" />}
-              iconBg="bg-blue-100 dark:bg-blue-900/30"
-              title="Browse Jobs"
-              desc="Discover thousands of expat opportunities"
-            />
-          )}
-          <ActionCard
-            href="/dashboard/profile"
-            icon={<User className="h-5 w-5 text-violet-600" />}
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            title="Edit Profile"
-            desc="Keep your profile up to date"
-          />
-          <ActionCard
-            href="/candidates"
-            icon={<Users className="h-5 w-5 text-emerald-600" />}
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            title="Browse Candidates"
-            desc="Connect with expat professionals"
-          />
-          <ActionCard
-            href="/dashboard/market"
-            icon={<ShoppingBag className="h-5 w-5 text-orange-600" />}
-            iconBg="bg-orange-100 dark:bg-orange-900/30"
-            title="Marketplace"
-            desc="Buy, sell or browse listings"
-          />
-          <ActionCard
-            href="/dashboard/articles"
-            icon={<BookOpen className="h-5 w-5 text-pink-600" />}
-            iconBg="bg-pink-100 dark:bg-pink-900/30"
-            title="My Articles"
-            desc="Write and share your expertise"
-          />
-        </div>
-      </div>
+      <CustomizableQuickActions userId={profile.id} role={(profile.role as UserRole) || "seeker"} />
 
       {/* Recent activity */}
       <RecentActivity items={recentActivity} />
@@ -347,7 +299,7 @@ function EmployerDashboard({
             <span className="text-foreground">👋</span>
           </h1>
           <p className="text-muted-foreground mt-1.5 text-sm">
-            Manage your job posts and find top talent.
+            Company workspace — jobs, talent, and marketplace listings.
           </p>
         </div>
         <Button asChild size="sm" className="gap-1.5">
@@ -428,40 +380,7 @@ function EmployerDashboard({
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          <ActionCard
-            href="/dashboard/jobs"
-            icon={<Briefcase className="h-5 w-5 text-blue-600" />}
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            title="My Job Posts"
-            desc="View and manage your job listings"
-          />
-          <ActionCard
-            href="/dashboard/jobs/new"
-            icon={<Plus className="h-5 w-5 text-sky-600" />}
-            iconBg="bg-sky-100 dark:bg-sky-900/30"
-            title="Post a New Job"
-            desc="Reach thousands of expat professionals"
-          />
-          <ActionCard
-            href="/candidates"
-            icon={<Users className="h-5 w-5 text-violet-600" />}
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            title="Browse Candidates"
-            desc="Find skilled expat talent"
-          />
-          <ActionCard
-            href="/dashboard/market"
-            icon={<ShoppingBag className="h-5 w-5 text-orange-600" />}
-            iconBg="bg-orange-100 dark:bg-orange-900/30"
-            title="Marketplace"
-            desc="Post and manage your listings"
-          />
-        </div>
-      </div>
+      <CustomizableQuickActions userId={profile.id} role="employer" />
 
       <RecentActivity items={recentActivity} />
     </div>
@@ -470,11 +389,13 @@ function EmployerDashboard({
 
 /* ── Admin Dashboard ──────────────────────────────────────── */
 function AdminDashboard({
+  userId,
   usersCount,
   jobsCount,
   pendingCount,
   pendingListings,
 }: {
+  userId: string;
   usersCount: number;
   jobsCount: number;
   pendingCount: number;
@@ -522,46 +443,7 @@ function AdminDashboard({
         />
       </div>
 
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          <ActionCard
-            href="/dashboard/admin/jobs"
-            icon={<CheckCircle className="h-5 w-5 text-emerald-600" />}
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            title="Review Job Queue"
-            desc={`${pendingCount} job${pendingCount !== 1 ? "s" : ""} awaiting approval`}
-          />
-          <ActionCard
-            href="/dashboard/admin/users"
-            icon={<Users className="h-5 w-5 text-blue-600" />}
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            title="Manage Users"
-            desc="View and manage all platform users"
-          />
-          <ActionCard
-            href="/dashboard/admin/market"
-            icon={<ShoppingBag className="h-5 w-5 text-orange-600" />}
-            iconBg="bg-orange-100 dark:bg-orange-900/30"
-            title="Marketplace"
-            desc={`${pendingListings} listing${pendingListings !== 1 ? "s" : ""} pending review`}
-          />
-          <ActionCard
-            href="/dashboard/admin/articles"
-            icon={<BookOpen className="h-5 w-5 text-pink-600" />}
-            iconBg="bg-pink-100 dark:bg-pink-900/30"
-            title="Articles"
-            desc="Review and approve submitted articles"
-          />
-          <ActionCard
-            href="/dashboard/admin/security"
-            icon={<ShieldCheck className="h-5 w-5 text-violet-600" />}
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            title="Security"
-            desc="Audit logs and access control"
-          />
-        </div>
-      </div>
+      <CustomizableQuickActions userId={userId} role="admin" />
 
       <RecentActivity items={[]} />
     </div>
