@@ -55,7 +55,6 @@ function getNavItems(role: UserRole): NavItem[] {
     return [
       { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
       { href: "/dashboard/profile", label: "Company Profile", icon: <User className="h-4 w-4" /> },
-      { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
       { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
       { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
       { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
@@ -74,7 +73,6 @@ function getNavItems(role: UserRole): NavItem[] {
       { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
       { href: "/dashboard/profile", label: "My Profile", icon: <User className="h-4 w-4" /> },
       { href: "/dashboard/team/profiles", label: "Team Profiles", icon: <Users className="h-4 w-4" /> },
-      { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
       { href: "/dashboard/team/bulk", label: "Bulk Post", icon: <Layers className="h-4 w-4" /> },
       { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
       { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
@@ -108,7 +106,6 @@ function getNavItems(role: UserRole): NavItem[] {
     { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
     { href: "/dashboard/profile", label: "My Profile", icon: <User className="h-4 w-4" /> },
     { href: "/dashboard/cv", label: "My CV", icon: <FileText className="h-4 w-4" /> },
-    { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
     { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
     { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
     { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
@@ -232,6 +229,13 @@ export function DashboardShell({
         </button>
         <HunaredLogo className="h-6 w-auto" />
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/post"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Post
+          </Link>
           <ThemeToggle />
           <UserButton afterSignOutUrl="/" />
         </div>
@@ -258,6 +262,16 @@ export function DashboardShell({
 
       {/* Main — flex-1 fills remaining width; sits flush against sidebar */}
       <main className="min-h-dvh min-w-0 flex-1 pt-14 md:pt-0">
+        {/* Desktop top bar with Post */}
+        <div className="sticky top-0 z-10 hidden md:flex h-14 items-center justify-end gap-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-4 sm:px-5 lg:px-6">
+          <Link
+            href="/post"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Post
+          </Link>
+        </div>
         <div className="w-full px-4 py-5 sm:px-5 lg:px-6 pb-10">
           {children}
         </div>
