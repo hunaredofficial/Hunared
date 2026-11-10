@@ -207,6 +207,11 @@ function SeekerDashboard({
             {profile.role === "team" ? "Team workspace — post jobs & listings, bulk tools, and team profiles." : profile.role === "personal" ? "Your personal hub — manage profile, listings, and learning." : "Manage your profile, CV, listings, and content from one place."}
           </p>
         </div>
+        <Button asChild size="sm" className="gap-1.5 shrink-0">
+          <Link href="/post">
+            <Plus className="h-3.5 w-3.5" /> Post
+          </Link>
+        </Button>
       </div>
 
       {/* Stat cards — team-focused vs seeker */}
@@ -326,9 +331,9 @@ function EmployerDashboard({
             Company workspace — manage job posts, listings, and company profile.
           </p>
         </div>
-        <Button asChild size="sm" className="gap-1.5">
-          <Link href="/dashboard/jobs/new">
-            <Plus className="h-3.5 w-3.5" /> Post a Job
+        <Button asChild size="sm" className="gap-1.5 shrink-0">
+          <Link href="/post">
+            <Plus className="h-3.5 w-3.5" /> Post
           </Link>
         </Button>
       </div>
@@ -427,17 +432,24 @@ function AdminDashboard({
 }) {
   return (
     <div className="space-y-6 sm:space-y-8 w-full pb-8">
-      <div>
-        <p className="text-sm text-muted-foreground mb-1">Platform overview</p>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-            Admin
-          </span>{" "}
-          <span className="text-foreground">Dashboard</span>
-        </h1>
-        <p className="text-muted-foreground mt-1.5 text-sm">
-          Monitor platform activity and manage content.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-muted-foreground mb-1">Platform overview</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
+              Admin
+            </span>{" "}
+            <span className="text-foreground">Dashboard</span>
+          </h1>
+          <p className="text-muted-foreground mt-1.5 text-sm">
+            Monitor platform activity and manage content.
+          </p>
+        </div>
+        <Button asChild size="sm" className="gap-1.5 shrink-0">
+          <Link href="/post">
+            <Plus className="h-3.5 w-3.5" /> Post
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
