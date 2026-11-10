@@ -65,8 +65,8 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   marketplace: {
     id: "marketplace",
     href: "/market",
-    title: "Marketplace",
-    desc: "Browse buy, sell and services",
+    title: "Browse Marketplace",
+    desc: "Public marketplace (optional)",
     icon: "ShoppingBag",
     iconBg: "bg-orange-100 dark:bg-orange-900/30",
     iconColor: "text-orange-600",
@@ -363,38 +363,38 @@ export const ROLE_ACTION_POOL: Record<UserRole, QuickActionId[]> = {
   ],
 };
 
-/** Default visible favorites per role */
+/** Default visible favorites per role — manage own content first */
 export const ROLE_DEFAULT_ACTIONS: Record<UserRole, QuickActionId[]> = {
   seeker: [
-    "browse_jobs",
+    "my_listings",
+    "post_listing",
     "cv_builder",
     "edit_profile",
-    "my_saved",
-    "marketplace",
     "my_articles",
+    "my_saved",
   ],
   personal: [
-    "browse_jobs",
+    "my_listings",
+    "post_listing",
     "edit_profile",
-    "marketplace",
-    "learning_hub",
     "my_resources",
+    "my_articles",
   ],
   employer: [
     "my_job_posts",
     "post_job",
-    "browse_candidates",
-    "company_profile",
     "my_listings",
+    "post_listing",
+    "company_profile",
     "premium_ads",
   ],
   team: [
     "post_center",
     "bulk_post",
     "my_listings",
+    "post_listing",
     "team_profiles",
-    "marketplace",
-    "browse_jobs",
+    "my_resources",
   ],
   admin: [
     "admin_jobs",

@@ -23,9 +23,9 @@ import {
   Bell,
   BellRing,
   FileText,
-  Building2,
   Layers,
   FolderOpen,
+  Tag,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -37,10 +37,9 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
-  exact?: boolean;
-}
+  exact?: boolefunction getNavItems(role: UserRole): NavItem[] {
+  /* Dashboard nav = manage own content only (no public Jobs/Candidates/Companies/Marketplace browse) */
 
-function getNavItems(role: UserRole): NavItem[] {
   if (role === "employer") {
     return [
       {
@@ -50,9 +49,15 @@ function getNavItems(role: UserRole): NavItem[] {
         exact: true,
       },
       {
+        href: "/dashboard/profile",
+        label: "Company Profile",
+        icon: <User className="h-4 w-4" />,
+      },
+      {
         href: "/dashboard/jobs",
         label: "My Job Posts",
         icon: <Briefcase className="h-4 w-4" />,
+        exact: true,
       },
       {
         href: "/dashboard/jobs/new",
@@ -60,34 +65,20 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Plus className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/profile",
-        label: "Company Profile",
-        icon: <User className="h-4 w-4" />,
+        href: "/dashboard/market",
+        label: "My Listings",
+        icon: <ShoppingBag className="h-4 w-4" />,
+        exact: true,
       },
       {
-        href: "/dashboard/cv",
-        label: "CV Builder",
-        icon: <FileText className="h-4 w-4" />,
+        href: "/dashboard/market/new",
+        label: "Post Listing",
+        icon: <Tag className="h-4 w-4" />,
       },
       {
-        href: "/candidates",
-        label: "Browse Candidates",
-        icon: <Users className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/saved",
-        label: "My Saved",
-        icon: <Bookmark className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/subscriptions",
-        label: "My Subscriptions",
-        icon: <BellRing className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/notifications",
-        label: "Notifications",
-        icon: <Bell className="h-4 w-4" />,
+        href: "/dashboard/market/orders",
+        label: "Orders",
+        icon: <PackageOpen className="h-4 w-4" />,
       },
       {
         href: "/dashboard/articles",
@@ -100,25 +91,24 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <FolderOpen className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/market",
-        label: "My Listings",
-        icon: <ShoppingBag className="h-4 w-4" />,
-        exact: true,
+        href: "/dashboard/saved",
+        label: "My Saved",
+        icon: <Bookmark className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/market/orders",
-        label: "Incoming Orders",
-        icon: <PackageOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/history",
-        label: "History",
-        icon: <History className="h-4 w-4" />,
+        href: "/dashboard/notifications",
+        label: "Notifications",
+        icon: <Bell className="h-4 w-4" />,
       },
       {
         href: "/dashboard/premium-ads",
         label: "Premium Ads",
         icon: <Megaphone className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/history",
+        label: "History",
+        icon: <History className="h-4 w-4" />,
       },
       {
         href: "/dashboard/settings",
@@ -147,14 +137,20 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Plus className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/resources",
-        label: "My Resources",
-        icon: <FolderOpen className="h-4 w-4" />,
-      },
-      {
         href: "/dashboard/team/bulk",
         label: "Bulk Post",
         icon: <Layers className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/market",
+        label: "My Listings",
+        icon: <ShoppingBag className="h-4 w-4" />,
+        exact: true,
+      },
+      {
+        href: "/dashboard/market/new",
+        label: "Post Listing",
+        icon: <Tag className="h-4 w-4" />,
       },
       {
         href: "/dashboard/team/profiles",
@@ -162,34 +158,29 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Users className="h-4 w-4" />,
       },
       {
-        href: "/jobs",
-        label: "Jobs",
-        icon: <Briefcase className="h-4 w-4" />,
+        href: "/dashboard/articles",
+        label: "My Articles",
+        icon: <BookOpen className="h-4 w-4" />,
       },
       {
-        href: "/candidates",
-        label: "Candidates",
-        icon: <Users className="h-4 w-4" />,
+        href: "/dashboard/resources",
+        label: "My Resources",
+        icon: <FolderOpen className="h-4 w-4" />,
       },
       {
-        href: "/companies",
-        label: "Companies",
-        icon: <Building2 className="h-4 w-4" />,
+        href: "/dashboard/notifications",
+        label: "Notifications",
+        icon: <Bell className="h-4 w-4" />,
       },
       {
-        href: "/market",
-        label: "Marketplace",
-        icon: <ShoppingBag className="h-4 w-4" />,
+        href: "/dashboard/premium-ads",
+        label: "Premium Ads",
+        icon: <Megaphone className="h-4 w-4" />,
       },
       {
         href: "/dashboard/history",
         label: "History",
         icon: <History className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/premium-ads/admin",
-        label: "Premium Ads",
-        icon: <Megaphone className="h-4 w-4" />,
       },
       {
         href: "/dashboard/settings",
@@ -218,14 +209,14 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <Briefcase className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/admin/articles",
-        label: "Articles",
-        icon: <BookOpen className="h-4 w-4" />,
+        href: "/dashboard/admin/market",
+        label: "Listings Queue",
+        icon: <ShoppingBag className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/admin/market",
-        label: "Marketplace",
-        icon: <ShoppingBag className="h-4 w-4" />,
+        href: "/dashboard/admin/articles",
+        label: "Articles Queue",
+        icon: <BookOpen className="h-4 w-4" />,
       },
       {
         href: "/dashboard/admin/security",
@@ -243,14 +234,14 @@ function getNavItems(role: UserRole): NavItem[] {
         icon: <DatabaseBackup className="h-4 w-4" />,
       },
       {
-        href: "/dashboard/history",
-        label: "History",
-        icon: <History className="h-4 w-4" />,
-      },
-      {
         href: "/dashboard/premium-ads/admin",
         label: "Premium Ads",
         icon: <Megaphone className="h-4 w-4" />,
+      },
+      {
+        href: "/dashboard/history",
+        label: "History",
+        icon: <History className="h-4 w-4" />,
       },
       {
         href: "/dashboard/settings",
@@ -260,7 +251,7 @@ function getNavItems(role: UserRole): NavItem[] {
     ];
   }
 
-  // seeker (default)
+  // seeker + personal — manage own profile, CV, listings, content
   return [
     {
       href: "/dashboard",
@@ -279,19 +270,20 @@ function getNavItems(role: UserRole): NavItem[] {
       icon: <FileText className="h-4 w-4" />,
     },
     {
-      href: "/dashboard/saved",
-      label: "My Saved",
-      icon: <Bookmark className="h-4 w-4" />,
+      href: "/dashboard/market",
+      label: "My Listings",
+      icon: <ShoppingBag className="h-4 w-4" />,
+      exact: true,
     },
     {
-      href: "/dashboard/subscriptions",
-      label: "My Subscriptions",
-      icon: <BellRing className="h-4 w-4" />,
+      href: "/dashboard/market/new",
+      label: "Post Listing",
+      icon: <Tag className="h-4 w-4" />,
     },
     {
-      href: "/dashboard/notifications",
-      label: "Notifications",
-      icon: <Bell className="h-4 w-4" />,
+      href: "/dashboard/market/orders",
+      label: "Orders",
+      icon: <PackageOpen className="h-4 w-4" />,
     },
     {
       href: "/dashboard/articles",
@@ -304,20 +296,19 @@ function getNavItems(role: UserRole): NavItem[] {
       icon: <FolderOpen className="h-4 w-4" />,
     },
     {
-      href: "/dashboard/market",
-      label: "My Listings",
-      icon: <ShoppingBag className="h-4 w-4" />,
-      exact: true,
+      href: "/dashboard/saved",
+      label: "My Saved",
+      icon: <Bookmark className="h-4 w-4" />,
     },
     {
-      href: "/dashboard/market/orders",
-      label: "Incoming Orders",
-      icon: <PackageOpen className="h-4 w-4" />,
+      href: "/dashboard/subscriptions",
+      label: "Subscriptions",
+      icon: <BellRing className="h-4 w-4" />,
     },
     {
-      href: "/dashboard/history",
-      label: "History",
-      icon: <History className="h-4 w-4" />,
+      href: "/dashboard/notifications",
+      label: "Notifications",
+      icon: <Bell className="h-4 w-4" />,
     },
     {
       href: "/dashboard/premium-ads",
@@ -325,10 +316,18 @@ function getNavItems(role: UserRole): NavItem[] {
       icon: <Megaphone className="h-4 w-4" />,
     },
     {
+      href: "/dashboard/history",
+      label: "History",
+      icon: <History className="h-4 w-4" />,
+    },
+    {
       href: "/dashboard/settings",
       label: "Settings",
       icon: <Settings className="h-4 w-4" />,
     },
+  ];
+}
+
   ];
 }
 
