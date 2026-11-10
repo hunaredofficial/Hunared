@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata = {
-  title: "CV Builder | Hunared",
+  title: "My CV | Hunared",
   description: "Create and manage professional CVs with AI assistance.",
 };
 
@@ -17,7 +17,7 @@ function CvFallback() {
   return (
     <div className="flex items-center justify-center min-h-[40vh] text-muted-foreground gap-2">
       <Loader2 className="h-5 w-5 animate-spin" />
-      <span className="text-sm">Loading CV Builder…</span>
+      <span className="text-sm">Loading My CV…</span>
     </div>
   );
 }

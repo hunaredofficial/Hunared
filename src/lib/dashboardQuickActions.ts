@@ -65,8 +65,8 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   marketplace: {
     id: "marketplace",
     href: "/market",
-    title: "Browse Marketplace",
-    desc: "Public marketplace (optional)",
+    title: "Marketplace",
+    desc: "Browse buy, sell and services",
     icon: "ShoppingBag",
     iconBg: "bg-orange-100 dark:bg-orange-900/30",
     iconColor: "text-orange-600",
@@ -119,8 +119,8 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   cv_builder: {
     id: "cv_builder",
     href: "/dashboard/cv",
-    title: "CV Builder",
-    desc: "Build or update your professional CV",
+    title: "My CV",
+    desc: "View saved CVs and open the CV builder",
     icon: "FileText",
     iconBg: "bg-teal-100 dark:bg-teal-900/30",
     iconColor: "text-teal-600",
@@ -363,36 +363,36 @@ export const ROLE_ACTION_POOL: Record<UserRole, QuickActionId[]> = {
   ],
 };
 
-/** Default visible favorites per role — manage own content first */
+/** Default visible favorites per role */
 export const ROLE_DEFAULT_ACTIONS: Record<UserRole, QuickActionId[]> = {
   seeker: [
     "my_listings",
-    "post_listing",
+    "post_center",
+    "my_job_posts",
     "cv_builder",
     "edit_profile",
     "my_articles",
-    "my_saved",
   ],
   personal: [
     "my_listings",
-    "post_listing",
+    "post_center",
     "edit_profile",
     "my_resources",
     "my_articles",
   ],
   employer: [
+    "post_center",
     "my_job_posts",
-    "post_job",
     "my_listings",
-    "post_listing",
     "company_profile",
+    "my_articles",
     "premium_ads",
   ],
   team: [
     "post_center",
     "bulk_post",
+    "my_job_posts",
     "my_listings",
-    "post_listing",
     "team_profiles",
     "my_resources",
   ],

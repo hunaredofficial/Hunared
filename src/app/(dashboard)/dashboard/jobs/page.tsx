@@ -25,7 +25,8 @@ export default async function MyJobsPage() {
     .eq("id", userId)
     .single();
 
-  if (!profile || profile.role !== "employer") redirect("/dashboard");
+  // Any signed-in user can manage jobs they posted (employer_id = userId)
+  if (!profile) redirect("/dashboard");
 
   const { data: jobs } = await supabase
     .from("jobs")

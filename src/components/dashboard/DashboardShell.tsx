@@ -40,294 +40,86 @@ interface NavItem {
   exact?: boolean;
 }
 
+function roleDisplayName(role: UserRole): string {
+  if (role === "employer") return "Company";
+  if (role === "team") return "Team";
+  if (role === "admin") return "Admin";
+  if (role === "personal") return "Personal";
+  return "Seeker";
+}
+
 function getNavItems(role: UserRole): NavItem[] {
-  // Dashboard nav: manage own content only (no public Jobs/Candidates/Companies/Marketplace)
+  // Manage-own-content nav; order is intentional per role
 
   if (role === "employer") {
     return [
-      {
-        href: "/dashboard",
-        label: "Overview",
-        icon: <LayoutDashboard className="h-4 w-4" />,
-        exact: true,
-      },
-      {
-        href: "/dashboard/profile",
-        label: "Company Profile",
-        icon: <User className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/jobs",
-        label: "My Job Posts",
-        icon: <Briefcase className="h-4 w-4" />,
-        exact: true,
-      },
-      {
-        href: "/dashboard/jobs/new",
-        label: "Post a Job",
-        icon: <Plus className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/market",
-        label: "My Listings",
-        icon: <ShoppingBag className="h-4 w-4" />,
-        exact: true,
-      },
-      {
-        href: "/dashboard/market/new",
-        label: "Post Listing",
-        icon: <Tag className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/market/orders",
-        label: "Orders",
-        icon: <PackageOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/articles",
-        label: "My Articles",
-        icon: <BookOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/resources",
-        label: "My Resources",
-        icon: <FolderOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/saved",
-        label: "My Saved",
-        icon: <Bookmark className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/notifications",
-        label: "Notifications",
-        icon: <Bell className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/premium-ads",
-        label: "Premium Ads",
-        icon: <Megaphone className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/history",
-        label: "History",
-        icon: <History className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/settings",
-        label: "Settings",
-        icon: <Settings className="h-4 w-4" />,
-      },
+      { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/profile", label: "Company Profile", icon: <User className="h-4 w-4" /> },
+      { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
+      { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
+      { href: "/dashboard/resources", label: "My Resources", icon: <FolderOpen className="h-4 w-4" /> },
+      { href: "/dashboard/saved", label: "My Saved", icon: <Bookmark className="h-4 w-4" /> },
+      { href: "/dashboard/market/orders", label: "Orders", icon: <PackageOpen className="h-4 w-4" /> },
+      { href: "/dashboard/notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+      { href: "/dashboard/premium-ads", label: "Premium Ads", icon: <Megaphone className="h-4 w-4" /> },
+      { href: "/dashboard/history", label: "History", icon: <History className="h-4 w-4" /> },
+      { href: "/dashboard/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
     ];
   }
 
   if (role === "team") {
     return [
-      {
-        href: "/dashboard",
-        label: "Overview",
-        icon: <LayoutDashboard className="h-4 w-4" />,
-        exact: true,
-      },
-      {
-        href: "/dashboard/profile",
-        label: "My Profile",
-        icon: <User className="h-4 w-4" />,
-      },
-      {
-        href: "/post",
-        label: "Post",
-        icon: <Plus className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/team/bulk",
-        label: "Bulk Post",
-        icon: <Layers className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/market",
-        label: "My Listings",
-        icon: <ShoppingBag className="h-4 w-4" />,
-        exact: true,
-      },
-      {
-        href: "/dashboard/market/new",
-        label: "Post Listing",
-        icon: <Tag className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/team/profiles",
-        label: "Team Profiles",
-        icon: <Users className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/articles",
-        label: "My Articles",
-        icon: <BookOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/resources",
-        label: "My Resources",
-        icon: <FolderOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/notifications",
-        label: "Notifications",
-        icon: <Bell className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/premium-ads",
-        label: "Premium Ads",
-        icon: <Megaphone className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/history",
-        label: "History",
-        icon: <History className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/settings",
-        label: "Settings",
-        icon: <Settings className="h-4 w-4" />,
-      },
+      { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/profile", label: "My Profile", icon: <User className="h-4 w-4" /> },
+      { href: "/dashboard/team/profiles", label: "Team Profiles", icon: <Users className="h-4 w-4" /> },
+      { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
+      { href: "/dashboard/team/bulk", label: "Bulk Post", icon: <Layers className="h-4 w-4" /> },
+      { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
+      { href: "/dashboard/resources", label: "My Resources", icon: <FolderOpen className="h-4 w-4" /> },
+      { href: "/dashboard/notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+      { href: "/dashboard/premium-ads", label: "Premium Ads", icon: <Megaphone className="h-4 w-4" /> },
+      { href: "/dashboard/history", label: "History", icon: <History className="h-4 w-4" /> },
+      { href: "/dashboard/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
     ];
   }
 
   if (role === "admin") {
     return [
-      {
-        href: "/dashboard",
-        label: "Overview",
-        icon: <LayoutDashboard className="h-4 w-4" />,
-        exact: true,
-      },
-      {
-        href: "/dashboard/admin/users",
-        label: "Users",
-        icon: <Users className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/admin/jobs",
-        label: "Job Queue",
-        icon: <Briefcase className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/admin/market",
-        label: "Listings Queue",
-        icon: <ShoppingBag className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/admin/articles",
-        label: "Articles Queue",
-        icon: <BookOpen className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/admin/security",
-        label: "Security",
-        icon: <ShieldCheck className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/admin/ads",
-        label: "Ads",
-        icon: <Megaphone className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/admin/backups",
-        label: "Backups",
-        icon: <DatabaseBackup className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/premium-ads/admin",
-        label: "Premium Ads",
-        icon: <Megaphone className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/history",
-        label: "History",
-        icon: <History className="h-4 w-4" />,
-      },
-      {
-        href: "/dashboard/settings",
-        label: "Settings",
-        icon: <Settings className="h-4 w-4" />,
-      },
+      { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
+      { href: "/dashboard/admin/users", label: "Users", icon: <Users className="h-4 w-4" /> },
+      { href: "/dashboard/admin/jobs", label: "Job Queue", icon: <Briefcase className="h-4 w-4" /> },
+      { href: "/dashboard/admin/market", label: "Listings Queue", icon: <ShoppingBag className="h-4 w-4" /> },
+      { href: "/dashboard/admin/articles", label: "Articles Queue", icon: <BookOpen className="h-4 w-4" /> },
+      { href: "/dashboard/admin/security", label: "Security", icon: <ShieldCheck className="h-4 w-4" /> },
+      { href: "/dashboard/admin/ads", label: "Ads", icon: <Megaphone className="h-4 w-4" /> },
+      { href: "/dashboard/admin/backups", label: "Backups", icon: <DatabaseBackup className="h-4 w-4" /> },
+      { href: "/dashboard/premium-ads/admin", label: "Premium Ads", icon: <Megaphone className="h-4 w-4" /> },
+      { href: "/dashboard/history", label: "History", icon: <History className="h-4 w-4" /> },
+      { href: "/dashboard/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
     ];
   }
 
   // seeker + personal
   return [
-    {
-      href: "/dashboard",
-      label: "Overview",
-      icon: <LayoutDashboard className="h-4 w-4" />,
-      exact: true,
-    },
-    {
-      href: "/dashboard/profile",
-      label: "My Profile",
-      icon: <User className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/cv",
-      label: "CV Builder",
-      icon: <FileText className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/market",
-      label: "My Listings",
-      icon: <ShoppingBag className="h-4 w-4" />,
-      exact: true,
-    },
-    {
-      href: "/dashboard/market/new",
-      label: "Post Listing",
-      icon: <Tag className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/market/orders",
-      label: "Orders",
-      icon: <PackageOpen className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/articles",
-      label: "My Articles",
-      icon: <BookOpen className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/resources",
-      label: "My Resources",
-      icon: <FolderOpen className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/saved",
-      label: "My Saved",
-      icon: <Bookmark className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/subscriptions",
-      label: "Subscriptions",
-      icon: <BellRing className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/notifications",
-      label: "Notifications",
-      icon: <Bell className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/premium-ads",
-      label: "Premium Ads",
-      icon: <Megaphone className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/history",
-      label: "History",
-      icon: <History className="h-4 w-4" />,
-    },
-    {
-      href: "/dashboard/settings",
-      label: "Settings",
-      icon: <Settings className="h-4 w-4" />,
-    },
+    { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
+    { href: "/dashboard/profile", label: "My Profile", icon: <User className="h-4 w-4" /> },
+    { href: "/dashboard/cv", label: "My CV", icon: <FileText className="h-4 w-4" /> },
+    { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
+    { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
+    { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
+    { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
+    { href: "/dashboard/resources", label: "My Resources", icon: <FolderOpen className="h-4 w-4" /> },
+    { href: "/dashboard/saved", label: "My Saved", icon: <Bookmark className="h-4 w-4" /> },
+    { href: "/dashboard/subscriptions", label: "Subscriptions", icon: <BellRing className="h-4 w-4" /> },
+    { href: "/dashboard/market/orders", label: "Orders", icon: <PackageOpen className="h-4 w-4" /> },
+    { href: "/dashboard/notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+    { href: "/dashboard/premium-ads", label: "Premium Ads", icon: <Megaphone className="h-4 w-4" /> },
+    { href: "/dashboard/history", label: "History", icon: <History className="h-4 w-4" /> },
+    { href: "/dashboard/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
   ];
 }
 
@@ -354,7 +146,7 @@ function SidebarContent({
 
       <div className="px-4 py-3 border-b">
         <p className="text-sm font-medium truncate">{fullName}</p>
-        <p className="text-xs text-muted-foreground capitalize">{role}</p>
+        <p className="text-xs text-muted-foreground">{roleDisplayName(role)}</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">

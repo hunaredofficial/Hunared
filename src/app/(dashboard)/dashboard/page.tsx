@@ -204,36 +204,60 @@ function SeekerDashboard({
             <span className="text-foreground">👋</span>
           </h1>
           <p className="text-muted-foreground mt-1.5 text-sm">
-            {profile.role === "team"
-              ? "Team workspace — post, bulk tools, and marketplace listings."
-              : profile.role === "personal"
-                ? "Your personal hub — jobs, marketplace, and learning."
-                : "Here&apos;s an overview of your activity and opportunities."}
+            {profile.role === "team" ? "Team workspace — post jobs & listings, bulk tools, and team profiles." : profile.role === "personal" ? "Your personal hub — manage profile, listings, and learning." : "Manage your profile, CV, listings, and content from one place."}
           </p>
         </div>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards — team-focused vs seeker */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-        <StatCard
-          icon={<Briefcase className="h-5 w-5 text-blue-600" />}
-          iconBg="bg-blue-100 dark:bg-blue-900/30"
-          label="Jobs Available"
-          value={approvedJobs.toLocaleString()}
-          link={{ href: "/jobs", label: "View" }}
-        />
-        <StatCard
-          icon={<User className="h-5 w-5 text-violet-600" />}
-          iconBg="bg-violet-100 dark:bg-violet-900/30"
-          label="Profile Complete"
-          value={`${completeness}%`}
-        />
-        <StatCard
-          icon={<CheckCircle className="h-5 w-5 text-emerald-600" />}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-          label="Account Status"
-          value="Active"
-        />
+        {profile.role === "team" ? (
+          <>
+            <StatCard
+              icon={<Plus className="h-5 w-5 text-blue-600" />}
+              iconBg="bg-blue-100 dark:bg-blue-900/30"
+              label="Post Center"
+              value="Open"
+              link={{ href: "/post", label: "Post" }}
+            />
+            <StatCard
+              icon={<ShoppingBag className="h-5 w-5 text-orange-600" />}
+              iconBg="bg-orange-100 dark:bg-orange-900/30"
+              label="My Listings"
+              value="Manage"
+              link={{ href: "/dashboard/market", label: "View" }}
+            />
+            <StatCard
+              icon={<Users className="h-5 w-5 text-violet-600" />}
+              iconBg="bg-violet-100 dark:bg-violet-900/30"
+              label="Team Profiles"
+              value="Manage"
+              link={{ href: "/dashboard/team/profiles", label: "Open" }}
+            />
+          </>
+        ) : (
+          <>
+            <StatCard
+              icon={<Briefcase className="h-5 w-5 text-blue-600" />}
+              iconBg="bg-blue-100 dark:bg-blue-900/30"
+              label="Jobs Available"
+              value={approvedJobs.toLocaleString()}
+              link={{ href: "/jobs", label: "View" }}
+            />
+            <StatCard
+              icon={<User className="h-5 w-5 text-violet-600" />}
+              iconBg="bg-violet-100 dark:bg-violet-900/30"
+              label="Profile Complete"
+              value={`${completeness}%`}
+            />
+            <StatCard
+              icon={<CheckCircle className="h-5 w-5 text-emerald-600" />}
+              iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+              label="Account Status"
+              value="Active"
+            />
+          </>
+        )}
       </div>
 
       {/* Profile completeness banner */}
@@ -248,7 +272,7 @@ function SeekerDashboard({
                 Complete your profile
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                A complete profile gets up to 3× more views from employers.
+                {profile.role === "team" ? "Complete team profile details for better posting and management." : "A complete profile gets up to 3× more views from employers."}
               </p>
             </div>
           </div>
@@ -299,7 +323,7 @@ function EmployerDashboard({
             <span className="text-foreground">👋</span>
           </h1>
           <p className="text-muted-foreground mt-1.5 text-sm">
-            Company workspace — jobs, talent, and marketplace listings.
+            Company workspace — manage job posts, listings, and company profile.
           </p>
         </div>
         <Button asChild size="sm" className="gap-1.5">
