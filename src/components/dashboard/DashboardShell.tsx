@@ -37,8 +37,11 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
-  exact?: boolefunction getNavItems(role: UserRole): NavItem[] {
-  /* Dashboard nav = manage own content only (no public Jobs/Candidates/Companies/Marketplace browse) */
+  exact?: boolean;
+}
+
+function getNavItems(role: UserRole): NavItem[] {
+  // Dashboard nav: manage own content only (no public Jobs/Candidates/Companies/Marketplace)
 
   if (role === "employer") {
     return [
@@ -251,7 +254,7 @@ interface NavItem {
     ];
   }
 
-  // seeker + personal — manage own profile, CV, listings, content
+  // seeker + personal
   return [
     {
       href: "/dashboard",
@@ -325,9 +328,6 @@ interface NavItem {
       label: "Settings",
       icon: <Settings className="h-4 w-4" />,
     },
-  ];
-}
-
   ];
 }
 
