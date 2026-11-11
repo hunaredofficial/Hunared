@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { CvData, CvSectionKey } from "@/lib/cv/types";
-import { CV_TEMPLATES, normalizeTemplateId } from "@/lib/cv/templates";
+import { CV_TEMPLATES } from "@/lib/cv/templates";
 
 function templateAllowsPhoto(templateId: string): boolean {
   const meta = CV_TEMPLATES.find((x) => x.id === templateId);
@@ -54,14 +54,13 @@ export function CvPreview({
   data: CvData;
   className?: string;
 }) {
-  const templateId = normalizeTemplateId(data.template);
-  const meta = CV_TEMPLATES.find((t) => t.id === templateId) || CV_TEMPLATES[0];
+  const meta = CV_TEMPLATES.find((t) => t.id === data.template) || CV_TEMPLATES[0];
   const accent = meta.accent;
   const order = data.sectionOrder?.length
     ? data.sectionOrder
     : (Object.keys(SECTION_LABELS) as CvSectionKey[]);
 
-  const isAts = templateId === "ats" || templateId === "classic" || !!meta.ats;
+  const isAts = data.template === "ats" || data.template === "classic";
   const isSidebar =
     data.template === "modern" || data.template === "tech" || data.template === "hse";
 
@@ -78,8 +77,7 @@ export function CvPreview({
     return (
       <section key={key} className="mb-3.5 break-inside-avoid">
         <h2
-          className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2 pb-1 border-b-2"
-          style={{ borderColor: accent, color: accent }}
+          className="text-[11px] font-bold uppercase tracking-[0.08em] mb-1.5 pb-0.5"
           style={{
             color: accent,
             borderBottom: `1.5px solid ${accent}33`,
@@ -211,7 +209,7 @@ export function CvPreview({
     <div
       className={cn(
         "bg-white text-neutral-900 shadow-lg rounded-sm overflow-hidden",
-        "print:shadow-none print:rounded-none print:min-h-0 print:h-auto",
+        "print:shadow-none print:rounded-none",
         className
       )}
       id="cv-print-root"
@@ -229,7 +227,7 @@ export function CvPreview({
         }
       >
         <div className="flex items-start gap-3">
-          {data.photoUrl && templateAllowsPhoto(templateId) ? (
+          {data.photoUrl && templateAllowsPhoto(data.template) ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.photoUrl}
@@ -241,36 +239,34 @@ export function CvPreview({
             />
           ) : null}
           <div className="min-w-0 flex-1">
-            <h1
-              className={cn(
-                "text-xl font-bold tracking-tight",
-                isAts ? "text-neutral-900" : "text-white"
-              )}
-            >
-              {data.fullName || "Your Name"}
-            </h1>
-            {data.title && (
-              <p
-                className={cn(
-                  "text-sm mt-0.5",
-                  isAts ? "text-neutral-600" : "text-white/90"
-                )}
-              >
-                {data.title}
-              </p>
+        <h1
+          className={cn(
+            "text-xl font-bold tracking-tight",
+            isAts ? "text-neutral-900" : "text-white"
+          )}
+        >
+          {data.fullName || "Your Name"}
+        </h1>
+        {data.title && (
+          <p
+            className={cn(
+              "text-sm mt-0.5",
+              isAts ? "text-neutral-600" : "text-white/90"
             )}
-            {contact && (
-              <p
-                className={cn(
-                  "text-[10.5px] mt-2 leading-relaxed",
-                  isAts ? "text-neutral-500" : "text-white/80"
-                )}
-              >
-                {contact}
-              </p>
+          >
+            {data.title}
+          </p>
+        )}
+        {contact && (
+          <p
+            className={cn(
+              "text-[10.5px] mt-2 leading-relaxed",
+              isAts ? "text-neutral-500" : "text-white/80"
             )}
-          </div>
-        </div>
+          >
+            {contact}
+          </p>
+        )}
       </header>
 
       <div
