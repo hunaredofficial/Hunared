@@ -85,8 +85,6 @@ export type CvData = {
   projects: CvProject[];
   template: CvTemplateId;
   sectionOrder: CvSectionKey[];
-  /** Optional profile photo data URL or hosted URL (photo templates only) */
-  photoUrl?: string;
 };
 
 export type CvDocumentMeta = {
@@ -164,6 +162,7 @@ export const DEFAULT_CV = (): CvData => ({
   projects: [],
   template: "professional",
   sectionOrder: [...DEFAULT_SECTION_ORDER],
+  photoUrl: "",
 });
 
 export type CvTemplateMeta = {
@@ -172,6 +171,8 @@ export type CvTemplateMeta = {
   desc: string;
   accent: string;
   category: string;
+  photo?: boolean;
+  ats?: boolean;
 };
 
 export type ProfileSeed = {
