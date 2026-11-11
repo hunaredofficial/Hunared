@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const sp = req.nextUrl.searchParams;
     const q = (sp.get("q") || "").trim();
     const page = Math.max(1, parseInt(sp.get("page") || "1", 10) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(sp.get("limit") || "12", 10) || 12));
+    const limit = Math.min(200, Math.max(1, parseInt(sp.get("limit") || "24", 10) || 24));
     const sort = sp.get("sort") || "relevant";
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
          status, verification_status, is_featured, is_premium, is_hiring,
          headquarters_country, headquarters_country_code, headquarters_city,
          website, rating_avg, reviews_count, followers_count, jobs_count,
-         services_count, created_at, updated_at`,
+         services_count, team_managed, created_at, updated_at`,
         { count: "exact" }
       )
       .eq("status", "active");
@@ -118,6 +118,7 @@ export async function GET(req: NextRequest) {
         query = query
           .order("is_featured", { ascending: false })
           .order("verification_status", { ascending: false })
+          .order("created_at", { ascending: false })
           .order("rating_avg", { ascending: false });
     }
 
