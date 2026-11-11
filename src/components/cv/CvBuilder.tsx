@@ -544,7 +544,7 @@ export function CvBuilder({ profile }: { profile?: ProfileSeed & { role?: string
               icon: Sparkles,
               title: "Try sample CV",
               desc: "Explore with a filled Instrument Technician example.",
-              action: startFromSample,
+              action: () => setView("samples"),
             },
           ].map((item) => (
             <button
