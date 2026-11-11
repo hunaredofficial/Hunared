@@ -197,6 +197,8 @@ function extractPriceMax(text: string): string | undefined {
 function cleanQuery(text: string): string {
   let q = expandProfession(text);
   q = q
+    .replace(/\b(browse|show|find|search|open|list|view)\s+(all\s+)?(jobs?|roles?|vacancies|openings|listings?|marketplace|companies|candidates|talent)\b/gi, " ")
+    .replace(/\b(all\s+jobs?|jobs?\s+for\s+me)\b/gi, " ")
     .replace(
       /\b(find|show|search|looking for|look for|need|want|get me|help me|please|can you|i want|i need|i'm looking for|im looking for)\b/gi,
       " "
@@ -255,13 +257,13 @@ export const COMMAND_PACKS: {
   {
     title: "Jobs",
     commands: [
-      { label: "Instrument Tech jobs", text: "Find instrument technician jobs in Saudi Arabia" },
-      { label: "HSE Officer", text: "Search jobs by skill" },
-      { label: "Temporary work", text: "Temporary jobs in Riyadh" },
-      { label: "Permanent roles", text: "Permanent jobs in Saudi Arabia" },
-      { label: "Jobs near me", text: "Find jobs near Khobar" },
-      { label: "Software Engineer", text: "Software Engineer jobs" },
-      { label: "Driver jobs", text: "Driver jobs in Jeddah" },
+      { label: "Browse all jobs", text: "Browse all jobs" },
+      { label: "Permanent roles", text: "Permanent jobs" },
+      { label: "Temporary work", text: "Temporary jobs" },
+      { label: "Engineering jobs", text: "Engineering jobs" },
+      { label: "HSE & safety jobs", text: "HSE and safety jobs" },
+      { label: "Admin & office", text: "Administrative and office jobs" },
+      { label: "Jobs in Saudi Arabia", text: "Jobs in Saudi Arabia" },
       { label: "Post a job", text: "Post a job" },
     ],
   },
@@ -362,10 +364,10 @@ export const SUGGESTIONS_BY_PATH: { match: RegExp; items: string[] }[] = [
   {
     match: /^\/$/,
     items: [
-      "Find instrument technician jobs in Saudi Arabia",
-      "Browse marketplace listings",
-      "Electrical services near Khobar",
+      "Browse all jobs",
+      "Browse marketplace",
       "Show candidates available for hire",
+      "Browse companies",
       "What can you do?",
     ],
   },
@@ -512,6 +514,27 @@ export function parseUserMessage(
         entities: mergeEntities(ctx.lastEntities, entities),
       };
     }
+  }
+
+  // ── Broad job browse (no narrow profession) ─────────────────────────
+  if (
+    /^(browse|show|find|search|open|list|view)?\s*(all\s+)?jobs?\s*$/i.test(raw.trim()) ||
+    /^(browse|show|find|search)\s+all\s+jobs?\b/i.test(raw.trim())
+  ) {
+    return {
+      intent: "search_jobs",
+      href: "/jobs",
+      label: "Browse jobs",
+      message:
+        "Opening **all jobs** on Hunared. Use filters for country, city, employment type, category, and keywords — any profession, not a single role.",
+      autoNavigate: true,
+      entities: {},
+      secondary: [
+        { label: "Permanent", href: "/jobs?employmentType=permanent" },
+        { label: "Temporary", href: "/jobs?employmentType=temporary" },
+        { label: "Post a job", href: "/dashboard/jobs/new" },
+      ],
+    };
   }
 
   // ── Help ────────────────────────────────────────────────────────────

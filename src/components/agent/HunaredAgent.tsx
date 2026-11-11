@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
@@ -51,11 +51,11 @@ type Msg = {
 };
 
 const QUICK_START = [
-  { icon: Briefcase, label: "Find jobs", text: "Find instrument technician jobs in Saudi Arabia" },
+  { icon: Briefcase, label: "Find jobs", text: "Browse all jobs" },
   { icon: FileText, label: "CV Builder", text: "Open CV Builder" },
-  { icon: ShoppingBag, label: "Marketplace", text: "Browse marketplace for sale" },
-  { icon: Users, label: "Talent", text: "Show candidates available for hire" },
-  { icon: Building2, label: "Companies", text: "Show companies hiring in Saudi Arabia" },
+  { icon: ShoppingBag, label: "Marketplace", text: "Browse marketplace" },
+  { icon: Users, label: "Talent", text: "Browse talent and candidates" },
+  { icon: Building2, label: "Companies", text: "Browse companies" },
   { icon: MessageSquare, label: "Messages", text: "Open my messages" },
   { icon: GraduationCap, label: "Programs", text: "Open Hunared programs" },
   { icon: MapPin, label: "Finder", text: "Open Finder Center" },
@@ -65,10 +65,11 @@ const QUICK_START = [
 function contextualSuggestions(path: string): string[] {
   if (path.startsWith("/jobs")) {
     return [
-      "How do I search for jobs?",
+      "Browse all jobs",
       "Show permanent roles",
-      "Open temporary jobs",
+      "Show temporary jobs",
       "How do I post a job?",
+      "How do I search for jobs?",
     ];
   }
   if (path.startsWith("/market")) {
@@ -131,7 +132,8 @@ function contextualSuggestions(path: string): string[] {
   }
   return [
     "How does Hunared work?",
-    "Find jobs",
+    "Browse all jobs",
+    "Browse marketplace",
     "Open CV Builder",
     "Open Finder Center",
     "How do I post a job?",
@@ -186,6 +188,74 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const [agentActions, setAgentActions] = useState(false);
   const [open, setOpen] = useState(variant === "page");
+  const MIN_H = 280;
+  const DEFAULT_H = 420;
+  const [panelHeight, setPanelHeight] = useState(DEFAULT_H);
+  const dragRef = useRef<{ startY: number; startH: number } | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("hunared_agent_height");
+      if (saved) {
+        const n = parseInt(saved, 10);
+        if (!Number.isNaN(n) && n >= MIN_H) setPanelHeight(n);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  function maxPanelHeight() {
+    if (typeof window === "undefined") return 720;
+    return Math.max(MIN_H, window.innerHeight - 72);
+  }
+
+  function onResizeStart(e: ReactMouseEvent | ReactTouchEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    dragRef.current = { startY: clientY, startH: panelHeight };
+    const onMove = (ev: MouseEvent | TouchEvent) => {
+      if (!dragRef.current) return;
+      const y = "touches" in ev ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
+      // Dragging bottom edge down increases height
+      const delta = y - dragRef.current.startY;
+      const next = Math.min(maxPanelHeight(), Math.max(MIN_H, dragRef.current.startH + delta));
+      setPanelHeight(next);
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      try {
+        localStorage.setItem("hunared_agent_height", String(panelHeight));
+      } catch {
+        /* ignore */
+      }
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+    // Fix: save height on up with latest via functional - use ref for height during drag
+    const onUpSave = () => {
+      setPanelHeight((h) => {
+        try {
+          localStorage.setItem("hunared_agent_height", String(h));
+        } catch {
+          /* ignore */
+        }
+        return h;
+      });
+      dragRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUpSave);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUpSave);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUpSave);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUpSave);
+  }
 
   // Header button controls the drawer (no floating FAB)
   useEffect(() => {
@@ -538,7 +608,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "w-[min(100vw-1rem,22rem)] h-[min(70vh,28rem)] max-h-[calc(100dvh-4.5rem)] rounded-2xl shadow-2xl border"
+          ? "w-[min(100vw-1rem,22rem)] rounded-2xl border"
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
@@ -552,6 +622,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               bottom: "auto",
               zIndex: 9998,
               margin: 0,
+              height: panelHeight,
+              maxHeight: "calc(100dvh - 4rem)",
             }
           : undefined
       }
@@ -870,10 +942,22 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               <Send className="h-4 w-4" />
             </Button>
           </form>
-          <p className="text-[9px] text-center text-muted-foreground/80 pb-2 px-3 leading-tight">
+          <p className="text-[9px] text-center text-muted-foreground/80 pb-1 px-3 leading-tight">
             AI guidance only — verify important details. You stay in control of applications and
             payments.
           </p>
+          {/* Drag bottom edge to resize (min ↔ max under header) */}
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize agent panel"
+            title="Drag to resize"
+            onMouseDown={onResizeStart}
+            onTouchStart={onResizeStart}
+            className="shrink-0 h-3 cursor-ns-resize flex items-center justify-center border-t border-border/50 hover:bg-muted/40 active:bg-muted/60 touch-none"
+          >
+            <span className="h-1 w-10 rounded-full bg-muted-foreground/35" />
+          </div>
         </>
       )}
     </div>
@@ -885,31 +969,23 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   if (!aiEnabled) return null;
   if (!portalReady) return null;
 
-  // Compact header popover — not a full-screen drawer
+  // Header-anchored panel (fixed to viewport — do not use transform parents)
+  if (!open) {
+    return createPortal(
+      <div className="pointer-events-none fixed inset-0 z-[9997]" aria-hidden />,
+      document.body
+    );
+  }
+
   const popover = (
     <>
-      {/* Light backdrop — click closes (minimize) */}
       <div
-        className={cn(
-          "fixed inset-0 z-[9997] transition-opacity duration-150",
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        )}
-        style={{ background: open ? "rgba(0,0,0,0.25)" : "transparent" }}
+        className="fixed inset-0 z-[9997] bg-black/20"
         onClick={() => setOpen(false)}
-        aria-hidden={!open}
+        aria-hidden
       />
-      <div
-        className={cn(
-          "z-[9998] transition-all duration-200 ease-out origin-top-right",
-          open
-            ? "opacity-100 scale-100 pointer-events-auto"
-            : "opacity-0 scale-95 pointer-events-none"
-        )}
-        role="dialog"
-        aria-label="Hunared Agent"
-        aria-hidden={!open}
-      >
-        {open ? panel : null}
+      <div role="dialog" aria-label="Hunared Agent" className="contents">
+        {panel}
       </div>
     </>
   );
