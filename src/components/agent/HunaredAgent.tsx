@@ -538,7 +538,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "w-[min(100vw,24rem)] sm:w-[24rem] h-[100dvh] sm:h-[min(100dvh,100%)] rounded-none sm:rounded-l-2xl border-l shadow-2xl"
+          ? "w-[min(100vw-1rem,22rem)] h-[min(70vh,28rem)] max-h-[calc(100dvh-4.5rem)] rounded-2xl shadow-2xl border"
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
@@ -546,13 +546,12 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         variant === "float"
           ? {
               position: "fixed",
-              top: 0,
-              right: 0,
+              top: "3.75rem",
+              right: "0.75rem",
               left: "auto",
-              bottom: 0,
+              bottom: "auto",
               zIndex: 9998,
               margin: 0,
-              maxHeight: "100dvh",
             }
           : undefined
       }
@@ -560,8 +559,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       {/* Header */}
       <header className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative h-9 w-9 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37] via-[#c9a227] to-[#8b7355] shadow-md shadow-[#D4AF37]/25">
-            <Sparkles className="h-4 w-4 text-[#0a0a0a] relative z-[1]" />
+          <div className="relative h-7 w-7 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37] via-[#c9a227] to-[#8b7355] shadow-md shadow-[#D4AF37]/25">
+            <Sparkles className="h-3.5 w-3.5 text-[#0a0a0a] relative z-[1]" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
@@ -630,14 +629,34 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             Menu
           </button>
           {variant === "float" && (
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted/80"
-              aria-label="Minimize"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpen(false);
+                }}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                aria-label="Minimize"
+                title="Minimize"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpen(false);
+                }}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                aria-label="Close"
+                title="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </>
           )}
         </div>
       </header>
@@ -866,31 +885,34 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   if (!aiEnabled) return null;
   if (!portalReady) return null;
 
-  const drawer = (
+  // Compact header popover — not a full-screen drawer
+  const popover = (
     <>
-      {/* Backdrop */}
+      {/* Light backdrop — click closes (minimize) */}
       <div
         className={cn(
-          "fixed inset-0 z-[9997] bg-black/40 backdrop-blur-[2px] transition-opacity duration-200",
+          "fixed inset-0 z-[9997] transition-opacity duration-150",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
+        style={{ background: open ? "rgba(0,0,0,0.25)" : "transparent" }}
         onClick={() => setOpen(false)}
         aria-hidden={!open}
       />
-      {/* Right drawer — header-aligned assistant */}
       <div
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-[9998] transition-transform duration-300 ease-out",
-          open ? "translate-x-0" : "translate-x-full"
+          "z-[9998] transition-all duration-200 ease-out origin-top-right",
+          open
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-95 pointer-events-none"
         )}
         role="dialog"
         aria-label="Hunared Agent"
         aria-hidden={!open}
       >
-        {panel}
+        {open ? panel : null}
       </div>
     </>
   );
 
-  return createPortal(drawer, document.body);
+  return createPortal(popover, document.body);
 }

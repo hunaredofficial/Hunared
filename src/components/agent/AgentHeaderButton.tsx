@@ -6,9 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
 /**
- * Header control for Hunared Agent — matches Messages / theme icon sizing (h-8 w-8).
- * Dispatches `hunared-agent-toggle` so a single mounted HunaredAgent opens the drawer.
- * Hidden when AI is OFF (local + account preference).
+ * Compact header Agent control — same footprint as Messages / theme icons (h-8 w-8).
  */
 export function AgentHeaderButton({ className }: { className?: string }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -42,7 +40,6 @@ export function AgentHeaderButton({ className }: { className?: string }) {
     };
   }, []);
 
-  // Soft-check account preference when signed in
   useEffect(() => {
     if (!isSignedIn) return;
     void fetch("/api/profile/ai-settings")
@@ -76,30 +73,20 @@ export function AgentHeaderButton({ className }: { className?: string }) {
     <button
       type="button"
       onClick={toggle}
-      title={open ? "Close Hunared Agent" : "Open Hunared Agent"}
+      title={open ? "Close Hunared Agent" : "Hunared Agent"}
       aria-label={open ? "Close Hunared Agent" : "Open Hunared Agent"}
       aria-pressed={open}
       className={cn(
         "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-        "text-muted-foreground hover:text-foreground hover:bg-muted/80",
         "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-        open && "bg-primary/15 text-primary",
+        open
+          ? "bg-primary/15 text-primary"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/80",
         className
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-1 rounded-md opacity-0 transition-opacity",
-          open && "opacity-100 bg-primary/10"
-        )}
-      />
-      <Sparkles
-        className={cn("h-4 w-4 relative z-[1]", open && "text-primary")}
-        strokeWidth={2}
-      />
-      {/* subtle online dot when signed in */}
-      {isSignedIn && (
+      <Sparkles className="h-4 w-4" strokeWidth={2} />
+      {isSignedIn && !open && (
         <span
           aria-hidden
           className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-background"
