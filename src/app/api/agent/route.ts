@@ -10,43 +10,64 @@ import {
 
 /**
  * Hunared AI Agent API
- * Rule-based intent + optional OpenAI polish.
- * Respects profiles.ai_enabled. Never executes irreversible actions.
+ * Login required. Rule-based intent + optional OpenAI polish.
+ * Respects profiles.ai_enabled and ai_agent_actions.
+ * Never publishes without the user reviewing the form.
  */
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        {
+          error: "auth_required",
+          action: {
+            intent: "sign_in",
+            href: "/sign-in",
+            label: "Sign in",
+            message:
+              "**Sign in required** to use Hunared AI. Register free or sign in, then ask again.",
+            secondary: [{ label: "Register", href: "/register" }],
+          } satisfies AgentAction,
+        },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const message = String((body as { message?: string }).message || "").slice(0, 2000);
     const context = (body as { context?: ConversationContext }).context;
     const path = String((body as { path?: string }).path || "");
     const roleHint = String((body as { role?: string }).role || "");
+    const clientAgentActions = Boolean((body as { agentActions?: boolean }).agentActions);
 
     if (!message.trim()) {
       return NextResponse.json({ error: "message required" }, { status: 400 });
     }
 
-    const { userId } = await auth();
     let aiEnabled = true;
+    let agentActions = clientAgentActions;
     let role = roleHint || "personal";
     let personalization = true;
 
-    if (userId) {
-      try {
-        const supabase = createAdminClient();
-        const { data } = await supabase
-          .from("profiles")
-          .select("role, ai_enabled, ai_personalization")
-          .eq("id", userId)
-          .maybeSingle();
-        if (data) {
-          if (typeof data.ai_enabled === "boolean") aiEnabled = data.ai_enabled;
-          if (typeof data.ai_personalization === "boolean")
-            personalization = data.ai_personalization;
-          if (data.role) role = String(data.role);
+    try {
+      const supabase = createAdminClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("role, ai_enabled, ai_personalization, ai_agent_actions")
+        .eq("id", userId)
+        .maybeSingle();
+      if (data) {
+        if (typeof data.ai_enabled === "boolean") aiEnabled = data.ai_enabled;
+        if (typeof data.ai_personalization === "boolean")
+          personalization = data.ai_personalization;
+        if (typeof (data as { ai_agent_actions?: boolean }).ai_agent_actions === "boolean") {
+          agentActions = (data as { ai_agent_actions: boolean }).ai_agent_actions;
         }
-      } catch {
-        /* migration not applied — default ON */
+        if (data.role) role = String(data.role);
       }
+    } catch {
+      /* migration not applied — defaults */
     }
 
     if (!aiEnabled) {
@@ -57,7 +78,7 @@ export async function POST(req: NextRequest) {
           href: "/ai-settings",
           label: "Turn on Hunared AI",
           message:
-            "Hunared AI is OFF for your account. Normal site features still work. Turn AI ON in Dashboard → Settings → Privacy & AI when you want assistance again.",
+            "Hunared AI is OFF for your account. Normal site features still work. Turn AI ON in Privacy & AI when you want assistance again.",
           secondary: [{ label: "Dashboard", href: "/dashboard" }],
         } satisfies AgentAction,
       });
@@ -66,12 +87,31 @@ export async function POST(req: NextRequest) {
     let action = parseUserMessage(message, { path }, context);
     action = enhanceAction(action, message, role);
 
+    // Soft-gate execute/create when agent actions disabled
+    if (
+      !agentActions &&
+      (action.intent === "execute_create" ||
+        action.intent === "post_listing" ||
+        action.intent === "post_job")
+    ) {
+      action = {
+        ...action,
+        autoNavigate: false,
+        message:
+          `${action.message}\n\n**Agent actions is OFF.** I can still guide you — open Privacy & AI and enable **Agent actions** so I pre-fill create/post forms from your words. You always review before publishing.`,
+        secondary: [
+          ...(action.secondary || []),
+          { label: "Privacy & AI", href: "/ai-settings" },
+          action.href ? { label: action.label || "Open form", href: action.href } : undefined,
+        ].filter(Boolean) as { label: string; href: string }[],
+      };
+    }
+
     if (path.startsWith("/jobs/") && /qualified|match|fit|this job/i.test(message)) {
       action = {
         ...action,
         intent: "match_job",
-        message:
-          `${action.message} You appear to be on a job detail page — compare requirements to your profile and CV. I will not claim you meet a requirement without supporting data.`,
+        message: `${action.message} You appear to be on a job detail page — compare requirements to your profile and CV. I will not claim you meet a requirement without supporting data.`,
         href: path,
         label: "Review this job",
       };
@@ -89,7 +129,7 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             model: process.env.OPENAI_MODEL || "gpt-4o-mini",
             temperature: 0.3,
-            max_tokens: 280,
+            max_tokens: 320,
             messages: [
               {
                 role: "system",
@@ -119,9 +159,10 @@ export async function POST(req: NextRequest) {
       meta: {
         role,
         personalization,
+        agentActions,
         path: path || null,
         disclaimer:
-          "AI-generated assistance — verify important information before acting.",
+          "AI-generated assistance — verify important information before acting. You review before any post is published.",
       },
     });
   } catch (e) {

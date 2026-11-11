@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 
+const KEYS = [
+  "ai_enabled",
+  "ai_personalization",
+  "ai_cv_analysis",
+  "ai_notifications",
+  "ai_agent_actions",
+] as const;
+
 export async function GET() {
   const { userId } = await auth();
   if (!userId) {
@@ -11,7 +19,7 @@ export async function GET() {
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("profiles")
-      .select("ai_enabled, ai_personalization, ai_cv_analysis, ai_notifications")
+      .select(KEYS.join(", "))
       .eq("id", userId)
       .maybeSingle();
     if (error) {
@@ -20,6 +28,7 @@ export async function GET() {
         ai_personalization: true,
         ai_cv_analysis: true,
         ai_notifications: false,
+        ai_agent_actions: false,
         migrationRequired: true,
       });
     }
@@ -28,6 +37,7 @@ export async function GET() {
       ai_personalization: data?.ai_personalization ?? true,
       ai_cv_analysis: data?.ai_cv_analysis ?? true,
       ai_notifications: data?.ai_notifications ?? false,
+      ai_agent_actions: data?.ai_agent_actions ?? false,
     });
   } catch {
     return NextResponse.json({
@@ -35,6 +45,7 @@ export async function GET() {
       ai_personalization: true,
       ai_cv_analysis: true,
       ai_notifications: false,
+      ai_agent_actions: false,
       migrationRequired: true,
     });
   }
@@ -45,12 +56,7 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const patch: Record<string, boolean> = {};
-  for (const key of [
-    "ai_enabled",
-    "ai_personalization",
-    "ai_cv_analysis",
-    "ai_notifications",
-  ] as const) {
+  for (const key of KEYS) {
     if (typeof (body as Record<string, unknown>)[key] === "boolean") {
       patch[key] = (body as Record<string, boolean>)[key];
     }
@@ -65,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Could not save. Run supabase/009_ai_preferences.sql on your database, then try again.",
+            "Could not save. Run supabase/015_ai_agent_actions.sql on your database, then try again.",
           detail: error.message,
         },
         { status: 400 }

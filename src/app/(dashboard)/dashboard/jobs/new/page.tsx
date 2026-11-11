@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { consumeAgentPrefill } from "@/lib/agent/prefill";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ interface JobForm {
 
 export default function PostJobPage() {
   const router = useRouter();
+
   const geo = useGeo();
   const [isLoading, setIsLoading] = useState(false);
   const [currencyTouched, setCurrencyTouched] = useState(false);
@@ -106,6 +108,19 @@ export default function PostJobPage() {
     showProfileContact: false,
     expiration: "never",
   });
+
+  // Hunared AI Agent actions → pre-fill once
+  useEffect(() => {
+    const p = consumeAgentPrefill();
+    if (!p) return;
+    setForm((prev) => ({
+      ...prev,
+      ...(p.title ? { jobTitle: p.title } : {}),
+      ...(p.city ? { city: p.city } : {}),
+      ...(p.country ? { country: p.country } : {}),
+    }));
+  }, []);
+
 
   // Auto country/city from geo (user can always override)
   useEffect(() => {

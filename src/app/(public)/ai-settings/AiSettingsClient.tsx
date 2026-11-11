@@ -12,6 +12,7 @@ type AiSettings = {
   ai_personalization: boolean;
   ai_cv_analysis: boolean;
   ai_notifications: boolean;
+  ai_agent_actions: boolean;
 };
 
 const DEFAULTS: AiSettings = {
@@ -19,6 +20,7 @@ const DEFAULTS: AiSettings = {
   ai_personalization: true,
   ai_cv_analysis: true,
   ai_notifications: false,
+  ai_agent_actions: false,
 };
 
 export default function AiSettingsClient() {
@@ -49,6 +51,7 @@ export default function AiSettingsClient() {
             ai_personalization: j.ai_personalization ?? true,
             ai_cv_analysis: j.ai_cv_analysis ?? true,
             ai_notifications: j.ai_notifications ?? false,
+            ai_agent_actions: j.ai_agent_actions ?? false,
           });
         }
       } finally {
@@ -61,6 +64,7 @@ export default function AiSettingsClient() {
     setS(next);
     try {
       localStorage.setItem("hunared_ai_enabled", next.ai_enabled ? "1" : "0");
+      localStorage.setItem("hunared_ai_agent_actions", next.ai_agent_actions ? "1" : "0");
       localStorage.setItem("hunared_ai_prefs", JSON.stringify(next));
       window.dispatchEvent(new Event("hunared-ai-settings-changed"));
     } catch {
@@ -151,7 +155,7 @@ export default function AiSettingsClient() {
         <div className="space-y-2">
           <Toggle
             label="Hunared AI agent"
-            desc="Show the floating assistant"
+            desc="Show the floating assistant. OFF hides it completely until you turn it on again."
             checked={s.ai_enabled}
             onChange={(v) => void save({ ...s, ai_enabled: v })}
           />
@@ -172,6 +176,13 @@ export default function AiSettingsClient() {
             desc="Optional AI-related alerts"
             checked={s.ai_notifications}
             onChange={(v) => void save({ ...s, ai_notifications: v })}
+          />
+
+          <Toggle
+            label="Agent actions"
+            desc="When ON, Hunared AI can open create/post forms pre-filled from your commands (e.g. room for rent in Dammam). You always review before publishing."
+            checked={s.ai_agent_actions}
+            onChange={(v) => void save({ ...s, ai_agent_actions: v })}
           />
         </div>
       )}

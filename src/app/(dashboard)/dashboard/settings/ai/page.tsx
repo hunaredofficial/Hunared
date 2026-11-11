@@ -12,6 +12,7 @@ type AiSettings = {
   ai_personalization: boolean;
   ai_cv_analysis: boolean;
   ai_notifications: boolean;
+  ai_agent_actions: boolean;
 };
 
 const DEFAULTS: AiSettings = {
@@ -19,6 +20,7 @@ const DEFAULTS: AiSettings = {
   ai_personalization: true,
   ai_cv_analysis: true,
   ai_notifications: false,
+  ai_agent_actions: false,
 };
 
 export default function DashboardAiSettingsPage() {
@@ -38,6 +40,7 @@ export default function DashboardAiSettingsPage() {
               ai_personalization: j.ai_personalization !== false,
               ai_cv_analysis: j.ai_cv_analysis !== false,
               ai_notifications: j.ai_notifications === true,
+                ai_agent_actions: j.ai_agent_actions === true,
             });
           }
         } else {
@@ -50,6 +53,7 @@ export default function DashboardAiSettingsPage() {
                 ai_personalization: j.ai_personalization !== false,
                 ai_cv_analysis: j.ai_cv_analysis !== false,
                 ai_notifications: j.ai_notifications === true,
+                ai_agent_actions: j.ai_agent_actions === true,
               });
             }
           }
@@ -70,6 +74,7 @@ export default function DashboardAiSettingsPage() {
     setS(next);
     try {
       localStorage.setItem("hunared_ai_enabled", next.ai_enabled ? "1" : "0");
+      localStorage.setItem("hunared_ai_agent_actions", next.ai_agent_actions ? "1" : "0");
       window.dispatchEvent(new Event("hunared-ai-settings-changed"));
     } catch {
       /* ignore */
@@ -164,7 +169,7 @@ export default function DashboardAiSettingsPage() {
         <div className="space-y-2">
           <Toggle
             label="Hunared AI agent"
-            desc="Show the floating assistant on the site"
+            desc="Show the floating assistant. OFF hides it completely until you turn it on again."
             checked={s.ai_enabled}
             onChange={(v) => void save({ ai_enabled: v })}
           />
@@ -185,6 +190,13 @@ export default function DashboardAiSettingsPage() {
             desc="Optional AI-related alerts (when available)"
             checked={s.ai_notifications}
             onChange={(v) => void save({ ai_notifications: v })}
+          />
+
+          <Toggle
+            label="Agent actions"
+            desc="When ON, Hunared AI can open create/post forms pre-filled from your commands (e.g. room for rent in Dammam). You always review before publishing."
+            checked={s.ai_agent_actions}
+            onChange={(v) => void save({ ai_agent_actions: v })}
           />
         </div>
       )}

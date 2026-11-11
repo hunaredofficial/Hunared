@@ -4,6 +4,8 @@
  * Never claims irreversible success without verified navigation/API result.
  */
 
+import { matchKnowledge } from "@/lib/agent/knowledge";
+
 export type AgentIntent =
   | "search_jobs"
   | "search_market"
@@ -48,6 +50,7 @@ export type AgentIntent =
   | "bulk_post"
   | "lost_found"
   | "offers"
+  | "execute_create"
   | "unknown";
 
 export type AgentAction = {
@@ -729,28 +732,93 @@ export function parseUserMessage(
     };
   }
 
-  // ── Post flows ──────────────────────────────────────────────────────
-  if (/\b(post a job|create a job|publish (a )?job|hire talent)\b/.test(t)) {
+  // ── Post / create flows (deep parse when possible) ──────────────────
+  const createJob =
+    /\b(post a job|create a job|publish (a )?job|hire talent)\b/.test(t) ||
+    /\b(create|post|publish)\b/.test(t) && /\b(job|vacancy|opening|position)\b/.test(t);
+  if (createJob) {
+    const titleMatch = raw.match(
+      /(?:job|vacancy|position|role)\s*(?:for|as|:)?\s*([A-Za-z][A-Za-z0-9 /&-]{2,60})/i
+    );
+    if (titleMatch?.[1]) entities.title = titleMatch[1].trim();
+    const qparts = [entities.title, entities.city, entities.country].filter(Boolean);
     return {
       intent: "post_job",
       href: "/dashboard/jobs/new",
       label: "Post a job",
-      message:
-        "Opening the job post form. Company account and sign-in are required.",
+      message: entities.title
+        ? `I'll open the **job form** and pre-fill **${entities.title}**${
+            entities.city ? ` in ${entities.city}` : ""
+          }. Review, complete required fields, then publish. (Needs **Agent actions** ON + Company/Team account.)`
+        : "Opening the job post form. Company or Team account required. With **Agent actions** ON I can pre-fill fields from your description.",
       autoNavigate: true,
+      needsConfirm: false,
       entities,
     };
   }
-  if (
-    /\b(post (an? )?(ad|listing|item)|create (a )?listing|sell (something|this|item)|list (an? )?item)\b/.test(
-      t
-    )
-  ) {
+
+  const createListing =
+    /\b(post (an? )?(ad|listing|item)|create (a )?listing|sell (something|this|item)|list (an? )?item)\b/.test(t) ||
+    /\b(create|post|publish|list)\b/.test(t) &&
+      /\b(room|apartment|flat|villa|house|bedspace|for rent|rent|accommodation|car|phone|laptop|item|ad)\b/.test(t);
+
+  if (createListing) {
+    // Category hints
+    if (/\b(room|apartment|flat|villa|house|bedspace|accommodation|for rent|rent)\b/.test(t)) {
+      entities.category = /\b(bedspace|shared room)\b/.test(t) ? "accommodation" : "for_rent";
+      if (/\broom\b/.test(t)) entities.subcategory = "room";
+      if (/\bapartment|flat\b/.test(t)) entities.subcategory = "apartment";
+      if (/\bvilla\b/.test(t)) entities.subcategory = "villa";
+    } else if (/\b(car|vehicle|toyota|honda)\b/.test(t)) {
+      entities.category = "vehicles";
+    } else if (/\b(phone|iphone|samsung|laptop)\b/.test(t)) {
+      entities.category = "for_sale";
+    } else if (/\b(lost|found)\b/.test(t)) {
+      entities.category = "lost_found";
+    }
+
+    // Title: prefer quoted or "room for rent" style phrase
+    const quoted = raw.match(/["“]([^"”]{3,80})["”]/);
+    if (quoted) entities.title = quoted[1].trim();
+    else {
+      const rentTitle = raw.match(
+        /\b((?:room|apartment|flat|villa|house|bedspace)[^,.]{0,40}(?:for rent|rent)?)/i
+      );
+      if (rentTitle) entities.title = rentTitle[1].replace(/\s+/g, " ").trim();
+    }
+
+    // Price / rent
+    const price =
+      raw.match(
+        /(?:rent|price|sar|rs|usd|\$)?\s*(?:is|=|:)?\s*(\d{2,7})\s*(?:\/|per)?\s*(month|mo|week|day)?/i
+      ) || raw.match(/\b(\d{2,7})\s*(sar|rs|usd|\$)?\s*(?:per\s*)?(month|mo)?/i);
+    if (price) {
+      entities.price = price[1];
+      if (price[2] && /month|mo/i.test(price[2])) entities.rentalPeriod = "month";
+      if (price[3] && /month|mo/i.test(price[3])) entities.rentalPeriod = "month";
+    }
+
+    const href = `/dashboard/market/new${qs({
+      category: entities.category,
+      subcategory: entities.subcategory,
+      city: entities.city,
+      country: entities.country,
+    })}`;
+
+    const bits = [
+      entities.title && `title “${entities.title}”`,
+      entities.city && `city ${entities.city}`,
+      entities.price && `price ${entities.price}`,
+      entities.category && `category ${entities.category}`,
+    ].filter(Boolean);
+
     return {
-      intent: "post_listing",
-      href: "/dashboard/market/new",
-      label: "Create listing",
-      message: "Opening the marketplace listing form. Sign-in required.",
+      intent: "execute_create",
+      href,
+      label: "Open listing form",
+      message: bits.length
+        ? `I'll open the **listing form** and pre-fill ${bits.join(", ")}. Review everything, add photos if needed, then publish.\n\nRequires sign-in and **Agent actions** enabled in Privacy & AI.`
+        : "Opening the marketplace listing form. Sign-in required. Enable **Agent actions** so I can pre-fill fields from natural language.",
       autoNavigate: true,
       entities,
     };
@@ -994,6 +1062,20 @@ export function parseUserMessage(
 
 /** Platform guide, how-to, support — full site knowledge layer */
 export function enhanceAction(action: AgentAction, q: string, role?: string): AgentAction {
+  // Full-site knowledge answers (Q&A / how-to / solutions)
+  const kn = matchKnowledge(q);
+  if (kn) {
+    return {
+      intent: "how_to",
+      href: kn.href,
+      label: kn.label || kn.title,
+      message: kn.answer,
+      secondary: kn.secondary,
+      autoNavigate: false,
+      entities: action.entities,
+    };
+  }
+
   const lower = q.toLowerCase().trim();
 
   if (

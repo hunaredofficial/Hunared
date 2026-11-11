@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import {
   Sparkles,
   X,
@@ -172,13 +173,15 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   }, []);
   const router = useRouter();
   const pathname = usePathname() || "/";
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
+  const [agentActions, setAgentActions] = useState(false);
   const [open, setOpen] = useState(variant === "page");
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([
     {
       id: "welcome",
       role: "assistant",
-      text: "I'm **Hunared AI** — your guide to the whole platform.\n\nAsk about **jobs**, **marketplace**, **CV**, **companies**, **learning**, or **how to use Hunared**. No login required for guidance.\n\nPick a shortcut or type anything.",
+      text: "I'm **Hunared AI** — your signed-in guide to the whole platform.\n\nAsk about **jobs**, **marketplace**, **CV**, **companies**, **learning**, or **how to use Hunared**.\n\nWith **Agent actions** ON I can also open create/post forms pre-filled from your words.\n\nPick a shortcut or type anything.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -191,14 +194,23 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
-    const apply = (enabled: boolean) => {
+    const apply = (enabled: boolean, actions?: boolean) => {
       setAiEnabled(enabled);
+      if (typeof actions === "boolean") setAgentActions(actions);
       try {
         localStorage.setItem("hunared_ai_enabled", enabled ? "1" : "0");
+        if (typeof actions === "boolean") {
+          localStorage.setItem("hunared_ai_agent_actions", actions ? "1" : "0");
+        }
       } catch {
         /* ignore */
       }
     };
+    try {
+      if (localStorage.getItem("hunared_ai_agent_actions") === "1") setAgentActions(true);
+    } catch {
+      /* ignore */
+    }
     try {
       if (localStorage.getItem("hunared_ai_enabled") === "0") setAiEnabled(false);
     } catch {
@@ -210,7 +222,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         if (res.ok) {
           const j = await res.json();
           if (typeof j.ai_enabled === "boolean") {
-            apply(j.ai_enabled);
+            apply(j.ai_enabled, typeof j.ai_agent_actions === "boolean" ? j.ai_agent_actions : undefined);
             return;
           }
         }
@@ -221,7 +233,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         const res = await fetch("/api/profile/ai-settings");
         if (res.ok) {
           const j = await res.json();
-          if (typeof j.ai_enabled === "boolean") apply(j.ai_enabled);
+          if (typeof j.ai_enabled === "boolean") apply(j.ai_enabled, typeof j.ai_agent_actions === "boolean" ? j.ai_agent_actions : undefined);
         }
       } catch {
         /* ignore */
@@ -257,6 +269,28 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       const q = text.trim();
       if (!q || loading) return;
 
+      if (!authLoaded) return;
+
+      if (!isSignedIn) {
+        setMsgs((m) => [
+          ...m,
+          { id: `u-${Date.now()}`, role: "user", text: q },
+          {
+            id: `a-${Date.now()}`,
+            role: "assistant",
+            text: "**Sign in required** to use Hunared AI.\n\nCreate a free account or sign in to search, get guidance, and run agent actions.",
+            action: {
+              intent: "sign_in",
+              href: `/sign-in?redirect_url=${encodeURIComponent(pathname || "/")}`,
+              label: "Sign in",
+              message: "",
+              secondary: [{ label: "Register", href: "/register" }],
+            },
+          },
+        ]);
+        return;
+      }
+
       if (!aiEnabled) {
         setMsgs((m) => [
           ...m,
@@ -285,7 +319,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         const res = await fetch("/api/agent", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: q, context: ctx, path: pathname }),
+          body: JSON.stringify({ message: q, context: ctx, path: pathname, agentActions }),
         });
         const j = await res.json();
 
@@ -319,9 +353,45 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           },
         ]);
 
-        // Only auto-navigate on explicit high-confidence short commands
-        if (action.autoNavigate && action.href && action.intent !== "search_jobs" && action.intent !== "search_market") {
-          setTimeout(() => router.push(action.href!), 900);
+        // Prefill create forms when Agent actions enabled
+        if (
+          agentActions &&
+          action.entities &&
+          (action.intent === "execute_create" ||
+            action.intent === "post_listing" ||
+            action.intent === "post_job")
+        ) {
+          try {
+            sessionStorage.setItem(
+              "hunared_agent_prefill",
+              JSON.stringify({
+                ...action.entities,
+                intent: action.intent,
+                raw: q,
+                at: Date.now(),
+              })
+            );
+          } catch {
+            /* ignore */
+          }
+        }
+
+        // Auto-navigate high-confidence actions (not broad search dumps)
+        if (
+          action.autoNavigate &&
+          action.href &&
+          action.intent !== "search_jobs" &&
+          action.intent !== "search_market"
+        ) {
+          setTimeout(() => router.push(action.href!), 700);
+        } else if (
+          agentActions &&
+          action.href &&
+          (action.intent === "execute_create" ||
+            action.intent === "post_listing" ||
+            action.intent === "post_job")
+        ) {
+          setTimeout(() => router.push(action.href!), 700);
         }
       } catch {
         setMsgs((m) => [
@@ -337,7 +407,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         inputRef.current?.focus();
       }
     },
-    [aiEnabled, ctx, loading, pathname, router]
+    [aiEnabled, agentActions, authLoaded, ctx, isSignedIn, loading, pathname, router]
   );
 
   function toggleVoice() {
@@ -399,7 +469,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "w-[min(100vw-1.5rem,22rem)] h-[min(70vh,32rem)] rounded-2xl shadow-2xl"
+          ? "w-[min(100vw-1.5rem,20rem)] h-[min(68vh,30rem)] rounded-2xl shadow-2xl"
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
@@ -445,10 +515,34 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         <div className="flex items-center gap-0.5">
           <button
             type="button"
-            onClick={() => router.push("/ai-settings")}
+            onClick={() => {
+              if (
+                typeof window !== "undefined" &&
+                window.confirm(
+                  "Turn OFF Hunared AI permanently? The floating agent will be hidden until you enable it again in Privacy & AI settings."
+                )
+              ) {
+                setAiEnabled(false);
+                try {
+                  localStorage.setItem("hunared_ai_enabled", "0");
+                  window.dispatchEvent(new Event("hunared-ai-settings-changed"));
+                } catch {
+                  /* ignore */
+                }
+                void fetch("/api/profile/ai-settings", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ ai_enabled: false }),
+                }).catch(() => {});
+                toast.success("Hunared AI is OFF — agent hidden");
+                setOpen(false);
+              } else {
+                router.push("/ai-settings");
+              }
+            }}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-            title="Privacy & AI"
-            aria-label="Privacy and AI settings"
+            title="Power off / Privacy & AI"
+            aria-label="Power off Hunared AI"
           >
             <Power className="h-4 w-4" />
           </button>
@@ -686,8 +780,17 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         dangerouslySetInnerHTML={{
           __html: `
 @keyframes hunared-agent-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.04); }
+}
+@keyframes hunared-agent-ring {
+  0% { transform: scale(0.85); opacity: 0.55; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes hunared-agent-glow {
+  0%, 100% { filter: brightness(1); box-shadow: 0 0 10px rgba(212,175,55,0.35); }
+  50% { filter: brightness(1.12); box-shadow: 0 0 18px rgba(212,175,55,0.55); }
 }
 `,
         }}
@@ -697,54 +800,58 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "group h-11 w-11 flex items-center justify-center",
+          "group h-9 w-9 flex items-center justify-center",
           "rounded-full relative transition-transform duration-300",
           open
             ? "bg-card text-foreground border border-border shadow-lg scale-95"
-            : "hover:scale-110 active:scale-95"
+            : "hover:scale-125 active:scale-95"
         )}
         style={{
           position: "fixed",
-          right: 20,
+          right: 18,
           left: "auto",
-          bottom: 24,
+          bottom: 20,
           zIndex: 9999,
           margin: 0,
         }}
         aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
       >
         {open ? (
-          <X className="h-5 w-5 relative z-[2]" />
+          <X className="h-4 w-4 relative z-[2]" />
         ) : (
           <>
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full bg-[#D4AF37]/25 animate-ping"
-              style={{ animationDuration: "2.4s" }}
+              className="pointer-events-none absolute -inset-2 rounded-full border border-[#D4AF37]/25 animate-[hunared-agent-ring_2.8s_ease-out_infinite]"
             />
             <span
               aria-hidden
-              className="pointer-events-none absolute -inset-1 rounded-full border border-[#D4AF37]/35 animate-pulse"
-              style={{ animationDuration: "2s" }}
+              className="pointer-events-none absolute -inset-1 rounded-full border border-[#D4AF37]/40 animate-[hunared-agent-ring_2.8s_ease-out_infinite]"
+              style={{ animationDelay: "0.9s" }}
             />
             <span
               aria-hidden
-              className="absolute inset-0 rounded-full shadow-lg shadow-[#D4AF37]/40"
+              className="pointer-events-none absolute inset-0 rounded-full bg-[#D4AF37]/20 animate-ping"
+              style={{ animationDuration: "2.6s" }}
+            />
+            <span
+              aria-hidden
+              className="absolute inset-0 rounded-full shadow-md shadow-[#D4AF37]/50 animate-[hunared-agent-glow_3.2s_ease-in-out_infinite]"
               style={{
                 background:
-                  "linear-gradient(145deg, #F0D78C 0%, #D4AF37 42%, #A8892D 78%, #6B5A2A 100%)",
+                  "conic-gradient(from 180deg at 50% 50%, #F5E6B8, #D4AF37, #8B7355, #F0D78C, #D4AF37)",
               }}
             />
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-[2px] rounded-full opacity-80"
+              className="pointer-events-none absolute inset-[1.5px] rounded-full"
               style={{
                 background:
-                  "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0%, transparent 45%)",
+                  "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.65) 0%, transparent 42%), linear-gradient(160deg, #E8C96A 0%, #C9A227 55%, #7A6A3A 100%)",
               }}
             />
-            <span className="relative z-[2] flex h-full w-full items-center justify-center animate-[hunared-agent-float_3s_ease-in-out_infinite]">
-              <Sparkles className="h-5 w-5 text-[#0a0a0a] drop-shadow-sm" />
+            <span className="relative z-[2] flex h-full w-full items-center justify-center animate-[hunared-agent-float_2.8s_ease-in-out_infinite]">
+              <Sparkles className="h-3.5 w-3.5 text-[#0a0a0a] drop-shadow-sm" />
             </span>
           </>
         )}
@@ -752,6 +859,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
     </>
   );
 
+  // Permanent OFF: remove agent visibility entirely
+  if (!aiEnabled) return null;
   if (!portalReady) return null;
   return createPortal(fab, document.body);
 }
+

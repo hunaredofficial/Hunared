@@ -36,6 +36,7 @@ import {
   type ExpirationOptionValue,
 } from "@/lib/expiration";
 import { CityCombobox } from "@/components/shared/CityCombobox";
+import { consumeAgentPrefill } from "@/lib/agent/prefill";
 import { COUNTRIES } from "@/lib/countries";
 
 const RichTextEditor = dynamic(
@@ -153,6 +154,19 @@ function NewListingForm() {
 
   // Price is optional for all marketplace categories
   const isPriceOptional = true;
+
+  // Hunared AI Agent actions → pre-fill once
+  useEffect(() => {
+    const p = consumeAgentPrefill();
+    if (!p) return;
+    if (p.title) setTitle(p.title);
+    if (p.city) setCity(p.city);
+    if (p.country) setCountry(p.country);
+    if (p.category) setCategory(p.category);
+    if (p.subcategory) setSubcategory(p.subcategory);
+    if (p.price) setPrice(p.price);
+  }, []);
+
 
   useEffect(() => {
     if (category && HIDE_LISTING_TYPE_CATEGORIES.has(category)) {
