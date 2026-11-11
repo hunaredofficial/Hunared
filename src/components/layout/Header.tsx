@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
+import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton, useAuth } from "@clerk/nextjs";
@@ -328,6 +329,8 @@ export function Header() {
             </Button>
 
             <ThemeToggle />
+
+            <AgentHeaderButton />
 
             <MessagesHeaderIcon />
 

@@ -6,6 +6,13 @@ import { ArrowLeft, Sparkles, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  DEFAULT_AGENT_PERMISSIONS,
+  PERMISSION_META,
+  mergePermissions,
+  type AgentPermissions,
+  type ExecutionPreference,
+} from "@/lib/agent/permissions";
 
 type AiSettings = {
   ai_enabled: boolean;
@@ -13,6 +20,7 @@ type AiSettings = {
   ai_cv_analysis: boolean;
   ai_notifications: boolean;
   ai_agent_actions: boolean;
+  ai_agent_permissions: AgentPermissions;
 };
 
 const DEFAULTS: AiSettings = {
@@ -21,6 +29,7 @@ const DEFAULTS: AiSettings = {
   ai_cv_analysis: true,
   ai_notifications: false,
   ai_agent_actions: false,
+  ai_agent_permissions: { ...DEFAULT_AGENT_PERMISSIONS },
 };
 
 export default function AiSettingsClient() {
@@ -52,6 +61,7 @@ export default function AiSettingsClient() {
             ai_cv_analysis: j.ai_cv_analysis ?? true,
             ai_notifications: j.ai_notifications ?? false,
             ai_agent_actions: j.ai_agent_actions ?? false,
+            ai_agent_permissions: mergePermissions(j.ai_agent_permissions),
           });
         }
       } finally {
@@ -184,6 +194,67 @@ export default function AiSettingsClient() {
             checked={s.ai_agent_actions}
             onChange={(v) => void save({ ...s, ai_agent_actions: v })}
           />
+
+          <div className="pt-4 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-1">
+              Granular permissions
+            </p>
+            <p className="text-[11px] text-muted-foreground px-1 pb-1">
+              Only enabled capabilities are offered. Publishing and messages always need your confirmation in the UI.
+            </p>
+            {PERMISSION_META.map((meta) => (
+              <Toggle
+                key={meta.key}
+                label={meta.label}
+                desc={meta.desc}
+                checked={!!s.ai_agent_permissions[meta.key]}
+                onChange={(v) =>
+                  void save({
+                    ...s,
+                    ai_agent_permissions: {
+                      ...s.ai_agent_permissions,
+                      [meta.key]: v,
+                    },
+                  })
+                }
+              />
+            ))}
+            <div className="rounded-xl border border-border bg-card/40 px-4 py-3 space-y-2">
+              <p className="text-sm font-medium">Execution preference</p>
+              <p className="text-xs text-muted-foreground">
+                How independent the Agent may be for low-risk actions (search, drafts).
+              </p>
+              {(
+                [
+                  ["ask_always", "Ask before every action"],
+                  ["confirm_important", "Confirm important actions only"],
+                  ["auto_low_risk", "Auto-run selected low-risk actions"],
+                ] as [ExecutionPreference, string][]
+              ).map(([val, label]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() =>
+                    void save({
+                      ...s,
+                      ai_agent_permissions: {
+                        ...s.ai_agent_permissions,
+                        execution: val,
+                      },
+                    })
+                  }
+                  className={cn(
+                    "w-full text-left text-xs rounded-lg border px-3 py-2 transition-colors",
+                    s.ai_agent_permissions.execution === val
+                      ? "border-primary/50 bg-primary/10"
+                      : "border-border hover:bg-muted/40"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

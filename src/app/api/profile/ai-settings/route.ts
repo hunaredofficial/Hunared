@@ -8,6 +8,7 @@ const KEYS = [
   "ai_cv_analysis",
   "ai_notifications",
   "ai_agent_actions",
+  "ai_agent_permissions",
 ] as const;
 
 export async function GET() {
@@ -29,6 +30,7 @@ export async function GET() {
         ai_cv_analysis: true,
         ai_notifications: false,
         ai_agent_actions: false,
+        ai_agent_permissions: {},
         migrationRequired: true,
       });
     }
@@ -38,6 +40,7 @@ export async function GET() {
       ai_cv_analysis: data?.ai_cv_analysis ?? true,
       ai_notifications: data?.ai_notifications ?? false,
       ai_agent_actions: data?.ai_agent_actions ?? false,
+      ai_agent_permissions: data?.ai_agent_permissions ?? {},
     });
   } catch {
     return NextResponse.json({
@@ -55,10 +58,13 @@ export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
-  const patch: Record<string, boolean> = {};
+  const patch: Record<string, unknown> = {};
   for (const key of KEYS) {
-    if (typeof (body as Record<string, unknown>)[key] === "boolean") {
-      patch[key] = (body as Record<string, boolean>)[key];
+    const v = (body as Record<string, unknown>)[key];
+    if (key === "ai_agent_permissions" && v && typeof v === "object") {
+      patch[key] = v;
+    } else if (typeof v === "boolean") {
+      patch[key] = v;
     }
   }
   if (!Object.keys(patch).length) {
@@ -71,7 +77,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Could not save. Run supabase/015_ai_agent_actions.sql on your database, then try again.",
+            "Could not save. Run supabase/016_agent_permissions.sql on your database, then try again.",
           detail: error.message,
         },
         { status: 400 }

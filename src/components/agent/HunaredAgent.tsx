@@ -33,11 +33,21 @@ import { Button } from "@/components/ui/button";
 import type { AgentAction, ConversationContext } from "@/lib/agent/engine";
 import { toast } from "sonner";
 
+type SearchHit = {
+  id: string;
+  type: string;
+  title: string;
+  subtitle?: string;
+  meta?: string;
+  href: string;
+};
+
 type Msg = {
   id: string;
   role: "user" | "assistant";
   text: string;
   action?: AgentAction;
+  results?: SearchHit[];
 };
 
 const QUICK_START = [
@@ -176,6 +186,29 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const [agentActions, setAgentActions] = useState(false);
   const [open, setOpen] = useState(variant === "page");
+
+  // Header button controls the drawer (no floating FAB)
+  useEffect(() => {
+    if (variant === "page") return;
+    const onToggle = () => setOpen((v) => !v);
+    const onOpen = (e: Event) => {
+      const d = (e as CustomEvent<{ open?: boolean }>).detail;
+      if (typeof d?.open === "boolean") setOpen(d.open);
+    };
+    window.addEventListener("hunared-agent-toggle", onToggle);
+    window.addEventListener("hunared-agent-set-open", onOpen as EventListener);
+    return () => {
+      window.removeEventListener("hunared-agent-toggle", onToggle);
+      window.removeEventListener("hunared-agent-set-open", onOpen as EventListener);
+    };
+  }, [variant]);
+
+  useEffect(() => {
+    if (variant === "page") return;
+    window.dispatchEvent(
+      new CustomEvent("hunared-agent-open-state", { detail: { open } })
+    );
+  }, [open, variant]);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([
     {
@@ -343,6 +376,41 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           lastEntities: action.entities,
           lastHref: action.href,
         });
+        let results: SearchHit[] | undefined;
+        const searchIntents = new Set([
+          "search_jobs",
+          "search_market",
+          "search_companies",
+          "search_candidates",
+        ]);
+        if (searchIntents.has(action.intent) && action.entities) {
+          try {
+            const type =
+              action.intent === "search_jobs"
+                ? "jobs"
+                : action.intent === "search_market"
+                  ? "market"
+                  : action.intent === "search_companies"
+                    ? "companies"
+                    : "candidates";
+            const sp = new URLSearchParams();
+            sp.set("type", type);
+            if (action.entities.q) sp.set("q", action.entities.q);
+            if (action.entities.country) sp.set("country", action.entities.country);
+            if (action.entities.city) sp.set("city", action.entities.city);
+            if (action.entities.category) sp.set("category", action.entities.category);
+            const sr = await fetch(`/api/agent/search?${sp.toString()}`);
+            if (sr.ok) {
+              const sj = await sr.json();
+              if (Array.isArray(sj.results) && sj.results.length) {
+                results = sj.results as SearchHit[];
+              }
+            }
+          } catch {
+            /* search optional */
+          }
+        }
+
         setMsgs((m) => [
           ...m,
           {
@@ -350,6 +418,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             role: "assistant",
             text: action.message,
             action,
+            results,
           },
         ]);
 
@@ -469,7 +538,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "w-[min(100vw-1.5rem,20rem)] h-[min(68vh,30rem)] rounded-2xl shadow-2xl"
+          ? "w-[min(100vw,24rem)] sm:w-[24rem] h-[100dvh] sm:h-[min(100dvh,100%)] rounded-none sm:rounded-l-2xl border-l shadow-2xl"
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
@@ -477,12 +546,13 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         variant === "float"
           ? {
               position: "fixed",
-              right: 16,
+              top: 0,
+              right: 0,
               left: "auto",
-              bottom: 76,
+              bottom: 0,
               zIndex: 9998,
               margin: 0,
-              maxHeight: "min(70vh, 32rem)",
+              maxHeight: "100dvh",
             }
           : undefined
       }
@@ -508,7 +578,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               </span>
             </p>
             <p className="text-[10px] text-muted-foreground truncate">
-              Jobs · Talent · Market · CV · Guide
+              Operating assistant · Real search · Actions
             </p>
           </div>
         </div>
@@ -519,7 +589,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               if (
                 typeof window !== "undefined" &&
                 window.confirm(
-                  "Turn OFF Hunared AI permanently? The floating agent will be hidden until you enable it again in Privacy & AI settings."
+                  "Turn OFF Hunared AI permanently? The Agent will be hidden from the header until you enable it again in Privacy & AI settings."
                 )
               ) {
                 setAiEnabled(false);
@@ -647,6 +717,26 @@ export function HunaredAgent({ variant = "float", className }: Props) {
                   <div className={cn(m.role === "assistant" && "text-[13px]")}>
                     {m.role === "assistant" ? renderText(m.text) : m.text}
                   </div>
+                  {m.results && m.results.length > 0 && m.role === "assistant" && (
+                    <div className="mt-2 space-y-1.5 w-full max-w-[18rem]">
+                      {m.results.map((r) => (
+                        <button
+                          key={`${r.type}-${r.id}`}
+                          type="button"
+                          onClick={() => router.push(r.href)}
+                          className="w-full text-left rounded-lg border border-border/70 bg-background/80 px-2.5 py-2 hover:border-primary/40 transition-colors"
+                        >
+                          <p className="text-xs font-semibold text-foreground line-clamp-1">{r.title}</p>
+                          {r.subtitle && (
+                            <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{r.subtitle}</p>
+                          )}
+                          {r.meta && (
+                            <p className="text-[10px] text-primary/90 mt-0.5">{r.meta}</p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {m.action?.href && m.role === "assistant" && (
                     <div className="mt-2.5 rounded-xl border border-border/60 bg-background/80 p-2.5 space-y-2">
@@ -772,96 +862,35 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
   if (variant === "page") return panel;
 
-  // Portal to document.body so fixed is always relative to the viewport
-  // (not stuck under the footer or trapped by parent transforms).
-  const fab = (
+  // Permanent OFF: remove agent entirely (header button also hides)
+  if (!aiEnabled) return null;
+  if (!portalReady) return null;
+
+  const drawer = (
     <>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-@keyframes hunared-agent-float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.04); }
-}
-@keyframes hunared-agent-ring {
-  0% { transform: scale(0.85); opacity: 0.55; }
-  70% { transform: scale(1.35); opacity: 0; }
-  100% { transform: scale(1.35); opacity: 0; }
-}
-@keyframes hunared-agent-glow {
-  0%, 100% { filter: brightness(1); box-shadow: 0 0 10px rgba(212,175,55,0.35); }
-  50% { filter: brightness(1.12); box-shadow: 0 0 18px rgba(212,175,55,0.55); }
-}
-`,
-        }}
-      />
-      {open && panel}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
+      {/* Backdrop */}
+      <div
         className={cn(
-          "group h-9 w-9 flex items-center justify-center",
-          "rounded-full relative transition-transform duration-300",
-          open
-            ? "bg-card text-foreground border border-border shadow-lg scale-95"
-            : "hover:scale-125 active:scale-95"
+          "fixed inset-0 z-[9997] bg-black/40 backdrop-blur-[2px] transition-opacity duration-200",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
-        style={{
-          position: "fixed",
-          right: 18,
-          left: "auto",
-          bottom: 20,
-          zIndex: 9999,
-          margin: 0,
-        }}
-        aria-label={open ? "Close Hunared AI" : "Open Hunared AI"}
+        onClick={() => setOpen(false)}
+        aria-hidden={!open}
+      />
+      {/* Right drawer — header-aligned assistant */}
+      <div
+        className={cn(
+          "fixed top-0 right-0 bottom-0 z-[9998] transition-transform duration-300 ease-out",
+          open ? "translate-x-0" : "translate-x-full"
+        )}
+        role="dialog"
+        aria-label="Hunared Agent"
+        aria-hidden={!open}
       >
-        {open ? (
-          <X className="h-4 w-4 relative z-[2]" />
-        ) : (
-          <>
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -inset-2 rounded-full border border-[#D4AF37]/25 animate-[hunared-agent-ring_2.8s_ease-out_infinite]"
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -inset-1 rounded-full border border-[#D4AF37]/40 animate-[hunared-agent-ring_2.8s_ease-out_infinite]"
-              style={{ animationDelay: "0.9s" }}
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full bg-[#D4AF37]/20 animate-ping"
-              style={{ animationDuration: "2.6s" }}
-            />
-            <span
-              aria-hidden
-              className="absolute inset-0 rounded-full shadow-md shadow-[#D4AF37]/50 animate-[hunared-agent-glow_3.2s_ease-in-out_infinite]"
-              style={{
-                background:
-                  "conic-gradient(from 180deg at 50% 50%, #F5E6B8, #D4AF37, #8B7355, #F0D78C, #D4AF37)",
-              }}
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-[1.5px] rounded-full"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.65) 0%, transparent 42%), linear-gradient(160deg, #E8C96A 0%, #C9A227 55%, #7A6A3A 100%)",
-              }}
-            />
-            <span className="relative z-[2] flex h-full w-full items-center justify-center animate-[hunared-agent-float_2.8s_ease-in-out_infinite]">
-              <Sparkles className="h-3.5 w-3.5 text-[#0a0a0a] drop-shadow-sm" />
-            </span>
-          </>
-        )}
-      </button>
+        {panel}
+      </div>
     </>
   );
 
-  // Permanent OFF: remove agent visibility entirely
-  if (!aiEnabled) return null;
-  if (!portalReady) return null;
-  return createPortal(fab, document.body);
+  return createPortal(drawer, document.body);
 }
-
