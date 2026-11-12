@@ -5,16 +5,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-/** Only two themes: Light ↔ Dark */
-const THEME_CYCLE = ["light", "dark"] as const;
-type ThemeValue = (typeof THEME_CYCLE)[number];
-
-function nextTheme(current: string | undefined): ThemeValue {
-  // Map any high-contrast / system residual to the opposite of resolved feel
-  if (current === "dark" || current === "contrast-black") return "light";
-  return "dark";
-}
-
+/** Light ↔ Dark only. Persists to next-themes storage and account settings when signed in. */
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -47,11 +38,27 @@ export function ThemeToggle() {
     ((theme === "system" || !theme) && resolvedTheme === "dark");
 
   const handleClick = () => {
-    setTheme(isDark ? "light" : "dark");
+    const next = isDark ? "light" : "dark";
+    // Mark so PreferencesApplier does not overwrite this choice mid-session
+    try {
+      sessionStorage.setItem("hunared_theme_user_set", next);
+    } catch {
+      /* ignore */
+    }
+    setTheme(next);
+    // Persist to account when possible (avoids revert after refresh / applier)
+    void fetch("/api/profile/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preferred_theme: next }),
+    }).catch(() => {
+      /* guest or offline — local theme still applies via next-themes */
+    });
   };
 
   return (
     <Button
+      type="button"
       variant="ghost"
       size="icon"
       className="w-9 h-9 transition-all duration-300 hover:bg-primary/10 cursor-pointer"

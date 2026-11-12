@@ -8,8 +8,6 @@ import {
   Sparkles,
   X,
   Send,
-  Minimize2,
-  Maximize2,
   Command,
   ExternalLink,
   ThumbsUp,
@@ -192,7 +190,6 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const MIN_H = 280;
   const DEFAULT_H = 420;
   const [panelHeight, setPanelHeight] = useState(DEFAULT_H);
-  const [minimized, setMinimized] = useState(false);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
   useEffect(() => {
@@ -262,24 +259,10 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   // Header button controls the drawer (no floating FAB)
   useEffect(() => {
     if (variant === "page") return;
-    const onToggle = () => {
-      setOpen((v) => {
-        if (v) {
-          // closing from header
-          setMinimized(false);
-          return false;
-        }
-        setMinimized(false);
-        return true;
-      });
-    };
+    const onToggle = () => setOpen((v) => !v);
     const onOpen = (e: Event) => {
       const d = (e as CustomEvent<{ open?: boolean }>).detail;
-      if (typeof d?.open === "boolean") {
-        setOpen(d.open);
-        if (!d.open) setMinimized(false);
-        else setMinimized(false);
-      }
+      if (typeof d?.open === "boolean") setOpen(d.open);
     };
     window.addEventListener("hunared-agent-toggle", onToggle);
     window.addEventListener("hunared-agent-set-open", onOpen as EventListener);
@@ -638,9 +621,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               bottom: "auto",
               zIndex: 9998,
               margin: 0,
-              height: minimized ? 56 : panelHeight,
+              height: panelHeight,
               maxHeight: "calc(100dvh - 4rem)",
-              overflow: minimized ? "hidden" : undefined,
             }
           : undefined
       }
@@ -718,44 +700,24 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             Menu
           </button>
           {variant === "float" && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMinimized((m) => !m);
-                }}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                aria-label={minimized ? "Maximize" : "Minimize"}
-                title={minimized ? "Maximize" : "Minimize"}
-              >
-                {minimized ? (
-                  <Maximize2 className="h-4 w-4" />
-                ) : (
-                  <Minimize2 className="h-4 w-4" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMinimized(false);
-                  setOpen(false);
-                }}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                aria-label="Close"
-                title="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(false);
+              }}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
+              aria-label="Close"
+              title="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
       </header>
 
-      {minimized ? null : !aiEnabled ? (
+      {!aiEnabled ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
             <Power className="h-5 w-5 text-muted-foreground" />
