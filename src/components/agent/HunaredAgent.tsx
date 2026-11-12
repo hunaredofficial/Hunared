@@ -30,7 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { AgentAction, ConversationContext } from "@/lib/agent/engine";
-import { saveAgentPrefill, encodeAgentPrefillForUrl } from "@/lib/agent/prefill";
+import { saveAgentPrefill, buildPrefillHref } from "@/lib/agent/prefill";
 import { toast } from "sonner";
 
 type SearchHit = {
@@ -492,15 +492,14 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           },
         ]);
 
-        // Prefill create forms when Agent actions enabled (mobile-safe dual storage + URL)
+        // Prefill create forms — always persist when we have entities (mobile needs URL params)
         let navHref = action.href;
-        if (
-          agentActions &&
-          action.entities &&
-          (action.intent === "execute_create" ||
-            action.intent === "post_listing" ||
-            action.intent === "post_job")
-        ) {
+        const isCreate =
+          action.intent === "execute_create" ||
+          action.intent === "post_listing" ||
+          action.intent === "post_job";
+
+        if (isCreate && action.entities) {
           const prefill = {
             ...action.entities,
             intent: action.intent,
@@ -508,36 +507,49 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             autoDescription: true,
             at: Date.now(),
           };
-          // Do not push short plain description — form builds full HTML suggestion
           delete (prefill as { description?: string }).description;
           saveAgentPrefill(prefill);
-          if (navHref && (navHref.startsWith("/dashboard/market") || navHref.startsWith("/dashboard/jobs"))) {
+
+          if (
+            navHref &&
+            (navHref.startsWith("/dashboard/market") ||
+              navHref.startsWith("/dashboard/jobs"))
+          ) {
             try {
-              const enc = encodeAgentPrefillForUrl(prefill);
-              const join = navHref.includes("?") ? "&" : "?";
-              navHref = `${navHref}${join}agentPrefill=${enc}`;
+              // Discrete query params — reliable on mobile (no base64)
+              navHref = buildPrefillHref(navHref, prefill);
             } catch {
               /* keep href */
             }
           }
         }
 
-        // Auto-navigate high-confidence actions (not broad search dumps)
-        if (
-          action.autoNavigate &&
+        // Navigate to form (harder navigation on mobile if soft push fails)
+        const shouldNav =
           navHref &&
+          (action.autoNavigate || isCreate) &&
           action.intent !== "search_jobs" &&
-          action.intent !== "search_market"
-        ) {
-          setTimeout(() => router.push(navHref!), 400);
-        } else if (
-          agentActions &&
-          navHref &&
-          (action.intent === "execute_create" ||
-            action.intent === "post_listing" ||
-            action.intent === "post_job")
-        ) {
-          setTimeout(() => router.push(navHref!), 400);
+          action.intent !== "search_market";
+
+        if (shouldNav) {
+          const target = navHref!;
+          setTimeout(() => {
+            try {
+              router.push(target);
+            } catch {
+              window.location.assign(target);
+            }
+            // Fallback if soft nav did not leave the page (common on some mobile WebViews)
+            setTimeout(() => {
+              try {
+                if (!window.location.pathname.includes(target.split("?")[0])) {
+                  window.location.assign(target);
+                }
+              } catch {
+                /* ignore */
+              }
+            }, 900);
+          }, 300);
         }
       } catch {
         setMsgs((m) => [

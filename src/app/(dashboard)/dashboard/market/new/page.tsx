@@ -36,7 +36,7 @@ import {
   type ExpirationOptionValue,
 } from "@/lib/expiration";
 import { CityCombobox } from "@/components/shared/CityCombobox";
-import { consumeAgentPrefill } from "@/lib/agent/prefill";
+import { consumeAgentPrefill, readAgentPrefill, clearAgentPrefillStorage } from "@/lib/agent/prefill";
 import { COUNTRIES } from "@/lib/countries";
 
 const RichTextEditor = dynamic(
@@ -155,41 +155,101 @@ function NewListingForm() {
   // Price is optional for all marketplace categories
   const isPriceOptional = true;
 
-  // Hunared AI Agent actions → pre-fill once (session + local + URL; mobile-safe)
+  // Hunared AI Agent → pre-fill (URL query params first — works on mobile)
+  const agentPrefillApplied = useRef(false);
   useEffect(() => {
-    const p = consumeAgentPrefill();
-    if (!p) return;
-    if (p.title) setTitle(p.title);
-    if (p.city) setCity(p.city);
-    if (p.country) setCountry(p.country);
-    if (p.category) setCategory(p.category);
-    if (p.subcategory) setSubcategory(p.subcategory);
-    if (p.price) setPrice(p.price);
-    if (p.rentalPeriod) {
-      const rp = /month/i.test(p.rentalPeriod) ? "Monthly" : p.rentalPeriod;
-      setRentalPeriod(rp);
+    if (agentPrefillApplied.current) return;
+
+    function applyPrefill(p: NonNullable<ReturnType<typeof readAgentPrefill>>) {
+      agentPrefillApplied.current = true;
+      if (p.title) setTitle(p.title);
+      if (p.city) setCity(p.city);
+      if (p.country) setCountry(p.country);
+      if (p.category) setCategory(p.category);
+      if (p.subcategory) setSubcategory(p.subcategory);
+      if (p.price) setPrice(p.price);
+      if (p.rentalPeriod) {
+        const rp = /month/i.test(p.rentalPeriod) ? "Monthly" : p.rentalPeriod;
+        setRentalPeriod(rp);
+      }
+      const titleForDesc = p.title || "";
+      const catForDesc = p.category || "for_rent";
+      if (titleForDesc) {
+        const html = buildDescription(titleForDesc, catForDesc, p.subcategory || undefined, {
+          city: p.city || undefined,
+          price: p.price || undefined,
+          currency: "SAR",
+          rentalPeriod: /month/i.test(p.rentalPeriod || "") ? "Monthly" : p.rentalPeriod || undefined,
+        });
+        setDescription(html);
+        setDescSuggestion(html);
+        setShowDescSuggest(true);
+        descFromSmart.current = true;
+      }
+      // Clear after successful apply
+      try {
+        clearAgentPrefillStorage();
+        const sp = new URLSearchParams(window.location.search);
+        let changed = false;
+        for (const k of ["agent","title","city","country","category","subcategory","price","rentalPeriod","salary","intent","agentPrefill"]) {
+          if (sp.has(k)) { sp.delete(k); changed = true; }
+        }
+        if (changed) {
+          const url = `${window.location.pathname}${sp.toString() ? `?${sp}` : ""}${window.location.hash}`;
+          window.history.replaceState({}, "", url);
+        }
+      } catch { /* ignore */ }
     }
-    // Always apply the full professional description (same as "Use suggested description")
-    const titleForDesc = p.title || "";
-    const catForDesc = p.category || "";
-    if (titleForDesc && catForDesc) {
-      const html = buildDescription(titleForDesc, catForDesc, p.subcategory || undefined, {
-        city: p.city || undefined,
-        price: p.price || undefined,
+
+    // Try immediately, then retry (mobile soft-nav / late hydration)
+    const tryApply = () => {
+      if (agentPrefillApplied.current) return;
+      const p = readAgentPrefill() || consumeAgentPrefill();
+      if (p) applyPrefill(p);
+    };
+    tryApply();
+    const t1 = setTimeout(tryApply, 150);
+    const t2 = setTimeout(tryApply, 500);
+    const t3 = setTimeout(tryApply, 1200);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
+
+  // Also react to Next.js searchParams (client) when agent lands with ?title=&category=
+  useEffect(() => {
+    if (agentPrefillApplied.current) return;
+    const titleQ = searchParams.get("title");
+    const categoryQ = searchParams.get("category");
+    const cityQ = searchParams.get("city");
+    const priceQ = searchParams.get("price");
+    if (!titleQ && !categoryQ && !cityQ && !priceQ) return;
+    agentPrefillApplied.current = true;
+    if (titleQ) setTitle(titleQ);
+    if (cityQ) setCity(cityQ);
+    if (searchParams.get("country")) setCountry(searchParams.get("country")!);
+    if (categoryQ) setCategory(categoryQ);
+    if (searchParams.get("subcategory")) setSubcategory(searchParams.get("subcategory")!);
+    if (priceQ) setPrice(priceQ);
+    const rp = searchParams.get("rentalPeriod");
+    if (rp) setRentalPeriod(/month/i.test(rp) ? "Monthly" : rp);
+    const t = titleQ || "";
+    const c = categoryQ || "for_rent";
+    if (t) {
+      const html = buildDescription(t, c, searchParams.get("subcategory") || undefined, {
+        city: cityQ || undefined,
+        price: priceQ || undefined,
         currency: "SAR",
-        rentalPeriod: p.rentalPeriod === "month" ? "Monthly" : p.rentalPeriod || undefined,
+        rentalPeriod: rp && /month/i.test(rp) ? "Monthly" : rp || undefined,
       });
       setDescription(html);
       setDescSuggestion(html);
       setShowDescSuggest(true);
       descFromSmart.current = true;
-    } else if (p.description && p.description.includes("<")) {
-      // HTML description from agent
-      setDescription(p.description);
-      descFromSmart.current = true;
     }
-    // Skip short plain-text agent drafts — full template is better
-  }, []);
+  }, [searchParams]);
 
 
   useEffect(() => {
