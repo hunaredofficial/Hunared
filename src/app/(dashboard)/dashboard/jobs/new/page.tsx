@@ -118,6 +118,8 @@ export default function PostJobPage() {
       ...(p.title ? { jobTitle: p.title } : {}),
       ...(p.city ? { city: p.city } : {}),
       ...(p.country ? { country: p.country } : {}),
+      ...(p.description ? { jobDescription: p.description } : {}),
+      ...(p.salary ? { salaryRate: p.salary } : {}),
     }));
   }, []);
 

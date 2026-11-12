@@ -755,6 +755,116 @@ export function parseUserMessage(
     };
   }
 
+
+/** Polish rough user words into a professional listing title */
+function polishListingTitle(rawTitle: string, city?: string, price?: string, category?: string): string {
+  let t = (rawTitle || "").replace(/\s+/g, " ").trim();
+  if (!t) {
+    if (category === "for_rent" || category === "accommodation") {
+      t = city ? `Room for rent in ${city}` : "Room for rent";
+    } else if (category === "services") {
+      t = city ? `Professional services in ${city}` : "Professional services";
+    } else if (category === "vehicles") {
+      t = "Vehicle for sale";
+    } else {
+      t = city ? `Listing in ${city}` : "Marketplace listing";
+    }
+  }
+  // Title case light
+  t = t
+    .replace(/\bfor\s*rent\b/gi, "for Rent")
+    .replace(/\bfor\s*sale\b/gi, "for Sale")
+    .replace(/\broom\b/gi, "Room")
+    .replace(/\bapartment\b/gi, "Apartment")
+    .replace(/\bflat\b/gi, "Flat")
+    .replace(/\bvilla\b/gi, "Villa")
+    .replace(/\bhouse\b/gi, "House")
+    .replace(/\bbedspace\b/gi, "Bed Space");
+  // Ensure city in title when known
+  if (city && !new RegExp(city, "i").test(t)) {
+    if (/for rent/i.test(t)) t = t.replace(/for rent/i, `for Rent in ${city}`);
+    else if (/for sale/i.test(t)) t = t.replace(/for sale/i, `for Sale in ${city}`);
+    else t = `${t} — ${city}`;
+  }
+  if (price && !/\d/.test(t) && (/rent/i.test(t) || category === "for_rent")) {
+    t = `${t} – SAR ${price}/month`;
+  }
+  // Cap length
+  if (t.length > 90) t = t.slice(0, 87) + "…";
+  return t;
+}
+
+function polishJobTitle(rawTitle: string, city?: string): string {
+  let t = (rawTitle || "").replace(/\s+/g, " ").trim();
+  if (!t) t = "Job opening";
+  // simple title case words
+  t = t.replace(/\b([a-z])/g, (m) => m.toUpperCase());
+  if (city && !new RegExp(city, "i").test(t)) t = `${t} — ${city}`;
+  return t.slice(0, 90);
+}
+
+/** Draft a clear description from user message without inventing amenities */
+function draftListingDescription(opts: {
+  raw: string;
+  title?: string;
+  city?: string;
+  price?: string;
+  category?: string;
+  rentalPeriod?: string;
+}): string {
+  const lines: string[] = [];
+  const title = opts.title || "This listing";
+  lines.push(`${title}.`);
+  if (opts.city) lines.push(`Location: ${opts.city}.`);
+  if (opts.price) {
+    const period =
+      opts.rentalPeriod === "month"
+        ? " per month"
+        : opts.rentalPeriod
+          ? ` per ${opts.rentalPeriod}`
+          : "";
+    lines.push(`Price: SAR ${opts.price}${period}.`);
+  }
+  // Keep user wording as notes (cleaned)
+  const cleaned = opts.raw
+    .replace(/\b(create|post|publish|make|add)\s+(a\s+)?(post|ad|listing|item)?\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length > 12) {
+    lines.push("");
+    lines.push("Details from the owner:");
+    lines.push(cleaned.charAt(0).toUpperCase() + cleaned.slice(1));
+  }
+  lines.push("");
+  lines.push("Please contact for viewing and further information. Serious inquiries only.");
+  return lines.join("\n");
+}
+
+function draftJobDescription(opts: {
+  raw: string;
+  title?: string;
+  city?: string;
+  salary?: string;
+}): string {
+  const role = opts.title || "This role";
+  const lines = [
+    `We are hiring for ${role}${opts.city ? ` in ${opts.city}` : ""}.`,
+    "",
+    "Key points from the hiring request:",
+    opts.raw.replace(/\s+/g, " ").trim(),
+    "",
+  ];
+  if (opts.salary) lines.push(`Salary indicated: SAR ${opts.salary}.`);
+  lines.push(
+    "Candidates should review the full requirements on this posting and apply with an updated CV."
+  );
+  lines.push("");
+  lines.push(
+    "(AI drafted from your words — edit duties, requirements, and benefits before publishing.)"
+  );
+  return lines.join("\n");
+}
+
   // ── Post / create flows (deep parse when possible) ──────────────────
   const createJob =
     /\b(post a job|create a job|publish (a )?job|hire talent)\b/.test(t) ||
@@ -764,15 +874,24 @@ export function parseUserMessage(
       /(?:job|vacancy|position|role)\s*(?:for|as|:)?\s*([A-Za-z][A-Za-z0-9 /&-]{2,60})/i
     );
     if (titleMatch?.[1]) entities.title = titleMatch[1].trim();
-    const qparts = [entities.title, entities.city, entities.country].filter(Boolean);
+    // salary from message
+    const sal = raw.match(/\b(?:salary|pay|package)?\s*(?:sar|rs)?\s*(\d{3,7})\b/i);
+    if (sal) entities.salary = sal[1];
+    entities.title = polishJobTitle(entities.title || "", entities.city);
+    entities.description = draftJobDescription({
+      raw,
+      title: entities.title,
+      city: entities.city,
+      salary: entities.salary,
+    });
     return {
       intent: "post_job",
       href: "/dashboard/jobs/new",
       label: "Post a job",
       message: entities.title
-        ? `I'll open the **job form** and pre-fill **${entities.title}**${
-            entities.city ? ` in ${entities.city}` : ""
-          }. Review, complete required fields, then publish. (Needs **Agent actions** ON + Company/Team account.)`
+        ? `I drafted a clearer **job title** and starter **description** from your words.\n\nTitle: **${entities.title}**${
+            entities.city ? ` · ${entities.city}` : ""
+          }.\n\nOpen the form, edit duties/requirements, then publish. Needs **Agent actions** ON and a Company/Team account.`
         : "Opening the job post form. Company or Team account required. With **Agent actions** ON I can pre-fill fields from your description.",
       autoNavigate: true,
       needsConfirm: false,
@@ -821,6 +940,22 @@ export function parseUserMessage(
       if (price[3] && /month|mo/i.test(price[3])) entities.rentalPeriod = "month";
     }
 
+    // Professional title + description from rough user words (no invented amenities)
+    entities.title = polishListingTitle(
+      entities.title || "",
+      entities.city,
+      entities.price,
+      entities.category
+    );
+    entities.description = draftListingDescription({
+      raw,
+      title: entities.title,
+      city: entities.city,
+      price: entities.price,
+      category: entities.category,
+      rentalPeriod: entities.rentalPeriod,
+    });
+
     const href = `/dashboard/market/new${qs({
       category: entities.category,
       subcategory: entities.subcategory,
@@ -840,7 +975,7 @@ export function parseUserMessage(
       href,
       label: "Open listing form",
       message: bits.length
-        ? `I'll open the **listing form** and pre-fill ${bits.join(", ")}. Review everything, add photos if needed, then publish.\n\nRequires sign-in and **Agent actions** enabled in Privacy & AI.`
+        ? `I prepared a clearer **title** and **description** from your words (no invented facilities).\n\nPre-fill: ${bits.join(", ")}.\n\nReview the form, add photos if needed, then publish. **Agent actions** must be ON.`
         : "Opening the marketplace listing form. Sign-in required. Enable **Agent actions** so I can pre-fill fields from natural language.",
       autoNavigate: true,
       entities,

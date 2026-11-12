@@ -165,6 +165,7 @@ function NewListingForm() {
     if (p.category) setCategory(p.category);
     if (p.subcategory) setSubcategory(p.subcategory);
     if (p.price) setPrice(p.price);
+    if (p.description) setDescription(p.description);
   }, []);
 
 

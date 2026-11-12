@@ -11,6 +11,8 @@ export type AgentPrefill = {
   subcategory?: string;
   price?: string;
   rentalPeriod?: string;
+  description?: string;
+  salary?: string;
   raw?: string;
   at?: number;
 };

@@ -9,6 +9,7 @@ import {
   X,
   Send,
   Minimize2,
+  Maximize2,
   Command,
   ExternalLink,
   ThumbsUp,
@@ -191,6 +192,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const MIN_H = 280;
   const DEFAULT_H = 420;
   const [panelHeight, setPanelHeight] = useState(DEFAULT_H);
+  const [minimized, setMinimized] = useState(false);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
   useEffect(() => {
@@ -260,10 +262,24 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   // Header button controls the drawer (no floating FAB)
   useEffect(() => {
     if (variant === "page") return;
-    const onToggle = () => setOpen((v) => !v);
+    const onToggle = () => {
+      setOpen((v) => {
+        if (v) {
+          // closing from header
+          setMinimized(false);
+          return false;
+        }
+        setMinimized(false);
+        return true;
+      });
+    };
     const onOpen = (e: Event) => {
       const d = (e as CustomEvent<{ open?: boolean }>).detail;
-      if (typeof d?.open === "boolean") setOpen(d.open);
+      if (typeof d?.open === "boolean") {
+        setOpen(d.open);
+        if (!d.open) setMinimized(false);
+        else setMinimized(false);
+      }
     };
     window.addEventListener("hunared-agent-toggle", onToggle);
     window.addEventListener("hunared-agent-set-open", onOpen as EventListener);
@@ -622,8 +638,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               bottom: "auto",
               zIndex: 9998,
               margin: 0,
-              height: panelHeight,
+              height: minimized ? 56 : panelHeight,
               maxHeight: "calc(100dvh - 4rem)",
+              overflow: minimized ? "hidden" : undefined,
             }
           : undefined
       }
@@ -634,12 +651,12 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           <div className="relative h-7 w-7 shrink-0 flex items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37] via-[#c9a227] to-[#8b7355] shadow-md shadow-[#D4AF37]/25">
             <Sparkles className="h-3.5 w-3.5 text-[#0a0a0a] relative z-[1]" />
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
-              Hunared AI
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold tracking-tight whitespace-nowrap flex items-center gap-1.5">
+              <span>Hunared AI</span>
               <span
                 className={cn(
-                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+                  "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0",
                   aiEnabled
                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                     : "bg-muted text-muted-foreground"
@@ -648,8 +665,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
                 {aiEnabled ? "Online" : "Off"}
               </span>
             </p>
-            <p className="text-[10px] text-muted-foreground truncate">
-              Operating assistant · Real search · Actions
+            <p className="text-[10px] text-muted-foreground whitespace-nowrap">
+              Search · Create · Guide
             </p>
           </div>
         </div>
@@ -707,19 +724,24 @@ export function HunaredAgent({ variant = "float", className }: Props) {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setOpen(false);
+                  setMinimized((m) => !m);
                 }}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                aria-label="Minimize"
-                title="Minimize"
+                aria-label={minimized ? "Maximize" : "Minimize"}
+                title={minimized ? "Maximize" : "Minimize"}
               >
-                <Minimize2 className="h-4 w-4" />
+                {minimized ? (
+                  <Maximize2 className="h-4 w-4" />
+                ) : (
+                  <Minimize2 className="h-4 w-4" />
+                )}
               </button>
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  setMinimized(false);
                   setOpen(false);
                 }}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -733,7 +755,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         </div>
       </header>
 
-      {!aiEnabled ? (
+      {minimized ? null : !aiEnabled ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
             <Power className="h-5 w-5 text-muted-foreground" />
