@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { AgentAction, ConversationContext } from "@/lib/agent/engine";
+import { saveAgentPrefill, encodeAgentPrefillForUrl } from "@/lib/agent/prefill";
 import { toast } from "sonner";
 
 type SearchHit = {
@@ -491,7 +492,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           },
         ]);
 
-        // Prefill create forms when Agent actions enabled
+        // Prefill create forms when Agent actions enabled (mobile-safe dual storage + URL)
+        let navHref = action.href;
         if (
           agentActions &&
           action.entities &&
@@ -499,37 +501,43 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             action.intent === "post_listing" ||
             action.intent === "post_job")
         ) {
-          try {
-            sessionStorage.setItem(
-              "hunared_agent_prefill",
-              JSON.stringify({
-                ...action.entities,
-                intent: action.intent,
-                raw: q,
-                at: Date.now(),
-              })
-            );
-          } catch {
-            /* ignore */
+          const prefill = {
+            ...action.entities,
+            intent: action.intent,
+            raw: q,
+            autoDescription: true,
+            at: Date.now(),
+          };
+          // Do not push short plain description — form builds full HTML suggestion
+          delete (prefill as { description?: string }).description;
+          saveAgentPrefill(prefill);
+          if (navHref && (navHref.startsWith("/dashboard/market") || navHref.startsWith("/dashboard/jobs"))) {
+            try {
+              const enc = encodeAgentPrefillForUrl(prefill);
+              const join = navHref.includes("?") ? "&" : "?";
+              navHref = `${navHref}${join}agentPrefill=${enc}`;
+            } catch {
+              /* keep href */
+            }
           }
         }
 
         // Auto-navigate high-confidence actions (not broad search dumps)
         if (
           action.autoNavigate &&
-          action.href &&
+          navHref &&
           action.intent !== "search_jobs" &&
           action.intent !== "search_market"
         ) {
-          setTimeout(() => router.push(action.href!), 700);
+          setTimeout(() => router.push(navHref!), 400);
         } else if (
           agentActions &&
-          action.href &&
+          navHref &&
           (action.intent === "execute_create" ||
             action.intent === "post_listing" ||
             action.intent === "post_job")
         ) {
-          setTimeout(() => router.push(action.href!), 700);
+          setTimeout(() => router.push(navHref!), 400);
         }
       } catch {
         setMsgs((m) => [

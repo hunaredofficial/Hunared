@@ -155,7 +155,7 @@ function NewListingForm() {
   // Price is optional for all marketplace categories
   const isPriceOptional = true;
 
-  // Hunared AI Agent actions → pre-fill once
+  // Hunared AI Agent actions → pre-fill once (session + local + URL; mobile-safe)
   useEffect(() => {
     const p = consumeAgentPrefill();
     if (!p) return;
@@ -165,7 +165,30 @@ function NewListingForm() {
     if (p.category) setCategory(p.category);
     if (p.subcategory) setSubcategory(p.subcategory);
     if (p.price) setPrice(p.price);
-    if (p.description) setDescription(p.description);
+    if (p.rentalPeriod) {
+      const rp = /month/i.test(p.rentalPeriod) ? "Monthly" : p.rentalPeriod;
+      setRentalPeriod(rp);
+    }
+    // Always apply the full professional description (same as "Use suggested description")
+    const titleForDesc = p.title || "";
+    const catForDesc = p.category || "";
+    if (titleForDesc && catForDesc) {
+      const html = buildDescription(titleForDesc, catForDesc, p.subcategory || undefined, {
+        city: p.city || undefined,
+        price: p.price || undefined,
+        currency: "SAR",
+        rentalPeriod: p.rentalPeriod === "month" ? "Monthly" : p.rentalPeriod || undefined,
+      });
+      setDescription(html);
+      setDescSuggestion(html);
+      setShowDescSuggest(true);
+      descFromSmart.current = true;
+    } else if (p.description && p.description.includes("<")) {
+      // HTML description from agent
+      setDescription(p.description);
+      descFromSmart.current = true;
+    }
+    // Skip short plain-text agent drafts — full template is better
   }, []);
 
 
