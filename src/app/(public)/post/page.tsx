@@ -145,8 +145,8 @@ const AD_TYPES: AdType[] = [
   },
     {
     icon: Compass,
-    title: "Finder Center",
-    description: "Create a lost or found post, or use Finder Center to search the community.",
+    title: "Lost & Found",
+    description: "Create a lost or found post for items in the community.",
     href: "/dashboard/market/new?category=lost_found",
     examples: ["Lost items", "Found items", "Search"],
     group: "community",
