@@ -23,7 +23,7 @@ const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   team: "Team",
   employer: "Company",
-  seeker: "Seeker",
+  seeker: "Talent",
   personal: "Personal",
 };
 
@@ -115,7 +115,7 @@ export default async function AdminUsersPage({
               >
                 <option value="">All roles</option>
                 <option value="personal">Personal</option>
-                <option value="seeker">Seeker</option>
+                <option value="seeker">Talent</option>
                 <option value="employer">Company</option>
                 <option value="team">Team</option>
                 <option value="admin">Admin</option>

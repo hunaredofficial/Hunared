@@ -45,7 +45,7 @@ function roleDisplayName(role: UserRole): string {
   if (role === "team") return "Team";
   if (role === "admin") return "Admin";
   if (role === "personal") return "Personal";
-  return "Seeker";
+  return "Talent";
 }
 
 function getNavItems(role: UserRole): NavItem[] {
@@ -55,6 +55,7 @@ function getNavItems(role: UserRole): NavItem[] {
     return [
       { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
       { href: "/dashboard/profile", label: "Company Profile", icon: <User className="h-4 w-4" /> },
+      { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
       { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
       { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
       { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
@@ -73,6 +74,7 @@ function getNavItems(role: UserRole): NavItem[] {
       { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
       { href: "/dashboard/profile", label: "My Profile", icon: <User className="h-4 w-4" /> },
       { href: "/dashboard/team/profiles", label: "Team Profiles", icon: <Users className="h-4 w-4" /> },
+      { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
       { href: "/dashboard/team/bulk", label: "Bulk Post", icon: <Layers className="h-4 w-4" /> },
       { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
       { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
@@ -106,6 +108,7 @@ function getNavItems(role: UserRole): NavItem[] {
     { href: "/dashboard", label: "Overview", icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
     { href: "/dashboard/profile", label: "My Profile", icon: <User className="h-4 w-4" /> },
     { href: "/dashboard/cv", label: "My CV", icon: <FileText className="h-4 w-4" /> },
+    { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
     { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
     { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
     { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },

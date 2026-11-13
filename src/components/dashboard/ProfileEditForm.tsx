@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { User, Upload, X, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,45 +19,23 @@ import { PROFESSIONS, JOB_CATEGORIES } from "@/lib/constants";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { buildUsernameSuggestions } from "@/lib/usernameSuggest";
 import { COUNTRIES } from "@/lib/countries";
-import { INDUSTRIES } from "@/lib/companyConstants";
-import { recommendServicesForIndustries, allServices } from "@/lib/industryServiceRecommendations";
 import type { Profile } from "@/types/database";
-
-const ALL_SERVICES = allServices();
 
 export function ProfileEditForm({
   initialProfile,
-  initialIndustries = [],
-  initialServices = [],
 }: {
   initialProfile: Profile;
-  initialIndustries?: string[];
-  initialServices?: string[];
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Account type is fixed here — change only via a new signup goal (API locks role on profile save)
-  const lockedRole = String(initialProfile.role || "seeker");
-  const [role] = useState<"personal" | "seeker" | "employer">(() => {
-    if (lockedRole === "employer") return "employer";
-    if (lockedRole === "personal") return "personal";
-    if (lockedRole === "team" || lockedRole === "admin") return "personal";
+  // Account type (role) — personal | seeker | employer (Company)
+  const [role, setRole] = useState<"personal" | "seeker" | "employer">(() => {
+    const r = initialProfile.role;
+    if (r === "employer") return "employer";
+    if (r === "personal") return "personal";
     return "seeker";
   });
-  const roleLabel =
-    lockedRole === "employer"
-      ? "Company"
-      : lockedRole === "seeker"
-        ? "Seeker"
-        : lockedRole === "personal"
-          ? "Personal"
-          : lockedRole === "team"
-            ? "Team"
-            : lockedRole === "admin"
-              ? "Admin"
-              : lockedRole;
 
   // Basic info
   const [fullName, setFullName] = useState(initialProfile.full_name ?? "");
@@ -85,9 +63,6 @@ export function ProfileEditForm({
   const [availableForHire, setAvailableForHire] = useState(
     initialProfile.available_for_hire !== false
   );
-  const [listedPublicly, setListedPublicly] = useState(
-    (initialProfile as { listed_publicly?: boolean | null }).listed_publicly !== false
-  );
 
   // Employer fields
   const [companyCr, setCompanyCr] = useState(
@@ -98,19 +73,6 @@ export function ProfileEditForm({
   );
   const [companyAddress, setCompanyAddress] = useState(
     initialProfile.company_address ?? ""
-  );
-  const [companyLocation, setCompanyLocation] = useState(
-    (initialProfile as { company_location?: string | null }).company_location ?? ""
-  );
-  const [industries, setIndustries] = useState<string[]>(
-    Array.isArray(initialIndustries) ? initialIndustries : []
-  );
-  const [services, setServices] = useState<string[]>(
-    Array.isArray(initialServices) ? initialServices : []
-  );
-  const recommendedServices = useMemo(
-    () => recommendServicesForIndustries(industries),
-    [industries]
   );
 
   // Avatar
@@ -153,25 +115,7 @@ export function ProfileEditForm({
       toast.error("Username must be at least 3 characters (letters, numbers, underscore).");
       return;
     }
-    if (role === "employer") {
-      if (industries.length === 0) {
-        toast.error("Select at least one industry.");
-        return;
-      }
-      if (services.length === 0) {
-        toast.error("Select at least one service.");
-        return;
-      }
-      const hasPhoto =
-        (!!avatarFile && !avatarRemoved) ||
-        (!!avatarPreview && !avatarRemoved) ||
-        (!!initialProfile.avatar_url && !avatarRemoved);
-      if (!hasPhoto) {
-        toast.error("Company logo / profile photo is required.");
-        return;
-      }
-    }
-    setIsLoading(true);
+setIsLoading(true);
     try {
       let avatarUrl: string | null = initialProfile.avatar_url;
       let avatarPublicId: string | null = initialProfile.avatar_public_id;
@@ -216,17 +160,12 @@ export function ProfileEditForm({
           profession: isSeeker ? profession || null : null,
           skillLevel: isSeeker ? skillLevel || null : null, // ← added
           availableForHire: isSeeker ? availableForHire : undefined,
-          listedPublicly: (isSeeker || isEmployer) ? listedPublicly : false,
           avatarUrl,
           avatarPublicId,
           cvUrl: cvUrl || null,
           companyCr: isEmployer ? companyCr.trim() || null : null,
           companyWebsite: isEmployer ? companyWebsite.trim() || null : null,
           companyAddress: isEmployer ? companyAddress.trim() || null : null,
-          mapLocation: isEmployer ? companyLocation.trim() || null : null,
-          companyLocation: isEmployer ? companyLocation.trim() || null : null,
-          industries: isEmployer ? industries : null,
-          services: isEmployer ? services : null,
         }),
       });
 
@@ -246,14 +185,29 @@ export function ProfileEditForm({
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
-      {/* Account type — read only */}
+      <div>
+        <h1 className="text-2xl font-bold">
+          {isEmployer ? "Company Profile" : "My Profile"}
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Keep your information up to date to improve visibility.
+        </p>
+      </div>
+
+      {/* Account type */}
       <div className="w-full p-5 rounded-xl border border-border bg-card">
         <label className="text-sm font-medium block mb-1.5">Account type</label>
-        <div className="w-full h-10 px-3 rounded-md border border-input bg-muted/40 text-sm flex items-center font-medium">
-          {roleLabel}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1.5">
-          To switch account types, complete the signup process again and select your new account purpose. Your existing data will be preserved.
+        <select data-color-scheme="dark"
+          value={role}
+          onChange={(e) => setRole(e.target.value as "personal" | "seeker" | "employer")}
+          className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option className="bg-background text-foreground" value="personal">Personal</option>
+          <option className="bg-background text-foreground" value="seeker">Talent</option>
+          <option className="bg-background text-foreground" value="employer">Company</option>
+        </select>
+        <p className="text-xs text-muted-foreground mt-1">
+          You can change this anytime. Personal = browse &amp; learn. Talent = find jobs. Company = post jobs &amp; hire.
         </p>
       </div>
 
@@ -288,13 +242,9 @@ export function ProfileEditForm({
           )}
         </div>
         <div>
-          <p className="text-sm font-medium mb-1">
-            {isEmployer ? "Company Logo / Profile Photo *" : "Profile Photo"}
-          </p>
+          <p className="text-sm font-medium mb-1">Profile Photo</p>
           <p className="text-xs text-muted-foreground mb-2">
-            {isEmployer
-              ? "Required for company accounts · JPG, PNG or WebP, max 10MB"
-              : "JPG, PNG or WebP, max 10MB"}
+            JPG, PNG or WebP, max 10MB
           </p>
           <input
             ref={avatarInputRef}
@@ -625,58 +575,6 @@ export function ProfileEditForm({
                 placeholder="https://company.com"
               />
             </Field>
-            <Field label="Industry *" className="col-span-full">
-              <MultiSelectChips
-                options={[...INDUSTRIES]}
-                value={industries}
-                onChange={setIndustries}
-                placeholder="Select industry"
-                searchPlaceholder="Search industries…"
-                label="Industry"
-              />
-            </Field>
-            {recommendedServices.length > 0 && (
-              <div className="col-span-full space-y-2">
-                <p className="text-sm font-medium text-primary">Recommended services</p>
-                <p className="text-xs text-muted-foreground">
-                  Based on your industry. Tap to add — nothing is forced.
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {recommendedServices.slice(0, 24).map((s) => {
-                    const on = services.includes(s);
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() =>
-                          setServices((prev) =>
-                            on ? prev.filter((x) => x !== s) : [...prev, s]
-                          )
-                        }
-                        className={cn(
-                          "text-xs rounded-full border px-2.5 py-1 transition-colors",
-                          on
-                            ? "border-primary bg-primary/15 text-primary"
-                            : "border-border hover:bg-accent"
-                        )}
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <Field label="Services *" className="col-span-full">
-              <MultiSelectChips
-                options={ALL_SERVICES}
-                value={services}
-                onChange={setServices}
-                placeholder="Select services you offer"
-                searchPlaceholder="Search services…"
-                label="Services"
-              />
-            </Field>
             <Field label="Company Address" className="col-span-full">
               <Input
                 value={companyAddress}
@@ -684,50 +582,14 @@ export function ProfileEditForm({
                 placeholder="Street, City, Country"
               />
             </Field>
-            <Field label="Company Location" className="col-span-full">
-              <Input
-                type="url"
-                value={companyLocation}
-                onChange={(e) => setCompanyLocation(e.target.value)}
-                placeholder="https://maps.google.com/... or Google Maps share link"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Paste a Google Maps (or similar) link to share your office location.
-              </p>
-            </Field>
           </div>
-        </div>
-      )}
-
-      {/* Visibility — at bottom; checked by default (listed_publicly !== false) */}
-      {(isSeeker || isEmployer) && (
-        <div className="w-full p-5 rounded-xl border border-border bg-card space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={listedPublicly}
-              onChange={(e) => setListedPublicly(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-input"
-            />
-            <span>
-              <span className="text-sm font-medium block">
-                {isEmployer
-                  ? "Show my company in the Companies directory"
-                  : "Show my profile in the Candidates section"}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Checked by default. Uncheck only if you want to hide your public
-                profile. You can change this anytime.
-              </span>
-            </span>
-          </label>
         </div>
       )}
 
       <Button
         size="lg"
         className="h-11"
-        disabled={isLoading || isDeleting}
+        disabled={isLoading}
         onClick={handleSave}
       >
         {isLoading ? (
@@ -737,90 +599,6 @@ export function ProfileEditForm({
         )}
         Save Changes
       </Button>
-
-      {/* ─── Danger Zone (separated) ─────────────────────────────── */}
-      <div className="w-full mt-10 pt-8 border-t border-border/80 space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-destructive/15 text-destructive">
-            <Trash2 className="h-3.5 w-3.5" />
-          </span>
-          <h3 className="text-sm font-semibold tracking-wide text-destructive uppercase">
-            Danger Zone
-          </h3>
-        </div>
-        <div className="w-full p-5 sm:p-6 rounded-xl border border-destructive/50 bg-destructive/5 space-y-4">
-          <div className="space-y-2">
-            <p className="text-base font-semibold text-destructive">
-              Permanently Delete Account?
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              This action will permanently delete your Hunared account and all
-              associated data, including profiles, pages, jobs, listings,
-              articles, reviews, saved items, follows, shares, orders, and
-              subscriptions.
-            </p>
-            <p className="text-sm font-medium text-destructive/90">
-              This action cannot be undone or recovered.
-            </p>
-            <p className="text-xs text-muted-foreground pt-1">
-              Applies to all account types: Personal, Candidate, and Company.
-              Your public profile is removed from Candidates and Companies
-              directories.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="destructive"
-            className="h-10"
-            disabled={isLoading || isDeleting}
-            onClick={async () => {
-              if (
-                !window.confirm(
-                  "Permanently Delete Account?\n\nThis action will permanently delete your Hunared account and all associated data, including profiles, pages, jobs, listings, articles, reviews, saved items, follows, shares, orders, and subscriptions.\n\nThis action cannot be undone or recovered."
-                )
-              ) {
-                return;
-              }
-              if (
-                !window.confirm(
-                  "Final confirmation: permanently delete everything linked to this account? This cannot be undone."
-                )
-              ) {
-                return;
-              }
-              setIsDeleting(true);
-              try {
-                const res = await fetch("/api/account/delete", {
-                  method: "DELETE",
-                  credentials: "include",
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                  toast.error(
-                    (data as { error?: string }).error ||
-                      "Could not delete account."
-                  );
-                  return;
-                }
-                toast.success("Account deleted.");
-                window.location.href = "/";
-              } catch {
-                toast.error("Network error. Please try again.");
-              } finally {
-                setIsDeleting(false);
-              }
-            }}
-          >
-            {isDeleting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
-            {isDeleting ? "Deleting…" : "Delete my account"}
-          </Button>
-        </div>
-      </div>
-
     </div>
   );
 }

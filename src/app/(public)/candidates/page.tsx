@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Candidates",
   description:
-    "Discover skilled professionals and job seekers on Hunared. Browse candidate profiles by profession, location, and availability.",
+    "Discover skilled professionals and talent on Hunared. Browse candidate profiles by profession, location, and availability.",
 };
 
 const AVATAR_GRADIENTS = [

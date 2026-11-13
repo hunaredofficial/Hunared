@@ -26,7 +26,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
-import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { Show, UserButton, useAuth } from "@clerk/nextjs";
@@ -76,7 +75,7 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Find Candidates", href: "/candidates", desc: "Professionals ready to work" },
           { label: "Available for Hire", href: "/candidates?available=yes", desc: "Open to opportunities only" },
           { label: "Expert Level", href: "/candidates?level=expert", desc: "Senior & expert talent" },
-          { label: "Create Candidate Profile", href: "/register?goal=seeker", desc: "Join as a job seeker", guestOnly: true },
+          { label: "Create Candidate Profile", href: "/register?goal=seeker", desc: "Join as a talent", guestOnly: true },
         ],
       },
     ],
@@ -329,8 +328,6 @@ export function Header() {
             </Button>
 
             <ThemeToggle />
-
-            <AgentHeaderButton />
 
             <MessagesHeaderIcon />
 

@@ -34,7 +34,7 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
       /\b(account type|role|personal|seeker|company account|employer account|team role|change account|switch (to )?(seeker|company|personal))\b/i,
     title: "Account types",
     answer:
-      "**Account types on Hunared**\n\n• **Personal** — browse, save, message, CV Builder\n• **Seeker** — job seeker profile, talent visibility, job interests\n• **Company** — company profile, post jobs, hire talent\n• **Team** — assigned by admins; bulk post, manage team profiles\n\nChange type from **My Profile** (or re-register with a new goal). Profile data is kept where possible.\n\nCompany accounts can add **Industry**, **Services**, and optional **Company Location** (Google Maps link).",
+      "**Account types on Hunared**\n\n• **Personal** — browse, save, message, CV Builder\n• **Talent** — talent profile, talent visibility, job interests\n• **Company** — company profile, post jobs, hire talent\n• **Team** — assigned by admins; bulk post, manage team profiles\n\nChange type from **My Profile** (or re-register with a new goal). Profile data is kept where possible.\n\nCompany accounts can add **Industry**, **Services**, and optional **Company Location** (Google Maps link).",
     href: "/dashboard/profile",
     label: "My Profile",
     secondary: [{ label: "Register", href: "/register" }],

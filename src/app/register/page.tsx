@@ -131,7 +131,6 @@ function RegisterInner() {
   const [jobInterests, setJobInterests] = useState<string[]>([]);
   const [skillLevel, setSkillLevel] = useState("");
   const [availableForHire, setAvailableForHire] = useState<boolean | null>(null);
-  const [listedPublicly, setListedPublicly] = useState(true);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   // Employer
@@ -216,7 +215,7 @@ function RegisterInner() {
   }, [sessionConfirmed, user, goal]);
   // Auto country/city from geo — COMPANY only (seeker selects manually)
   useEffect(() => {
-    if (goal === "seeker") return; // Job seekers pick country/city themselves
+    if (goal === "seeker") return; // Talent pick country/city themselves
     if (!geo || geo.loading || geo.error || locationTouched) return;
     if (geo.countryCode) {
       setCountry((prev) => prev || geo.countryCode!);
@@ -337,10 +336,6 @@ function RegisterInner() {
         setError("Company phone is required.");
         return;
       }
-      if (!avatarFile && !avatarPreview) {
-        setError("Company logo / profile photo is required.");
-        return;
-      }
       if (industries.length === 0) {
         setError("Select at least one industry.");
         return;
@@ -391,7 +386,6 @@ function RegisterInner() {
 
       const payload: Record<string, unknown> = {
         role,
-        fromRegister: true,
         fullName: fullName.trim(),
         username: handle,
         phone: phone.trim(),
@@ -417,10 +411,8 @@ function RegisterInner() {
         payload.profession = jobInterests[0] ?? null;
         payload.skillLevel = skillLevel;
         payload.availableForHire = availableForHire === true;
-        payload.listedPublicly = listedPublicly;
       }
       if (activeGoal === "employer") {
-        payload.listedPublicly = listedPublicly;
         payload.industries = industries;
         payload.services = services;
         payload.mapLocation = mapLocation.trim() || null;
@@ -496,7 +488,6 @@ function RegisterInner() {
     jobInterests,
     skillLevel,
     availableForHire,
-    listedPublicly,
     avatarFile,
     avatarPreview,
     companyCr,
@@ -525,7 +516,7 @@ function RegisterInner() {
     },
     {
       id: "seeker",
-      title: "Job Seeker",
+      title: "Talent",
       desc: "Find your next opportunity",
       icon: User,
     },
@@ -584,7 +575,7 @@ function RegisterInner() {
         {!waitingSession && step === "goal" && (
           <div className="space-y-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold gradient-text">
                 What&apos;s your goal?
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -672,10 +663,10 @@ function RegisterInner() {
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {goal === "employer"
-                  ? "Register your company on Hunared"
+                  ? "Register your company"
                   : goal === "seeker"
-                    ? "Create your professional profile"
-                    : "Join the global opportunity platform"}
+                    ? "Start your job search"
+                    : "Join Hunared"}
               </p>
             </div>
 
@@ -764,7 +755,7 @@ function RegisterInner() {
               {(goal === "seeker" || goal === "employer") && (
                 <div className="space-y-2">
                   <Label>
-                    {goal === "employer" ? "Company logo / profile image *" : "Profile image"}
+                    {goal === "employer" ? "Company logo / profile image" : "Profile image"}
                   </Label>
                   <div className="flex items-center gap-3">
                     {avatarPreview ? (
@@ -820,8 +811,8 @@ function RegisterInner() {
                         onChange={(e) => {
                           const f = e.target.files?.[0];
                           if (!f) return;
-                          if (f.size > 10 * 1024 * 1024) {
-                            toast.error("Image must be under 10MB");
+                          if (f.size > 5 * 1024 * 1024) {
+                            toast.error("Image must be under 5MB");
                             return;
                           }
                           setAvatarFile(f);
@@ -832,8 +823,8 @@ function RegisterInner() {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {goal === "employer"
-                      ? "Optional · JPG, PNG or WebP · max 10MB"
-                      : "JPG, PNG or WebP · max 10MB"}
+                      ? "Optional · JPG, PNG or WebP · max 5MB"
+                      : "JPG, PNG or WebP · max 5MB"}
                   </p>
                 </div>
               )}
@@ -1049,38 +1040,12 @@ function RegisterInner() {
                     </div>
                   </div>
 
-                  <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border p-3">
-                    <input
-                      type="checkbox"
-                      checked={listedPublicly}
-                      onChange={(e) => setListedPublicly(e.target.checked)}
-                      className="mt-1 h-4 w-4"
-                    />
-                    <span>
-                      <span className="text-sm font-medium block">Show my profile in Candidates</span>
-                      <span className="text-xs text-muted-foreground">Uncheck to keep your seeker profile private.</span>
-                    </span>
-                  </label>
-
                 </>
               )}
 
               {/* ── EMPLOYER / COMPANY FIELDS ── */}
               {goal === "employer" && (
                 <>
-                  <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border p-3">
-                    <input
-                      type="checkbox"
-                      checked={listedPublicly}
-                      onChange={(e) => setListedPublicly(e.target.checked)}
-                      className="mt-1 h-4 w-4"
-                    />
-                    <span>
-                      <span className="text-sm font-medium block">Show my company in Companies directory</span>
-                      <span className="text-xs text-muted-foreground">Uncheck to hide your company from the public directory.</span>
-                    </span>
-                  </label>
-
                   <div className="space-y-2">
                     <Label>Industry *</Label>
                     <MultiSelectChips
@@ -1142,7 +1107,7 @@ function RegisterInner() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mapLocation">Company Location</Label>
+                    <Label htmlFor="mapLocation">Map location link</Label>
                     <Input
                       id="mapLocation"
                       value={mapLocation}
@@ -1151,7 +1116,7 @@ function RegisterInner() {
                       className="h-11 rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Optional. Paste a Google Maps (or similar) link to share your office location.
+                      Optional. Paste a Google Maps (or similar) link to your office.
                     </p>
                   </div>
 

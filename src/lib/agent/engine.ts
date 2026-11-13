@@ -1319,7 +1319,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/register",
       label: "Register",
       message:
-        "**Create a Hunared account**\n\n1. Open **Register**\n2. Choose Personal, Seeker, or Company\n3. Complete required profile fields\n4. Verify email if prompted\n\nSeekers can list as available for hire. Companies can post jobs.",
+        "**Create a Hunared account**\n\n1. Open **Register**\n2. Choose Personal, Talent, or Company\n3. Complete required profile fields\n4. Verify email if prompted\n\nSeekers can list as available for hire. Companies can post jobs.",
       secondary: [
         { label: "Register", href: "/register" },
         { label: "Sign in", href: "/sign-in" },
@@ -1523,7 +1523,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/register",
       label: "Account types",
       message:
-        "**Account type on Hunared**\n\nTypes: **Personal**, **Seeker (Candidate)**, **Company**.\n\nYou cannot change type from My Profile. To switch:\n1. Open **Sign up / Register**\n2. Choose your new goal (Personal / Job Seeker / Company)\n3. Complete the form\n\nYour existing data and listings are **kept** — only the account purpose is updated.\n\nTeam and Admin roles are assigned by Hunared, not via self-signup.",
+        "**Account type on Hunared**\n\nTypes: **Personal**, **Talent**, **Company**.\n\nYou cannot change type from My Profile. To switch:\n1. Open **Sign up / Register**\n2. Choose your new goal (Personal / Talent / Company)\n3. Complete the form\n\nYour existing data and listings are **kept** — only the account purpose is updated.\n\nTeam and Admin roles are assigned by Hunared, not via self-signup.",
       secondary: [
         { label: "Register", href: "/register" },
         { label: "My Profile", href: "/dashboard/profile" },

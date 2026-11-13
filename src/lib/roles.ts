@@ -3,7 +3,7 @@ import type { UserRole } from "@/types/database";
 /** Human labels for roles (UI) */
 export const ROLE_LABELS: Record<UserRole, string> = {
   personal: "Personal",
-  seeker: "Seeker",
+  seeker: "Talent",
   employer: "Company",
   team: "Team",
   admin: "Admin",
