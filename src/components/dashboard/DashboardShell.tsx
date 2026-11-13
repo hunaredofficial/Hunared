@@ -31,6 +31,8 @@ import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton";
+import { HunaredAgent } from "@/components/agent/HunaredAgent";
 import type { UserRole } from "@/types/database";
 
 interface NavItem {
@@ -175,7 +177,10 @@ function SidebarContent({
       </nav>
 
       <div className="border-t px-3 py-3 flex items-center justify-between gap-2">
-        <ThemeToggle />
+        <div className="flex items-center gap-1.5">
+          <AgentHeaderButton />
+          <ThemeToggle />
+        </div>
         <UserButton afterSignOutUrl="/" />
       </div>
     </div>
@@ -232,6 +237,7 @@ export function DashboardShell({
         </button>
         <HunaredLogo className="h-6 w-auto" />
         <div className="ml-auto flex items-center gap-2">
+          <AgentHeaderButton />
           <ThemeToggle />
           <UserButton afterSignOutUrl="/" />
         </div>
@@ -262,6 +268,7 @@ export function DashboardShell({
           {children}
         </div>
       </main>
+      <HunaredAgent />
     </div>
     </DashboardShellContext.Provider>
   );
