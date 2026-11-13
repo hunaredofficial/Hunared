@@ -169,7 +169,7 @@ function ResourceLibrary({
           </div>
           {signedIn ? (
             <Button asChild size="sm" className="shrink-0">
-              <Link href="/dashboard/resources/new">
+              <Link href="/education/resources/upload">
                 <Upload className="h-4 w-4 mr-1.5" />
                 Upload resource
               </Link>
@@ -346,7 +346,7 @@ function ResourceUploadForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Could not save resource");
+        toast.error(data.error || (data as { detail?: string }).detail || "Could not save resource");
         return;
       }
       toast.success(data.message || "Resource published");

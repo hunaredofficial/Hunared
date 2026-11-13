@@ -8,7 +8,6 @@ import { COUNTRIES } from "@/lib/countries";
 import type { Profile } from "@/types/database";
 
 import type { Metadata } from "next";
-import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 
 export const metadata: Metadata = {
   title: "Candidates",
@@ -108,13 +107,12 @@ export default async function CandidatesPage({
                   : "Find talent ready to work"}
               </p>
             </div>
+            <Button size="sm" className="shrink-0 font-semibold" asChild>
+              <Link href="/register?goal=seeker">Join as talent</Link>
+            </Button>
           </div>
         </div>
       </section>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="candidates_top" legacySlotName="candidates_top" className="mb-2" />
-      </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
@@ -222,6 +220,24 @@ export default async function CandidatesPage({
           </div>
         </div>
       </div>
+
+      {/* CTA strip — same pattern as Companies */}
+      <section className="border-t border-border bg-muted/30 py-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-xl font-semibold mb-2">Looking for work?</h2>
+          <p className="text-muted-foreground text-sm mb-5 max-w-md mx-auto">
+            Create your public talent profile, showcase skills, and get found by employers on Hunared.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button asChild className="rounded-xl">
+              <Link href="/register?goal=seeker">Join as talent</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl">
+              <Link href="/dashboard/profile">Complete profile</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

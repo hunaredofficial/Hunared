@@ -28,7 +28,6 @@ export async function GET(req: Request) {
   const limit = Math.min(24, Math.max(1, parseInt(searchParams.get("limit") ?? "12", 10)));
   const from = (page - 1) * limit;
 
-  const mine = searchParams.get("mine") === "1" || searchParams.get("mine") === "true";
   const { userId } = await auth();
   const supabase = createAdminClient();
 
@@ -41,12 +40,7 @@ export async function GET(req: Request) {
     .order("created_at", { ascending: false })
     .range(from, from + limit - 1);
 
-  if (mine) {
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized", resources: [], total: 0 }, { status: 401 });
-    }
-    query = query.eq("uploaded_by", userId);
-  } else if (userId) {
+  if (userId) {
     query = query.or(`status.eq.approved,uploaded_by.eq.${userId}`);
   } else {
     query = query.eq("status", "approved");
@@ -98,23 +92,68 @@ export async function POST(req: Request) {
     : "general";
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+
+  // Avoid FK failure when profiles row is missing for this Clerk user
+  let uploaded_by: string | null = userId;
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!profile?.id) {
+      uploaded_by = null;
+    }
+  } catch {
+    uploaded_by = null;
+  }
+
+  const row = {
+    title,
+    description: (body.description ?? "").trim() || null,
+    category,
+    file_path,
+    file_name,
+    file_type: body.file_type || null,
+    file_size: body.file_size ?? 0,
+    uploaded_by,
+    status: "approved" as const,
+  };
+
+  let { data, error } = await supabase
     .from("learning_resources")
-    .insert({
-      title,
-      description: (body.description ?? "").trim() || null,
-      category,
-      file_path,
-      file_name,
-      file_type: body.file_type || null,
-      file_size: body.file_size ?? 0,
-      uploaded_by: userId,
-      status: "approved",
-    })
-    .select("id, title, status, category, file_name, file_size, download_count, created_at, description, file_type, uploaded_by")
+    .insert(row)
+    .select(
+      "id, title, status, category, file_name, file_size, download_count, created_at, description, file_type, uploaded_by"
+    )
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Retry without uploaded_by if FK / constraint still fails
+  if (error && uploaded_by) {
+    const retry = await supabase
+      .from("learning_resources")
+      .insert({ ...row, uploaded_by: null })
+      .select(
+        "id, title, status, category, file_name, file_size, download_count, created_at, description, file_type, uploaded_by"
+      )
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
+
+  if (error) {
+    const msg = error.message || "Could not save resource";
+    // Friendlier hints
+    let hint = msg;
+    if (/relation .* does not exist/i.test(msg)) {
+      hint = "Learning resources table is missing. Run supabase/015_learning_resources.sql in Supabase.";
+    } else if (/foreign key|violates foreign key/i.test(msg)) {
+      hint = "Profile link failed. Complete your profile once, then publish again.";
+    } else if (/bucket|storage/i.test(msg)) {
+      hint = "Storage bucket issue. Ensure bucket `learning-resources` exists in Supabase Storage.";
+    }
+    return NextResponse.json({ error: hint, detail: msg }, { status: 500 });
+  }
 
   return NextResponse.json({
     resource: data,

@@ -29,7 +29,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Learning Hub",
   description:
-    "Hunared Learning Hub — professional articles, downloadable resources, programs and training for global careers.",
+    "Learning Hub — professional articles, downloadable resources, programs and training for global careers.",
 };
 
 interface SearchParams {
@@ -134,7 +134,7 @@ export default async function EducationPage({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-              Hunared Learning Hub
+              Learning Hub
             </p>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
               Learn. Grow.{" "}

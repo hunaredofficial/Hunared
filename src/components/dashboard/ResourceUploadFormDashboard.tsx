@@ -68,7 +68,7 @@ export function ResourceUploadFormDashboard() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Could not save resource");
+        toast.error(data.error || data.detail || "Could not save resource");
         return;
       }
       toast.success(data.message || "Resource published");
