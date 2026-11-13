@@ -16,6 +16,7 @@ import {
   Gift,
   CalendarDays,
   Users,
+  Compass,
   ArrowRight,
   Tag,
   Sofa,
@@ -142,7 +143,15 @@ const AD_TYPES: AdType[] = [
     examples: ["Announcements", "Groups"],
     group: "community",
   },
-  {
+    {
+    icon: Compass,
+    title: "Finder Center",
+    description: "Create a lost or found post, or use Finder Center to search the community.",
+    href: "/dashboard/market/new?category=lost_found",
+    examples: ["Lost items", "Found items", "Search"],
+    group: "community",
+  },
+{
     icon: CalendarDays,
     title: "Event",
     description: "Create an event post for meetups, workshops, or activities.",
@@ -156,7 +165,7 @@ const GROUPS: { key: AdType["group"]; label: string; blurb: string }[] = [
   { key: "work", label: "Work & Talent", blurb: "Create job posts to hire talent" },
   { key: "marketplace", label: "Marketplace", blurb: "Create posts to sell, rent, offer services or list property" },
   { key: "knowledge", label: "Learning & Content", blurb: "Create learning and article posts" },
-  { key: "community", label: "Community", blurb: "Create wanted, free, event and local posts" },
+  { key: "community", label: "Community", blurb: "Create wanted, free, lost & found, event and local posts" },
 ];
 
 export default function CreateAdPage() {
