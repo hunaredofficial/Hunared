@@ -101,23 +101,27 @@ function NewListingForm() {
   const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [title, setTitle] = useState("");
+  // Seed from URL on first paint (mobile agent prefill — do not wait for useEffect)
+  const [title, setTitle] = useState(() => searchParams.get("title") ?? "");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(() => searchParams.get("price") ?? "");
   const geo = useGeo();
   const [currency, setCurrency] = useState("SAR");
   const [currencyTouched, setCurrencyTouched] = useState(false);
   const [category, setCategory] = useState(
-    searchParams.get("category") ?? ""
+    () => searchParams.get("category") ?? ""
   );
   const [subcategory, setSubcategory] = useState(
-    searchParams.get("subcategory") ?? ""
+    () => searchParams.get("subcategory") ?? ""
   );
-  const [rentalPeriod, setRentalPeriod] = useState("");
+  const [rentalPeriod, setRentalPeriod] = useState(() => {
+    const rp = searchParams.get("rentalPeriod") ?? "";
+    return /month/i.test(rp) ? "Monthly" : rp;
+  });
   const [condition, setCondition] = useState("");
   const [lfStatus, setLfStatus] = useState(searchParams.get("status") === "found" ? "Found" : searchParams.get("status") === "lost" ? "Lost" : "");
-  const [country, setCountry] = useState("SA");
-  const [city, setCity] = useState("");
+  const [country, setCountry] = useState(() => searchParams.get("country") ?? "SA");
+  const [city, setCity] = useState(() => searchParams.get("city") ?? "");
   const [mapsUrl, setMapsUrl] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   // Smart Fill — auto category/sub/city from title; description after form fields
@@ -142,18 +146,43 @@ function NewListingForm() {
   const availableSubcategories = category ? SUBCATEGORIES[category] ?? [] : [];
 
   // Auto-set country + currency from geo until user overrides
+  // Skip when agent prefill is in the URL (mobile create flow)
   useEffect(() => {
     if (geo.loading) return;
     if (!geo.countryCode) return;
+    if (searchParams.get("agent") === "1" || searchParams.get("title")) return;
     setCountry((prev) => (prev === "SA" || !prev ? geo.countryCode! : prev));
     if (!currencyTouched) {
       setCurrency(currencyForCountry(geo.countryCode));
     }
-  }, [geo.loading, geo.countryCode, currencyTouched]);
+  }, [geo.loading, geo.countryCode, currencyTouched, searchParams]);
 
 
   // Price is optional for all marketplace categories
   const isPriceOptional = true;
+
+  // If title/category came from URL (agent), build full description immediately
+  useEffect(() => {
+    const t = searchParams.get("title") || title;
+    const c = searchParams.get("category") || category || "for_rent";
+    if (!t || !searchParams.get("agent")) return;
+    if (description && description.length > 40) return;
+    try {
+      const html = buildDescription(t, c, searchParams.get("subcategory") || subcategory || undefined, {
+        city: searchParams.get("city") || city || undefined,
+        price: searchParams.get("price") || price || undefined,
+        currency: "SAR",
+        rentalPeriod: rentalPeriod || undefined,
+      });
+      setDescription(html);
+      setDescSuggestion(html);
+      setShowDescSuggest(true);
+      descFromSmart.current = true;
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Hunared AI Agent → pre-fill (URL query params first — works on mobile)
   const agentPrefillApplied = useRef(false);

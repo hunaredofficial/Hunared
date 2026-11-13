@@ -507,6 +507,21 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             autoDescription: true,
             at: Date.now(),
           };
+          // Guarantee a title for the form (mobile URL seed)
+          if (!prefill.title) {
+            const fromRaw =
+              q.replace(/\b(create|post|publish|make|add)\s+(a\s+)?(post|ad|listing|job)?\b/gi, "")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 80) || "New listing";
+            prefill.title = fromRaw;
+          }
+          if (!prefill.category && /rent|room|apartment|villa|bedspace/i.test(q)) {
+            prefill.category = "for_rent";
+          }
+          if (!prefill.category && /job|hiring|vacancy|salary/i.test(q)) {
+            // jobs form — category N/A
+          }
           delete (prefill as { description?: string }).description;
           saveAgentPrefill(prefill);
 
@@ -516,7 +531,6 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               navHref.startsWith("/dashboard/jobs"))
           ) {
             try {
-              // Discrete query params — reliable on mobile (no base64)
               navHref = buildPrefillHref(navHref, prefill);
             } catch {
               /* keep href */
@@ -533,23 +547,34 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
         if (shouldNav) {
           const target = navHref!;
-          setTimeout(() => {
-            try {
-              router.push(target);
-            } catch {
+          // Mobile Safari / in-app browsers: soft router.push often drops query or races form mount.
+          // Use full navigation for create forms so ?title=&category= are always present.
+          const isMobile =
+            typeof navigator !== "undefined" &&
+            /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry/i.test(navigator.userAgent);
+
+          const go = () => {
+            if (isCreate || isMobile) {
               window.location.assign(target);
-            }
-            // Fallback if soft nav did not leave the page (common on some mobile WebViews)
-            setTimeout(() => {
+            } else {
               try {
-                if (!window.location.pathname.includes(target.split("?")[0])) {
-                  window.location.assign(target);
-                }
+                router.push(target);
+                setTimeout(() => {
+                  try {
+                    const pathOnly = target.split("?")[0];
+                    if (!window.location.pathname.includes(pathOnly.replace(/\/$/, ""))) {
+                      window.location.assign(target);
+                    }
+                  } catch {
+                    window.location.assign(target);
+                  }
+                }, 800);
               } catch {
-                /* ignore */
+                window.location.assign(target);
               }
-            }, 900);
-          }, 300);
+            }
+          };
+          setTimeout(go, 200);
         }
       } catch {
         setMsgs((m) => [
