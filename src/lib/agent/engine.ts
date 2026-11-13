@@ -900,9 +900,10 @@ function draftJobDescription(opts: {
   }
 
   const createListing =
-    /\b(post (an? )?(ad|listing|item)|create (a )?listing|sell (something|this|item)|list (an? )?item)\b/.test(t) ||
+    /\b(post (an? )?(ad|listing|item)|create (a )?(listing|post|ad)|sell (something|this|item)|list (an? )?item)\b/.test(t) ||
     /\b(create|post|publish|list)\b/.test(t) &&
-      /\b(room|apartment|flat|villa|house|bedspace|for rent|rent|accommodation|car|phone|laptop|item|ad)\b/.test(t);
+      /\b(room|apartment|flat|villa|house|bedspace|for rent|rent|accommodation|car|phone|laptop|item|ad)\b/.test(t) ||
+    /\b(create|post)\s+post\b/i.test(t);
 
   if (createListing) {
     // Category hints

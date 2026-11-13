@@ -492,89 +492,86 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           },
         ]);
 
-        // Prefill create forms — always persist when we have entities (mobile needs URL params)
+        // Prefill create forms — save everywhere + hard navigate with URL params
         let navHref = action.href;
         const isCreate =
           action.intent === "execute_create" ||
           action.intent === "post_listing" ||
           action.intent === "post_job";
 
-        if (isCreate && action.entities) {
+        if (isCreate) {
+          const entities = { ...(action.entities || {}) } as Record<string, string | undefined>;
+          // Title fallback from user message
+          if (!entities.title) {
+            const cleaned = q
+              .replace(/\b(create|post|publish|make|add)\s+(a\s+)?(post|ad|listing|job|item)?\b/gi, " ")
+              .replace(/\s+/g, " ")
+              .trim()
+              .slice(0, 90);
+            entities.title = cleaned || (action.intent === "post_job" ? "Job opening" : "New listing");
+          }
+          if (!entities.category && /rent|room|apartment|villa|flat|bedspace|house/i.test(q)) {
+            entities.category = "for_rent";
+          }
+          if (!entities.city) {
+            const cityHint = q.match(
+              /\b(riyadh|jeddah|dammam|khobar|jubail|yanbu|makkah|madinah|neom|dubai|doha|manama)\b/i
+            );
+            if (cityHint) {
+              entities.city = cityHint[1].charAt(0).toUpperCase() + cityHint[1].slice(1).toLowerCase();
+              if (/khobar/i.test(entities.city)) entities.city = "Khobar";
+            }
+          }
+          if (!entities.price) {
+            const pr = q.match(/\b(\d{2,7})\b/);
+            if (pr) entities.price = pr[1];
+          }
+          if (!entities.rentalPeriod && /month|monthly|\/mo\b/i.test(q)) {
+            entities.rentalPeriod = "month";
+          }
+
           const prefill = {
-            ...action.entities,
+            ...entities,
             intent: action.intent,
             raw: q,
             autoDescription: true,
             at: Date.now(),
           };
-          // Guarantee a title for the form (mobile URL seed)
-          if (!prefill.title) {
-            const fromRaw =
-              q.replace(/\b(create|post|publish|make|add)\s+(a\s+)?(post|ad|listing|job)?\b/gi, "")
-                .replace(/\s+/g, " ")
-                .trim()
-                .slice(0, 80) || "New listing";
-            prefill.title = fromRaw;
-          }
-          if (!prefill.category && /rent|room|apartment|villa|bedspace/i.test(q)) {
-            prefill.category = "for_rent";
-          }
-          if (!prefill.category && /job|hiring|vacancy|salary/i.test(q)) {
-            // jobs form — category N/A
-          }
           delete (prefill as { description?: string }).description;
-          saveAgentPrefill(prefill);
 
-          if (
-            navHref &&
-            (navHref.startsWith("/dashboard/market") ||
-              navHref.startsWith("/dashboard/jobs"))
-          ) {
-            try {
-              navHref = buildPrefillHref(navHref, prefill);
-            } catch {
-              /* keep href */
-            }
+          try {
+            saveAgentPrefill(prefill);
+          } catch {
+            /* ignore */
           }
-        }
 
-        // Navigate to form (harder navigation on mobile if soft push fails)
-        const shouldNav =
+          const base =
+            navHref ||
+            (action.intent === "post_job" ? "/dashboard/jobs/new" : "/dashboard/market/new");
+          try {
+            navHref = buildPrefillHref(base, prefill);
+          } catch {
+            navHref = base;
+          }
+
+          // Always full page load so form reads ?title= on first paint (PC + mobile)
+          const target = navHref;
+          setTimeout(() => {
+            window.location.assign(target);
+          }, 250);
+        } else if (
+          action.autoNavigate &&
           navHref &&
-          (action.autoNavigate || isCreate) &&
           action.intent !== "search_jobs" &&
-          action.intent !== "search_market";
-
-        if (shouldNav) {
-          const target = navHref!;
-          // Mobile Safari / in-app browsers: soft router.push often drops query or races form mount.
-          // Use full navigation for create forms so ?title=&category= are always present.
-          const isMobile =
-            typeof navigator !== "undefined" &&
-            /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry/i.test(navigator.userAgent);
-
-          const go = () => {
-            if (isCreate || isMobile) {
-              window.location.assign(target);
-            } else {
-              try {
-                router.push(target);
-                setTimeout(() => {
-                  try {
-                    const pathOnly = target.split("?")[0];
-                    if (!window.location.pathname.includes(pathOnly.replace(/\/$/, ""))) {
-                      window.location.assign(target);
-                    }
-                  } catch {
-                    window.location.assign(target);
-                  }
-                }, 800);
-              } catch {
-                window.location.assign(target);
-              }
+          action.intent !== "search_market"
+        ) {
+          setTimeout(() => {
+            try {
+              router.push(navHref!);
+            } catch {
+              window.location.assign(navHref!);
             }
-          };
-          setTimeout(go, 200);
+          }, 300);
         }
       } catch {
         setMsgs((m) => [

@@ -109,13 +109,24 @@ export default function PostJobPage() {
     expiration: "never",
   });
 
-  // Hunared AI Agent → pre-fill (URL + storage, mobile retries)
+  // Hunared AI Agent → pre-fill (URL + cookie + storage)
   const agentJobApplied = useRef(false);
   useEffect(() => {
     if (agentJobApplied.current) return;
     const apply = () => {
       if (agentJobApplied.current) return;
-      const p = readAgentPrefill() || consumeAgentPrefill();
+      let p = readAgentPrefill() || consumeAgentPrefill();
+      if (!p && typeof window !== "undefined") {
+        const sp = new URLSearchParams(window.location.search);
+        if (sp.get("title") || sp.get("agent") === "1") {
+          p = {
+            title: sp.get("title") || undefined,
+            city: sp.get("city") || undefined,
+            country: sp.get("country") || undefined,
+            salary: sp.get("salary") || undefined,
+          };
+        }
+      }
       if (!p) return;
       agentJobApplied.current = true;
       setForm((prev) => ({
@@ -129,9 +140,10 @@ export default function PostJobPage() {
       try { clearAgentPrefillStorage(); } catch { /* ignore */ }
     };
     apply();
-    const t1 = setTimeout(apply, 200);
-    const t2 = setTimeout(apply, 800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t1 = setTimeout(apply, 50);
+    const t2 = setTimeout(apply, 300);
+    const t3 = setTimeout(apply, 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
 
