@@ -511,7 +511,7 @@ function RegisterInner() {
     {
       id: "personal",
       title: "Personal",
-      desc: "Browse jobs, market & learning",
+      desc: "Explore the platform & advertise",
       icon: UserRound,
     },
     {

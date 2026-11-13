@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { consumeAgentPrefill } from "@/lib/agent/prefill";
+import {
+  consumeAgentPrefill,
+  readAgentPrefill,
+  clearAgentPrefillStorage,
+} from "@/lib/agent/prefill";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";

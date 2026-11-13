@@ -1,16 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
   Briefcase,
+  GraduationCap,
   Wrench,
   Home,
   ShoppingBag,
   Megaphone,
-  FileText,
   Car,
   Laptop,
   Building2,
@@ -25,8 +23,9 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * Post an Ad — Step 1: What do you want to post?
- * Category-first marketplace flow. Login required only when publishing.
+ * Create a post — Step 1: choose category
+ * Opens the right form (job, market listing, article, etc.).
+ * Sign-in is required only when you publish.
  */
 
 type AdType = {
@@ -42,7 +41,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Briefcase,
     title: "Job",
-    description: "Hire talent for permanent or temporary roles.",
+    description: "Create a job post to hire for permanent or temporary roles.",
     href: "/dashboard/jobs/new",
     examples: ["Engineering", "Construction", "Healthcare", "IT"],
     group: "work",
@@ -50,7 +49,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Tag,
     title: "For Sale",
-    description: "Sell products — new or used — to buyers worldwide.",
+    description: "Create a sale post for products — new or used.",
     href: "/dashboard/market/new?category=for_sale",
     examples: ["Furniture", "Tools", "Appliances", "Fashion"],
     group: "marketplace",
@@ -58,7 +57,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Home,
     title: "For Rent",
-    description: "Rent out items, equipment, or spaces by the day or month.",
+    description: "Create a rental post for items, equipment, or spaces.",
     href: "/dashboard/market/new?category=for_rent",
     examples: ["Equipment", "Tools", "Vehicles", "Spaces"],
     group: "marketplace",
@@ -66,7 +65,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Wrench,
     title: "Service",
-    description: "Offer professional, trade, IT, design, and other services.",
+    description: "Create a service post for trade, IT, design, and more.",
     href: "/dashboard/market/new?category=services",
     examples: ["Electrical", "IT", "Logistics", "Design"],
     group: "marketplace",
@@ -74,7 +73,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Building2,
     title: "Property",
-    description: "List houses, land, commercial units, and real estate.",
+    description: "Create a property post for houses, land, or commercial units.",
     href: "/dashboard/market/new?category=property",
     examples: ["House", "Land", "Office", "Shop"],
     group: "marketplace",
@@ -82,7 +81,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Sofa,
     title: "Accommodation",
-    description: "Rooms, apartments, bed spaces, and short-term stays.",
+    description: "Create a post for rooms, apartments, bed spaces, or stays.",
     href: "/dashboard/market/new?category=accommodation",
     examples: ["Apartment", "Room", "Bed space", "Villa"],
     group: "marketplace",
@@ -90,7 +89,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Car,
     title: "Vehicle",
-    description: "Cars, trucks, motorcycles, and other vehicles.",
+    description: "Create a vehicle post for cars, trucks, bikes, or parts.",
     href: "/dashboard/market/new?category=vehicles",
     examples: ["Cars", "Trucks", "Motorbikes", "Parts"],
     group: "marketplace",
@@ -98,31 +97,31 @@ const AD_TYPES: AdType[] = [
   {
     icon: Laptop,
     title: "Electronics",
-    description: "Phones, laptops, gadgets, and tech accessories.",
+    description: "Create a post for phones, laptops, gadgets, and tech.",
     href: "/dashboard/market/new?category=electronics",
     examples: ["Phones", "Laptops", "Audio", "Accessories"],
     group: "marketplace",
   },
   {
-    icon: Megaphone,
-    title: "Article / Learning",
-    description: "Publish career tips, HSE, engineering, courses, and professional articles.",
+    icon: GraduationCap,
+    title: "Learning",
+    description: "Create a learning post for courses, certificates, or internships.",
     href: "/dashboard/articles/new",
-    examples: ["Career Tips", "HSE", "Courses", "News"],
+    examples: ["Courses", "Certifications", "Internships"],
     group: "knowledge",
   },
   {
-    icon: FileText,
-    title: "Share Files",
-    description: "Upload guides, templates, checklists, and documents to Resources.",
-    href: "/dashboard/resources/new",
-    examples: ["Guides", "Templates", "Checklists", "Forms"],
+    icon: Megaphone,
+    title: "Article / News",
+    description: "Create an article or news post for tips, HSE, or updates.",
+    href: "/dashboard/articles/new",
+    examples: ["Career Tips", "HSE", "News"],
     group: "knowledge",
   },
   {
     icon: Search,
     title: "Wanted",
-    description: "Post what you are looking for — items, services, or help.",
+    description: "Create a wanted post for items, services, or help you need.",
     href: "/dashboard/market/new?category=wanted",
     examples: ["Items wanted", "Services needed"],
     group: "community",
@@ -130,7 +129,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Gift,
     title: "Free Items",
-    description: "Give away items free to the community.",
+    description: "Create a free-item post to give something to the community.",
     href: "/dashboard/market/new?category=free_items",
     examples: ["Furniture", "Clothes", "Misc"],
     group: "community",
@@ -138,7 +137,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: Users,
     title: "Community",
-    description: "Announcements, groups, and local community posts.",
+    description: "Create a community post for announcements or local groups.",
     href: "/dashboard/market/new?category=community",
     examples: ["Announcements", "Groups"],
     group: "community",
@@ -146,7 +145,7 @@ const AD_TYPES: AdType[] = [
   {
     icon: CalendarDays,
     title: "Event",
-    description: "Promote events, meetups, and local activities.",
+    description: "Create an event post for meetups, workshops, or activities.",
     href: "/dashboard/market/new?category=events",
     examples: ["Meetups", "Workshops", "Fairs"],
     group: "community",
@@ -154,28 +153,13 @@ const AD_TYPES: AdType[] = [
 ];
 
 const GROUPS: { key: AdType["group"]; label: string; blurb: string }[] = [
-  { key: "work", label: "Work & Talent", blurb: "Hire or find opportunities" },
-  { key: "marketplace", label: "Marketplace", blurb: "Buy, sell, rent, services & property" },
-  { key: "knowledge", label: "Learning & Resources", blurb: "Articles and shareable files" },
-  { key: "community", label: "Community", blurb: "Wanted, free, events and local" },
+  { key: "work", label: "Work & Talent", blurb: "Create job posts to hire talent" },
+  { key: "marketplace", label: "Marketplace", blurb: "Create posts to sell, rent, offer services or list property" },
+  { key: "knowledge", label: "Learning & Content", blurb: "Create learning and article posts" },
+  { key: "community", label: "Community", blurb: "Create wanted, free, event and local posts" },
 ];
 
 export default function CreateAdPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Deep links from Finder Center → go straight to Lost & Found listing form
-  useEffect(() => {
-    const type = searchParams.get("type") || searchParams.get("category");
-    const status = searchParams.get("status") || "";
-    if (type === "lost_found") {
-      const q = new URLSearchParams();
-      q.set("category", "lost_found");
-      if (status === "lost" || status === "found") q.set("status", status);
-      router.replace(`/dashboard/market/new?${q.toString()}`);
-    }
-  }, [searchParams, router]);
-
   const { isSignedIn } = useAuth();
 
   function hrefFor(type: AdType): string {
@@ -193,11 +177,10 @@ export default function CreateAdPage() {
             Step 1 of 2
           </p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            What do you want to post?
+            What do you want to create?
           </h1>
           <p className="text-muted-foreground mt-2 max-w-2xl text-sm sm:text-base">
-            Choose a category to continue. Anyone can browse Hunared — you&apos;ll
-            only need to sign in when you publish.
+            Choose a category to create your post. You only need to sign in when you publish.
           </p>
 
           {/* Simple step dots */}
@@ -205,7 +188,7 @@ export default function CreateAdPage() {
             <span className="h-1.5 w-10 rounded-full bg-primary" aria-hidden />
             <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden />
             <span className="text-xs text-muted-foreground ml-2">
-              Next: fill details & publish
+              Next: add details & publish
             </span>
           </div>
         </div>
@@ -288,8 +271,8 @@ export default function CreateAdPage() {
 
         <p className="text-center text-xs text-muted-foreground pt-2">
           {isSignedIn
-            ? "You are signed in — choose a category to open the form."
-            : "Not signed in? You can still choose a category; we’ll ask you to sign in before publishing."}
+            ? "You are signed in — choose a category to create your post."
+            : "Not signed in? You can still choose a category; we will ask you to sign in before you publish."}
         </p>
       </div>
     </main>
