@@ -35,7 +35,7 @@ const FOOTER_LINKS: Record<
   ],
   Company: [
     { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Help Center" },
+    { href: "/help", label: "Help Center" },
     { href: "/contact", label: "Contact Us" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
