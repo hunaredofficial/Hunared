@@ -23,10 +23,10 @@ export const HELP_ARTICLES: HelpArticle[] = [
 - Manage everything from your **Dashboard**
 
 ## Main navigation
-Use the top header: Jobs, Talent (Candidates), Companies, Marketplace, Learning/Program, and More (including Finder Center).
+Use the top header: Jobs, Talent, Companies, Marketplace, Learning, Programs (opens hunared.org), plus Finder Center, CV Builder, and Hunared Agent in the header.
 
 ## Account types
-Hunared supports different roles (Personal, Seeker, Company, Team, Admin). Features available to you depend on your role — see the Account types guide.`,
+Hunared supports different roles (Personal, Talent, Company, Team, Admin). Features available to you depend on your role — see the Account types guide.`,
   },
   {
     slug: "create-account",
@@ -41,8 +41,8 @@ Hunared supports different roles (Personal, Seeker, Company, Team, Admin). Featu
     steps: [
       { title: "Open Sign up", body: "Go to Register (or Sign up) from the header." },
       { title: "Enter your details", body: "Use a valid email and follow the Clerk authentication steps (verification as required)." },
-      { title: "Choose your path", body: "Complete registration for Seeker (job seeker) or Company (employer) fields when prompted — including photo, skills, industry, or services as shown." },
-      { title: "Finish profile", body: "You may be redirected to complete mandatory fields (for example username for seekers). Save your profile." },
+      { title: "Choose your path", body: "Choose Personal, Talent, or Company and complete the fields shown — photo, skills, industry, or services as required." },
+      { title: "Finish profile", body: "You may be redirected to complete mandatory fields (for example username for Talent accounts). Save your profile." },
     ],
     body: `## Overview
 Anyone can browse public pages without an account. To post jobs, save items, message others, use the CV Builder workspace, or access the dashboard, you need an account.
@@ -62,7 +62,7 @@ After sign-up you can open **Dashboard** from the header and manage your profile
   {
     slug: "account-types",
     category: "getting-started",
-    title: "Account types: Personal, Seeker, Company, Team",
+    title: "Account types: Personal, Talent, Company, Team",
     summary: "Which role to choose and what each role can do.",
     keywords: ["role", "seeker", "employer", "company", "team", "personal", "account type"],
     roles: ["all"],
@@ -71,13 +71,13 @@ After sign-up you can open **Dashboard** from the header and manage your profile
     updated: "2026-10-21",
     body: `## Roles on Hunared
 - **Personal** — general account for browsing and marketplace use.
-- **Seeker** — job seeker / talent profile (CV, available for hire, job interests).
+- **Talent** — professional profile (CV, available for hire, job interests). Site label is **Talent**.
 - **Company (employer)** — company profile, post jobs, browse candidates.
 - **Team** — internal Hunared team tools (bulk post, managed profiles). Not for normal public users.
 - **Admin** — platform moderation tools.
 
 ## Who can use what
-| Feature | Seeker | Company | Team |
+| Feature | Talent | Company | Team |
 |---------|--------|---------|------|
 | CV Builder | Yes | Yes | Yes |
 | Post jobs | Limited | Yes | Yes |
@@ -102,8 +102,8 @@ Dashboard → **My Profile** / **Company Profile**. Some role changes may clear 
     steps: [
       { title: "Open profile", body: "Dashboard → My Profile (or Company Profile for employers)." },
       { title: "Add photo", body: "Upload a clear profile or company photo (size limits apply, e.g. max 10MB where enforced)." },
-      { title: "Fill required fields", body: "Seekers: username, skills, interests, location. Companies: industry, services, optional Google Maps location link." },
-      { title: "Public listing", body: "If you see a “listed publicly” or similar toggle, enable it only if you want to appear in public candidate/company directories." },
+      { title: "Fill required fields", body: "Talent: username, skills, interests, location. Companies: industry, services, optional Google Maps location link." },
+      { title: "Public listing", body: "If you see a “listed publicly” or similar toggle, enable it only if you want to appear in public talent/company directories." },
       { title: "Save", body: "Save changes and confirm success message." },
     ],
     body: `## Purpose
@@ -148,7 +148,7 @@ Use Quick Actions on Overview for common tasks. On mobile, open the sidebar menu
     steps: [
       { title: "Open Settings", body: "Dashboard → Settings (usually near the bottom of the sidebar)." },
       { title: "Adjust preferences", body: "Set theme, country, timezone, and other options shown for your account." },
-      { title: "Agent visibility", body: "Turn Hunared Agent on or off for the homepage if the toggle is available." },
+      { title: "Agent visibility", body: "Manage Agent visibility and actions under Privacy & AI settings. Footer **Hunared AI** opens the same Agent as the header button." },
       { title: "Activity history", body: "Enable or disable saving your browsing activity if the option is present." },
       { title: "Save", body: "Save each section when the UI requires an explicit save." },
     ],
@@ -653,38 +653,126 @@ Use **Contact Us** with the page URL, approximate time, and a screenshot (no pas
   },
   {
     slug: "finder-center",
-    category: "getting-started",
-    title: "Finder Center",
-    summary: "Standalone tool to discover opportunities and resources.",
-    keywords: ["finder", "finder center", "discover"],
+    category: "learning",
+    title: "Finder Center (Lost & Found)",
+    summary: "Report and search lost or found items with the community.",
+    keywords: ["finder", "finder center", "lost", "found", "lost and found"],
     roles: ["all", "guest"],
     action: { href: "/finder", label: "Open Finder Center" },
-    related: ["getting-started/what-is-hunared"],
-    updated: "2026-10-21",
+    related: ["getting-started/what-is-hunared", "marketplace/post-an-ad"],
+    updated: "2026-11-14",
     body: `## Where
-Open **Finder Center** from site navigation / footer (path /finder).
+Open **Finder Center** from Programs menu, footer, or go to **/finder**.
 
-## Purpose
-A focused discovery experience separate from the main homepage hero search.`,
+## What it is
+Community **lost & found** — search existing reports or create a lost/found post.
+
+## Create a lost or found post
+1. Go to **Post** (or choose **Lost & Found** on the create-post page).
+2. Fill title, description, location, and photos if available.
+3. Publish. Sign-in is required to publish.
+
+## Tips
+Use clear titles (item + city). Check Finder Center before posting a duplicate.`,
   },
   {
     slug: "program-learning",
-    category: "getting-started",
-    title: "Programs and learning links",
-    summary: "Hunared Programs and external courses / credential info.",
-    keywords: ["program", "courses", "training", "certificate", "learning"],
+    category: "learning",
+    title: "Hunared Programs and training",
+    summary: "Official programs and courses live on hunared.org.",
+    keywords: ["program", "courses", "training", "certificate", "learning", "TUV"],
     roles: ["all", "guest"],
-    action: { href: "/program", label: "Hunared Programs" },
-    related: ["getting-started/what-is-hunared"],
-    updated: "2026-10-21",
-    body: `## Hunared Programs
-Visit **/program** for program information and available offerings.
+    action: { href: "https://hunared.org/programs", label: "Open Hunared Programs" },
+    related: ["learning/education-hub", "getting-started/what-is-hunared"],
+    updated: "2026-11-14",
+    body: `## Official Programs site
+Hunared Programs are hosted at **https://hunared.org/programs** (not an internal page on hunared.com).
+
+From the homepage Programs section or header **Programs**, you open that site.
 
 ## Courses
-Course exploration may link to **https://hunared.org/courses** (external).
+**https://hunared.org/courses**
 
-## Credentials
-Follow on-page guidance for training partners and verification links shown on the Program page.`,
+## Referral Program
+**https://hunared.org/referral-program**
+
+## On Hunared.com
+Use **Education Hub** (/education) for articles and downloadable resources while you explore formal programs on hunared.org.`,
+  },
+  {
+    slug: "education-hub",
+    category: "learning",
+    title: "Education Hub and resources",
+    summary: "Browse articles and upload or download learning resources.",
+    keywords: ["education", "learning hub", "articles", "resources", "guides"],
+    roles: ["all", "guest"],
+    action: { href: "/education", label: "Open Education Hub" },
+    related: ["learning/program-learning"],
+    updated: "2026-11-14",
+    body: `## Education Hub
+Open **Learning** in the header or go to **/education**.
+
+## What you find
+- Career, safety (HSE), engineering, and professional articles
+- Category filters and related articles
+- **Resources** at **/education/resources** for downloadable files
+
+## Contribute resources
+Signed-in users can manage uploads from **Dashboard → My Resources**.
+
+## Programs vs Education
+Articles and files stay on hunared.com. Formal **Hunared Programs** are on **hunared.org/programs**.`,
+  },
+  {
+    slug: "post-an-ad",
+    category: "marketplace",
+    title: "Post an ad (all categories)",
+    summary: "Use /post to choose Job, marketplace, learning, or community post types.",
+    keywords: ["post", "create", "ad", "job post", "listing", "lost found"],
+    roles: ["all"],
+    action: { href: "/post", label: "Create a post" },
+    related: ["jobs/post-job"],
+    updated: "2026-11-14",
+    body: `## Start at Post
+Open **+ Post** in the header or **/post**.
+
+## Step 1 — Choose category
+- **Job** — hire talent
+- **Marketplace** — For Sale, For Rent, Service, Property, Accommodation, Vehicle, Electronics
+- **Learning / Article** — learning or news-style posts
+- **Community** — Wanted, Free Items, Community, Lost & Found, Events
+
+## Step 2 — Fill the form
+Complete required fields on the matching form and publish. Sign-in is required to publish.
+
+## Hunared Agent
+If Agent actions are enabled, ask the Agent to pre-fill a job or listing, then review before publish.`,
+  },
+  {
+    slug: "agent-in-header",
+    category: "agent",
+    title: "Open Hunared Agent from the header",
+    summary: "The Agent lives in the site header and can help you search or create posts.",
+    keywords: ["agent", "header", "AI", "assistant", "open agent"],
+    roles: ["all"],
+    action: { href: "/", label: "Go to homepage" },
+    related: ["agent/what-is-agent"],
+    updated: "2026-11-14",
+    body: `## Where is the Agent?
+Look in the **header** (near theme, messages, dashboard). Click **Agent** to open the panel.
+
+Footer **Hunared AI** opens the same Agent.
+
+## Login
+Using the Agent requires sign-in.
+
+## What it can do
+- Answer how Hunared works
+- Help find jobs, talent, companies, or marketplace items
+- Pre-fill create-job / create-listing forms when actions are allowed
+
+## Turn off
+Use **Privacy & AI** / Agent settings to disable actions or hide the Agent when that option is available.`,
   },
 ];
 

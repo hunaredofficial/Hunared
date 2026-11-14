@@ -18,7 +18,7 @@ export function HelpSearch({ autoFocus }: { autoFocus?: boolean }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus={autoFocus}
-          placeholder="Search help… e.g. how to make a CV"
+          placeholder="Ask anything about Hunared…"
           className="w-full rounded-xl border border-border bg-background/80 pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           aria-label="Search help articles"
         />

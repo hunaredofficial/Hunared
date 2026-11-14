@@ -27,12 +27,12 @@ export default function HelpCenterPage() {
             How can we help you?
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-            Guides for jobs, CV Builder, marketplace, messaging, accounts, and every major
-            Hunared feature — based on how the platform actually works.
+            Guides for jobs, talent, marketplace, CV Builder, Hunared Agent, messaging,
+            learning, and every major feature — based on how the platform works today.
           </p>
           <HelpSearch autoFocus />
           <div className="flex flex-wrap justify-center gap-2 text-xs">
-            {["Create account", "CV Builder", "Post a job", "Messages", "Hide Agent"].map(
+            {["Create account", "Talent profile", "CV Builder", "Post an ad", "Hunared Agent"].map(
               (label) => (
                 <span
                   key={label}

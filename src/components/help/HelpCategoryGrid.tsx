@@ -12,6 +12,7 @@ import {
   Megaphone,
   Users,
   LifeBuoy,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import { HELP_CATEGORIES } from "@/lib/help/categories";
@@ -30,6 +31,7 @@ const ICONS: Record<string, LucideIcon> = {
   Megaphone,
   Users,
   LifeBuoy,
+  GraduationCap,
 };
 
 export function HelpCategoryGrid() {

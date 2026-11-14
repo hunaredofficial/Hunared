@@ -46,8 +46,14 @@ export const HELP_CATEGORIES: HelpCategory[] = [
   {
     id: "agent",
     title: "Hunared Agent",
-    description: "AI assistant for navigation and platform guidance",
+    description: "Header AI assistant for search, create posts, and guidance",
     icon: "Bot",
+  },
+  {
+    id: "learning",
+    title: "Learning & Programs",
+    description: "Education Hub, resources, programs, and Finder Center",
+    icon: "GraduationCap",
   },
   {
     id: "saved-notifications",
