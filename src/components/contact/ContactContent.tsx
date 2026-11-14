@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Send, Loader2, CheckCircle2, Globe2 } from "lucide-react";
+import { MapPin, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 const CONTACT_REASONS = [
@@ -216,45 +216,59 @@ export function ContactContent() {
           ))}
         </ul>
 
-        {/* Global presence visual — fills left column empty space */}
-        <div className="mt-10 relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-background p-6 sm:p-8">
-          <div
-            className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/15 blur-2xl"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -left-6 bottom-0 h-28 w-28 rounded-full bg-primary/10 blur-xl"
-            aria-hidden
-          />
-          <div className="relative flex flex-col items-center text-center gap-4">
-            <div className="relative flex h-28 w-28 items-center justify-center">
-              <span className="absolute inset-0 rounded-full border border-primary/20 animate-pulse" />
-              <span className="absolute inset-3 rounded-full border border-dashed border-primary/30" />
-              <span className="absolute inset-6 rounded-full bg-primary/10" />
-              <Globe2 className="relative h-12 w-12 text-primary" strokeWidth={1.5} />
-            </div>
-            <div className="space-y-1.5 max-w-[16rem]">
-              <p className="text-sm font-semibold text-foreground">
-                Global by design
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Jobs, talent, companies, marketplace, and learning — one platform
-                for professionals and organizations around the world.
-              </p>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2 pt-1">
-              {["Jobs", "Talent", "Market", "Learning"].map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-border/80 bg-background/60 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
+                {/* Animated globe — visual only, no text */}
+        <div
+          className="mt-10 flex items-center justify-center rounded-2xl border border-border/60 bg-card/40 py-12 sm:py-16"
+          aria-hidden="true"
+        >
+          <div className="relative h-40 w-40 sm:h-44 sm:w-44">
+            {/* pulse glow */}
+            <span className="hg-glow pointer-events-none absolute inset-[-8%] rounded-full bg-primary/20 blur-2xl" />
+            {/* outer thin ring */}
+            <span className="pointer-events-none absolute inset-0 rounded-full border border-primary/25" />
+            {/* orbiting satellite */}
+            <span className="hg-orbit pointer-events-none absolute inset-0">
+              <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_14px_2px_hsl(var(--primary)/0.7)]" />
+            </span>
+            {/* sphere body */}
+            <span className="pointer-events-none absolute inset-[15%] rounded-full border border-primary/40 bg-gradient-to-br from-primary/40 via-primary/10 to-background/40 shadow-[inset_0_-8px_24px_hsl(var(--primary)/0.15),inset_0_8px_20px_rgba(255,255,255,0.06)]" />
+            {/* latitudes */}
+            <span className="pointer-events-none absolute left-[16%] right-[16%] top-[37%] h-px bg-primary/30" />
+            <span className="pointer-events-none absolute left-[18%] right-[18%] top-1/2 h-px bg-primary/50" />
+            <span className="pointer-events-none absolute left-[16%] right-[16%] top-[63%] h-px bg-primary/30" />
+            {/* spinning meridians */}
+            <span className="hg-spin pointer-events-none absolute inset-[15%] rounded-full border border-transparent border-t-primary/55 border-b-primary/45" />
+            <span className="hg-spin-slow pointer-events-none absolute inset-[22%] rounded-full border border-dashed border-primary/30" />
+            {/* specular */}
+            <span className="pointer-events-none absolute left-[30%] top-[26%] h-10 w-10 rounded-full bg-primary/25 blur-md" />
           </div>
+          <style>{`
+            .hg-glow {
+              animation: hg-pulse 3.2s ease-in-out infinite;
+            }
+            .hg-orbit {
+              animation: hg-spin 10s linear infinite;
+            }
+            .hg-spin {
+              animation: hg-spin 14s linear infinite;
+            }
+            .hg-spin-slow {
+              animation: hg-spin-rev 22s linear infinite;
+            }
+            @keyframes hg-spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            @keyframes hg-spin-rev {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(-360deg); }
+            }
+            @keyframes hg-pulse {
+              0%, 100% { opacity: 0.28; transform: scale(0.92); }
+              50% { opacity: 0.8; transform: scale(1.1); }
+            }
+          `}</style>
         </div>
-      </div>
 
       <div className="lg:col-span-3">
         <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
