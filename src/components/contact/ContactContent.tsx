@@ -242,32 +242,19 @@ export function ContactContent() {
             {/* specular */}
             <span className="pointer-events-none absolute left-[30%] top-[26%] h-10 w-10 rounded-full bg-primary/25 blur-md" />
           </div>
-          <style>{`
-            .hg-glow {
-              animation: hg-pulse 3.2s ease-in-out infinite;
-            }
-            .hg-orbit {
-              animation: hg-spin 10s linear infinite;
-            }
-            .hg-spin {
-              animation: hg-spin 14s linear infinite;
-            }
-            .hg-spin-slow {
-              animation: hg-spin-rev 22s linear infinite;
-            }
-            @keyframes hg-spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-            @keyframes hg-spin-rev {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(-360deg); }
-            }
-            @keyframes hg-pulse {
-              0%, 100% { opacity: 0.28; transform: scale(0.92); }
-              50% { opacity: 0.8; transform: scale(1.1); }
-            }
-          `}</style>
+          <style
+            dangerouslySetInnerHTML={{
+              __html: [
+                ".hg-glow{animation:hg-pulse 3.2s ease-in-out infinite}",
+                ".hg-orbit{animation:hg-spin 10s linear infinite}",
+                ".hg-spin{animation:hg-spin 14s linear infinite}",
+                ".hg-spin-slow{animation:hg-spin-rev 22s linear infinite}",
+                "@keyframes hg-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}",
+                "@keyframes hg-spin-rev{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}",
+                "@keyframes hg-pulse{0%,100%{opacity:.28;transform:scale(.92)}50%{opacity:.8;transform:scale(1.1)}}",
+              ].join(""),
+            }}
+          />
         </div>
 
       <div className="lg:col-span-3">
