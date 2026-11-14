@@ -222,40 +222,33 @@ export function ContactContent() {
           aria-hidden="true"
         >
           <div className="relative h-40 w-40 sm:h-44 sm:w-44">
-            {/* pulse glow */}
-            <span className="hg-glow pointer-events-none absolute inset-[-8%] rounded-full bg-primary/20 blur-2xl" />
-            {/* outer thin ring */}
+            <span className="hg-glow pointer-events-none absolute -inset-2 rounded-full bg-primary/20 blur-2xl" />
             <span className="pointer-events-none absolute inset-0 rounded-full border border-primary/25" />
-            {/* orbiting satellite */}
             <span className="hg-orbit pointer-events-none absolute inset-0">
-              <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_14px_2px_hsl(var(--primary)/0.7)]" />
+              <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-lg shadow-primary/50" />
             </span>
-            {/* sphere body */}
-            <span className="pointer-events-none absolute inset-[15%] rounded-full border border-primary/40 bg-gradient-to-br from-primary/40 via-primary/10 to-background/40 shadow-[inset_0_-8px_24px_hsl(var(--primary)/0.15),inset_0_8px_20px_rgba(255,255,255,0.06)]" />
-            {/* latitudes */}
+            <span className="pointer-events-none absolute inset-[15%] rounded-full border border-primary/40 bg-gradient-to-br from-primary/40 via-primary/10 to-background/40" />
             <span className="pointer-events-none absolute left-[16%] right-[16%] top-[37%] h-px bg-primary/30" />
             <span className="pointer-events-none absolute left-[18%] right-[18%] top-1/2 h-px bg-primary/50" />
             <span className="pointer-events-none absolute left-[16%] right-[16%] top-[63%] h-px bg-primary/30" />
-            {/* spinning meridians */}
             <span className="hg-spin pointer-events-none absolute inset-[15%] rounded-full border border-transparent border-t-primary/55 border-b-primary/45" />
             <span className="hg-spin-slow pointer-events-none absolute inset-[22%] rounded-full border border-dashed border-primary/30" />
-            {/* specular */}
             <span className="pointer-events-none absolute left-[30%] top-[26%] h-10 w-10 rounded-full bg-primary/25 blur-md" />
           </div>
           <style
             dangerouslySetInnerHTML={{
-              __html: [
-                ".hg-glow{animation:hg-pulse 3.2s ease-in-out infinite}",
-                ".hg-orbit{animation:hg-spin 10s linear infinite}",
-                ".hg-spin{animation:hg-spin 14s linear infinite}",
-                ".hg-spin-slow{animation:hg-spin-rev 22s linear infinite}",
-                "@keyframes hg-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}",
-                "@keyframes hg-spin-rev{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}",
-                "@keyframes hg-pulse{0%,100%{opacity:.28;transform:scale(.92)}50%{opacity:.8;transform:scale(1.1)}}",
-              ].join(""),
+              __html:
+                ".hg-glow{animation:hg-pulse 3.2s ease-in-out infinite}" +
+                ".hg-orbit{animation:hg-spin 10s linear infinite}" +
+                ".hg-spin{animation:hg-spin 14s linear infinite}" +
+                ".hg-spin-slow{animation:hg-spin-rev 22s linear infinite}" +
+                "@keyframes hg-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}" +
+                "@keyframes hg-spin-rev{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}" +
+                "@keyframes hg-pulse{0%,100%{opacity:0.28;transform:scale(0.92)}50%{opacity:0.8;transform:scale(1.1)}}",
             }}
           />
         </div>
+      </div>
 
       <div className="lg:col-span-3">
         <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
