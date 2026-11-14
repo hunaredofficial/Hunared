@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { MapPin, Send, Loader2, CheckCircle2, Globe2 } from "lucide-react";
 import { toast } from "sonner";
 
 const CONTACT_REASONS = [
@@ -215,6 +215,45 @@ export function ContactContent() {
             </li>
           ))}
         </ul>
+
+        {/* Global presence visual — fills left column empty space */}
+        <div className="mt-10 relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-background p-6 sm:p-8">
+          <div
+            className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/15 blur-2xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -left-6 bottom-0 h-28 w-28 rounded-full bg-primary/10 blur-xl"
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-center text-center gap-4">
+            <div className="relative flex h-28 w-28 items-center justify-center">
+              <span className="absolute inset-0 rounded-full border border-primary/20 animate-pulse" />
+              <span className="absolute inset-3 rounded-full border border-dashed border-primary/30" />
+              <span className="absolute inset-6 rounded-full bg-primary/10" />
+              <Globe2 className="relative h-12 w-12 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className="space-y-1.5 max-w-[16rem]">
+              <p className="text-sm font-semibold text-foreground">
+                Global by design
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Jobs, talent, companies, marketplace, and learning — one platform
+                for professionals and organizations around the world.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 pt-1">
+              {["Jobs", "Talent", "Market", "Learning"].map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-border/80 bg-background/60 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="lg:col-span-3">
