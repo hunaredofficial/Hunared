@@ -222,9 +222,7 @@ export function Header() {
               const isActive =
                 pathname === item.href ||
                 pathname.startsWith(item.href + "/") ||
-                (item.label === "Programs" &&
-                  (pathname.startsWith("/program") ||
-                    pathname.startsWith("/finder")));
+                (item.label === "Programs" && pathname.startsWith("/finder"));
 
               return (
                 <div key={item.label} className="relative">

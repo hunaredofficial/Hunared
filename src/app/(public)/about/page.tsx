@@ -76,7 +76,7 @@ const features = [
     title: "Programs & Credentials",
     description:
       "Training and certification pathways with official verification through Hunared.org.",
-    href: "/program",
+    href: "https://hunared.org/programs",
   },
   {
     icon: Sparkles,
@@ -227,7 +227,7 @@ export default function AboutPage() {
               <Link href="/jobs">Browse jobs</Link>
             </Button>
             <Button asChild variant="ghost" size="lg">
-              <Link href="/program">View programs</Link>
+              <Link href="https://hunared.org/programs">View programs</Link>
             </Button>
           </div>
         </SiteContainer>

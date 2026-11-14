@@ -4,10 +4,15 @@ import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
 
-const FOOTER_LINKS: Record<
-  string,
-  { href: string; label: string; external?: boolean }[]
-> = {
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+  /** Open Hunared Agent drawer instead of navigating */
+  openAgent?: boolean;
+};
+
+const FOOTER_LINKS: Record<string, FooterLink[]> = {
   Explore: [
     { href: "/jobs", label: "Browse Jobs" },
     { href: "/candidates", label: "Find Talent" },
@@ -19,7 +24,7 @@ const FOOTER_LINKS: Record<
     { href: "/post", label: "Post Ads" },
     { href: "/dashboard/cv", label: "CV Builder" },
     { href: "/dashboard/saved", label: "My Saved" },
-    { href: "/ai-settings", label: "Hunared AI" },
+    { href: "#", label: "Hunared AI", openAgent: true },
     { href: "/dashboard/settings", label: "Settings" },
   ],
   Programs: [
@@ -56,12 +61,16 @@ const SOCIAL_LINKS = [
   },
 ];
 
+function openHunaredAgent() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("hunared-agent-toggle"));
+}
+
 export function Footer() {
   return (
     <footer className="bg-card border-t border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
-          {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2 space-y-4 pr-2">
             <Link
               href="/"
@@ -90,7 +99,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([title, links]) => (
             <div key={title} className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground tracking-wide">
@@ -99,7 +107,15 @@ export function Footer() {
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.href + link.label}>
-                    {link.external || link.href.startsWith("http") ? (
+                    {link.openAgent ? (
+                      <button
+                        type="button"
+                        onClick={openHunaredAgent}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 text-left"
+                      >
+                        {link.label}
+                      </button>
+                    ) : link.external || link.href.startsWith("http") ? (
                       <a
                         href={link.href}
                         target="_blank"

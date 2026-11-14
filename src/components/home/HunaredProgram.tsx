@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, GraduationCap, ShieldCheck, Sparkles } from "lucide-react";
 
@@ -24,9 +23,13 @@ export function HunaredProgram() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <Button asChild size="lg" className="gap-2 min-h-11">
-                  <Link href="/program">
+                  <a
+                    href="https://hunared.org/programs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Hunared Programs <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </a>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="min-h-11 gap-1.5">
                   <a
