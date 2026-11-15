@@ -348,7 +348,10 @@ export default async function ListingDetailPage({
           </div>
         </div>
 
-      </div>{/* end main detail grid */}
+      </div>
+            <PremiumAdSlot slotId="market_detail_below" hideIfEmpty className="my-3" />
+
+            {/* end main detail grid */}
 
       {relatedListings.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 pb-12 space-y-4">
