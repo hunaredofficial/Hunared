@@ -128,8 +128,16 @@ export function PremiumAdCreateForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected || !title.trim()) {
-      toast.error("Title and placement are required");
+    if (!selected) {
+      toast.error("Select a placement");
+      return;
+    }
+    if (!title.trim()) {
+      toast.error("Campaign title is required");
+      return;
+    }
+    if (!targetUrl.trim()) {
+      toast.error("Destination URL is required");
       return;
     }
     const p = typeof price === "number" ? price : Number(price);
@@ -143,7 +151,7 @@ export function PremiumAdCreateForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kind,
+          ad_kind: kind,
           slot_id: selected.id,
           title: title.trim(),
           target_url: targetUrl.trim() || null,
@@ -390,13 +398,13 @@ export function PremiumAdCreateForm() {
               <div className="lg:col-span-3 space-y-3.5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium">
-                    Campaign title <span className="text-destructive">*</span>
+                    Campaign Title <span className="text-destructive">*</span>
                   </label>
                   <input
                     className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Safety officer jobs — Jubail"
+                    placeholder="Enter your campaign title"
                     required
                     maxLength={120}
                   />
@@ -407,12 +415,12 @@ export function PremiumAdCreateForm() {
                     className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     value={targetUrl}
                     onChange={(e) => setTargetUrl(e.target.value)}
-                    placeholder="https://hunared.com/jobs/..."
+                    placeholder="https://hunared.com/..."
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium">
-                    Banner image URL{" "}
+                    Banner Image URL{" "}
                     <span className="text-muted-foreground font-normal">(or upload)</span>
                   </label>
                   <input
@@ -423,12 +431,12 @@ export function PremiumAdCreateForm() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium">Design notes (optional)</label>
+                  <label className="text-xs font-medium">Notes (optional)</label>
                   <textarea
                     className="w-full min-h-[72px] px-3 py-2 rounded-lg border border-input bg-background text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     value={designNotes}
                     onChange={(e) => setDesignNotes(e.target.value)}
-                    placeholder="Logo placement, colors, text on creative…"
+                    placeholder="Add any notes for admin (logo, colors, message on the banner)…"
                   />
                 </div>
               </div>

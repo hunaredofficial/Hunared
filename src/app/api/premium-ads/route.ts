@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const {
     slot_id,
-    ad_kind,
+    ad_kind: adKindRaw,
+    kind: kindRaw,
     linked_job_id,
     linked_listing_id,
     title,
@@ -67,8 +68,13 @@ export async function POST(req: NextRequest) {
     submit_for_payment = true,
   } = body;
 
-  if (!slot_id || !ad_kind || !title || !target_url) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  const ad_kind = adKindRaw || kindRaw;
+
+  if (!slot_id || !ad_kind || !String(title || "").trim() || !String(target_url || "").trim()) {
+    return NextResponse.json(
+      { error: "Missing required fields (placement, type, title, destination URL)" },
+      { status: 400 }
+    );
   }
   if (!["job", "market", "standalone"].includes(ad_kind)) {
     return NextResponse.json({ error: "Invalid ad_kind" }, { status: 400 });
@@ -96,14 +102,10 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   const currentTop = active ? Number(active.offered_price_sar) : 0;
-  const days = Math.min(90, Math.max(1, Number(duration_days) || 7));
-  const mult =
-    days >= 90 ? 7.5 : days >= 60 ? 5.5 : days >= 30 ? 3.2 : days >= 14 ? 1.8 : 1;
-  const packageFloor = Math.round(Number(slot.base_price_sar) * mult);
   const minPrice =
     currentTop > 0
-      ? Math.max(packageFloor, currentTop + Number(slot.min_bid_increment_sar))
-      : packageFloor;
+      ? currentTop + Number(slot.min_bid_increment_sar)
+      : Number(slot.base_price_sar);
 
   const price = Number(offered_price_sar);
   if (!Number.isFinite(price) || price < minPrice) {
@@ -113,6 +115,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const days = Math.min(90, Math.max(1, Number(duration_days) || 7));
   const status = submit_for_payment ? "pending_payment" : "draft";
 
   const { data: ad, error } = await supabase
