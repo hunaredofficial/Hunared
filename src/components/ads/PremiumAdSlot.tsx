@@ -12,43 +12,55 @@ type LiveAd = {
 };
 
 /**
- * Shows the winning active premium ad for slotId.
- * If none is live, falls back to admin custom/AdSense placement via legacySlotName (or slotId).
+ * Shows the winning active premium ad for slotId (and optional aliases).
+ * Falls back to admin AdSlot (AdSense / custom banner) when no paid ad is live.
  */
 export function PremiumAdSlot({
   slotId,
+  alternateSlotIds = [],
   legacySlotName,
   className = "",
+  maxHeightClass = "max-h-40",
 }: {
   slotId: string;
-  /** Optional admin ad_placements.slot_name when different from premium slot id */
+  /** Extra premium slot ids to try (e.g. header + header_leaderboard) */
+  alternateSlotIds?: string[];
+  /** Admin ad_placements.slot_name for fallback */
   legacySlotName?: string;
   className?: string;
+  maxHeightClass?: string;
 }) {
   const [ad, setAd] = useState<LiveAd | null>(null);
   const [checked, setChecked] = useState(false);
 
+  const querySlots = [slotId, ...alternateSlotIds].filter(Boolean).join(",");
+
   useEffect(() => {
     let cancelled = false;
-    void fetch(`/api/premium-ads/live?slot=${encodeURIComponent(slotId)}`)
+    setChecked(false);
+    void fetch(`/api/premium-ads/live?slot=${encodeURIComponent(querySlots)}`)
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
         if (j?.ad) setAd(j.ad);
+        else setAd(null);
         setChecked(true);
       })
       .catch(() => {
-        if (!cancelled) setChecked(true);
+        if (!cancelled) {
+          setAd(null);
+          setChecked(true);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [slotId]);
+  }, [querySlots]);
 
   if (!checked) {
     return (
       <div
-        className={`w-full min-h-[48px] rounded-lg bg-muted/15 animate-pulse ${className}`}
+        className={`w-full min-h-[40px] rounded-lg bg-muted/10 animate-pulse ${className}`}
         aria-hidden
       />
     );
@@ -57,7 +69,7 @@ export function PremiumAdSlot({
   if (ad) {
     return (
       <a
-        href={ad.target_url}
+        href={ad.target_url || "#"}
         target="_blank"
         rel="noopener noreferrer sponsored"
         className={`block w-full overflow-hidden rounded-lg border border-border/40 bg-muted/10 ${className}`}
@@ -67,11 +79,11 @@ export function PremiumAdSlot({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={ad.image_url}
-            alt={ad.title}
-            className="w-full h-auto max-h-40 object-contain mx-auto"
+            alt={ad.title || "Advertisement"}
+            className={`w-full h-auto ${maxHeightClass} object-contain mx-auto`}
           />
         ) : (
-          <div className="w-full min-h-[56px] flex items-center justify-center text-sm font-medium px-4 py-3">
+          <div className="w-full min-h-[56px] flex items-center justify-center text-sm font-medium px-4 py-3 text-center">
             {ad.title}
           </div>
         )}
@@ -80,6 +92,5 @@ export function PremiumAdSlot({
     );
   }
 
-  // Fallback: admin-managed AdSense / custom banner
   return <AdSlot slotName={legacySlotName || slotId} className={className} />;
 }
