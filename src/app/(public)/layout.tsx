@@ -3,16 +3,11 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      {/* Site-wide header premium / admin ads — full content width */}
-      <div className="w-full border-b border-border/20 bg-background/40">
+      <div className="w-full border-b border-border/15">
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 pt-20 sm:pt-22 pb-2">
           <div className="hidden sm:block">
             <PremiumAdSlot
@@ -31,7 +26,7 @@ export default function PublicLayout({
         </div>
       </div>
       <main className="flex-1">{children}</main>
-      <div className="w-full border-t border-border/20">
+      <div className="w-full border-t border-border/15">
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3">
           <PremiumAdSlot
             slotId="footer_banner"

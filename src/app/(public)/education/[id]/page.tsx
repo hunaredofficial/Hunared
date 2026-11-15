@@ -8,9 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_COLORS } from "@/lib/constants";
 import type { Article, Profile } from "@/types/database";
 import { ArticleBody } from "@/components/articles/ArticleBody";
-import { ShareButton } from "@/components/shared/ShareButton";
-import { SaveButton } from "@/components/shared/SaveButton";
 import { RelatedCarousel } from "@/components/shared/RelatedCarousel";
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 
 export default async function ArticleDetailPage({
   params,
@@ -35,7 +34,7 @@ export default async function ArticleDetailPage({
     if (article) {
       const { data: authorData } = await supabase
         .from("profiles")
-        .select("id, full_name, profession, location, avatar_url")
+        .select("id, full_name, profession, location")
         .eq("id", article.author_id)
         .single();
       author = authorData;
@@ -117,15 +116,6 @@ export default async function ArticleDetailPage({
                   </div>
                 )}
               </div>
-
-              <div className="flex items-center gap-2 mt-5">
-                <SaveButton itemType="article" itemId={article.id} size="sm" />
-                <ShareButton
-                  url={`/education/${article.id}`}
-                  title={article.title}
-                  size="sm"
-                />
-              </div>
             </div>
 
             {/* Divider */}
@@ -146,6 +136,12 @@ export default async function ArticleDetailPage({
 
           {/* ── Sticky Sidebar ── */}
           <aside className="sticky top-24 self-start space-y-5 hidden lg:block">
+            <PremiumAdSlot
+              slotId="blog_sidebar"
+              legacySlotName="blog_sidebar"
+              className="mb-4"
+            />
+
             {/* Author card */}
             <Card className="overflow-hidden">
               <CardContent className="pt-5 pb-5">
@@ -155,17 +151,8 @@ export default async function ArticleDetailPage({
                 {author ? (
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="h-11 w-11 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm select-none ring-1 ring-border/50">
-                      {author.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={author.avatar_url}
-                          alt={author.full_name ?? "Author"}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        initials
-                      )}
+                    <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary font-bold text-sm select-none">
+                      {initials}
                     </div>
                     <div>
                       <p className="font-semibold text-sm leading-snug">{author.full_name}</p>

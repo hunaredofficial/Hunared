@@ -7,10 +7,10 @@ import { ShoppingBag, MapPin, ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
 } from "@/lib/constants";
-import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
 import { MarketFilter } from "@/components/market/MarketFilter";
@@ -293,14 +293,14 @@ export default async function MarketPage({
       </section>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="market_list_top" legacySlotName="market_list_top" className="mb-2" />
+        <PremiumAdSlot slotId="market_list_top" alternateSlotIds={["market_top"]} legacySlotName="market_list_top" className="mb-2" />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop sidebar filters */}
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0 space-y-4">
-            <PremiumAdSlot slotId="market_sidebar" legacySlotName="market_sidebar" />
+            <PremiumAdSlot slotId="market_sidebar" legacySlotName="market_sidebar" className="mb-3" />
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-lg border border-border bg-card p-3">
               <MarketFilter
                 variant="sidebar"

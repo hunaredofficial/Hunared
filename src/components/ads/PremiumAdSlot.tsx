@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { displayForSlot } from "@/lib/premium-ads/slotDisplay";
+import { expandSlotIds, legacyNameFor } from "@/lib/premium-ads/slotAliases";
 import { cn } from "@/lib/utils";
 
 type LiveAd = {
@@ -13,12 +14,6 @@ type LiveAd = {
   slot_id: string;
 };
 
-/**
- * Winning active premium ad for slot(s).
- * Falls back to admin AdSlot when none live.
- * Images are framed to slot size (cover for banners, contain for sidebar).
- * Text-only ads without image are not shown (avoids empty "title" strips).
- */
 export function PremiumAdSlot({
   slotId,
   alternateSlotIds = [],
@@ -32,19 +27,22 @@ export function PremiumAdSlot({
 }) {
   const [ad, setAd] = useState<LiveAd | null>(null);
   const [checked, setChecked] = useState(false);
-
-  const querySlots = [slotId, ...alternateSlotIds].filter(Boolean).join(",");
+  const querySlots = useMemo(
+    () => expandSlotIds(slotId, alternateSlotIds).join(","),
+    [slotId, alternateSlotIds]
+  );
 
   useEffect(() => {
     let cancelled = false;
     setChecked(false);
-    void fetch(`/api/premium-ads/live?slot=${encodeURIComponent(querySlots)}`)
+    setAd(null);
+    void fetch(`/api/premium-ads/live?slot=${encodeURIComponent(querySlots)}`, {
+      cache: "no-store",
+    })
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
-        const row = j?.ad as LiveAd | null;
-        // Prefer ads with creative image — skip title-only strips
-        if (row && row.image_url) setAd(row);
+        if (j?.ad?.image_url) setAd(j.ad);
         else setAd(null);
         setChecked(true);
       })
@@ -62,7 +60,7 @@ export function PremiumAdSlot({
   if (!checked) {
     return (
       <div
-        className={cn("w-full rounded-lg bg-muted/10 animate-pulse min-h-[40px]", className)}
+        className={cn("w-full min-h-[40px] rounded-lg bg-muted/10 animate-pulse", className)}
         aria-hidden
       />
     );
@@ -76,7 +74,7 @@ export function PremiumAdSlot({
         target="_blank"
         rel="noopener noreferrer sponsored"
         className={cn(
-          "block overflow-hidden rounded-lg border border-border/30 bg-muted/5",
+          "block overflow-hidden rounded-lg border border-border/30 bg-black/20",
           disp.frameClass,
           className
         )}
@@ -91,10 +89,15 @@ export function PremiumAdSlot({
             disp.objectFit === "cover" ? "object-cover object-center" : "object-contain object-center"
           )}
         />
-        <span className="sr-only">Sponsored: {ad.title}</span>
+        <span className="sr-only">Sponsored</span>
       </a>
     );
   }
 
-  return <AdSlot slotName={legacySlotName || slotId} className={className} />;
+  return (
+    <AdSlot
+      slotName={legacySlotName || legacyNameFor(slotId)}
+      className={className}
+    />
+  );
 }
