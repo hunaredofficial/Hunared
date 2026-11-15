@@ -1,6 +1,5 @@
 import { LEGACY_TO_CANONICAL } from "@/lib/ads/slots";
 
-/** Expand only true aliases — never merge independent placements like jobs_list_top + jobs_inline */
 export function expandSlotIds(slotId: string, extra: string[] = []): string[] {
   const seeds = [slotId, ...extra].filter(Boolean);
   const wanted = new Set<string>(seeds);

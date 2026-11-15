@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
       .select("*")
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
-    return NextResponse.json({ slots: slots || [] });
+    const visible = (slots || []).filter(
+      (s: { id: string }) => s.id !== "job_promote" && s.id !== "listing_promote"
+    );
+    return NextResponse.json({ slots: visible });
   }
 
   const { data, error } = await supabase
@@ -31,13 +34,13 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ ads: data || [] });
 }
 
-/** POST — create campaign (draft → pending_payment) */
+/** POST — create campaign (banner or ranking promote) */
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const {
+  let {
     slot_id,
     ad_kind,
     linked_job_id,
@@ -51,11 +54,34 @@ export async function POST(req: NextRequest) {
     submit_for_payment = true,
   } = body;
 
-  if (!slot_id || !ad_kind || !title || !target_url) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
-  if (!["job", "market", "standalone"].includes(ad_kind)) {
+  if (!ad_kind || !["job", "market", "standalone"].includes(ad_kind)) {
     return NextResponse.json({ error: "Invalid ad_kind" }, { status: 400 });
+  }
+
+  const isPromote = ad_kind === "job" || ad_kind === "market";
+
+  // Ranking promote: auto slot, no creative/price required
+  if (isPromote) {
+    if (ad_kind === "job" && !linked_job_id) {
+      return NextResponse.json({ error: "Select a job to promote" }, { status: 400 });
+    }
+    if (ad_kind === "market" && !linked_listing_id) {
+      return NextResponse.json({ error: "Select a listing to promote" }, { status: 400 });
+    }
+    slot_id = ad_kind === "job" ? "job_promote" : "listing_promote";
+    if (!title) title = ad_kind === "job" ? "Job promotion" : "Listing promotion";
+    if (!target_url) {
+      target_url =
+        ad_kind === "job"
+          ? `https://hunared.com/jobs/${linked_job_id}`
+          : `https://hunared.com/market/${linked_listing_id}`;
+    }
+    offered_price_sar = 0;
+    image_url = image_url || null;
+  } else {
+    if (!slot_id || !title || !target_url) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
   }
 
   const supabase = createAdminClient();
@@ -68,33 +94,44 @@ export async function POST(req: NextRequest) {
 
   if (!slot) return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
 
-  // Min price = base or current active + increment
-  const { data: active } = await supabase
-    .from("premium_ads")
-    .select("offered_price_sar")
-    .eq("slot_id", slot_id)
-    .eq("status", "active")
-    .gt("ends_at", new Date().toISOString())
-    .order("offered_price_sar", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  let price = Number(offered_price_sar);
+  if (!isPromote) {
+    const { data: active } = await supabase
+      .from("premium_ads")
+      .select("offered_price_sar")
+      .eq("slot_id", slot_id)
+      .eq("status", "active")
+      .gt("ends_at", new Date().toISOString())
+      .order("offered_price_sar", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  const currentTop = active ? Number(active.offered_price_sar) : 0;
-  const minPrice =
-    currentTop > 0
-      ? currentTop + Number(slot.min_bid_increment_sar)
-      : Number(slot.base_price_sar);
+    const currentTop = active ? Number(active.offered_price_sar) : 0;
+    const minPrice =
+      currentTop > 0
+        ? currentTop + Number(slot.min_bid_increment_sar)
+        : Number(slot.base_price_sar);
 
-  const price = Number(offered_price_sar);
-  if (!Number.isFinite(price) || price < minPrice) {
-    return NextResponse.json(
-      { error: `Minimum price for this slot is ${minPrice} ${slot.currency}` },
-      { status: 400 }
-    );
+    if (!Number.isFinite(price) || price < minPrice) {
+      return NextResponse.json(
+        { error: `Minimum price for this slot is ${minPrice} ${slot.currency || "USD"}` },
+        { status: 400 }
+      );
+    }
+  } else {
+    price = 0;
   }
 
   const days = Math.min(90, Math.max(1, Number(duration_days) || 7));
-  const status = submit_for_payment ? "pending_payment" : "draft";
+  const starts = new Date();
+  const ends = new Date(starts.getTime() + days * 86400000);
+
+  // Promote goes pending review; standalone may need payment first
+  const status = isPromote
+    ? "pending_approval"
+    : submit_for_payment
+      ? "pending_payment"
+      : "draft";
 
   const { data: ad, error } = await supabase
     .from("premium_ads")
@@ -104,28 +141,26 @@ export async function POST(req: NextRequest) {
       ad_kind,
       linked_job_id: linked_job_id || null,
       linked_listing_id: linked_listing_id || null,
-      title: String(title).slice(0, 120),
-      target_url: String(target_url).slice(0, 500),
+      title: String(title).trim(),
+      target_url: String(target_url).trim(),
       image_url: image_url || null,
       design_notes: design_notes || null,
       offered_price_sar: price,
-      currency: slot.currency,
+      currency: slot.currency || "USD",
       duration_days: days,
+      starts_at: starts.toISOString(),
+      ends_at: ends.toISOString(),
       status,
-      updated_at: new Date().toISOString(),
     })
     .select("*")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await supabase.from("premium_ad_bids").insert({
-    ad_id: ad.id,
-    user_id: userId,
-    slot_id,
-    amount_sar: price,
-    note: "Initial offer",
+  return NextResponse.json({
+    ad,
+    minPrice: isPromote ? 0 : price,
+    promote: isPromote,
   });
-
-  return NextResponse.json({ ad, minPrice });
 }
+

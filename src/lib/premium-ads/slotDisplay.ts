@@ -12,6 +12,7 @@ export const SLOT_DISPLAY: Record<string, SlotDisplay> = {
   market_list_top: { frameClass: "w-full h-[90px]", objectFit: "cover" },
   market_sidebar: { frameClass: "w-full aspect-[300/250] max-h-[300px]", objectFit: "contain" },
   market_detail_below: { frameClass: "w-full h-[90px]", objectFit: "cover" },
+  candidates_filters: { frameClass: "w-full aspect-[300/250] max-h-[250px]", objectFit: "contain" },
   candidates_top: { frameClass: "w-full h-[90px]", objectFit: "cover" },
   companies_top: { frameClass: "w-full h-[90px]", objectFit: "cover" },
   companies_filters: { frameClass: "w-full h-[90px]", objectFit: "cover" },

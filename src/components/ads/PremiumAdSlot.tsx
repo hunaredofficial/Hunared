@@ -14,30 +14,22 @@ type LiveAd = {
   slot_id: string;
 };
 
-/**
- * One creative per slotId. Does not merge unrelated slots.
- * Falls back to admin AdSlot only when legacySlotName is provided.
- */
 export function PremiumAdSlot({
   slotId,
   alternateSlotIds = [],
   legacySlotName,
   className = "",
-  hideIfEmpty = false,
 }: {
   slotId: string;
   alternateSlotIds?: string[];
   legacySlotName?: string;
   className?: string;
-  /** When true, render nothing if no premium creative (no AdSense/custom fallback) */
-  hideIfEmpty?: boolean;
 }) {
   const [ad, setAd] = useState<LiveAd | null>(null);
   const [checked, setChecked] = useState(false);
   const querySlots = useMemo(
     () => expandSlotIds(slotId, alternateSlotIds).join(","),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [slotId, alternateSlotIds.join(",")]
+    [slotId, alternateSlotIds]
   );
 
   useEffect(() => {
@@ -50,7 +42,7 @@ export function PremiumAdSlot({
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
-        if (j?.ad?.image_url) setAd(j.ad as LiveAd);
+        if (j?.ad?.image_url) setAd(j.ad);
         else setAd(null);
         setChecked(true);
       })
@@ -94,9 +86,7 @@ export function PremiumAdSlot({
           alt={ad.title || "Advertisement"}
           className={cn(
             "w-full h-full",
-            disp.objectFit === "cover"
-              ? "object-cover object-center"
-              : "object-contain object-center"
+            disp.objectFit === "cover" ? "object-cover object-center" : "object-contain object-center"
           )}
         />
         <span className="sr-only">Sponsored</span>
@@ -104,11 +94,10 @@ export function PremiumAdSlot({
     );
   }
 
-  if (hideIfEmpty) return null;
-
-  if (legacySlotName) {
-    return <AdSlot slotName={legacySlotName} className={className} />;
-  }
-
-  return null;
+  return (
+    <AdSlot
+      slotName={legacySlotName || legacyNameFor(slotId)}
+      className={className}
+    />
+  );
 }

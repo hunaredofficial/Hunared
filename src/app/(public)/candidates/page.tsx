@@ -102,6 +102,10 @@ export default async function CandidatesPage({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Talent</h1>
+          <div className="mt-4 mb-2">
+            <PremiumAdSlot slotId="candidates_top" hideIfEmpty />
+          </div>
+
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0
                   ? `${total.toLocaleString()} professional${total !== 1 ? "s" : ""}`
@@ -112,15 +116,15 @@ export default async function CandidatesPage({
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="candidates_top" legacySlotName="candidates_top" className="mb-2" />
-      </div>
-
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop sidebar filters */}
+
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-lg border border-border bg-card p-3">
+              <div className="mb-3">
+                <PremiumAdSlot slotId="candidates_filters" hideIfEmpty />
+              </div>
               <h2 className="text-sm font-semibold mb-3">Filters</h2>
               <CandidatesFilter
                 defaultSearch={search}
