@@ -53,5 +53,12 @@ export const PREMIUM_ADS_ADMIN_CONTACT = {
     "Pay the package price, then submit your payment reference. An admin reviews and publishes your ad.",
 };
 
-/** Default display currency for UI */
 export const PREMIUM_ADS_CURRENCY = "USD";
+
+export const PREMIUM_AD_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5MB
+export const PREMIUM_AD_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
