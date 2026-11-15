@@ -243,7 +243,10 @@ export default async function MarketPage({
       rows = promoteToFront(rows, promotedListingIds);
 
       if (usePersonalSort && profile) {
-        const promoted = rows.filter((r) => promotedListingSet.has(r.id));
+        const promoted = promoteToFront(
+          rows.filter((r) => promotedListingSet.has(r.id)),
+          promotedListingIds
+        );
         const rest = rows.filter((r) => !promotedListingSet.has(r.id));
         const rankedRest = rankByPersonalization(rest, (row) =>
           scoreListing(row, profile, savedListingIds)
@@ -257,13 +260,33 @@ export default async function MarketPage({
       }
     } else {
       const ascending = sort === "oldest";
+      const promotedDb = await getPromotedListingIds(supabase);
+      promotedListingSet = new Set(promotedDb);
+
+      let promotedRows: typeof listings = [];
+      if (promotedDb.length > 0) {
+        let pq = supabase
+          .from("marketplace_listings")
+          .select("*")
+          .eq("status", "approved")
+          .in("id", promotedDb);
+        if (category) pq = pq.eq("category", category);
+        if (country) pq = pq.eq("country", country);
+        if (city) pq = pq.ilike("city", `%${city}%`);
+        const { data: promoData } = await pq;
+        promotedRows = promoteToFront(promoData ?? [], promotedDb);
+      }
+
       query = query
         .order("created_at", { ascending })
         .range(from, from + limit - 1);
       const { data, count } = await query;
-      const promotedDb = await getPromotedListingIds(supabase);
-      promotedListingSet = new Set(promotedDb);
-      listings = promoteToFront(data ?? [], promotedDb);
+      const organic = (data ?? []).filter((r) => !promotedListingSet.has(r.id));
+      if (page <= 1) {
+        listings = [...promotedRows, ...organic].slice(0, limit);
+      } else {
+        listings = organic;
+      }
       total = count ?? 0;
     }
   } catch {

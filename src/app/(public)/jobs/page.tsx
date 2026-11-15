@@ -276,15 +276,18 @@ export default async function JobsPage({
         );
       }
 
-      // Premium-promoted jobs always first
+      // Premium-promoted jobs always first (higher bid → newer if same bid)
       const promotedIds = await getPromotedJobIds(supabase);
       promotedIdSet = new Set(promotedIds);
       rows = promoteToFront(rows, promotedIds);
 
       // Personalization: rank by profile match when signed in
       if (usePersonalSort && profile) {
-        // Keep promoted at top, personalize the rest
-        const promoted = rows.filter((j) => promotedIdSet.has(j.id));
+        // Keep bid-ordered promoted at top, personalize the rest
+        const promoted = promoteToFront(
+          rows.filter((j) => promotedIdSet.has(j.id)),
+          promotedIds
+        );
         const rest = rows.filter((j) => !promotedIdSet.has(j.id));
         const rankedRest = rankByPersonalization(rest, (j) =>
           scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
@@ -297,16 +300,42 @@ export default async function JobsPage({
         jobs = rows.slice(from, from + limit);
       }
     } else {
-      // DB-side order
+      // DB-side order + inject ALL active promotions on page 1
       const ascending = dateOrder === "oldest";
+      const promotedIdsDb = await getPromotedJobIds(supabase);
+      promotedIdSet = new Set(promotedIdsDb);
+
+      let promotedRows: typeof jobs = [];
+      if (promotedIdsDb.length > 0) {
+        let pq = supabase
+          .from("jobs")
+          .select("*")
+          .eq("status", "approved")
+          .in("id", promotedIdsDb);
+        if (category) pq = pq.eq("category", category);
+        if (country) pq = pq.eq("country", country);
+        if (city) pq = pq.ilike("city", `%${city}%`);
+        if (employmentType) pq = pq.eq("employment_type", employmentType);
+        const { data: promoData } = await pq;
+        promotedRows = promoteToFront(promoData ?? [], promotedIdsDb);
+      }
+
       query = query
         .order("created_at", { ascending })
         .range(from, from + limit - 1);
       const { data, count } = await query;
-      const promotedIdsDb = await getPromotedJobIds(supabase);
-      promotedIdSet = new Set(promotedIdsDb);
-      jobs = promoteToFront(data ?? [], promotedIdsDb);
-      total = count ?? 0;
+      const organic = (data ?? []).filter((j) => !promotedIdSet.has(j.id));
+
+      if (page <= 1) {
+        // All promotions (any user, any bid) at top, then organic fill
+        const merged = [...promotedRows, ...organic];
+        jobs = merged.slice(0, limit);
+      } else {
+        jobs = organic;
+      }
+      // total counts organic + promoted so pagination stays sane
+      total = (count ?? 0) + (page <= 1 ? 0 : 0);
+      if (count != null) total = count;
     }
   } catch {
     // DB not configured — show empty state
