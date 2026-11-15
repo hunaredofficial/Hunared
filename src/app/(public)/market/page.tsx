@@ -457,9 +457,15 @@ function ListingCard({ listing, isPromoted = false }: { listing: Listing & { _ma
 
   return (
     <div className={cn(
-      "group flex flex-col rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden hover:ring-primary/40 hover:shadow-md transition-all duration-200",
+      "group relative flex flex-col rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden hover:ring-primary/40 hover:shadow-md transition-all duration-200",
       isRecommended && "surface-recommended"
     )}>
+      {isPromoted && (
+        <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-amber-500/25 text-amber-500 dark:text-amber-400 px-2 py-0.5 text-[10px] font-semibold tracking-wide border border-amber-500/40 shadow-sm backdrop-blur-sm">
+          <Megaphone className="h-3 w-3" />
+          Promoted
+        </span>
+      )}
       {listing.image_url ? (
         <div className="aspect-square w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}

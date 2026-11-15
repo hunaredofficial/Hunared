@@ -539,15 +539,15 @@ function JobCard({
         isRecommended && "ring-1 ring-primary/25 border-primary/30"
       )}
     >
-      <CardContent className="p-4 flex flex-col h-full gap-3">
+      {isPromoted && (
+        <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-amber-500/25 text-amber-500 dark:text-amber-400 px-2 py-0.5 text-[10px] font-semibold tracking-wide border border-amber-500/40 shadow-sm backdrop-blur-sm">
+          <Megaphone className="h-3 w-3" />
+          Promoted
+        </span>
+      )}
+      <CardContent className={cn("p-4 flex flex-col h-full gap-3", isPromoted && "pt-8")}>
         {/* Top: badges */}
         <div className="flex items-center gap-1.5 flex-wrap min-h-[1.25rem]">
-          {isPromoted && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-[10px] font-semibold tracking-wide border border-amber-500/30">
-              <Megaphone className="h-3 w-3" />
-              Promoted
-            </span>
-          )}
           {isRecommended && (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold tracking-wide">
               <Sparkles className="h-3 w-3" />
