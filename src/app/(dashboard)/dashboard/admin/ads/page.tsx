@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Megaphone } from "lucide-react";
 import { AdSlotEditor } from "@/components/admin/AdSlotEditor";
 import { AddAdSlotForm } from "@/components/admin/AddAdSlotForm";
+import { AD_SLOT_BY_ID } from "@/lib/ads/slots";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,18 @@ export default async function AdminAdsPage() {
     .select("*")
     .order("slot_name", { ascending: true });
 
+  const list = placements ?? [];
+
+  // Sort: known catalog order first, then unknown
+  const sorted = [...list].sort((a, b) => {
+    const ia = AD_SLOT_BY_ID[a.slot_name]?.group || "ZZZ";
+    const ib = AD_SLOT_BY_ID[b.slot_name]?.group || "ZZZ";
+    if (ia !== ib) return ia.localeCompare(ib);
+    return a.slot_name.localeCompare(b.slot_name);
+  });
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -35,10 +45,11 @@ export default async function AdminAdsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold">Ad Placements</h1>
-            <p className="text-xs text-muted-foreground">
-              Site banners (AdSense / custom). Paid user campaigns are reviewed in{" "}
-              <a href="/dashboard/premium-ads/admin" className="text-primary underline font-medium">
-                Premium Ads → Approve & publish
+            <p className="text-xs text-muted-foreground max-w-xl">
+              Site slots for custom banners or Google AdSense. Names match live page components.
+              Paid campaigns are managed under{" "}
+              <a href="/dashboard/premium-ads/admin" className="text-primary underline">
+                Premium Ads
               </a>
               .
             </p>
@@ -47,63 +58,70 @@ export default async function AdminAdsPage() {
         <AddAdSlotForm />
       </div>
 
-      {/* Stats row */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span>{placements?.length ?? 0} total slots</span>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+        <span>{sorted.length} total slots</span>
         <span>·</span>
-        <span className="text-green-600 font-medium">
-          {placements?.filter((p) => p.is_active).length ?? 0} active
+        <span className="text-emerald-600 font-medium">
+          {sorted.filter((p) => p.is_active).length} active
         </span>
         <span>·</span>
         <span>
-          {placements?.filter((p) => p.ad_type === "adsense").length ?? 0} AdSense /{" "}
-          {placements?.filter((p) => p.ad_type === "custom").length ?? 0} Custom
+          {sorted.filter((p) => p.ad_type === "adsense").length} AdSense /{" "}
+          {sorted.filter((p) => p.ad_type === "custom").length} Custom
         </span>
       </div>
 
-      {/* No slots yet */}
-      {!placements?.length && (
+      {!sorted.length && (
         <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground space-y-2">
           <Megaphone className="h-8 w-8 mx-auto opacity-30" />
           <p className="text-sm font-medium">No ad slots yet</p>
           <p className="text-xs">
-            Click &ldquo;Add Slot&rdquo; above to create your first placement.
+            Run <code className="bg-muted px-1 rounded">supabase/020_ad_slots_align.sql</code> then
+            refresh, or click Add Slot.
           </p>
         </div>
       )}
 
-      {/* Slots grid */}
-      {!!placements?.length && (
+      {!!sorted.length && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {placements.map((placement) => (
+          {sorted.map((placement) => (
             <AdSlotEditor key={placement.id} placement={placement} />
           ))}
         </div>
       )}
 
-      {/* Usage guide */}
       <div className="rounded-xl border bg-muted/30 p-4 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          How to use
+          Current site slots
         </p>
-        <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
           <li>
-            Add <code className="bg-muted px-1 rounded">NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-XXXXXXXXXXXXXXXX</code> to your{" "}
-            <code className="bg-muted px-1 rounded">.env.local</code>.
+            <strong>Sitewide:</strong> header, header_leaderboard, header_mobile, footer,
+            footer_banner
           </li>
           <li>
-            Create a slot here with a unique <strong>slot_name</strong> (e.g.{" "}
-            <code className="bg-muted px-1 rounded">header</code>).
+            <strong>Home:</strong> homepage_hero / home_hero, homepage_mid, homepage_inline
           </li>
           <li>
-            Drop{" "}
-            <code className="bg-muted px-1 rounded">
-              {"<AdSlot slotName=\"header\" />"}
-            </code>{" "}
-            anywhere in your page components.
+            <strong>Jobs:</strong> jobs_list_top, jobs_sidebar, jobs_inline, job_below_description
           </li>
-          <li>Toggle the slot active — the component auto-hides when inactive.</li>
-        </ol>
+          <li>
+            <strong>Marketplace:</strong> market_list_top, market_sidebar
+          </li>
+          <li>
+            <strong>Directories:</strong> candidates_top (Talent), companies_top, learning_top
+          </li>
+          <li>
+            <strong>Articles:</strong> blog_sidebar
+          </li>
+        </ul>
+        <p className="text-[11px] text-muted-foreground pt-1">
+          In code:{" "}
+          <code className="bg-muted px-1 rounded">{'<AdSlot slotName="header" />'}</code> or{" "}
+          <code className="bg-muted px-1 rounded">
+            {'<PremiumAdSlot slotId="jobs_list_top" legacySlotName="jobs_list_top" />'}
+          </code>
+        </p>
       </div>
     </div>
   );

@@ -16,35 +16,7 @@ import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { upsertAdPlacement } from "@/app/(dashboard)/dashboard/admin/ads/actions";
 import type { AdType } from "@/types/database";
-
-const SUGGESTED_SLOTS = [
-  // Site-wide
-  "header",
-  "header_mobile",
-  "footer",
-  // Home
-  "homepage_hero",
-  "homepage_mid",
-  "homepage_inline",
-  // Jobs
-  "jobs_list_top",
-  "job_sidebar",
-  "jobs_inline",
-  "job_below_description",
-  // Marketplace
-  "market_list_top",
-  "market_sidebar",
-  "market_top",
-  // Talent / Companies / Learning
-  "candidates_top",
-  "companies_top",
-  "learning_top",
-  "blog_sidebar",
-  // Align with premium_ad_slots ids (for custom fallback display)
-  "header_leaderboard",
-  "home_hero",
-  "jobs_sidebar",
-];
+import { AD_SLOT_CATALOG, SUGGESTED_AD_SLOTS, getAdSlotLabel } from "@/lib/ads/slots";
 
 export function AddAdSlotForm() {
   const [open, setOpen] = useState(false);
@@ -73,12 +45,12 @@ export function AddAdSlotForm() {
         adsense_slot_id: "",
       });
 
-      if (!result.ok) {
-        toast.error(result.error);
+      if (result && typeof result === "object" && "ok" in result && !result.ok) {
+        toast.error((result as { error?: string }).error || "Failed to create slot");
         return;
       }
 
-      toast.success(`Slot "${name}" created.`);
+      toast.success(`Slot "${getAdSlotLabel(name)}" created.`);
       setSlotName("");
       setOpen(false);
     });
@@ -107,19 +79,26 @@ export function AddAdSlotForm() {
           <Label className="text-xs">Slot Name</Label>
           <Input
             className="h-8 text-xs font-mono"
-            placeholder="e.g. header or job_sidebar"
+            placeholder="e.g. header or jobs_list_top"
             list="slot-suggestions"
             value={slotName}
             onChange={(e) => setSlotName(e.target.value)}
             autoComplete="off"
           />
           <datalist id="slot-suggestions">
-            {SUGGESTED_SLOTS.map((s) => (
-              <option key={s} value={s} />
+            {SUGGESTED_AD_SLOTS.map((s) => (
+              <option key={s} value={s}>
+                {getAdSlotLabel(s)}
+              </option>
             ))}
           </datalist>
           <p className="text-[10px] text-muted-foreground">
-            Lowercase with underscores. Must be unique and match the slotName used in code.
+            Must match the <code className="bg-muted px-1 rounded">slotName</code> used in code.
+            Current site slots:{" "}
+            {AD_SLOT_CATALOG.slice(0, 6)
+              .map((s) => s.id)
+              .join(", ")}
+            …
           </p>
         </div>
         <div className="space-y-1.5">
@@ -134,11 +113,11 @@ export function AddAdSlotForm() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem className="cursor-pointer text-xs" value="adsense">
-                Google AdSense
-              </SelectItem>
               <SelectItem className="cursor-pointer text-xs" value="custom">
                 Custom Banner
+              </SelectItem>
+              <SelectItem className="cursor-pointer text-xs" value="adsense">
+                Google AdSense
               </SelectItem>
             </SelectContent>
           </Select>
@@ -149,7 +128,6 @@ export function AddAdSlotForm() {
             variant="ghost"
             className="h-7 text-xs cursor-pointer"
             onClick={() => setOpen(false)}
-            disabled={isPending}
           >
             Cancel
           </Button>
