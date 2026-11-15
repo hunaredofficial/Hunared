@@ -14,8 +14,14 @@ export default async function EditPremiumAdPage({
   if (!userId) redirect("/sign-in");
   const { id } = await params;
   return (
-    <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
-      <PremiumAdEditForm adId={id} />
-    </Suspense>
+    <div className="w-full">
+      <Suspense
+        fallback={
+          <p className="text-sm text-muted-foreground text-center py-16">Loading…</p>
+        }
+      >
+        <PremiumAdEditForm adId={id} />
+      </Suspense>
+    </div>
   );
 }

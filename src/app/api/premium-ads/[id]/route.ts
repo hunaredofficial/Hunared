@@ -203,7 +203,6 @@ export async function DELETE(
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
   const supabase = createAdminClient();
-  // Owner may delete any of their campaigns (including live / rejected / expired)
   const { data: existing } = await supabase
     .from("premium_ads")
     .select("id, status")
@@ -219,5 +218,5 @@ export async function DELETE(
     .eq("id", id)
     .eq("user_id", userId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, deleted: true });
 }
