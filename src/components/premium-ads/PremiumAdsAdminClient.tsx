@@ -82,15 +82,20 @@ export function PremiumAdsAdminClient() {
     action: string,
     extra: Record<string, unknown> = {}
   ) {
-    setBusy(id + action);
+    const campaignId = String(id || "").trim();
+    if (!campaignId) {
+      toast.error("Missing campaign id");
+      return;
+    }
+    setBusy(campaignId + action);
     try {
       const res = await fetch("/api/admin/premium-ads", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id,
+          id: campaignId,
           action,
-          admin_note: notes[id] || undefined,
+          admin_note: notes[campaignId] || notes[id] || undefined,
           ...extra,
         }),
       });
@@ -278,7 +283,15 @@ export function PremiumAdsAdminClient() {
                           size="sm"
                           variant="outline"
                           disabled={!!busy}
-                          onClick={() => void act(ad.id, "expire")}
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "End this live campaign now? It will stop showing on the site."
+                              )
+                            ) {
+                              void act(ad.id, "expire");
+                            }
+                          }}
                         >
                           <Ban className="h-3.5 w-3.5 mr-1" />
                           End now
@@ -380,7 +393,11 @@ export function PremiumAdsAdminClient() {
                         variant="destructive"
                         disabled={!!busy}
                         onClick={() => {
-                          if (confirm("Permanently delete this campaign?")) {
+                          const live = ad.status === "active" || ad.status === "scheduled";
+                          const msg = live
+                            ? "This campaign is LIVE. Permanently delete it and remove it from the site?"
+                            : "Permanently delete this campaign?";
+                          if (confirm(msg)) {
                             void act(ad.id, "delete");
                           }
                         }}

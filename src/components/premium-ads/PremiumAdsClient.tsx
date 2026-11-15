@@ -33,7 +33,7 @@ const canEdit = (s: PremiumAdStatus) =>
   ["draft", "pending_payment", "pending_approval", "rejected", "outbid", "active"].includes(s);
 
 const canDelete = (s: PremiumAdStatus) =>
-  ["draft", "pending_payment", "rejected", "outbid", "pending_approval"].includes(s);
+  ["draft", "pending_payment", "rejected", "outbid", "pending_approval", "expired", "active", "scheduled"].includes(s);
 
 export function PremiumAdsClient() {
   const [ads, setAds] = useState<Ad[]>([]);
@@ -81,8 +81,12 @@ export function PremiumAdsClient() {
     }
   }
 
-  async function removeAd(id: string) {
-    if (!confirm("Delete this premium ad?")) return;
+  async function removeAd(id: string, status?: string) {
+    const live = status === "active" || status === "scheduled";
+    const msg = live
+      ? "This campaign is LIVE on the site. Permanently delete it?"
+      : "Delete this premium ad?";
+    if (!confirm(msg)) return;
     setBusy(id);
     try {
       const res = await fetch(`/api/premium-ads/${id}`, { method: "DELETE" });
@@ -98,7 +102,7 @@ export function PremiumAdsClient() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-1">
+    <div className="space-y-6 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
@@ -140,19 +144,10 @@ export function PremiumAdsClient() {
           <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
       ) : ads.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card/30 px-6 py-16 sm:py-20 text-center flex flex-col items-center justify-center max-w-xl mx-auto">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Megaphone className="h-6 w-6 text-primary" />
-          </div>
-          <p className="text-base font-medium text-foreground mb-1">No premium ads yet</p>
-          <p className="text-sm text-muted-foreground mb-5 max-w-sm">
-            Promote a job, listing, or brand creative on high-visibility placements across Hunared.
-          </p>
-          <Button asChild size="lg" className="h-11 px-6">
-            <Link href="/dashboard/premium-ads/new">
-              <Plus className="h-4 w-4 mr-1.5" />
-              Create your first ad
-            </Link>
+        <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
+          <p className="text-sm text-muted-foreground mb-3">No premium ads yet.</p>
+          <Button asChild>
+            <Link href="/dashboard/premium-ads/new">Create your first ad</Link>
           </Button>
         </div>
       ) : (
@@ -184,7 +179,7 @@ export function PremiumAdsClient() {
               <p className="text-sm">
                 Offer:{" "}
                 <span className="font-semibold">
-                  ${ad.offered_price_sar} {ad.currency || "USD"}
+                  {ad.offered_price_sar} {ad.currency}
                 </span>
                 {ad.ends_at && ad.status === "active" && (
                   <span className="text-muted-foreground text-xs ml-2">
@@ -221,7 +216,7 @@ export function PremiumAdsClient() {
                     variant="ghost"
                     className="text-destructive"
                     disabled={busy === ad.id}
-                    onClick={() => void removeAd(ad.id)}
+                    onClick={() => void removeAd(ad.id, ad.status)}
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" />
                     Delete

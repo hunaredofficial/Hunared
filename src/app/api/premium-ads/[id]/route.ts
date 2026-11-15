@@ -203,12 +203,21 @@ export async function DELETE(
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
   const supabase = createAdminClient();
+  // Owner may delete any of their campaigns (including live / rejected / expired)
+  const { data: existing } = await supabase
+    .from("premium_ads")
+    .select("id, status")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!existing) {
+    return NextResponse.json({ error: "Not found or not allowed" }, { status: 404 });
+  }
   const { error } = await supabase
     .from("premium_ads")
     .delete()
     .eq("id", id)
-    .eq("user_id", userId)
-    .in("status", ["draft", "pending_payment", "rejected", "outbid", "pending_approval"]);
+    .eq("user_id", userId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
