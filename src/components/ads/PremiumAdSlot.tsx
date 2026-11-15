@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
+import { displayForSlot } from "@/lib/premium-ads/slotDisplay";
+import { cn } from "@/lib/utils";
 
 type LiveAd = {
   id: string;
@@ -12,23 +14,21 @@ type LiveAd = {
 };
 
 /**
- * Shows the winning active premium ad for slotId (and optional aliases).
- * Falls back to admin AdSlot (AdSense / custom banner) when no paid ad is live.
+ * Winning active premium ad for slot(s).
+ * Falls back to admin AdSlot when none live.
+ * Images are framed to slot size (cover for banners, contain for sidebar).
+ * Text-only ads without image are not shown (avoids empty "title" strips).
  */
 export function PremiumAdSlot({
   slotId,
   alternateSlotIds = [],
   legacySlotName,
   className = "",
-  maxHeightClass = "max-h-40",
 }: {
   slotId: string;
-  /** Extra premium slot ids to try (e.g. header + header_leaderboard) */
   alternateSlotIds?: string[];
-  /** Admin ad_placements.slot_name for fallback */
   legacySlotName?: string;
   className?: string;
-  maxHeightClass?: string;
 }) {
   const [ad, setAd] = useState<LiveAd | null>(null);
   const [checked, setChecked] = useState(false);
@@ -42,7 +42,9 @@ export function PremiumAdSlot({
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
-        if (j?.ad) setAd(j.ad);
+        const row = j?.ad as LiveAd | null;
+        // Prefer ads with creative image — skip title-only strips
+        if (row && row.image_url) setAd(row);
         else setAd(null);
         setChecked(true);
       })
@@ -60,34 +62,36 @@ export function PremiumAdSlot({
   if (!checked) {
     return (
       <div
-        className={`w-full min-h-[40px] rounded-lg bg-muted/10 animate-pulse ${className}`}
+        className={cn("w-full rounded-lg bg-muted/10 animate-pulse min-h-[40px]", className)}
         aria-hidden
       />
     );
   }
 
-  if (ad) {
+  if (ad?.image_url) {
+    const disp = displayForSlot(ad.slot_id || slotId);
     return (
       <a
         href={ad.target_url || "#"}
         target="_blank"
         rel="noopener noreferrer sponsored"
-        className={`block w-full overflow-hidden rounded-lg border border-border/40 bg-muted/10 ${className}`}
-        title={ad.title}
-      >
-        {ad.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={ad.image_url}
-            alt={ad.title || "Advertisement"}
-            className={`w-full h-auto ${maxHeightClass} object-contain mx-auto`}
-          />
-        ) : (
-          <div className="w-full min-h-[56px] flex items-center justify-center text-sm font-medium px-4 py-3 text-center">
-            {ad.title}
-          </div>
+        className={cn(
+          "block overflow-hidden rounded-lg border border-border/30 bg-muted/5",
+          disp.frameClass,
+          className
         )}
-        <span className="sr-only">Sponsored</span>
+        title={ad.title || "Sponsored"}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={ad.image_url}
+          alt={ad.title || "Advertisement"}
+          className={cn(
+            "w-full h-full",
+            disp.objectFit === "cover" ? "object-cover object-center" : "object-contain object-center"
+          )}
+        />
+        <span className="sr-only">Sponsored: {ad.title}</span>
       </a>
     );
   }

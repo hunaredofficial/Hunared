@@ -23,6 +23,8 @@ const ACTION_ALIASES: Record<string, string> = {
   end: "expire",
   end_now: "expire",
   stop: "expire",
+  restore: "restore",
+  reactivate: "restore",
   renew: "renew",
   schedule: "schedule",
 };
@@ -177,6 +179,30 @@ export async function PATCH(req: NextRequest) {
           Math.ceil((end.getTime() - start.getTime()) / 86400000)
         ),
         admin_note: admin_note || ad.admin_note || null,
+        reviewed_by: userId,
+        reviewed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ad: data });
+  }
+
+
+  if (action === "restore") {
+    // Put pending_removal / rejected / expired back to active for remaining duration
+    const starts = new Date();
+    const ends = new Date();
+    ends.setDate(ends.getDate() + (ad.duration_days || 7));
+    const { data, error } = await supabase
+      .from("premium_ads")
+      .update({
+        status: "active",
+        starts_at: starts.toISOString(),
+        ends_at: ends.toISOString(),
+        admin_note: admin_note || ad.admin_note || "Restored by admin",
         reviewed_by: userId,
         reviewed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

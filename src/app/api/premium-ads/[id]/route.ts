@@ -204,23 +204,52 @@ export async function DELETE(
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
   const supabase = createAdminClient();
+
   const { data: existing } = await supabase
     .from("premium_ads")
-    .select("id, status, slot_id, image_url")
+    .select("id, status, slot_id, image_url, user_id")
     .eq("id", id)
     .eq("user_id", userId)
     .maybeSingle();
+
   if (!existing) {
     return NextResponse.json({ error: "Not found or not allowed" }, { status: 404 });
   }
+
+  const live = existing.status === "active" || existing.status === "scheduled";
+
+  // Live ads: soft-delete → admin reviews (re-activate or permanent delete)
+  if (live) {
+    const { data, error } = await supabase
+      .from("premium_ads")
+      .update({
+        status: "pending_removal",
+        ends_at: new Date().toISOString(),
+        admin_note: "Advertiser requested removal — review in admin",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("id, status")
+      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await clearPremiumPlacementMirror(supabase, existing.slot_id, existing.image_url);
+    return NextResponse.json({
+      ok: true,
+      soft: true,
+      status: "pending_removal",
+      message: "Removal requested. An admin will confirm or restore.",
+      ad: data,
+    });
+  }
+
+  // Non-live: permanent delete by owner
   const { error } = await supabase
     .from("premium_ads")
     .delete()
     .eq("id", id)
     .eq("user_id", userId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
   await clearPremiumPlacementMirror(supabase, existing.slot_id, existing.image_url);
-
   return NextResponse.json({ ok: true, deleted: true });
 }

@@ -67,7 +67,7 @@ export function PremiumAdsAdminClient() {
     return ads.filter((ad) => {
       if (filter === "all") return true;
       if (filter === "pending")
-        return ad.status === "pending_approval" || ad.status === "pending_payment";
+        return ad.status === "pending_approval" || ad.status === "pending_payment" || ad.status === "pending_removal";
       if (filter === "active") return ad.status === "active";
       if (filter === "scheduled") return ad.status === "scheduled";
       if (filter === "expired") return ad.status === "expired" || ad.status === "outbid";
@@ -388,15 +388,34 @@ export function PremiumAdsAdminClient() {
                           </Button>
                         </div>
                       </details>
+                      {(ad.status === "pending_removal" ||
+                        ad.status === "expired" ||
+                        ad.status === "rejected") && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={!!busy}
+                          onClick={() => {
+                            if (confirm("Restore this campaign to live for its duration?")) {
+                              void act(ad.id, "restore");
+                            }
+                          }}
+                        >
+                          Restore live
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="destructive"
                         disabled={!!busy}
                         onClick={() => {
                           const live = ad.status === "active" || ad.status === "scheduled";
+                          const pendingRm = ad.status === "pending_removal";
                           const msg = live
                             ? "This campaign is LIVE. Permanently delete it and remove it from the site?"
-                            : "Permanently delete this campaign?";
+                            : pendingRm
+                              ? "Permanently delete? Advertiser requested removal."
+                              : "Permanently delete this campaign?";
                           if (confirm(msg)) {
                             void act(ad.id, "delete");
                           }

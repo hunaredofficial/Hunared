@@ -27,7 +27,8 @@ export type PremiumAdStatus =
   | "active"
   | "rejected"
   | "expired"
-  | "outbid";
+  | "outbid"
+  | "pending_removal";
 
 export const PREMIUM_AD_STATUS_LABEL: Record<PremiumAdStatus, string> = {
   draft: "Draft",
@@ -37,6 +38,7 @@ export const PREMIUM_AD_STATUS_LABEL: Record<PremiumAdStatus, string> = {
   rejected: "Rejected",
   expired: "Expired",
   outbid: "Outbid",
+  pending_removal: "Removal requested",
 };
 
 /** Duration packages — package price = base × multiplier */

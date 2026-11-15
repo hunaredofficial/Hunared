@@ -99,8 +99,11 @@ export function PremiumAdsClient() {
       const res = await fetch(`/api/premium-ads/${id}`, { method: "DELETE" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Failed");
-      toast.success("Ad deleted");
-      setAds((prev) => prev.filter((a) => a.id !== id));
+      if (j.soft || j.status === "pending_removal") {
+        toast.success("Removal requested — admin will confirm or restore");
+      } else {
+        toast.success("Ad deleted");
+      }
       void load();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed");
