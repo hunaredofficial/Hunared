@@ -219,12 +219,23 @@ export async function PATCH(req: NextRequest) {
   const ends = new Date();
   ends.setDate(ends.getDate() + (ad.duration_days || 7));
 
-  await supabase
-    .from("premium_ads")
-    .update({ status: "outbid", updated_at: new Date().toISOString() })
-    .eq("slot_id", ad.slot_id)
-    .eq("status", "active")
-    .neq("id", id);
+  // Ranking promote slots (job_promote / listing_promote) allow MULTIPLE active
+  // campaigns at once — ordered by bid in getPromotedJobIds / getPromotedListingIds.
+  // Only exclusive banner slots should knock out the previous winner.
+  const isRankingPromote =
+    ad.slot_id === "job_promote" ||
+    ad.slot_id === "listing_promote" ||
+    ad.ad_kind === "job" ||
+    ad.ad_kind === "market";
+
+  if (!isRankingPromote) {
+    await supabase
+      .from("premium_ads")
+      .update({ status: "outbid", updated_at: new Date().toISOString() })
+      .eq("slot_id", ad.slot_id)
+      .eq("status", "active")
+      .neq("id", id);
+  }
 
   const { data, error } = await supabase
     .from("premium_ads")
