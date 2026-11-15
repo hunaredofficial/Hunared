@@ -1,4 +1,4 @@
-/** Premium ad product constants — prices displayed in USD */
+/** Premium ad product constants — prices in USD; scale with duration */
 
 export const PREMIUM_AD_KINDS = [
   {
@@ -39,12 +39,19 @@ export const PREMIUM_AD_STATUS_LABEL: Record<PremiumAdStatus, string> = {
   outbid: "Outbid",
 };
 
+/** Duration packages — package price = base × multiplier */
 export const DURATION_OPTIONS = [
-  { days: 7, label: "7 days", hint: "Test campaign" },
-  { days: 14, label: "14 days", hint: "Standard" },
-  { days: 30, label: "30 days", hint: "Best value" },
-  { days: 60, label: "60 days", hint: "Extended" },
-];
+  { days: 7, label: "7 days", hint: "Test", multiplier: 1 },
+  { days: 14, label: "14 days", hint: "Standard", multiplier: 1.75 },
+  { days: 30, label: "30 days", hint: "Best value", multiplier: 3.0 },
+  { days: 60, label: "60 days", hint: "Extended", multiplier: 5.0 },
+] as const;
+
+export function packagePrice(baseUsd: number, days: number): number {
+  const opt =
+    DURATION_OPTIONS.find((d) => d.days === days) || DURATION_OPTIONS[0];
+  return Math.max(1, Math.round(Number(baseUsd) * opt.multiplier));
+}
 
 export const PREMIUM_ADS_ADMIN_CONTACT = {
   email: process.env.NEXT_PUBLIC_PREMIUM_ADS_EMAIL || "ads@hunared.com",
