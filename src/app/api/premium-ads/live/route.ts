@@ -4,6 +4,10 @@ import { expandSlotIds } from "@/lib/premium-ads/slotAliases";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * One winning creative per physical placement.
+ * Expands legacy slot ids so header / header_leaderboard / header_mobile compete as one.
+ */
 export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get("slot");
   if (!raw) return NextResponse.json({ ad: null });
@@ -17,16 +21,19 @@ export async function GET(req: NextRequest) {
 
   const { data } = await supabase
     .from("premium_ads")
-    .select("id, title, target_url, image_url, offered_price_sar, ends_at, slot_id, status")
+    .select(
+      "id, title, target_url, image_url, offered_price_sar, ends_at, slot_id, status"
+    )
     .in("slot_id", slotIds)
     .eq("status", "active")
     .not("image_url", "is", null)
     .neq("image_url", "")
     .order("offered_price_sar", { ascending: false })
-    .limit(8);
+    .limit(12);
 
   const row = (data || []).find(
     (a) => a.image_url && (!a.ends_at || new Date(a.ends_at) > new Date(now))
   );
+
   return NextResponse.json({ ad: row || null });
 }

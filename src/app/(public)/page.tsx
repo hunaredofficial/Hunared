@@ -23,23 +23,16 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       <HeroSection />
-      {/* Home Hero Banner / Billboard / Alt — all aliases */}
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-4">
-        <PremiumAdSlot
-          slotId="home_hero"
-          alternateSlotIds={["homepage_hero", "home_hero_billboard"]}
-          legacySlotName="homepage_hero"
-        />
+        <PremiumAdSlot slotId="home_hero" legacySlotName="homepage_hero" />
       </div>
       <UserPathSection />
-      {/* Home Mid Page */}
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-2">
-        <PremiumAdSlot slotId="homepage_mid" legacySlotName="homepage_mid" />
+        <PremiumAdSlot slotId="homepage_mid" />
       </div>
       <MarketplacePreview />
-      {/* Home Inline Rectangle */}
       <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-4 flex justify-center">
-        <PremiumAdSlot slotId="homepage_inline" legacySlotName="homepage_inline" />
+        <PremiumAdSlot slotId="homepage_inline" />
       </div>
       <LearningPreview />
       <HunaredProgram />

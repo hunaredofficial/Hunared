@@ -17,24 +17,8 @@ export async function GET(req: NextRequest) {
       .from("premium_ad_slots")
       .select("*")
       .eq("is_active", true)
-      .order("sort_order");
-
-    // Current winning bid / active ad per slot
-    const { data: active } = await supabase
-      .from("premium_ads")
-      .select("id, slot_id, offered_price_sar, ends_at, title, status")
-      .eq("status", "active")
-      .gt("ends_at", new Date().toISOString());
-
-    const topBySlot: Record<string, { price: number; ends_at: string | null }> = {};
-    for (const a of active || []) {
-      const p = Number(a.offered_price_sar);
-      if (!topBySlot[a.slot_id] || p > topBySlot[a.slot_id].price) {
-        topBySlot[a.slot_id] = { price: p, ends_at: a.ends_at };
-      }
-    }
-
-    return NextResponse.json({ slots: slots || [], topBySlot });
+      .order("sort_order", { ascending: true });
+    return NextResponse.json({ slots: slots || [] });
   }
 
   const { data, error } = await supabase
@@ -55,8 +39,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const {
     slot_id,
-    ad_kind: adKindRaw,
-    kind: kindRaw,
+    ad_kind,
     linked_job_id,
     linked_listing_id,
     title,
@@ -68,13 +51,8 @@ export async function POST(req: NextRequest) {
     submit_for_payment = true,
   } = body;
 
-  const ad_kind = adKindRaw || kindRaw;
-
-  if (!slot_id || !ad_kind || !String(title || "").trim() || !String(target_url || "").trim()) {
-    return NextResponse.json(
-      { error: "Missing required fields (placement, type, title, destination URL)" },
-      { status: 400 }
-    );
+  if (!slot_id || !ad_kind || !title || !target_url) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
   if (!["job", "market", "standalone"].includes(ad_kind)) {
     return NextResponse.json({ error: "Invalid ad_kind" }, { status: 400 });
