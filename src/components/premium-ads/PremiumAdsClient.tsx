@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Megaphone, Plus, ExternalLink, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Megaphone, Plus, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -28,12 +28,6 @@ type Ad = {
   ends_at?: string | null;
   slot?: { label: string; size_label: string; id: string };
 };
-
-const canEdit = (s: PremiumAdStatus) =>
-  ["draft", "pending_payment", "pending_approval", "rejected", "outbid", "active"].includes(s);
-
-const canDelete = (s: PremiumAdStatus) =>
-  ["draft", "pending_payment", "rejected", "outbid", "pending_approval"].includes(s);
 
 export function PremiumAdsClient() {
   const [ads, setAds] = useState<Ad[]>([]);
@@ -81,22 +75,6 @@ export function PremiumAdsClient() {
     }
   }
 
-  async function removeAd(id: string) {
-    if (!confirm("Delete this premium ad?")) return;
-    setBusy(id);
-    try {
-      const res = await fetch(`/api/premium-ads/${id}`, { method: "DELETE" });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j.error || "Failed");
-      toast.success("Ad deleted");
-      void load();
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -106,7 +84,7 @@ export function PremiumAdsClient() {
             Premium Ads
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Promote jobs, marketplace listings, or custom creatives. Edit anytime before go-live;
+            Promote jobs, marketplace listings, or brand creatives. Edit anytime before go-live;
             live creative changes need re-approval.
           </p>
         </div>
@@ -196,29 +174,6 @@ export function PremiumAdsClient() {
                   Target URL <ExternalLink className="h-3 w-3" />
                 </a>
               )}
-
-              <div className="flex flex-wrap gap-2">
-                {canEdit(ad.status) && (
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/dashboard/premium-ads/${ad.id}/edit`}>
-                      <Pencil className="h-3.5 w-3.5 mr-1" />
-                      Edit
-                    </Link>
-                  </Button>
-                )}
-                {canDelete(ad.status) && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive"
-                    disabled={busy === ad.id}
-                    onClick={() => void removeAd(ad.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Delete
-                  </Button>
-                )}
-              </div>
 
               {(ad.status === "pending_payment" || ad.status === "draft") && (
                 <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
