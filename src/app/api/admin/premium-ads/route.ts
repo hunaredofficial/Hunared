@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { clearPremiumPlacementMirror } from "@/lib/premium-ads/clearPlacementMirror";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,7 @@ export async function PATCH(req: NextRequest) {
   if (!ad) return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
 
   if (action === "delete") {
+    await clearPremiumPlacementMirror(supabase, ad.slot_id, ad.image_url);
     const { error } = await supabase.from("premium_ads").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
@@ -115,6 +117,7 @@ export async function PATCH(req: NextRequest) {
       .select("*")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await clearPremiumPlacementMirror(supabase, ad.slot_id, ad.image_url);
     return NextResponse.json({ ad: data });
   }
 

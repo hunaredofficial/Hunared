@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { clearPremiumPlacementMirror } from "@/lib/premium-ads/clearPlacementMirror";
 
 export const dynamic = "force-dynamic";
 
@@ -205,7 +206,7 @@ export async function DELETE(
   const supabase = createAdminClient();
   const { data: existing } = await supabase
     .from("premium_ads")
-    .select("id, status")
+    .select("id, status, slot_id, image_url")
     .eq("id", id)
     .eq("user_id", userId)
     .maybeSingle();
@@ -218,5 +219,8 @@ export async function DELETE(
     .eq("id", id)
     .eq("user_id", userId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await clearPremiumPlacementMirror(supabase, existing.slot_id, existing.image_url);
+
   return NextResponse.json({ ok: true, deleted: true });
 }
