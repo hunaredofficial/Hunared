@@ -123,6 +123,8 @@ export default async function ArticleDetailPage({
 
             {/* Body — rendered like write-article preview */}
             <ArticleBody content={article.content} />
+            <PremiumAdSlot slotId="article_detail_below" className="mt-8" />
+
 
             {/* Bottom back link */}
             <div className="mt-16 pt-8 border-t border-border">
@@ -136,11 +138,7 @@ export default async function ArticleDetailPage({
 
           {/* ── Sticky Sidebar ── */}
           <aside className="sticky top-24 self-start space-y-5 hidden lg:block">
-            <PremiumAdSlot
-              slotId="blog_sidebar"
-              legacySlotName="blog_sidebar"
-              className="mb-4"
-            />
+            <PremiumAdSlot slotId="blog_sidebar" className="mb-4" />
 
             {/* Author card */}
             <Card className="overflow-hidden">

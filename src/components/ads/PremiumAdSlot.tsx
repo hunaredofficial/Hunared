@@ -86,9 +86,7 @@ export function PremiumAdSlot({
           alt={ad.title || "Advertisement"}
           className={cn(
             "w-full h-full",
-            disp.objectFit === "cover"
-              ? "object-cover object-center"
-              : "object-contain object-center"
+            disp.objectFit === "cover" ? "object-cover object-center" : "object-contain object-center"
           )}
         />
         <span className="sr-only">Sponsored</span>

@@ -13,6 +13,7 @@ import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 import { auth } from "@clerk/nextjs/server";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+import { getPromotedJobIds, promoteToFront } from "@/lib/premium-ads/promotedItems";
 import {
   rankByPersonalization,
   scoreJob,
@@ -274,11 +275,19 @@ export default async function JobsPage({
         );
       }
 
+      // Premium-promoted jobs always first
+      const promotedIds = await getPromotedJobIds(supabase);
+      rows = promoteToFront(rows, promotedIds);
+
       // Personalization: rank by profile match when signed in
       if (usePersonalSort && profile) {
-        const ranked = rankByPersonalization(rows, (j) =>
+        // Keep promoted at top, personalize the rest
+        const promoted = rows.filter((j) => promotedIds.has(j.id));
+        const rest = rows.filter((j) => !promotedIds.has(j.id));
+        const rankedRest = rankByPersonalization(rest, (j) =>
           scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
         );
+        const ranked = [...promoted, ...rankedRest];
         total = ranked.length;
         jobs = ranked.slice(from, from + limit);
       } else {
@@ -292,7 +301,8 @@ export default async function JobsPage({
         .order("created_at", { ascending })
         .range(from, from + limit - 1);
       const { data, count } = await query;
-      jobs = data ?? [];
+      const promotedIdsDb = await getPromotedJobIds(supabase);
+      jobs = promoteToFront(data ?? [], promotedIdsDb);
       total = count ?? 0;
     }
   } catch {
@@ -345,10 +355,8 @@ export default async function JobsPage({
       </section>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="jobs_list_top" alternateSlotIds={["jobs_inline"]} legacySlotName="jobs_list_top" className="mb-2" />
-        <div className="mb-2">
-          <PremiumAdSlot slotId="jobs_inline" legacySlotName="jobs_list_top" />
-        </div>
+        <PremiumAdSlot slotId="jobs_list_top" className="mb-2" />
+        <PremiumAdSlot slotId="jobs_inline" className="mb-2" />
       </div>
 
       {/* Marketplace layout: sidebar filters + results */}

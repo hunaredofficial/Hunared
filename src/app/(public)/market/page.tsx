@@ -7,6 +7,7 @@ import { ShoppingBag, MapPin, ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+import { getPromotedListingIds, promoteToFront } from "@/lib/premium-ads/promotedItems";
 import {
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
@@ -236,10 +237,16 @@ export default async function MarketPage({
         );
       }
 
+      const promotedListingIds = await getPromotedListingIds(supabase);
+      rows = promoteToFront(rows, promotedListingIds);
+
       if (usePersonalSort && profile) {
-        const ranked = rankByPersonalization(rows, (row) =>
+        const promoted = rows.filter((r) => promotedListingIds.has(r.id));
+        const rest = rows.filter((r) => !promotedListingIds.has(r.id));
+        const rankedRest = rankByPersonalization(rest, (row) =>
           scoreListing(row, profile, savedListingIds)
         );
+        const ranked = [...promoted, ...rankedRest];
         total = ranked.length;
         listings = ranked.slice(from, from + limit);
       } else {
@@ -252,7 +259,8 @@ export default async function MarketPage({
         .order("created_at", { ascending })
         .range(from, from + limit - 1);
       const { data, count } = await query;
-      listings = data ?? [];
+      const promotedDb = await getPromotedListingIds(supabase);
+      listings = promoteToFront(data ?? [], promotedDb);
       total = count ?? 0;
     }
   } catch {
