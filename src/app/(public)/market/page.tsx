@@ -3,7 +3,7 @@ import { SaveButton } from "@/components/shared/SaveButton";
 import { formatMoney } from "@/lib/currencies";
 import { createAdminClient } from "@/lib/supabase";
 import Link from "next/link";
-import { ShoppingBag, MapPin, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingBag, MapPin, ArrowRight, Sparkles, Megaphone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
@@ -149,6 +149,7 @@ export default async function MarketPage({
     hasPriceRange ||
     usePersonalSort;
 
+  let promotedListingSet = new Set<string>();
   let listings: (Listing & { _matchScore?: number })[] = [];
   let total = 0;
 
@@ -238,12 +239,12 @@ export default async function MarketPage({
       }
 
       const promotedListingIds = await getPromotedListingIds(supabase);
+      promotedListingSet = new Set(promotedListingIds);
       rows = promoteToFront(rows, promotedListingIds);
 
       if (usePersonalSort && profile) {
-        const promoSet = new Set(promotedListingIds);
-        const promoted = rows.filter((r) => promoSet.has(r.id));
-        const rest = rows.filter((r) => !promoSet.has(r.id));
+        const promoted = rows.filter((r) => promotedListingSet.has(r.id));
+        const rest = rows.filter((r) => !promotedListingSet.has(r.id));
         const rankedRest = rankByPersonalization(rest, (row) =>
           scoreListing(row, profile, savedListingIds)
         );
@@ -261,6 +262,7 @@ export default async function MarketPage({
         .range(from, from + limit - 1);
       const { data, count } = await query;
       const promotedDb = await getPromotedListingIds(supabase);
+      promotedListingSet = new Set(promotedDb);
       listings = promoteToFront(data ?? [], promotedDb);
       total = count ?? 0;
     }
@@ -370,7 +372,7 @@ export default async function MarketPage({
               <>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                   {listings.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} />
+                    <ListingCard key={listing.id} listing={listing} isPromoted={promotedListingSet.has(listing.id)} />
                   ))}
                 </div>
 
@@ -443,7 +445,7 @@ export default async function MarketPage({
   );
 }
 
-function ListingCard({ listing }: { listing: Listing & { _matchScore?: number } }) {
+function ListingCard({ listing, isPromoted = false }: { listing: Listing & { _matchScore?: number }; isPromoted?: boolean }) {
   const catLabel =
     LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
     listing.category;

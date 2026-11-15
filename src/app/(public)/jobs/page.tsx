@@ -1,7 +1,7 @@
 import { SaveButton } from "@/components/shared/SaveButton";
 import { createAdminClient } from "@/lib/supabase";
 import Link from "next/link";
-import { MapPin, Clock, DollarSign, Users, ArrowRight, Sparkles } from "lucide-react";
+import { MapPin, Clock, DollarSign, Users, ArrowRight, Sparkles, Megaphone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -172,6 +172,7 @@ export default async function JobsPage({
     usePersonalSort;
 
   let jobs: (Partial<Job> & { _matchScore?: number })[] = [];
+  let promotedIdSet = new Set<string>();
   let total = 0;
   const categories: string[] = [...JOB_CATEGORIES];
 
@@ -277,14 +278,14 @@ export default async function JobsPage({
 
       // Premium-promoted jobs always first
       const promotedIds = await getPromotedJobIds(supabase);
+      promotedIdSet = new Set(promotedIds);
       rows = promoteToFront(rows, promotedIds);
 
       // Personalization: rank by profile match when signed in
       if (usePersonalSort && profile) {
         // Keep promoted at top, personalize the rest
-        const promoSet = new Set(promotedIds);
-        const promoted = rows.filter((j) => promoSet.has(j.id));
-        const rest = rows.filter((j) => !promoSet.has(j.id));
+        const promoted = rows.filter((j) => promotedIdSet.has(j.id));
+        const rest = rows.filter((j) => !promotedIdSet.has(j.id));
         const rankedRest = rankByPersonalization(rest, (j) =>
           scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
         );
@@ -303,6 +304,7 @@ export default async function JobsPage({
         .range(from, from + limit - 1);
       const { data, count } = await query;
       const promotedIdsDb = await getPromotedJobIds(supabase);
+      promotedIdSet = new Set(promotedIdsDb);
       jobs = promoteToFront(data ?? [], promotedIdsDb);
       total = count ?? 0;
     }
@@ -325,6 +327,9 @@ export default async function JobsPage({
     experience
   );
   const activeCountry = COUNTRIES.find((c) => c.code === country);
+  // promoted ids for badge (re-fetch not needed — approximate from ranking order)
+  // We mark top promoted via a second lightweight set passed below
+
 
   return (
     <div className="min-h-screen">
@@ -429,7 +434,7 @@ export default async function JobsPage({
               <>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                   {jobs.map((job) => (
-                    <JobCard key={job.id} job={job} />
+                    <JobCard key={job.id} job={job} isPromoted={promotedIdSet.has(job.id)} />
                   ))}
                 </div>
 
@@ -495,8 +500,10 @@ export default async function JobsPage({
 
 function JobCard({
   job,
+  isPromoted = false,
 }: {
   job: Partial<Job> & { _matchScore?: number };
+  isPromoted?: boolean;
 }) {
   const createdAt = job.created_at
     ? new Date(job.created_at).toLocaleDateString("en-GB", {
@@ -535,6 +542,12 @@ function JobCard({
       <CardContent className="p-4 flex flex-col h-full gap-3">
         {/* Top: badges */}
         <div className="flex items-center gap-1.5 flex-wrap min-h-[1.25rem]">
+          {isPromoted && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-[10px] font-semibold tracking-wide border border-amber-500/30">
+              <Megaphone className="h-3 w-3" />
+              Promoted
+            </span>
+          )}
           {isRecommended && (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold tracking-wide">
               <Sparkles className="h-3 w-3" />

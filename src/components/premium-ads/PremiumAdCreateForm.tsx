@@ -576,7 +576,7 @@ export function PremiumAdCreateForm() {
                       {selectedItem.status ? ` · ${selectedItem.status}` : ""}
                     </p>
                     <p className="text-xs text-muted-foreground border-t border-border/50 pt-3">
-                      Ranks above organic results. Higher bid → higher position among promoted posts.
+                      Shows a Promoted badge and ranks above organic results. Higher bid = higher position.
                     </p>
                   </div>
                 ) : (
@@ -591,18 +591,27 @@ export function PremiumAdCreateForm() {
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
-                <p className="text-[11px] text-muted-foreground">
-                  {selected?.label || "Banner"} · {selected?.size_label || "728×90"} · live size ratio
-                </p>
-                <div
-                  className="rounded-xl border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 overflow-hidden flex items-center justify-center shadow-inner"
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-foreground">
+                    {selected?.label || "Banner"}
+                  </p>
+                  <span className="text-[10px] font-mono text-muted-foreground rounded bg-muted px-1.5 py-0.5">
+                    {selected?.size_label || "728×90"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full rounded-xl border-2 border-dashed border-border/80 bg-muted/15 hover:bg-muted/30 hover:border-primary/40 transition-colors overflow-hidden flex items-center justify-center relative group"
                   style={{
-                    aspectRatio: selected?.width_px && selected?.height_px
-                      ? `${selected.width_px} / ${selected.height_px}`
-                      : "728 / 90",
-                    minHeight: 72,
-                    maxHeight: 220,
+                    aspectRatio:
+                      selected?.width_px && selected?.height_px && selected.height_px > 0
+                        ? `${Math.min(selected.width_px, 800)} / ${Math.min(selected.height_px, 280)}`
+                        : "16 / 5",
+                    minHeight: 100,
+                    maxHeight: 200,
                   }}
                 >
                   {imageUrl ? (
@@ -610,16 +619,23 @@ export function PremiumAdCreateForm() {
                     <img
                       src={imageUrl}
                       alt="Ad preview"
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="text-center text-muted-foreground text-xs p-6">
-                      <ImageIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                      <p className="font-medium text-foreground/70">Upload creative</p>
-                      <p className="mt-1 opacity-70">Preview appears here at slot ratio</p>
+                    <div className="text-center text-muted-foreground p-4 z-10">
+                      <ImageIcon className="h-9 w-9 mx-auto mb-2 opacity-50 group-hover:text-primary transition-colors" />
+                      <p className="text-sm font-medium text-foreground/80">
+                        {uploading ? "Uploading…" : "Click to upload creative"}
+                      </p>
+                      <p className="text-[11px] mt-1 opacity-60">JPG, PNG or WebP</p>
                     </div>
                   )}
-                </div>
+                  {imageUrl && (
+                    <span className="absolute bottom-2 right-2 text-[10px] bg-black/60 text-white rounded px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Change image
+                    </span>
+                  )}
+                </button>
               </div>
             )}
 

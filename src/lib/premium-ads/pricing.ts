@@ -1,4 +1,4 @@
-/** Duration multipliers on base 7-day package price */
+/** Duration multipliers on base 7-day package price (brand banners) */
 export const DURATION_MULTIPLIER: Record<number, number> = {
   7: 1,
   14: 1.75,
@@ -6,12 +6,12 @@ export const DURATION_MULTIPLIER: Record<number, number> = {
   60: 5.5,
 };
 
-/** Fixed promote ranking packages (USD) by duration — competitive, not free */
+/** Promote ranking packages (USD) — affordable */
 export const PROMOTE_PACKAGE_USD: Record<number, number> = {
-  7: 19,
-  14: 32,
-  30: 55,
-  60: 95,
+  7: 9,
+  14: 15,
+  30: 25,
+  60: 42,
 };
 
 export function packagePriceUsd(baseUsd: number, durationDays: number): number {
@@ -20,5 +20,5 @@ export function packagePriceUsd(baseUsd: number, durationDays: number): number {
 }
 
 export function promotePackageUsd(durationDays: number): number {
-  return PROMOTE_PACKAGE_USD[durationDays] ?? Math.round(19 * (durationDays / 7));
+  return PROMOTE_PACKAGE_USD[durationDays] ?? Math.round(9 * (durationDays / 7));
 }

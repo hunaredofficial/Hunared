@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   const days = Math.min(90, Math.max(1, Number(duration_days) || 14));
 
   // Promote ranking packages
-  const PROMOTE_PKG: Record<number, number> = { 7: 19, 14: 32, 30: 55, 60: 95 };
+  const PROMOTE_PKG: Record<number, number> = { 7: 9, 14: 15, 30: 25, 60: 42 };
   const DURATION_MULT: Record<number, number> = { 7: 1, 14: 1.75, 30: 3.2, 60: 5.5 };
 
   if (isPromote) {
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
           ? `https://hunared.com/jobs/${linked_job_id}`
           : `https://hunared.com/market/${linked_listing_id}`;
     }
-    const pkg = PROMOTE_PKG[days] ?? Math.round(19 * (days / 7));
+    const pkg = PROMOTE_PKG[days] ?? Math.round(9 * (days / 7));
     // Allow higher bid to outrank others
     const bid = Number(offered_price_sar);
     offered_price_sar = Number.isFinite(bid) && bid > pkg ? bid : pkg;
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } else if (!Number.isFinite(price) || price < 1) {
-    price = PROMOTE_PKG[days] ?? 19;
+    price = PROMOTE_PKG[days] ?? 9;
   }
 
   const starts = new Date();

@@ -1,9 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Active job promotions ordered by bid (highest first) */
-export async function getPromotedJobIds(
-  supabase: SupabaseClient
-): Promise<string[]> {
+export async function getPromotedJobIds(supabase: SupabaseClient): Promise<string[]> {
   const now = new Date().toISOString();
   const { data } = await supabase
     .from("premium_ads")
@@ -26,9 +23,7 @@ export async function getPromotedJobIds(
   return ordered;
 }
 
-export async function getPromotedListingIds(
-  supabase: SupabaseClient
-): Promise<string[]> {
+export async function getPromotedListingIds(supabase: SupabaseClient): Promise<string[]> {
   const now = new Date().toISOString();
   const { data } = await supabase
     .from("premium_ads")
@@ -51,7 +46,6 @@ export async function getPromotedListingIds(
   return ordered;
 }
 
-/** Place promoted ids first in given order, then the rest */
 export function promoteToFront<T extends { id: string }>(
   items: T[],
   promotedOrdered: string[] | Set<string>
@@ -60,7 +54,6 @@ export function promoteToFront<T extends { id: string }>(
     ? promotedOrdered
     : Array.from(promotedOrdered);
   if (!order.length) return items;
-
   const map = new Map(items.map((i) => [i.id, i]));
   const top: T[] = [];
   const used = new Set<string>();
@@ -71,6 +64,5 @@ export function promoteToFront<T extends { id: string }>(
       used.add(id);
     }
   }
-  const rest = items.filter((i) => !used.has(i.id));
-  return [...top, ...rest];
+  return [...top, ...items.filter((i) => !used.has(i.id))];
 }
