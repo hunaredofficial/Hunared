@@ -903,17 +903,21 @@ export function CompaniesDirectory() {
         </div>
       </section>
 
+      {/* Top banner — same as Jobs list top */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
+        <PremiumAdSlot slotId="companies_top" hideIfEmpty className="mb-2" />
+      </div>
+
       {/* Sidebar filters + results (Jobs layout) */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop left sidebar */}
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
-            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-xl border border-border bg-card p-4 space-y-4">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4">
+              <PremiumAdSlot slotId="companies_filters" hideIfEmpty className="mb-1" />
+              <div className="rounded-xl border border-border bg-card p-4 space-y-4">
               <div className="flex items-center justify-between gap-2">
-                <div className="mb-3">
-              <PremiumAdSlot slotId="companies_filters" hideIfEmpty />
-            </div>
-            <h2 className="text-sm font-semibold">Filters</h2>
+                <h2 className="text-sm font-semibold">Filters</h2>
                 {hasFilters && (
                   <button
                     type="button"
@@ -1147,6 +1151,7 @@ export function CompaniesDirectory() {
                   Hiring now
                 </label>
               </div>
+            </div>
             </div>
           </aside>
 

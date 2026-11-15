@@ -96,16 +96,12 @@ export default async function CandidatesPage({
 
   return (
     <div className="min-h-screen">
-      {/* Compact header */}
+      {/* Header — same pattern as Jobs */}
       <section className="border-b border-border bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Talent</h1>
-          <div className="mt-4 mb-2">
-            <PremiumAdSlot slotId="candidates_top" hideIfEmpty />
-          </div>
-
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0
                   ? `${total.toLocaleString()} professional${total !== 1 ? "s" : ""}`
@@ -116,15 +112,18 @@ export default async function CandidatesPage({
         </div>
       </section>
 
+      {/* Top banner — like jobs_list_top */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
+        <PremiumAdSlot slotId="candidates_top" hideIfEmpty className="mb-2" />
+      </div>
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Desktop sidebar filters */}
-
+          {/* Desktop sidebar — ad above filters like Jobs */}
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
-            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-lg border border-border bg-card p-3">
-              <div className="mb-3">
-                <PremiumAdSlot slotId="candidates_filters" hideIfEmpty />
-              </div>
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4">
+              <PremiumAdSlot slotId="candidates_filters" hideIfEmpty className="mb-1" />
+              <div className="rounded-lg border border-border bg-card p-3">
               <h2 className="text-sm font-semibold mb-3">Filters</h2>
               <CandidatesFilter
                 defaultSearch={search}
@@ -134,6 +133,7 @@ export default async function CandidatesPage({
                 defaultLevel={level}
                 defaultAvailable={available}
               />
+              </div>
             </div>
           </aside>
 

@@ -50,8 +50,7 @@ export default async function EducationResourcesPage() {
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
                 Learning Resources
               </h1>
-          <div className="mt-4 mb-2"><PremiumAdSlot slotId="resources_top" /></div>
-
+          
               <p className="mt-3 text-muted-foreground text-base sm:text-lg leading-relaxed">
                 Browse downloadable templates, guides, checklists, procedures, and
                 training files shared by the community. Sign in to upload and share
@@ -126,6 +125,11 @@ export default async function EducationResourcesPage() {
           </div>
         </div>
       </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
+        <PremiumAdSlot slotId="resources_top" hideIfEmpty className="mb-2" />
+      </div>
+
 
       {/* Library + upload */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">

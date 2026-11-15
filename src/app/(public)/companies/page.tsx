@@ -16,9 +16,8 @@ export const metadata = {
 export default function CompaniesPage() {
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="companies_top" className="mb-3" />
-      </div>
+      {/* Top banner slot is rendered inside CompaniesDirectory after page header
+          so it sits under the Companies title like Jobs. */}
       <Suspense
         fallback={
           <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">

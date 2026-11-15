@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { displayForSlot } from "@/lib/premium-ads/slotDisplay";
-import { expandSlotIds, legacyNameFor } from "@/lib/premium-ads/slotAliases";
+import { expandSlotIds } from "@/lib/premium-ads/slotAliases";
 import { cn } from "@/lib/utils";
 
 type LiveAd = {
@@ -19,17 +19,20 @@ export function PremiumAdSlot({
   alternateSlotIds = [],
   legacySlotName,
   className = "",
+  hideIfEmpty = false,
 }: {
   slotId: string;
   alternateSlotIds?: string[];
   legacySlotName?: string;
   className?: string;
+  hideIfEmpty?: boolean;
 }) {
   const [ad, setAd] = useState<LiveAd | null>(null);
   const [checked, setChecked] = useState(false);
   const querySlots = useMemo(
     () => expandSlotIds(slotId, alternateSlotIds).join(","),
-    [slotId, alternateSlotIds]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [slotId, alternateSlotIds.join(",")]
   );
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export function PremiumAdSlot({
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
-        if (j?.ad?.image_url) setAd(j.ad);
+        if (j?.ad?.image_url) setAd(j.ad as LiveAd);
         else setAd(null);
         setChecked(true);
       })
@@ -74,7 +77,7 @@ export function PremiumAdSlot({
         target="_blank"
         rel="noopener noreferrer sponsored"
         className={cn(
-          "block overflow-hidden rounded-lg border border-border/30 bg-black/20",
+          "block w-full overflow-hidden rounded-lg border border-border/40 bg-black/30",
           disp.frameClass,
           className
         )}
@@ -86,7 +89,9 @@ export function PremiumAdSlot({
           alt={ad.title || "Advertisement"}
           className={cn(
             "w-full h-full",
-            disp.objectFit === "cover" ? "object-cover object-center" : "object-contain object-center"
+            disp.objectFit === "cover"
+              ? "object-cover object-center"
+              : "object-contain object-center"
           )}
         />
         <span className="sr-only">Sponsored</span>
@@ -94,10 +99,7 @@ export function PremiumAdSlot({
     );
   }
 
-  return (
-    <AdSlot
-      slotName={legacySlotName || legacyNameFor(slotId)}
-      className={className}
-    />
-  );
+  if (hideIfEmpty) return null;
+  if (legacySlotName) return <AdSlot slotName={legacySlotName} className={className} />;
+  return null;
 }
