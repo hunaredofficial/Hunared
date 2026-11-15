@@ -21,6 +21,10 @@ import {
   PREMIUM_ADS_ADMIN_CONTACT,
   type PremiumAdKind,
 } from "@/lib/premium-ads/constants";
+import {
+  packagePriceUsd,
+  promotePackageUsd,
+} from "@/lib/premium-ads/pricing";
 import { cn } from "@/lib/utils";
 
 type Slot = {
@@ -127,11 +131,13 @@ export function PremiumAdCreateForm() {
   const selected = useMemo(() => slots.find((s) => s.id === slotId), [slots, slotId]);
 
   const minPrice = useMemo(() => {
+    if (isPromote) return promotePackageUsd(duration);
     if (!selected) return 0;
+    const pkg = packagePriceUsd(Number(selected.base_price_sar), duration);
     const top = topBySlot[selected.id];
-    if (top?.price) return top.price + Number(selected.min_bid_increment_sar);
-    return Number(selected.base_price_sar);
-  }, [selected, topBySlot]);
+    if (top?.price) return Math.max(pkg, top.price + Number(selected.min_bid_increment_sar));
+    return pkg;
+  }, [selected, topBySlot, duration, isPromote]);
 
   useEffect(() => {
     if (isPromote) {
@@ -189,7 +195,8 @@ export function PremiumAdCreateForm() {
                 ? `https://hunared.com/jobs/${linkedJobId}`
                 : `https://hunared.com/market/${linkedListingId}`,
             duration_days: duration,
-            offered_price_sar: 0,
+            offered_price_sar: Number(price) || minPrice,
+            submit_for_payment: true,
           }
         : {
             slot_id: slotId,
@@ -500,6 +507,34 @@ export function PremiumAdCreateForm() {
             </div>
           </section>
 
+          {/* Price — promote or brand */}
+          {isPromote && (
+            <section className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5 space-y-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                3. Package (USD)
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Fixed package by duration. Increase your bid to rank above other promoted posts.
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Your bid</label>
+                  <input
+                    type="number"
+                    min={minPrice}
+                    step={1}
+                    className="block w-36 rounded-lg border border-border bg-background px-3 py-2.5 text-sm mt-1"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground pb-2">
+                  Package from <strong>{minPrice} USD</strong> for {duration} days
+                </p>
+              </div>
+            </section>
+          )}
+
           {/* Price — Brand only */}
           {!isPromote && (
             <section className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5 space-y-3">
@@ -514,7 +549,7 @@ export function PremiumAdCreateForm() {
                 value={price}
                 onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
               />
-              <p className="text-xs text-muted-foreground">Minimum for this slot: {minPrice} USD</p>
+              <p className="text-xs text-muted-foreground">Package for {duration} days from {minPrice} USD (scales with duration)</p>
             </section>
           )}
         </div>
@@ -527,40 +562,64 @@ export function PremiumAdCreateForm() {
             </h2>
 
             {isPromote ? (
-              <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 min-h-[140px]">
+              <div className="rounded-xl border border-border/60 bg-gradient-to-br from-primary/10 via-muted/20 to-muted/10 p-5 min-h-[160px]">
                 {selectedItem ? (
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {kind === "job" ? "Job ranking boost" : "Listing ranking boost"}
+                  <div className="space-y-3">
+                    <span className="inline-flex items-center rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
+                      {kind === "job" ? "Top of Jobs" : "Top of Marketplace"}
+                    </span>
+                    <p className="text-lg font-semibold leading-snug text-foreground">
+                      {selectedItem.title}
                     </p>
-                    <p className="text-base font-semibold leading-snug">{selectedItem.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {[selectedItem.city, selectedItem.country].filter(Boolean).join(", ") || "—"}
                       {selectedItem.status ? ` · ${selectedItem.status}` : ""}
                     </p>
-                    <p className="text-xs text-primary mt-2">
-                      When live, this post appears first in {kind === "job" ? "Jobs" : "Marketplace"}.
+                    <p className="text-xs text-muted-foreground border-t border-border/50 pt-3">
+                      Ranks above organic results. Higher bid → higher position among promoted posts.
                     </p>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Select a {kind === "job" ? "job" : "listing"} to preview
-                  </p>
+                  <div className="flex flex-col items-center justify-center text-center py-6 text-muted-foreground">
+                    {kind === "job" ? (
+                      <Briefcase className="h-8 w-8 mb-2 opacity-40" />
+                    ) : (
+                      <ShoppingBag className="h-8 w-8 mb-2 opacity-40" />
+                    )}
+                    <p className="text-sm">Select a {kind === "job" ? "job" : "listing"} to preview</p>
+                  </div>
                 )}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-border bg-muted/20 overflow-hidden aspect-[728/90] flex items-center justify-center">
-                {imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-center text-muted-foreground text-xs p-4">
-                    <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    {selected?.label || "Banner"} — {selected?.size_label || "728×90"}
-                    <br />
-                    Upload a creative to preview
-                  </div>
-                )}
+              <div className="space-y-2">
+                <p className="text-[11px] text-muted-foreground">
+                  {selected?.label || "Banner"} · {selected?.size_label || "728×90"} · live size ratio
+                </p>
+                <div
+                  className="rounded-xl border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 overflow-hidden flex items-center justify-center shadow-inner"
+                  style={{
+                    aspectRatio: selected?.width_px && selected?.height_px
+                      ? `${selected.width_px} / ${selected.height_px}`
+                      : "728 / 90",
+                    minHeight: 72,
+                    maxHeight: 220,
+                  }}
+                >
+                  {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt="Ad preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground text-xs p-6">
+                      <ImageIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                      <p className="font-medium text-foreground/70">Upload creative</p>
+                      <p className="mt-1 opacity-70">Preview appears here at slot ratio</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -587,11 +646,14 @@ export function PremiumAdCreateForm() {
                 <span className="text-foreground font-medium">{duration} days</span>
               </div>
               <div className="flex justify-between gap-2 text-muted-foreground">
-                <span>{isPromote ? "Fee" : "Bid"}</span>
-                <span className="text-foreground font-medium">
-                  {isPromote ? "Included — admin review" : `${price || 0} USD`}
-                </span>
+                <span>Package</span>
+                <span className="text-foreground font-medium">{price || minPrice} USD</span>
               </div>
+              {isPromote && (
+                <p className="text-[11px] text-muted-foreground">
+                  Higher bids rank above other promoted posts.
+                </p>
+              )}
             </div>
 
             {!isPromote && (

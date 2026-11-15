@@ -14,8 +14,8 @@ const OK_STATUS = new Set([
 ]);
 
 /**
- * GET ?kind=job|market
- * Jobs use employer_id; listings use seller_id (not user_id).
+ * Jobs column is job_title (not title). Ownership: employer_id.
+ * Listings: title, seller_id.
  */
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
@@ -25,56 +25,88 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
 
   if (kind === "market") {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("listings")
-      .select("id, title, status, category, city, country, created_at, seller_id")
+      .select("id, title, status, category, city, country, created_at")
       .eq("seller_id", userId)
       .order("created_at", { ascending: false })
       .limit(150);
 
     if (error) {
-      // fallback try user_id for older rows
-      const { data: alt, error: e2 } = await supabase
+      const alt = await supabase
         .from("listings")
         .select("id, title, status, category, city, country, created_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(150);
-      if (e2) return NextResponse.json({ error: e2.message, items: [] }, { status: 500 });
-      return NextResponse.json({ items: filterOk(alt || []) });
+      data = alt.data;
+      error = alt.error;
     }
-    return NextResponse.json({ items: filterOk(data || []) });
+    if (error) return NextResponse.json({ error: error.message, items: [] }, { status: 500 });
+
+    const rows = (data || []).map((r) => ({
+      id: r.id,
+      title: r.title || "Untitled listing",
+      status: r.status,
+      city: r.city,
+      country: r.country,
+      category: r.category,
+      created_at: r.created_at,
+    }));
+    return NextResponse.json({ items: filterOk(rows) });
   }
 
-  // Jobs: employer_id
-  const { data, error } = await supabase
+  // Jobs — job_title column
+  let { data, error } = await supabase
     .from("jobs")
-    .select("id, title, status, category, city, country, created_at, employer_id")
+    .select("id, job_title, status, category, city, country, created_at")
     .eq("employer_id", userId)
     .order("created_at", { ascending: false })
     .limit(150);
 
   if (error) {
-    const { data: alt, error: e2 } = await supabase
+    // try without status/category if schema differs
+    const alt = await supabase
       .from("jobs")
-      .select("id, title, status, category, city, country, created_at")
-      .eq("user_id", userId)
+      .select("id, job_title, status, city, country, created_at")
+      .eq("employer_id", userId)
       .order("created_at", { ascending: false })
       .limit(150);
-    if (e2) return NextResponse.json({ error: e2.message, items: [] }, { status: 500 });
-    return NextResponse.json({ items: filterOk(alt || []) });
+    data = alt.data as typeof data;
+    error = alt.error;
   }
 
-  return NextResponse.json({ items: filterOk(data || []) });
+  if (error) {
+    return NextResponse.json({ error: error.message, items: [] }, { status: 500 });
+  }
+
+  const rows = (data || []).map((r: Record<string, unknown>) => ({
+    id: String(r.id),
+    title: String(r.job_title || "Untitled job"),
+    status: r.status as string | null,
+    city: r.city as string | null,
+    country: r.country as string | null,
+    category: (r.category as string | null) || null,
+    created_at: r.created_at as string | undefined,
+  }));
+
+  return NextResponse.json({ items: filterOk(rows) });
 }
 
 function filterOk(
-  rows: { id: string; title: string; status?: string | null; city?: string | null; country?: string | null; category?: string | null; created_at?: string }[]
+  rows: {
+    id: string;
+    title: string;
+    status?: string | null;
+    city?: string | null;
+    country?: string | null;
+    category?: string | null;
+    created_at?: string;
+  }[]
 ) {
   const open = rows.filter((r) => {
     if (!r.status) return true;
     return OK_STATUS.has(String(r.status).toLowerCase());
   });
-  // If filter empties everything, still return rows (user can promote pending)
   return open.length ? open : rows;
 }

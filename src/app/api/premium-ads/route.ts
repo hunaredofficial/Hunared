@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     image_url,
     design_notes,
     offered_price_sar,
-    duration_days = 7,
+    duration_days = 14,
     submit_for_payment = true,
   } = body;
 
@@ -59,8 +59,12 @@ export async function POST(req: NextRequest) {
   }
 
   const isPromote = ad_kind === "job" || ad_kind === "market";
+  const days = Math.min(90, Math.max(1, Number(duration_days) || 14));
 
-  // Ranking promote: auto slot, no creative/price required
+  // Promote ranking packages
+  const PROMOTE_PKG: Record<number, number> = { 7: 19, 14: 32, 30: 55, 60: 95 };
+  const DURATION_MULT: Record<number, number> = { 7: 1, 14: 1.75, 30: 3.2, 60: 5.5 };
+
   if (isPromote) {
     if (ad_kind === "job" && !linked_job_id) {
       return NextResponse.json({ error: "Select a job to promote" }, { status: 400 });
@@ -76,7 +80,10 @@ export async function POST(req: NextRequest) {
           ? `https://hunared.com/jobs/${linked_job_id}`
           : `https://hunared.com/market/${linked_listing_id}`;
     }
-    offered_price_sar = 0;
+    const pkg = PROMOTE_PKG[days] ?? Math.round(19 * (days / 7));
+    // Allow higher bid to outrank others
+    const bid = Number(offered_price_sar);
+    offered_price_sar = Number.isFinite(bid) && bid > pkg ? bid : pkg;
     image_url = image_url || null;
   } else {
     if (!slot_id || !title || !target_url) {
@@ -95,7 +102,12 @@ export async function POST(req: NextRequest) {
   if (!slot) return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
 
   let price = Number(offered_price_sar);
+
   if (!isPromote) {
+    const base = Number(slot.base_price_sar) || 0;
+    const mult = DURATION_MULT[days] ?? days / 7;
+    const packageMin = Math.max(1, Math.round(base * mult));
+
     const { data: active } = await supabase
       .from("premium_ads")
       .select("offered_price_sar")
@@ -109,8 +121,8 @@ export async function POST(req: NextRequest) {
     const currentTop = active ? Number(active.offered_price_sar) : 0;
     const minPrice =
       currentTop > 0
-        ? currentTop + Number(slot.min_bid_increment_sar)
-        : Number(slot.base_price_sar);
+        ? currentTop + Number(slot.min_bid_increment_sar || 1)
+        : packageMin;
 
     if (!Number.isFinite(price) || price < minPrice) {
       return NextResponse.json(
@@ -118,20 +130,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-  } else {
-    price = 0;
+  } else if (!Number.isFinite(price) || price < 1) {
+    price = PROMOTE_PKG[days] ?? 19;
   }
 
-  const days = Math.min(90, Math.max(1, Number(duration_days) || 7));
   const starts = new Date();
   const ends = new Date(starts.getTime() + days * 86400000);
-
-  // Promote goes pending review; standalone may need payment first
-  const status = isPromote
-    ? "pending_approval"
-    : submit_for_payment
-      ? "pending_payment"
-      : "draft";
+  const status = submit_for_payment ? "pending_payment" : "draft";
 
   const { data: ad, error } = await supabase
     .from("premium_ads")
@@ -157,10 +162,5 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({
-    ad,
-    minPrice: isPromote ? 0 : price,
-    promote: isPromote,
-  });
+  return NextResponse.json({ ad, minPrice: price, promote: isPromote });
 }
-

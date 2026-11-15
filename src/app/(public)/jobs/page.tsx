@@ -282,8 +282,9 @@ export default async function JobsPage({
       // Personalization: rank by profile match when signed in
       if (usePersonalSort && profile) {
         // Keep promoted at top, personalize the rest
-        const promoted = rows.filter((j) => promotedIds.has(j.id));
-        const rest = rows.filter((j) => !promotedIds.has(j.id));
+        const promoSet = new Set(promotedIds);
+        const promoted = rows.filter((j) => promoSet.has(j.id));
+        const rest = rows.filter((j) => !promoSet.has(j.id));
         const rankedRest = rankByPersonalization(rest, (j) =>
           scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
         );
@@ -355,7 +356,8 @@ export default async function JobsPage({
       </section>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-4">
-        <PremiumAdSlot slotId="jobs_list_top" hideIfEmpty className="mb-2" />
+        <PremiumAdSlot slotId="jobs_list_top" className="mb-2" />
+        <PremiumAdSlot slotId="jobs_inline" className="mb-2" />
       </div>
 
       {/* Marketplace layout: sidebar filters + results */}
@@ -364,7 +366,7 @@ export default async function JobsPage({
           {/* Desktop sidebar */}
           <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4">
-              <PremiumAdSlot slotId="jobs_sidebar" alternateSlotIds={["job_sidebar"]} hideIfEmpty className="mb-3" />
+              <PremiumAdSlot slotId="jobs_sidebar" alternateSlotIds={["job_sidebar"]} legacySlotName="job_sidebar" className="mb-3" />
               <JobsFilter
                 variant="sidebar"
                 defaultSearch={search}

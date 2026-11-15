@@ -241,8 +241,9 @@ export default async function MarketPage({
       rows = promoteToFront(rows, promotedListingIds);
 
       if (usePersonalSort && profile) {
-        const promoted = rows.filter((r) => promotedListingIds.has(r.id));
-        const rest = rows.filter((r) => !promotedListingIds.has(r.id));
+        const promoSet = new Set(promotedListingIds);
+        const promoted = rows.filter((r) => promoSet.has(r.id));
+        const rest = rows.filter((r) => !promoSet.has(r.id));
         const rankedRest = rankByPersonalization(rest, (row) =>
           scoreListing(row, profile, savedListingIds)
         );

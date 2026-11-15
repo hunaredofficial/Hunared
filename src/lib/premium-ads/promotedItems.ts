@@ -1,53 +1,76 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Active premium campaigns that boost a job or listing to the top of directories */
+/** Active job promotions ordered by bid (highest first) */
 export async function getPromotedJobIds(
   supabase: SupabaseClient
-): Promise<Set<string>> {
+): Promise<string[]> {
   const now = new Date().toISOString();
   const { data } = await supabase
     .from("premium_ads")
-    .select("linked_job_id")
+    .select("linked_job_id, offered_price_sar")
     .eq("status", "active")
     .eq("ad_kind", "job")
     .not("linked_job_id", "is", null)
-    .gt("ends_at", now);
-  return new Set(
-    (data || [])
-      .map((r: { linked_job_id: string | null }) => r.linked_job_id)
-      .filter(Boolean) as string[]
-  );
+    .gt("ends_at", now)
+    .order("offered_price_sar", { ascending: false });
+
+  const seen = new Set<string>();
+  const ordered: string[] = [];
+  for (const r of data || []) {
+    const id = r.linked_job_id as string;
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      ordered.push(id);
+    }
+  }
+  return ordered;
 }
 
 export async function getPromotedListingIds(
   supabase: SupabaseClient
-): Promise<Set<string>> {
+): Promise<string[]> {
   const now = new Date().toISOString();
   const { data } = await supabase
     .from("premium_ads")
-    .select("linked_listing_id")
+    .select("linked_listing_id, offered_price_sar")
     .eq("status", "active")
     .eq("ad_kind", "market")
     .not("linked_listing_id", "is", null)
-    .gt("ends_at", now);
-  return new Set(
-    (data || [])
-      .map((r: { linked_listing_id: string | null }) => r.linked_listing_id)
-      .filter(Boolean) as string[]
-  );
+    .gt("ends_at", now)
+    .order("offered_price_sar", { ascending: false });
+
+  const seen = new Set<string>();
+  const ordered: string[] = [];
+  for (const r of data || []) {
+    const id = r.linked_listing_id as string;
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      ordered.push(id);
+    }
+  }
+  return ordered;
 }
 
-/** Stable sort: promoted ids first, then keep relative order of the rest */
+/** Place promoted ids first in given order, then the rest */
 export function promoteToFront<T extends { id: string }>(
   items: T[],
-  promoted: Set<string>
+  promotedOrdered: string[] | Set<string>
 ): T[] {
-  if (!promoted.size) return items;
+  const order = Array.isArray(promotedOrdered)
+    ? promotedOrdered
+    : Array.from(promotedOrdered);
+  if (!order.length) return items;
+
+  const map = new Map(items.map((i) => [i.id, i]));
   const top: T[] = [];
-  const rest: T[] = [];
-  for (const item of items) {
-    if (promoted.has(item.id)) top.push(item);
-    else rest.push(item);
+  const used = new Set<string>();
+  for (const id of order) {
+    const item = map.get(id);
+    if (item) {
+      top.push(item);
+      used.add(id);
+    }
   }
+  const rest = items.filter((i) => !used.has(i.id));
   return [...top, ...rest];
 }
