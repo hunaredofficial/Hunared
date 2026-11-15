@@ -12,8 +12,8 @@ import { formatMoney, formatJobSalary } from "@/lib/currencies";
 import { JobsFilter } from "@/components/jobs/JobsFilter";
 import type { Job } from "@/types/database";
 import { auth } from "@clerk/nextjs/server";
-import {
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+import {
   rankByPersonalization,
   scoreJob,
   type PersonalizationProfile,

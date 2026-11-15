@@ -6,8 +6,8 @@ import Link from "next/link";
 import { ShoppingBag, MapPin, ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+import {
   LISTING_CATEGORIES,
   LISTING_CATEGORY_COLORS,
 } from "@/lib/constants";
