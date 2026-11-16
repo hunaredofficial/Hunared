@@ -63,7 +63,19 @@ const SOCIAL_LINKS = [
 
 function openHunaredAgent() {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("hunared-agent-toggle"));
+  // Force the float drawer open (HunaredAgent is mounted on public layout)
+  window.dispatchEvent(
+    new CustomEvent("hunared-agent-set-open", { detail: { open: true } })
+  );
+  // Safety net: if drawer did not appear (AI permanently off), open full page
+  window.setTimeout(() => {
+    const dialog = document.querySelector(
+      '[role="dialog"][aria-label="Hunared Agent"]'
+    );
+    if (!dialog) {
+      window.location.href = "/agent";
+    }
+  }, 150);
 }
 
 export function Footer() {

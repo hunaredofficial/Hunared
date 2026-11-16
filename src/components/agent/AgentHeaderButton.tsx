@@ -63,13 +63,17 @@ export function AgentHeaderButton({ className }: { className?: string }) {
   if (!isLoaded || !aiEnabled) return null;
 
   function toggle() {
-    if (!isSignedIn) {
-      window.location.href = `/sign-in?redirect_url=${encodeURIComponent(
-        typeof window !== "undefined" ? window.location.pathname : "/"
-      )}`;
-      return;
+    // Open drawer for everyone (guest + signed-in). Agent answers platform Qs without login;
+    // create/post actions still require sign-in inside the panel.
+    if (open) {
+      window.dispatchEvent(
+        new CustomEvent("hunared-agent-set-open", { detail: { open: false } })
+      );
+    } else {
+      window.dispatchEvent(
+        new CustomEvent("hunared-agent-set-open", { detail: { open: true } })
+      );
     }
-    window.dispatchEvent(new CustomEvent("hunared-agent-toggle"));
   }
 
   return (

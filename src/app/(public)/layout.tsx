@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+import { HunaredAgent } from "@/components/agent/HunaredAgent";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +28,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </div>
       <Footer />
       <ScrollToTop />
+      {/* Listens for hunared-agent-toggle from header + footer on all public pages */}
+      <HunaredAgent />
     </div>
   );
 }
