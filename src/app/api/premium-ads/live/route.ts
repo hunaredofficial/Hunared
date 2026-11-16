@@ -10,19 +10,43 @@ export async function GET(req: NextRequest) {
   const requested = raw.split(",").map((s) => s.trim()).filter(Boolean);
   if (!requested.length) return NextResponse.json({ ad: null });
   const slotIds = expandSlotIds(requested[0], requested.slice(1));
-  const now = new Date().toISOString();
+  const now = new Date();
+  const nowIso = now.toISOString();
   const supabase = createAdminClient();
-  const { data } = await supabase
+
+  // Prefer exact requested order: primary slot first, then alternates
+  const { data, error } = await supabase
     .from("premium_ads")
-    .select("id, title, target_url, image_url, offered_price_sar, ends_at, slot_id, status")
+    .select(
+      "id, title, target_url, image_url, offered_price_sar, ends_at, starts_at, slot_id, status"
+    )
     .in("slot_id", slotIds)
-    .eq("status", "active")
+    .in("status", ["active", "scheduled"])
     .not("image_url", "is", null)
     .neq("image_url", "")
     .order("offered_price_sar", { ascending: false })
-    .limit(12);
-  const row = (data || []).find(
-    (a) => a.image_url && (!a.ends_at || new Date(a.ends_at) > new Date(now))
-  );
-  return NextResponse.json({ ad: row || null });
+    .limit(24);
+
+  if (error) {
+    return NextResponse.json({ ad: null, error: error.message });
+  }
+
+  const candidates = (data || []).filter((a) => {
+    if (!a.image_url) return false;
+    if (a.ends_at && new Date(a.ends_at) <= now) return false;
+    if (a.starts_at && new Date(a.starts_at) > now) return false;
+    // scheduled only if window has started
+    if (a.status === "scheduled" && a.starts_at && new Date(a.starts_at) > now) {
+      return false;
+    }
+    return a.status === "active" || a.status === "scheduled";
+  });
+
+  // Prefer ads on the primary slot id, then highest bid
+  const primary = requested[0];
+  const primaryHits = candidates.filter((a) => a.slot_id === primary);
+  const pool = primaryHits.length ? primaryHits : candidates;
+  const row = pool[0] || null;
+
+  return NextResponse.json({ ad: row });
 }

@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { TrustSafety } from "@/components/home/TrustSafety";
 import { CtaBanner } from "@/components/home/CtaBanner";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
+import { HomeInlineAdRow } from "@/components/ads/HomeInlineAdRow";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -31,19 +32,8 @@ export default function HomePage() {
         <PremiumAdSlot slotId="homepage_mid" />
       </div>
       <MarketplacePreview />
-      {/* Three equal mid-page tiles (300×250) — fills the band instead of one small centered ad */}
-      <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <PremiumAdSlot
-            slotId="homepage_inline_1"
-            alternateSlotIds={["homepage_inline"]}
-            legacySlotName="homepage_inline"
-            className="w-full"
-          />
-          <PremiumAdSlot slotId="homepage_inline_2" className="w-full" />
-          <PremiumAdSlot slotId="homepage_inline_3" className="w-full" />
-        </div>
-      </div>
+      {/* Three equal mid-page promo tiles */}
+      <HomeInlineAdRow />
       <LearningPreview />
       <HunaredProgram />
       <HowItWorks />
