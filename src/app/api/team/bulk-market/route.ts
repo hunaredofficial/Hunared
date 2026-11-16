@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { canBulkPost } from "@/lib/roles";
+import { LISTING_CATEGORIES } from "@/lib/constants";
 
 type BulkListing = {
   title?: string;
@@ -17,6 +18,10 @@ type BulkListing = {
   location?: string;
   contact_phone?: string;
 };
+
+const VALID_CATS = new Set(
+  LISTING_CATEGORIES.map((c: { value: string }) => c.value)
+);
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -56,50 +61,88 @@ export async function POST(req: Request) {
       continue;
     }
 
-    // Prefer known columns; extra fields may be ignored by DB if absent
+    let category = (L.category?.trim() || "for_sale").toLowerCase();
+    if (!VALID_CATS.has(category)) category = "for_sale";
+
+    const city = L.city?.trim() || null;
+    const country = L.country?.trim() || null;
+
+    // Match single-post market API so public + My Listings queries find the row
     const row: Record<string, unknown> = {
       seller_id: userId,
       title,
       description,
       price: L.price?.trim() || "",
       currency: L.currency?.trim() || "SAR",
-      category: L.category?.trim() || "for_sale",
+      category,
       subcategory: L.subcategory?.trim() || null,
-      country: L.country?.trim() || null,
-      city: L.city?.trim() || null,
-      location: L.location?.trim() || L.city?.trim() || null,
+      country,
+      city,
+      location: L.location?.trim() || city || null,
       contact_phone: L.contact_phone?.trim() || null,
+      listing_type: "standard",
       status: "approved",
+      closed_at: null,
+      close_reason: null,
+      expires_at: null,
+      image_url: null,
+      image_urls: null,
     };
     if (L.condition?.trim()) row.condition = L.condition.trim();
     if (L.rentalPeriod?.trim()) row.rental_period = L.rentalPeriod.trim();
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("marketplace_listings")
       .insert(row)
       .select("id")
       .single();
 
     if (error) {
-      // Retry without optional columns if schema is stricter
-      if (/column|schema|rental_period|condition/i.test(error.message)) {
-        delete row.condition;
-        delete row.rental_period;
-        const retry = await supabase
-          .from("marketplace_listings")
-          .insert(row)
-          .select("id")
-          .single();
-        if (retry.error) results.push({ index: i, ok: false, error: retry.error.message });
-        else results.push({ index: i, ok: true, id: retry.data?.id });
-      } else {
-        results.push({ index: i, ok: false, error: error.message });
-      }
-    } else {
-      results.push({ index: i, ok: true, id: data?.id });
+      // Drop optional columns that may not exist
+      const slim = { ...row };
+      delete slim.condition;
+      delete slim.rental_period;
+      delete slim.image_urls;
+      delete slim.close_reason;
+      const retry = await supabase
+        .from("marketplace_listings")
+        .insert(slim)
+        .select("id")
+        .single();
+      data = retry.data;
+      error = retry.error;
     }
+
+    if (error) {
+      // Minimal required fields
+      const minimal: Record<string, unknown> = {
+        seller_id: userId,
+        title,
+        description,
+        price: L.price?.trim() || "",
+        currency: L.currency?.trim() || "SAR",
+        category,
+        status: "approved",
+        listing_type: "standard",
+      };
+      const retry2 = await supabase
+        .from("marketplace_listings")
+        .insert(minimal)
+        .select("id")
+        .single();
+      data = retry2.data;
+      error = retry2.error;
+    }
+
+    if (error) results.push({ index: i, ok: false, error: error.message });
+    else results.push({ index: i, ok: true, id: data?.id });
   }
 
   const created = results.filter((r) => r.ok).length;
-  return NextResponse.json({ created, total: listings.length, results });
+  return NextResponse.json({
+    created,
+    total: listings.length,
+    results,
+    ok: created > 0,
+  });
 }
