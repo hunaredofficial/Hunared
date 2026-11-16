@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase";
 import { canBulkPost } from "@/lib/roles";
 import { LISTING_CATEGORIES } from "@/lib/constants";
@@ -50,7 +51,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Provide listings: [] (max 50)." }, { status: 400 });
   }
 
-  const results: { index: number; ok: boolean; id?: string; error?: string }[] = [];
+  const results: {
+    index: number;
+    ok: boolean;
+    id?: string;
+    status?: string;
+    error?: string;
+  }[] = [];
 
   for (let i = 0; i < listings.length; i++) {
     const L = listings[i];
@@ -65,57 +72,49 @@ export async function POST(req: Request) {
     if (!VALID_CATS.has(category)) category = "for_sale";
 
     const city = L.city?.trim() || null;
-    const country = L.country?.trim() || null;
+    const country = (L.country?.trim() || "SA").toUpperCase().slice(0, 2);
 
-    // Match single-post market API so public + My Listings queries find the row
-    const row: Record<string, unknown> = {
-      seller_id: userId,
-      title,
-      description,
-      price: L.price?.trim() || "",
-      currency: L.currency?.trim() || "SAR",
-      category,
-      subcategory: L.subcategory?.trim() || null,
-      country,
-      city,
-      location: L.location?.trim() || city || null,
-      contact_phone: L.contact_phone?.trim() || null,
-      listing_type: "standard",
-      status: "approved",
-      closed_at: null,
-      close_reason: null,
-      expires_at: null,
-      image_url: null,
-      image_urls: null,
-    };
-    if (L.condition?.trim()) row.condition = L.condition.trim();
-    if (L.rentalPeriod?.trim()) row.rental_period = L.rentalPeriod.trim();
-
-    let { data, error } = await supabase
-      .from("marketplace_listings")
-      .insert(row)
-      .select("id")
-      .single();
-
-    if (error) {
-      // Drop optional columns that may not exist
-      const slim = { ...row };
-      delete slim.condition;
-      delete slim.rental_period;
-      delete slim.image_urls;
-      delete slim.close_reason;
-      const retry = await supabase
-        .from("marketplace_listings")
-        .insert(slim)
-        .select("id")
-        .single();
-      data = retry.data;
-      error = retry.error;
-    }
-
-    if (error) {
-      // Minimal required fields
-      const minimal: Record<string, unknown> = {
+    const attempts: Record<string, unknown>[] = [
+      {
+        seller_id: userId,
+        title,
+        description,
+        price: L.price?.trim() || "",
+        currency: L.currency?.trim() || "SAR",
+        category,
+        subcategory: L.subcategory?.trim() || null,
+        country,
+        city,
+        location: L.location?.trim() || city || null,
+        contact_phone: L.contact_phone?.trim() || null,
+        listing_type: "standard",
+        status: "approved",
+        closed_at: null,
+        close_reason: null,
+        expires_at: null,
+        image_url: null,
+        ...(L.condition?.trim() ? { condition: L.condition.trim() } : {}),
+        ...(L.rentalPeriod?.trim()
+          ? { rental_period: L.rentalPeriod.trim() }
+          : {}),
+      },
+      {
+        seller_id: userId,
+        title,
+        description,
+        price: L.price?.trim() || "",
+        currency: L.currency?.trim() || "SAR",
+        category,
+        country,
+        city,
+        location: L.location?.trim() || city || null,
+        contact_phone: L.contact_phone?.trim() || null,
+        listing_type: "standard",
+        status: "approved",
+        closed_at: null,
+        expires_at: null,
+      },
+      {
         seller_id: userId,
         title,
         description,
@@ -124,21 +123,59 @@ export async function POST(req: Request) {
         category,
         status: "approved",
         listing_type: "standard",
-      };
-      const retry2 = await supabase
+        country,
+      },
+    ];
+
+    let insertedId: string | null = null;
+    let lastError = "";
+
+    for (const row of attempts) {
+      const { data, error } = await supabase
         .from("marketplace_listings")
-        .insert(minimal)
-        .select("id")
+        .insert(row)
+        .select("id, status")
         .single();
-      data = retry2.data;
-      error = retry2.error;
+      if (!error && data?.id) {
+        insertedId = data.id;
+        await supabase
+          .from("marketplace_listings")
+          .update({
+            status: "approved",
+            closed_at: null,
+            close_reason: null,
+            expires_at: null,
+            country,
+            listing_type: "standard",
+          })
+          .eq("id", data.id);
+        break;
+      }
+      lastError = error?.message || "insert failed";
     }
 
-    if (error) results.push({ index: i, ok: false, error: error.message });
-    else results.push({ index: i, ok: true, id: data?.id });
+    if (!insertedId) results.push({ index: i, ok: false, error: lastError });
+    else
+      results.push({
+        index: i,
+        ok: true,
+        id: insertedId,
+        status: "approved",
+      });
   }
 
   const created = results.filter((r) => r.ok).length;
+  if (created > 0) {
+    try {
+      revalidatePath("/market");
+      revalidatePath("/");
+      revalidatePath("/dashboard/market");
+      revalidatePath("/search");
+    } catch {
+      /* ignore */
+    }
+  }
+
   return NextResponse.json({
     created,
     total: listings.length,

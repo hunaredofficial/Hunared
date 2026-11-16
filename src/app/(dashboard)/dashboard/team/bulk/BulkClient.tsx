@@ -369,23 +369,7 @@ export default function BulkClient() {
           smartResult: _r,
           smartDismissed: _d,
           ...rest
-        }) => {
-          const categories =
-            rest.categories?.length
-              ? rest.categories
-              : rest.category
-                ? [rest.category]
-                : [JOB_CATEGORIES[0]];
-          return {
-            ...rest,
-            categories,
-            category: categories[0],
-            // Ensure salary fields are never empty for older NOT NULL columns
-            salaryRate: rest.salaryRate?.trim() || "Negotiable",
-            salaryType: rest.salaryType?.trim() || "After Interview",
-            companyName: rest.companyName?.trim() || "Hunared Team",
-          };
-        }
+        }) => rest
       );
     if (!payload.length) {
       toast.error("Add at least one job with title and description");
@@ -401,27 +385,12 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
+      toast.success(
+        `Published ${data.created}/${data.total} jobs` +
+          (data.linked ? ` · ${data.linked} linked to team companies` : "")
+      );
       setLastResult(JSON.stringify(data, null, 2));
-      const created = Number(data.created || 0);
-      const failed = (data.results || []).filter((r: { ok?: boolean }) => !r.ok);
-      if (created > 0) {
-        toast.success(
-          `Published ${created}/${data.total} jobs` +
-            (data.linked ? ` · ${data.linked} linked to team companies` : "")
-        );
-        setJobs([emptyJob()]);
-      }
-      if (failed.length) {
-        const firstErr = failed[0]?.error || "unknown error";
-        toast.error(
-          created === 0
-            ? `No jobs published. ${firstErr}`
-            : `${failed.length} job(s) failed. First error: ${firstErr}`
-        );
-      }
-      if (created === 0 && !failed.length) {
-        toast.error("No jobs published");
-      }
+      if (data.created > 0) setJobs([emptyJob()]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -447,24 +416,9 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
+      toast.success(`Published ${data.created}/${data.total} listings`);
       setLastResult(JSON.stringify(data, null, 2));
-      const created = Number(data.created || 0);
-      const failed = (data.results || []).filter((r: { ok?: boolean }) => !r.ok);
-      if (created > 0) {
-        toast.success(`Published ${created}/${data.total} listings`);
-        setListings([emptyMarket()]);
-      }
-      if (failed.length) {
-        const firstErr = failed[0]?.error || "unknown error";
-        toast.error(
-          created === 0
-            ? `No listings published. ${firstErr}`
-            : `${failed.length} listing(s) failed. First error: ${firstErr}`
-        );
-      }
-      if (created === 0 && !failed.length) {
-        toast.error("No listings published");
-      }
+      if (data.created > 0) setListings([emptyMarket()]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {

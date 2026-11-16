@@ -20,6 +20,9 @@ import {
   type PersonalizationProfile,
 } from "@/lib/personalization";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface SearchParams {
   search?: string;
   category?: string;
@@ -185,7 +188,8 @@ export default async function JobsPage({
         "id, job_title, company_name, location, country, city, employment_type, experience_level, salary_rate, salary_type, currency, duration, category, categories, positions, created_at",
         { count: "exact" }
       )
-      .eq("status", "approved");
+      .eq("status", "approved")
+      .is("closed_at", null);
 
     if (category) query = query.eq("category", category);
     if (country) query = query.eq("country", country);
@@ -311,6 +315,7 @@ export default async function JobsPage({
           .from("jobs")
           .select("*")
           .eq("status", "approved")
+          .is("closed_at", null)
           .in("id", promotedIdsDb);
         if (category) pq = pq.eq("category", category);
         if (country) pq = pq.eq("country", country);

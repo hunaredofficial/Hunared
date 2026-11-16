@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase";
 import { canBulkPost } from "@/lib/roles";
 import { findTeamManagedCompanyByName } from "@/lib/team-profiles";
-import { JOB_CATEGORIES } from "@/lib/constants";
+import { JOB_CATEGORIES, SALARY_TYPES } from "@/lib/constants";
 
 type BulkJob = {
   jobTitle?: string;
@@ -30,6 +31,7 @@ type BulkJob = {
 };
 
 const VALID_CATS = new Set<string>(JOB_CATEGORIES as unknown as string[]);
+const VALID_SALARY = new Set<string>(SALARY_TYPES as unknown as string[]);
 
 function normalizeCategories(j: BulkJob): string[] {
   const raw = (
@@ -38,15 +40,17 @@ function normalizeCategories(j: BulkJob): string[] {
     .map((c) => String(c).trim())
     .filter(Boolean);
   const valid = [...new Set(raw.filter((c) => VALID_CATS.has(c)))];
-  // Prefer a real category; fall back to first catalog entry so NOT NULL + public filters work
   if (valid.length) return valid;
-  return [JOB_CATEGORIES[0] || "engineering"];
+  return [JOB_CATEGORIES[0]];
 }
 
-function normalizePositions(v: string | number | undefined | null): number | null {
-  if (v == null || String(v).trim() === "") return null;
-  const n = typeof v === "number" ? v : parseInt(String(v).replace(/[^\d]/g, ""), 10);
-  if (!Number.isFinite(n) || n < 1) return null;
+function normalizePositions(v: string | number | undefined | null): number {
+  if (v == null || String(v).trim() === "") return 1;
+  const n =
+    typeof v === "number"
+      ? v
+      : parseInt(String(v).replace(/[^\d]/g, ""), 10);
+  if (!Number.isFinite(n) || n < 1) return 1;
   return n;
 }
 
@@ -81,6 +85,7 @@ export async function POST(req: Request) {
     index: number;
     ok: boolean;
     id?: string;
+    status?: string;
     linkedCompanyId?: string | null;
     linkedCompanyName?: string | null;
     error?: string;
@@ -98,13 +103,12 @@ export async function POST(req: Request) {
 
     const cats = normalizeCategories(j);
     const primary = cats[0];
-
     const durationRaw = j.duration?.trim() || "";
     const empRaw = (j.employmentType || "").toLowerCase();
-    const emp =
+    const emp: "permanent" | "temporary" =
       empRaw === "temporary" ||
       empRaw === "task_force" ||
-      (durationRaw && durationRaw.toLowerCase() !== "permanent")
+      (durationRaw !== "" && durationRaw.toLowerCase() !== "permanent")
         ? "temporary"
         : "permanent";
     const duration =
@@ -112,64 +116,57 @@ export async function POST(req: Request) {
 
     const positions = normalizePositions(j.positions);
     const city = j.city?.trim() || null;
-    const country = j.country?.trim() || null;
+    // Default SA so geo-filtered /jobs?country=SA still shows team posts
+    const country = (j.country?.trim() || "SA").toUpperCase().slice(0, 2);
     const location =
       j.location?.trim() ||
       j.workLocation?.trim() ||
-      city ||
-      "Remote";
+      (city ? `${city}` : "Remote");
 
-    // salary_rate may still be NOT NULL on older DBs — never send null
     const salaryRate = j.salaryRate?.trim() || "Negotiable";
-    const salaryType = j.salaryType?.trim() || "After Interview";
+    let salaryType = j.salaryType?.trim() || "Negotiable";
+    // Map UI alias used in filters
+    if (salaryType === "After Interview") salaryType = "Negotiable";
+    if (!VALID_SALARY.has(salaryType)) salaryType = "Negotiable";
 
     const teamCo = await findTeamManagedCompanyByName(supabase, company);
 
-    // Full row matching single-post API (with safe defaults)
-    const fullRow: Record<string, unknown> = {
-      employer_id: userId,
-      job_title: title,
-      job_description: desc,
-      company_name: company,
-      company_phone: j.companyPhone?.trim() || null,
-      company_email: j.companyEmail?.trim() || null,
-      company_address: j.companyAddress?.trim() || null,
-      country,
-      city,
-      location,
-      work_location: j.workLocation?.trim() || null,
-      employment_type: emp,
-      duration,
-      category: primary,
-      categories: cats,
-      subcategory: j.subcategory?.trim() || null,
-      experience_level:
-        j.experienceLevel && j.experienceLevel !== "any"
-          ? j.experienceLevel.trim()
-          : null,
-      // Prefer null when column is nullable; fallback retry uses 1
-      positions,
-      salary_rate: salaryRate,
-      salary_type: salaryType,
-      currency: j.currency?.trim() || "SAR",
-      office_location_link: j.mapLocation?.trim() || null,
-      linked_company_id: teamCo?.id ?? null,
-      status: "approved",
-      show_profile_contact: false,
-      closed_at: null,
-      close_reason: null,
-      expires_at: null,
-    };
-
-    let { data, error } = await supabase
-      .from("jobs")
-      .insert(fullRow)
-      .select("id")
-      .single();
-
-    // Retry without optional / newer columns if schema is stricter
-    if (error) {
-      const slim: Record<string, unknown> = {
+    // Attempt inserts from richest → leanest schema
+    const attempts: Record<string, unknown>[] = [
+      {
+        employer_id: userId,
+        job_title: title,
+        job_description: desc,
+        company_name: company,
+        company_phone: j.companyPhone?.trim() || null,
+        company_email: j.companyEmail?.trim() || null,
+        company_address: j.companyAddress?.trim() || null,
+        country,
+        city,
+        location,
+        work_location: j.workLocation?.trim() || null,
+        employment_type: emp,
+        duration,
+        category: primary,
+        categories: cats,
+        subcategory: j.subcategory?.trim() || null,
+        experience_level:
+          j.experienceLevel && j.experienceLevel !== "any"
+            ? j.experienceLevel.trim()
+            : null,
+        positions,
+        salary_rate: salaryRate,
+        salary_type: salaryType,
+        currency: j.currency?.trim() || "SAR",
+        office_location_link: j.mapLocation?.trim() || null,
+        linked_company_id: teamCo?.id ?? null,
+        status: "approved",
+        show_profile_contact: false,
+        closed_at: null,
+        close_reason: null,
+        expires_at: null,
+      },
+      {
         employer_id: userId,
         job_title: title,
         job_description: desc,
@@ -185,43 +182,66 @@ export async function POST(req: Request) {
         category: primary,
         categories: cats,
         subcategory: j.subcategory?.trim() || null,
-        positions: positions ?? 1,
+        positions,
         salary_rate: salaryRate,
         salary_type: salaryType,
         currency: j.currency?.trim() || "SAR",
         status: "approved",
-      };
-      const retry = await supabase.from("jobs").insert(slim).select("id").single();
-      data = retry.data;
-      error = retry.error;
-    }
-
-    // Last-chance: minimal columns from original schema
-    if (error) {
-      const minimal: Record<string, unknown> = {
+        closed_at: null,
+        expires_at: null,
+      },
+      {
         employer_id: userId,
         job_title: title,
         job_description: desc,
-        positions: positions ?? 1,
+        positions,
         location,
         duration,
         salary_rate: salaryRate,
         category: primary,
         company_name: company,
         status: "approved",
-      };
-      const retry2 = await supabase.from("jobs").insert(minimal).select("id").single();
-      data = retry2.data;
-      error = retry2.error;
+        country,
+        city,
+        employment_type: emp,
+      },
+    ];
+
+    let insertedId: string | null = null;
+    let lastError = "";
+
+    for (const row of attempts) {
+      const { data, error } = await supabase
+        .from("jobs")
+        .insert(row)
+        .select("id, status")
+        .single();
+      if (!error && data?.id) {
+        insertedId = data.id;
+        // Force visible on public pages regardless of triggers/defaults
+        await supabase
+          .from("jobs")
+          .update({
+            status: "approved",
+            closed_at: null,
+            close_reason: null,
+            expires_at: null,
+            country: country,
+          })
+          .eq("id", data.id);
+        break;
+      }
+      lastError = error?.message || "insert failed";
     }
 
-    if (error) {
-      results.push({ index: i, ok: false, error: error.message });
+    if (!insertedId) {
+      results.push({ index: i, ok: false, error: lastError });
     } else {
       results.push({
         index: i,
         ok: true,
-        id: data?.id,
+        id: insertedId,
+        status: "approved",
         linkedCompanyId: teamCo?.id ?? null,
         linkedCompanyName: teamCo?.name ?? null,
       });
@@ -229,10 +249,20 @@ export async function POST(req: Request) {
   }
 
   const created = results.filter((r) => r.ok).length;
-  const linked = results.filter((r) => r.linkedCompanyId).length;
+  if (created > 0) {
+    try {
+      revalidatePath("/jobs");
+      revalidatePath("/");
+      revalidatePath("/dashboard/jobs");
+      revalidatePath("/search");
+    } catch {
+      /* ignore */
+    }
+  }
+
   return NextResponse.json({
     created,
-    linked,
+    linked: results.filter((r) => r.linkedCompanyId).length,
     total: jobs.length,
     results,
     ok: created > 0,
