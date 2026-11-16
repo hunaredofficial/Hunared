@@ -216,34 +216,43 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found or not allowed" }, { status: 404 });
   }
 
-  const live = existing.status === "active" || existing.status === "scheduled";
+  // Keep history: mark as expired (removed from live placements).
+  // Avoids invalid statuses like pending_removal that may fail DB check constraints.
+  const keepHistory = [
+    "active",
+    "scheduled",
+    "pending_approval",
+    "pending_payment",
+    "outbid",
+    "rejected",
+  ].includes(existing.status);
 
-  // Live ads: soft-delete → admin reviews (re-activate or permanent delete)
-  if (live) {
+  if (keepHistory) {
     const { data, error } = await supabase
       .from("premium_ads")
       .update({
-        status: "pending_removal",
+        status: "expired",
         ends_at: new Date().toISOString(),
-        admin_note: "Advertiser requested removal — review in admin",
+        admin_note: "Deleted by advertiser",
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
       .eq("user_id", userId)
-      .select("id, status")
+      .select("id, status, ends_at, admin_note")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await clearPremiumPlacementMirror(supabase, existing.slot_id, existing.image_url);
     return NextResponse.json({
       ok: true,
-      soft: true,
-      status: "pending_removal",
-      message: "Removal requested. An admin will confirm or restore.",
+      deleted: true,
+      expired: true,
+      status: "expired",
+      message: "Ad deleted and marked as Expired.",
       ad: data,
     });
   }
 
-  // Non-live: permanent delete by owner
+  // Draft / unknown: hard delete
   const { error } = await supabase
     .from("premium_ads")
     .delete()

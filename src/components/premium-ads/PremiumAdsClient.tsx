@@ -40,6 +40,8 @@ export function PremiumAdsClient() {
   const [loading, setLoading] = useState(true);
   const [payNote, setPayNote] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Ad | null>(null);
+  const [deleteTyped, setDeleteTyped] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,35 +83,46 @@ export function PremiumAdsClient() {
     }
   }
 
-  async function removeAd(id: string, status?: string) {
-    const live = status === "active" || status === "scheduled";
-    if (live) {
-      const typed = window.prompt(
-        'This campaign is LIVE on the site. Type "delete" to permanently remove it.'
-      );
-      if (!typed || typed.trim().toLowerCase() !== "delete") {
-        if (typed != null) toast.error('Type "delete" to confirm');
-        return;
-      }
-    } else {
-      if (!confirm("Delete this premium ad?")) return;
+  function openDeleteModal(ad: Ad) {
+    setDeleteTarget(ad);
+    setDeleteTyped("");
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    if (deleteTyped.trim() !== "Delete") {
+      toast.error('Type "Delete" exactly to confirm');
+      return;
     }
+    const id = deleteTarget.id;
     setBusy(id);
     try {
       const res = await fetch(`/api/premium-ads/${id}`, { method: "DELETE" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Failed");
-      if (j.soft || j.status === "pending_removal") {
-        toast.success("Removal requested — admin will confirm or restore");
+      if (j.expired || j.status === "expired") {
+        toast.success("Ad deleted — marked as Expired");
       } else {
         toast.success("Ad deleted");
       }
+      setDeleteTarget(null);
+      setDeleteTyped("");
       void load();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
       setBusy(null);
     }
+  }
+
+  function statusLabel(ad: Ad): string {
+    if (
+      ad.status === "expired" &&
+      (ad.admin_note || "").toLowerCase().includes("deleted by advertiser")
+    ) {
+      return "Deleted · Expired";
+    }
+    return PREMIUM_AD_STATUS_LABEL[ad.status] || ad.status;
   }
 
   return (
@@ -190,10 +203,11 @@ export function PremiumAdsClient() {
                   className={cn(
                     ad.status === "active" && "border-emerald-500/50 text-emerald-400",
                     ad.status === "pending_approval" && "border-amber-500/50 text-amber-400",
-                    ad.status === "rejected" && "border-destructive/50 text-destructive"
+                    ad.status === "rejected" && "border-destructive/50 text-destructive",
+                    ad.status === "expired" && "border-muted-foreground/40 text-muted-foreground"
                   )}
                 >
-                  {PREMIUM_AD_STATUS_LABEL[ad.status] || ad.status}
+                  {statusLabel(ad)}
                 </Badge>
               </div>
               <p className="text-sm">
@@ -236,7 +250,7 @@ export function PremiumAdsClient() {
                     variant="ghost"
                     className="text-destructive"
                     disabled={busy === ad.id}
-                    onClick={() => void removeAd(ad.id, ad.status)}
+                    onClick={() => openDeleteModal(ad)}
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" />
                     Delete
@@ -266,6 +280,72 @@ export function PremiumAdsClient() {
           ))}
         </ul>
       )}
+
+      {/* Type "Delete" to confirm */}
+      {deleteTarget ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl space-y-4">
+            <h2 className="text-lg font-semibold">Delete this ad?</h2>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{deleteTarget.title}</span>
+              {(deleteTarget.status === "active" || deleteTarget.status === "scheduled") && (
+                <>
+                  {" "}
+                  is <span className="text-foreground font-medium">LIVE</span> and will be
+                  taken offline immediately.
+                </>
+              )}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Type <span className="font-mono text-foreground font-semibold">Delete</span> to
+              confirm. The campaign will move to{" "}
+              <span className="text-foreground font-medium">Expired</span> and show as deleted.
+            </p>
+            <input
+              className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm"
+              value={deleteTyped}
+              onChange={(e) => setDeleteTyped(e.target.value)}
+              placeholder='Type "Delete" to confirm'
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void confirmDelete();
+              }}
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy === deleteTarget.id}
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteTyped("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={busy === deleteTarget.id || deleteTyped.trim() !== "Delete"}
+                onClick={() => void confirmDelete()}
+              >
+                {busy === deleteTarget.id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                    Deleting…
+                  </>
+                ) : (
+                  "Delete ad"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

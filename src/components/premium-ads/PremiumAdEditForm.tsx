@@ -122,8 +122,9 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
 
   async function confirmDelete() {
     const live = status === "active" || status === "scheduled";
-    if (live && deleteTyped.trim().toLowerCase() !== "delete") {
-      toast.error('Type "delete" to confirm');
+    // Always require exact "Delete" (case-sensitive) for safety
+    if (deleteTyped.trim() !== "Delete") {
+      toast.error('Type "Delete" exactly to confirm');
       return;
     }
     setDeleting(true);
@@ -131,7 +132,11 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
       const res = await fetch(`/api/premium-ads/${adId}`, { method: "DELETE" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Delete failed");
-      toast.success("Campaign deleted");
+      toast.success(
+        j.expired || j.status === "expired"
+          ? "Ad deleted — marked as Expired"
+          : "Campaign deleted"
+      );
       setShowDeleteModal(false);
       router.push("/dashboard/premium-ads");
       router.refresh();
@@ -332,26 +337,26 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
         >
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl space-y-4">
             <h2 className="text-lg font-semibold">Delete campaign?</h2>
-            {isLive ? (
-              <>
-                <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
+              {isLive ? (
+                <>
                   This campaign is <span className="text-foreground font-medium">LIVE</span> and
-                  may be showing on the site. Type <span className="font-mono text-foreground">delete</span>{" "}
-                  below to confirm permanent removal.
-                </p>
-                <input
-                  className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm"
-                  value={deleteTyped}
-                  onChange={(e) => setDeleteTyped(e.target.value)}
-                  placeholder='Type "delete" to confirm'
-                  autoFocus
-                />
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                This will permanently remove the campaign. This cannot be undone.
-              </p>
-            )}
+                  will be taken offline immediately.
+                </>
+              ) : (
+                <>This campaign will be removed from your active list.</>
+              )}{" "}
+              Type <span className="font-mono text-foreground font-semibold">Delete</span> to
+              confirm. It will move to{" "}
+              <span className="text-foreground font-medium">Expired</span> and show as deleted.
+            </p>
+            <input
+              className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm"
+              value={deleteTyped}
+              onChange={(e) => setDeleteTyped(e.target.value)}
+              placeholder='Type "Delete" to confirm'
+              autoFocus
+            />
             <div className="flex justify-end gap-2 pt-1">
               <Button
                 type="button"
@@ -365,7 +370,7 @@ export function PremiumAdEditForm({ adId }: { adId: string }) {
                 type="button"
                 variant="destructive"
                 disabled={
-                  deleting || (isLive && deleteTyped.trim().toLowerCase() !== "delete")
+                  deleting || deleteTyped.trim() !== "Delete"
                 }
                 onClick={() => void confirmDelete()}
               >
