@@ -21,7 +21,7 @@ export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Hunared AI",
   description:
-    "Hunared AI — platform guide for jobs, CV, marketplace, learning, and how to use Hunared. Works without login.",
+    "Hunared AI — platform guide for jobs, CV, marketplace, learning, and how to use Hunared. Login required.",
 };
 
 const CAPS = [
@@ -49,7 +49,7 @@ export default function AgentPage() {
     <div className="container max-w-4xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
-          Hunared AI · No login required
+          Hunared AI · Login required
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           What can I help you accomplish?
