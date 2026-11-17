@@ -363,14 +363,14 @@
 /* ─── Wordmark — gold + optical vertical align with mark ─────────── */
 .hunared-wordmark {
   /* Cap-height glyphs sit high vs square mark; nudge down ~1px–2% em */
-  transform: translateY(0.08em);
+  transform: translateY(0.04em);
   margin: 0;
   padding: 0;
   line-height: 1;
 }
 .group\/logo:hover .hunared-wordmark {
   /* Keep optical Y while allowing slight X hover shift from Tailwind */
-  transform: translateY(0.08em) translateX(1.5px);
+  transform: translateY(0.04em) translateX(1.5px);
 }
 .hunared-wordmark-text {
   color: #FDC415;
@@ -401,7 +401,7 @@
     animation: none;
   }
   .group\/logo:hover .hunared-wordmark {
-    transform: translateY(0.08em);
+    transform: translateY(0.04em);
   }
 }
 

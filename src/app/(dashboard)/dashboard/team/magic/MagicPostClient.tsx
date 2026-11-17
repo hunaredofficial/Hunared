@@ -270,8 +270,8 @@ export default function MagicPostClient() {
           className={cn(areaCls, "min-h-[220px] font-mono text-[13px]")}
           placeholder={
             mode === "jobs"
-              ? "Scaffolder\nCompany: Green Asia\nJubail, Saudi Arabia\n20 positions · SAR 18/hr · Temporary\n...\n\n---\n\nElectrician\nDaria · 10 positions\n..."
-              : "Industrial cables for sale\nJubail · SAR 500\n...\n\n---\n\nWelding services\n..."
+              ? "----------\n\n----------\n\n----------"
+              : "----------\n\n----------\n\n----------"
           }
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
