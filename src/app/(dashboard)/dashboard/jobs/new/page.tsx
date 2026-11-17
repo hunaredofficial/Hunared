@@ -607,7 +607,7 @@ export default function PostJobPage() {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="e.g. Senior HSE Engineer"
+              placeholder="Enter the position"
               value={form.jobTitle}
               onChange={(e) => {
                 const v = e.target.value;
@@ -665,9 +665,9 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Subcategory" className="sm:col-span-2">
+            <Field label="SUBCATEGORY (OPTIONAL)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. NEBOSH, IOSH"
+                placeholder="Type a relevant subcategory"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -701,7 +701,7 @@ export default function PostJobPage() {
 
             <Field label="City *">
               <Input
-                placeholder="e.g. Jubail"
+                placeholder="Enter City"
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
               />
@@ -709,7 +709,7 @@ export default function PostJobPage() {
 
             <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Project site, plant name, or area"
+                placeholder="Enter Project site, plant name or area"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
@@ -769,7 +769,7 @@ export default function PostJobPage() {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="e.g. 3"
+                placeholder="Select Positions'"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
@@ -906,7 +906,7 @@ export default function PostJobPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Aramco Projects Ltd."
+                placeholder="Enter company name"
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />

@@ -387,7 +387,8 @@ export default function BulkClient() {
       if (!res.ok) throw new Error(data.error || "Failed");
       toast.success(
         `Published ${data.created}/${data.total} jobs` +
-          (data.linked ? ` · ${data.linked} linked to team companies` : "")
+          (data.linked ? ` · ${data.linked} linked to team companies` : "") +
+          " — open /jobs to view (hard refresh if needed)"
       );
       setLastResult(JSON.stringify(data, null, 2));
       if (data.created > 0) setJobs([emptyJob()]);
@@ -416,7 +417,9 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      toast.success(`Published ${data.created}/${data.total} listings`);
+      toast.success(
+        `Published ${data.created}/${data.total} listings — open /market to view (hard refresh if needed)`
+      );
       setLastResult(JSON.stringify(data, null, 2));
       if (data.created > 0) setListings([emptyMarket()]);
     } catch (e) {
@@ -517,7 +520,7 @@ export default function BulkClient() {
                           updateJob(i, { jobTitle: v });
                           runJobSmart(i, v, row.jobDescription);
                         }}
-                        placeholder="e.g. Senior HSE Engineer"
+                        placeholder="Enter the position"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -565,14 +568,14 @@ export default function BulkClient() {
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={labelCls}>Subcategory</label>
+                      <label className={labelCls}>SUBCATEGORY (OPTIONAL)</label>
                       <input
                         className={inputCls}
                         value={row.subcategory}
                         onChange={(e) =>
                           updateJob(i, { subcategory: e.target.value })
                         }
-                        placeholder="e.g. NEBOSH, IOSH"
+                        placeholder="Type a relevant subcategory"
                       />
                     </div>
                     <div>
@@ -585,6 +588,7 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { companyName: e.target.value })
                         }
+                        placeholder="Enter company name"
                       />
                     </div>
                     <div>
@@ -660,6 +664,7 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { workLocation: e.target.value })
                         }
+                        placeholder="Enter Project site, plant name or area"
                       />
                     </div>
                     <div>
@@ -689,7 +694,7 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { positions: e.target.value })
                         }
-                        placeholder="e.g. 3"
+                        placeholder="Select Positions'"
                       />
                     </div>
                     <div>
@@ -900,7 +905,7 @@ export default function BulkClient() {
                         </select>
                       </div>
                       <div>
-                        <label className={labelCls}>Subcategory</label>
+                        <label className={labelCls}>SUBCATEGORY (OPTIONAL)</label>
                         <select
                           className={inputCls}
                           value={row.subcategory}

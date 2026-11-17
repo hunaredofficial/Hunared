@@ -24,6 +24,46 @@ const VALID_CATS = new Set(
   LISTING_CATEGORIES.map((c: { value: string }) => c.value)
 );
 
+async function forcePublicVisible(
+  supabase: ReturnType<typeof createAdminClient>,
+  id: string,
+  country: string,
+  city: string | null
+) {
+  const visibility = {
+    status: "approved",
+    closed_at: null,
+    close_reason: null,
+    expires_at: null,
+    listing_type: "standard",
+    country,
+    ...(city ? { city } : {}),
+  };
+
+  await supabase.from("marketplace_listings").update(visibility).eq("id", id);
+
+  const { data: check } = await supabase
+    .from("marketplace_listings")
+    .select("id, status, closed_at, expires_at, country, city")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!check || check.status !== "approved" || check.closed_at != null) {
+    await supabase
+      .from("marketplace_listings")
+      .update({
+        status: "approved",
+        closed_at: null,
+        close_reason: null,
+        expires_at: null,
+        listing_type: "standard",
+      })
+      .eq("id", id);
+  }
+
+  return check;
+}
+
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -57,6 +97,7 @@ export async function POST(req: Request) {
     id?: string;
     status?: string;
     error?: string;
+    verified?: boolean;
   }[] = [];
 
   for (let i = 0; i < listings.length; i++) {
@@ -73,6 +114,7 @@ export async function POST(req: Request) {
 
     const city = L.city?.trim() || null;
     const country = (L.country?.trim() || "SA").toUpperCase().slice(0, 2);
+    const location = L.location?.trim() || city || null;
 
     const attempts: Record<string, unknown>[] = [
       {
@@ -85,7 +127,7 @@ export async function POST(req: Request) {
         subcategory: L.subcategory?.trim() || null,
         country,
         city,
-        location: L.location?.trim() || city || null,
+        location,
         contact_phone: L.contact_phone?.trim() || null,
         listing_type: "standard",
         status: "approved",
@@ -107,7 +149,7 @@ export async function POST(req: Request) {
         category,
         country,
         city,
-        location: L.location?.trim() || city || null,
+        location,
         contact_phone: L.contact_phone?.trim() || null,
         listing_type: "standard",
         status: "approved",
@@ -124,6 +166,8 @@ export async function POST(req: Request) {
         status: "approved",
         listing_type: "standard",
         country,
+        closed_at: null,
+        expires_at: null,
       },
     ];
 
@@ -138,39 +182,37 @@ export async function POST(req: Request) {
         .single();
       if (!error && data?.id) {
         insertedId = data.id;
-        await supabase
-          .from("marketplace_listings")
-          .update({
-            status: "approved",
-            closed_at: null,
-            close_reason: null,
-            expires_at: null,
-            country,
-            listing_type: "standard",
-          })
-          .eq("id", data.id);
         break;
       }
       lastError = error?.message || "insert failed";
     }
 
-    if (!insertedId) results.push({ index: i, ok: false, error: lastError });
-    else
-      results.push({
-        index: i,
-        ok: true,
-        id: insertedId,
-        status: "approved",
-      });
+    if (!insertedId) {
+      results.push({ index: i, ok: false, error: lastError });
+      continue;
+    }
+
+    const verified = await forcePublicVisible(supabase, insertedId, country, city);
+
+    results.push({
+      index: i,
+      ok: true,
+      id: insertedId,
+      status: "approved",
+      verified: verified?.status === "approved" && verified?.closed_at == null,
+    });
   }
 
   const created = results.filter((r) => r.ok).length;
   if (created > 0) {
     try {
       revalidatePath("/market");
+      revalidatePath("/market", "layout");
       revalidatePath("/");
       revalidatePath("/dashboard/market");
+      revalidatePath("/dashboard");
       revalidatePath("/search");
+      revalidatePath("/api/market");
     } catch {
       /* ignore */
     }

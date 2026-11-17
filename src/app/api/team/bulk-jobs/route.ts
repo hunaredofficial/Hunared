@@ -54,6 +54,47 @@ function normalizePositions(v: string | number | undefined | null): number {
   return n;
 }
 
+async function forcePublicVisible(
+  supabase: ReturnType<typeof createAdminClient>,
+  id: string,
+  country: string,
+  city: string | null
+) {
+  // Hard-force every visibility field public pages filter on
+  const visibility = {
+    status: "approved",
+    closed_at: null,
+    close_reason: null,
+    expires_at: null,
+    country,
+    ...(city ? { city } : {}),
+  };
+
+  // Primary update
+  await supabase.from("jobs").update(visibility).eq("id", id);
+
+  // Verify; if status still not approved, try a second minimal update
+  const { data: check } = await supabase
+    .from("jobs")
+    .select("id, status, closed_at, expires_at, country, city")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!check || check.status !== "approved" || check.closed_at != null) {
+    await supabase
+      .from("jobs")
+      .update({
+        status: "approved",
+        closed_at: null,
+        close_reason: null,
+        expires_at: null,
+      })
+      .eq("id", id);
+  }
+
+  return check;
+}
+
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -89,6 +130,7 @@ export async function POST(req: Request) {
     linkedCompanyId?: string | null;
     linkedCompanyName?: string | null;
     error?: string;
+    verified?: boolean;
   }[] = [];
 
   for (let i = 0; i < jobs.length; i++) {
@@ -131,7 +173,7 @@ export async function POST(req: Request) {
 
     const teamCo = await findTeamManagedCompanyByName(supabase, company);
 
-    // Attempt inserts from richest → leanest schema
+    // Attempt inserts from richest → leanest schema (matches single-job POST shape first)
     const attempts: Record<string, unknown>[] = [
       {
         employer_id: userId,
@@ -204,6 +246,8 @@ export async function POST(req: Request) {
         country,
         city,
         employment_type: emp,
+        closed_at: null,
+        expires_at: null,
       },
     ];
 
@@ -218,17 +262,6 @@ export async function POST(req: Request) {
         .single();
       if (!error && data?.id) {
         insertedId = data.id;
-        // Force visible on public pages regardless of triggers/defaults
-        await supabase
-          .from("jobs")
-          .update({
-            status: "approved",
-            closed_at: null,
-            close_reason: null,
-            expires_at: null,
-            country: country,
-          })
-          .eq("id", data.id);
         break;
       }
       lastError = error?.message || "insert failed";
@@ -236,25 +269,33 @@ export async function POST(req: Request) {
 
     if (!insertedId) {
       results.push({ index: i, ok: false, error: lastError });
-    } else {
-      results.push({
-        index: i,
-        ok: true,
-        id: insertedId,
-        status: "approved",
-        linkedCompanyId: teamCo?.id ?? null,
-        linkedCompanyName: teamCo?.name ?? null,
-      });
+      continue;
     }
+
+    // Force public visibility (handles DB defaults / triggers that may reset status)
+    const verified = await forcePublicVisible(supabase, insertedId, country, city);
+
+    results.push({
+      index: i,
+      ok: true,
+      id: insertedId,
+      status: verified?.status === "approved" ? "approved" : "approved",
+      linkedCompanyId: teamCo?.id ?? null,
+      linkedCompanyName: teamCo?.name ?? null,
+      verified: verified?.status === "approved" && verified?.closed_at == null,
+    });
   }
 
   const created = results.filter((r) => r.ok).length;
   if (created > 0) {
     try {
       revalidatePath("/jobs");
+      revalidatePath("/jobs", "layout");
       revalidatePath("/");
       revalidatePath("/dashboard/jobs");
+      revalidatePath("/dashboard");
       revalidatePath("/search");
+      revalidatePath("/api/jobs");
     } catch {
       /* ignore */
     }
