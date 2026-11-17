@@ -422,7 +422,11 @@ export default async function JobsPage({
                 {total > 0
                   ? `${total.toLocaleString()} opportunit${total !== 1 ? "ies" : "y"}`
                   : "Find your next opportunity"}
-                {/* feed order: premium → newest */}
+                {useForYou && isPersonalized && (
+                  <span className="ml-2 text-primary text-sm font-medium">
+                    · matched to your profile
+                  </span>
+                )}
               </p>
             </div>
             <Button size="sm" className="shrink-0 font-semibold" asChild>
@@ -485,12 +489,12 @@ export default async function JobsPage({
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} result{total !== 1 ? "s" : ""}
-                {useForYou && isPersonalized ? " · matched to your profile" : ""}
                 {search && ` for "${search}"`}
                 {category && ` in ${category}`}
                 {employmentType && ` · ${employmentType.replace("_", " ")}`}
                 {activeCountry && ` · ${activeCountry.name}`}
                 {city && ` · ${city}`}
+                {useForYou && isPersonalized ? " · Recommended" : ""}
               </p>
             </div>
 

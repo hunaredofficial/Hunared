@@ -394,16 +394,11 @@ export default async function MarketPage({
                 {activeCountry && ` · ${activeCountry.name}`}
                 {city && ` · ${city}`}
                 {search && ` matching "${search}"`}
+                {useForYou && isPersonalized ? " · Recommended" : ""}
               </p>
             </div>
 
 
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <p className="text-sm text-muted-foreground">
-                {total} listing{total !== 1 ? "s" : ""}
-                {useForYou && isPersonalized ? " · matched to your profile" : ""}
-              </p>
-            </div>
             {listings.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-lg">
                 <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
