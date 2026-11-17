@@ -31,7 +31,7 @@ import { CityCombobox } from "@/components/shared/CityCombobox";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
 
-export type CompSort = "" | "comp_asc" | "comp_desc";
+export type CompSort = "" | "comp_asc" | "comp_desc" | "for_you";
 export type DateOrder = "" | "newest" | "oldest";
 
 const PAYOUT_OPTIONS = [
@@ -385,21 +385,38 @@ export function JobsFilter({
             onSelect={() => setPosted(o.value)}
           />
         ))}
-        <p className="text-xs text-muted-foreground px-2 mt-2 mb-1">Sort by date</p>
+        <p className="text-xs text-muted-foreground px-2 mt-2 mb-1">Sort order</p>
         <RadioRow
-          checked={dateOrder === ""}
-          label="Default"
-          onSelect={() => setDateOrder("")}
+          checked={compSort === "for_you"}
+          label="Recommended for you"
+          onSelect={() => {
+            setCompSort("for_you");
+            setDateOrder("");
+          }}
+        />
+        <RadioRow
+          checked={compSort !== "for_you" && dateOrder === ""}
+          label="Newest First"
+          onSelect={() => {
+            if (compSort === "for_you") setCompSort("");
+            setDateOrder("");
+          }}
         />
         <RadioRow
           checked={dateOrder === "newest"}
-          label="Newest First"
-          onSelect={() => setDateOrder("newest")}
+          label="Newest only"
+          onSelect={() => {
+            if (compSort === "for_you") setCompSort("");
+            setDateOrder("newest");
+          }}
         />
         <RadioRow
           checked={dateOrder === "oldest"}
           label="Oldest First"
-          onSelect={() => setDateOrder("oldest")}
+          onSelect={() => {
+            if (compSort === "for_you") setCompSort("");
+            setDateOrder("oldest");
+          }}
         />
       </Section>
 
@@ -456,7 +473,11 @@ export function JobsFilter({
       )}
       {compSort && (
         <Badge variant="secondary" className="gap-1 text-xs">
-          {compSort === "comp_asc" ? "Pay ↑" : "Pay ↓"}
+          {compSort === "for_you"
+            ? "Recommended"
+            : compSort === "comp_asc"
+              ? "Pay ↑"
+              : "Pay ↓"}
           <button type="button" onClick={() => { setCompSort(""); applyQuick({ sort: "" }); }} aria-label="Remove">
             <X className="h-3 w-3" />
           </button>

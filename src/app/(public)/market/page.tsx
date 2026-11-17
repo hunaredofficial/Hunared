@@ -401,51 +401,8 @@ export default async function MarketPage({
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} listing{total !== 1 ? "s" : ""}
-                {useForYou && isPersonalized ? " · matched to your profile" : ""}
+                {useForYou && isPersonalized ? " · recommended for you" : ""}
               </p>
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const params = new URLSearchParams();
-                  if (search) params.set("search", search);
-                  if (category) params.set("category", category);
-                  if (subcategory) params.set("subcategory", subcategory);
-                  if (country) params.set("country", country);
-                  if (city) params.set("city", city);
-                  if (minPrice) params.set("minPrice", minPrice);
-                  if (maxPrice) params.set("maxPrice", maxPrice);
-                  if (posted) params.set("posted", posted);
-                  if (status) params.set("status", status);
-                  if (!useForYou) params.set("sort", "for_you");
-                  else if (sort && sort !== "for_you") params.set("sort", sort);
-                  const qs = params.toString();
-                  const href = qs ? `/market?${qs}` : "/market";
-                  if (!isPersonalized) {
-                    return (
-                      <Link
-                        href="/sign-in?redirect_url=/market?sort=for_you"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        For you
-                      </Link>
-                    );
-                  }
-                  return (
-                    <Link
-                      href={href}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                        useForYou
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      )}
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      For you
-                    </Link>
-                  );
-                })()}
-              </div>
             </div>
             {listings.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-lg">
@@ -459,7 +416,7 @@ export default async function MarketPage({
               <>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                   {listings.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} isPromoted={promotedListingSet.has(listing.id)} />
+                    <ListingCard key={listing.id} listing={listing} isPromoted={promotedListingSet.has(listing.id)} showRecommended={useForYou && isPersonalized} />
                   ))}
                 </div>
 
@@ -532,7 +489,7 @@ export default async function MarketPage({
   );
 }
 
-function ListingCard({ listing, isPromoted = false }: { listing: Listing & { _matchScore?: number }; isPromoted?: boolean }) {
+function ListingCard({ listing, isPromoted = false, showRecommended = false }: { listing: Listing & { _matchScore?: number }; isPromoted?: boolean; showRecommended?: boolean }) {
   const catLabel =
     LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
     listing.category;
@@ -540,7 +497,7 @@ function ListingCard({ listing, isPromoted = false }: { listing: Listing & { _ma
     LISTING_CATEGORY_COLORS[listing.category] ??
     "bg-muted text-muted-foreground";
 
-  const isRecommended = (listing._matchScore ?? 0) >= 20;
+  const isRecommended = showRecommended && (listing._matchScore ?? 0) >= 20;
 
   return (
     <div className={cn(

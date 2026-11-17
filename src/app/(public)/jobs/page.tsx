@@ -481,62 +481,17 @@ export default async function JobsPage({
               />
             </div>
 
-            {/* Result meta + For you chip */}
+                        {/* Result meta */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} result{total !== 1 ? "s" : ""}
-                {useForYou && isPersonalized ? " · matched to your profile" : ""}
+                {useForYou && isPersonalized ? " · recommended for you" : ""}
                 {search && ` for "${search}"`}
                 {category && ` in ${category}`}
                 {employmentType && ` · ${employmentType.replace("_", " ")}`}
                 {activeCountry && ` · ${activeCountry.name}`}
                 {city && ` · ${city}`}
               </p>
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const params = new URLSearchParams();
-                  if (search) params.set("search", search);
-                  if (category) params.set("category", category);
-                  if (country) params.set("country", country);
-                  if (city) params.set("city", city);
-                  if (employmentType) params.set("employmentType", employmentType);
-                  if (payout) params.set("payout", payout);
-                  if (durationFilter) params.set("duration", durationFilter);
-                  if (posted) params.set("posted", posted);
-                  if (dateOrder) params.set("dateOrder", dateOrder);
-                  if (experience) params.set("experience", experience);
-                  // toggle for_you
-                  if (!useForYou) params.set("sort", "for_you");
-                  else if (sort && sort !== "for_you") params.set("sort", sort);
-                  const qs = params.toString();
-                  const href = qs ? `/jobs?${qs}` : "/jobs";
-                  if (!isPersonalized) {
-                    return (
-                      <Link
-                        href="/sign-in?redirect_url=/jobs?sort=for_you"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        For you
-                      </Link>
-                    );
-                  }
-                  return (
-                    <Link
-                      href={href}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                        useForYou
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      )}
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      For you
-                    </Link>
-                  );
-                })()}
-              </div>
             </div>
 
             {jobs.length === 0 ? (
@@ -552,7 +507,7 @@ export default async function JobsPage({
               <>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                   {jobs.map((job) => (
-                    <JobCard key={job.id} job={job} isPromoted={promotedIdSet.has(job.id)} />
+                    <JobCard key={job.id} job={job} isPromoted={promotedIdSet.has(job.id)} showRecommended={useForYou && isPersonalized} />
                   ))}
                 </div>
 
@@ -619,9 +574,12 @@ export default async function JobsPage({
 function JobCard({
   job,
   isPromoted = false,
+  showRecommended = false,
 }: {
   job: Partial<Job> & { _matchScore?: number };
   isPromoted?: boolean;
+  /** Only true when user opted into Recommended (For you) filter */
+  showRecommended?: boolean;
 }) {
   const createdAt = job.created_at
     ? new Date(job.created_at).toLocaleDateString("en-GB", {
@@ -636,7 +594,7 @@ function JobCard({
     (job.salary_type === "Negotiable" ? "Negotiable" : "") ||
     "";
 
-  const isRecommended = (job._matchScore ?? 0) >= 25;
+  const isRecommended = showRecommended && (job._matchScore ?? 0) >= 25;
 
   const empLabel = job.employment_type
     ? job.employment_type.toLowerCase() === "permanent"

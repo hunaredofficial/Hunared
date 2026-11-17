@@ -33,8 +33,9 @@ import { cn } from "@/lib/utils";
 const SUBCATEGORIES = LISTING_SUBCATEGORIES;
 
 const SORT_OPTIONS = [
-  { value: "", label: "Recommended" },
-  { value: "newest", label: "Newest First" },
+  { value: "", label: "Newest First" },
+  { value: "for_you", label: "Recommended for you" },
+  { value: "newest", label: "Newest only" },
   { value: "oldest", label: "Oldest First" },
   { value: "price_asc", label: "Price: Low to High" },
   { value: "price_desc", label: "Price: High to Low" },
