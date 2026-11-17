@@ -19,10 +19,11 @@ const WORDMARK_CLASS: Record<Size, string> = {
   xl: "text-[30px] sm:text-[34px]",
 };
 
-const MARK_SRC = "/assets/logos/hunared-mark.png?v=20260905";
+const MARK_SRC = "/assets/logos/hunared-mark.png?v=20261117gold";
 
 /**
- * Hunared brand mark (gold H, gold border, black field) + solid gold wordmark matching the mark.
+ * Hunared brand mark + wordmark.
+ * Icon unchanged; wordmark uses previous Poppins/extrabold type + logo gold (#FDC415 via CSS).
  */
 export function HunaredLogo({
   href = "/",
@@ -61,7 +62,7 @@ export function HunaredLogo({
             className="pointer-events-none absolute inset-[-12%] rounded-[22%] opacity-35 blur-[8px] transition-all duration-400 group-hover/logo:opacity-60 group-hover/logo:blur-[10px]"
             style={{
               background:
-                "radial-gradient(circle at 50% 45%, rgba(212,175,55,0.55) 0%, transparent 70%)",
+                "radial-gradient(circle at 50% 45%, rgba(253,196,21,0.55) 0%, transparent 70%)",
             }}
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -74,7 +75,7 @@ export function HunaredLogo({
               "relative z-[1] h-full w-full object-contain rounded-[18%]",
               "drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]",
               "transition-[filter] duration-400",
-              "group-hover/logo:drop-shadow-[0_2px_10px_rgba(212,175,55,0.4)]"
+              "group-hover/logo:drop-shadow-[0_2px_10px_rgba(253,196,21,0.45)]"
             )}
             style={{ width: px, height: px }}
             decoding="async"
@@ -86,11 +87,12 @@ export function HunaredLogo({
         <span
           className={cn(
             "hunared-wordmark relative inline-block leading-none select-none",
+            "font-bold tracking-tight",
             "transition-transform duration-400 ease-out group-hover/logo:translate-x-[1.5px]",
             WORDMARK_CLASS[size]
           )}
         >
-          <span className="hunared-wordmark-text font-semibold tracking-tight">Hunared</span>
+          <span className="hunared-wordmark-text">Hunared</span>
         </span>
       )}
     </span>

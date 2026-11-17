@@ -360,20 +360,20 @@
   }
 }
 
-/* ─── Wordmark — gold brand mark (independent of UI indigo) ──── */
+/* ─── Wordmark — previous font metrics + logo-matched gold (#FDC415) ─ */
 .hunared-wordmark-text {
-  color: #c9a227;
-  -webkit-text-fill-color: #c9a227;
+  color: #FDC415;
+  -webkit-text-fill-color: #FDC415;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 .dark .hunared-wordmark-text {
-  color: #d4af37;
-  -webkit-text-fill-color: #d4af37;
+  color: #FDC415;
+  -webkit-text-fill-color: #FDC415;
 }
 :root:not(.dark) a:hover .hunared-wordmark-text {
-  color: #b8860b;
-  -webkit-text-fill-color: #b8860b;
+  color: #F5B800;
+  -webkit-text-fill-color: #F5B800;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -448,8 +448,8 @@ datalist option {
   color: #fafafa;
 }
 .contrast-black .hunared-wordmark-text {
-  color: #e8c547;
-  -webkit-text-fill-color: #e8c547;
+  color: #FDC415;
+  -webkit-text-fill-color: #FDC415;
   background-image: none;
   animation: none;
 }
