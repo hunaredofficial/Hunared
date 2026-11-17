@@ -159,9 +159,9 @@ export default async function JobsPage({
     // Auth / DB optional — fall back to non-personalized
   }
 
-  // Personalization forces in-memory ranking when user is signed in and no explicit sort
-  const usePersonalSort =
-    isPersonalized && !sort && !dateOrder;
+  // Listing order is always: active Premium Ads first, then publish date
+  // (newest → oldest by default). Personalization does NOT reorder the feed.
+  const usePersonalSort = false;
 
   const needsInMemory =
     sort === "comp_asc" ||
@@ -172,7 +172,7 @@ export default async function JobsPage({
     !!posted ||
     !!experience ||
     dateOrder === "oldest" ||
-    usePersonalSort;
+    dateOrder === "newest";
 
   let jobs: (Partial<Job> & { _matchScore?: number })[] = [];
   let promotedIdSet = new Set<string>();
@@ -182,7 +182,6 @@ export default async function JobsPage({
   try {
     const supabase = createAdminClient();
 
-    const nowIso = new Date().toISOString();
     let query = supabase
       .from("jobs")
       .select(
@@ -191,7 +190,7 @@ export default async function JobsPage({
       )
       .eq("status", "approved")
       .is("closed_at", null)
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
     if (category) query = query.eq("category", category);
     if (country) query = query.eq("country", country);
@@ -282,31 +281,52 @@ export default async function JobsPage({
         );
       }
 
-      // Premium-promoted jobs always first (higher bid → newer if same bid)
+      // Order: 1) active Premium Ads (bid/recency)  2) everyone else by publish date
       const promotedIds = await getPromotedJobIds(supabase);
       promotedIdSet = new Set(promotedIds);
-      rows = promoteToFront(rows, promotedIds);
 
-      // Personalization: rank by profile match when signed in
-      if (usePersonalSort && profile) {
-        // Keep bid-ordered promoted at top, personalize the rest
-        const promoted = promoteToFront(
-          rows.filter((j) => promotedIdSet.has(j.id)),
-          promotedIds
-        );
-        const rest = rows.filter((j) => !promotedIdSet.has(j.id));
-        const rankedRest = rankByPersonalization(rest, (j) =>
-          scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
-        );
-        const ranked = [...promoted, ...rankedRest];
-        total = ranked.length;
-        jobs = ranked.slice(from, from + limit);
-      } else {
-        total = rows.length;
-        jobs = rows.slice(from, from + limit);
+      const ascending = dateOrder === "oldest";
+      const byDate = (a: { created_at?: string | null }, b: { created_at?: string | null }) => {
+        const ta = new Date(a.created_at ?? 0).getTime();
+        const tb = new Date(b.created_at ?? 0).getTime();
+        return ascending ? ta - tb : tb - ta;
+      };
+
+      // Only re-apply date sort when user did not already pick compensation sort
+      const isCompSort =
+        sort === "comp_asc" ||
+        sort === "comp_desc" ||
+        sort === "rate_asc" ||
+        sort === "rate_desc";
+      if (!isCompSort) {
+        rows = [...rows].sort(byDate);
       }
+
+      const promoted = promoteToFront(
+        rows.filter((j) => promotedIdSet.has(j.id)),
+        promotedIds
+      );
+      const organic = rows
+        .filter((j) => !promotedIdSet.has(j.id))
+        .sort(isCompSort ? () => 0 : byDate);
+
+      // Optional match scores for "For you" badges only — do not change order
+      let ordered = [...promoted, ...organic];
+      if (profile) {
+        ordered = ordered.map((j) => ({
+          ...j,
+          _matchScore: scoreJob(
+            j as Parameters<typeof scoreJob>[0],
+            profile,
+            savedJobIds
+          ),
+        }));
+      }
+
+      total = ordered.length;
+      jobs = ordered.slice(from, from + limit);
     } else {
-      // DB-side order + inject ALL active promotions on page 1
+      // DB-side: premium first, then publish date (newest → oldest by default)
       const ascending = dateOrder === "oldest";
       const promotedIdsDb = await getPromotedJobIds(supabase);
       promotedIdSet = new Set(promotedIdsDb);
@@ -324,6 +344,7 @@ export default async function JobsPage({
         if (city) pq = pq.ilike("city", `%${city}%`);
         if (employmentType) pq = pq.eq("employment_type", employmentType);
         const { data: promoData } = await pq;
+        // Keep premium bid order from getPromotedJobIds
         promotedRows = promoteToFront(promoData ?? [], promotedIdsDb);
       }
 
@@ -333,16 +354,25 @@ export default async function JobsPage({
       const { data, count } = await query;
       const organic = (data ?? []).filter((j) => !promotedIdSet.has(j.id));
 
+      // Attach optional match scores for badges (order unchanged)
+      const attachScore = (list: typeof jobs) => {
+        if (!profile) return list;
+        return list.map((j) => ({
+          ...j,
+          _matchScore: scoreJob(
+            j as Parameters<typeof scoreJob>[0],
+            profile,
+            savedJobIds
+          ),
+        }));
+      };
+
       if (page <= 1) {
-        // All promotions (any user, any bid) at top, then organic fill
-        const merged = [...promotedRows, ...organic];
-        jobs = merged.slice(0, limit);
+        jobs = attachScore([...promotedRows, ...organic]).slice(0, limit);
       } else {
-        jobs = organic;
+        jobs = attachScore(organic);
       }
-      // total counts organic + promoted so pagination stays sane
-      total = (count ?? 0) + (page <= 1 ? 0 : 0);
-      if (count != null) total = count;
+      total = count ?? 0;
     }
   } catch {
     // DB not configured — show empty state
@@ -381,12 +411,7 @@ export default async function JobsPage({
                 {total > 0
                   ? `${total.toLocaleString()} opportunit${total !== 1 ? "ies" : "y"}`
                   : "Find your next opportunity"}
-                {isPersonalized && usePersonalSort && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Personalized for you
-                  </span>
-                )}
+                {/* feed order: premium → newest */}
               </p>
             </div>
             <Button size="sm" className="shrink-0 font-semibold" asChild>

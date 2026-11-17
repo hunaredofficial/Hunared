@@ -143,7 +143,7 @@ export default async function MarketPage({
     (minNum != null && Number.isFinite(minNum)) ||
     (maxNum != null && Number.isFinite(maxNum));
 
-  const usePersonalSort = isPersonalized && !sort;
+  const usePersonalSort = false; // order: premium → newest; no personalization reorder
 
   const needsInMemory =
     sort === "price_asc" ||
@@ -245,21 +245,27 @@ export default async function MarketPage({
       promotedListingSet = new Set(promotedListingIds);
       rows = promoteToFront(rows, promotedListingIds);
 
-      if (usePersonalSort && profile) {
+      // Premium ads first, then newest → oldest by published date
+      {
+        const ascending = sort === "oldest";
+        const byDate = (
+          a: { created_at?: string | null },
+          b: { created_at?: string | null }
+        ) => {
+          const ta = new Date(a.created_at ?? 0).getTime();
+          const tb = new Date(b.created_at ?? 0).getTime();
+          return ascending ? ta - tb : tb - ta;
+        };
         const promoted = promoteToFront(
           rows.filter((r) => promotedListingSet.has(r.id)),
           promotedListingIds
         );
-        const rest = rows.filter((r) => !promotedListingSet.has(r.id));
-        const rankedRest = rankByPersonalization(rest, (row) =>
-          scoreListing(row, profile, savedListingIds)
-        );
-        const ranked = [...promoted, ...rankedRest];
-        total = ranked.length;
-        listings = ranked.slice(from, from + limit);
-      } else {
-        total = rows.length;
-        listings = rows.slice(from, from + limit);
+        const organic = rows
+          .filter((r) => !promotedListingSet.has(r.id))
+          .sort(byDate);
+        const ordered = [...promoted, ...organic];
+        total = ordered.length;
+        listings = ordered.slice(from, from + limit);
       }
     } else {
       const ascending = sort === "oldest";
