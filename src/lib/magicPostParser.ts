@@ -1,7 +1,6 @@
 /**
  * Magic Post — parse unstructured pasted text into job or marketplace fields.
- * Supports multi-post paste: split → smart-parse each block → publish via bulk API.
- * Team / admin only (enforced at page + API).
+ * Builds on existing smartJobParser / smartListingParser.
  */
 
 import {
@@ -51,9 +50,6 @@ export type MagicListingFields = {
   rentalPeriod: string;
 };
 
-const MAX_BLOCKS = 100;
-const MIN_BLOCK_CHARS = 12;
-
 function firstLineAsTitle(raw: string): { title: string; body: string } {
   const lines = raw
     .replace(/\r\n/g, "\n")
@@ -70,57 +66,7 @@ function val<T>(f?: { value: T } | null): T | undefined {
   return f?.value;
 }
 
-/**
- * Split a large paste into individual job/listing blocks.
- * Tries explicit separators first, then blank-line groups, then numbered/heading cues.
- */
-export function splitMagicBlocks(raw: string): string[] {
-  const text = raw.replace(/\r\n/g, "\n").trim();
-  if (!text) return [];
-
-  // 1) Explicit visual separators
-  let parts = text
-    .split(/\n\s*(?:-{3,}|={3,}|\*{3,}|#{3,}|_{3,}|~{3,}|⚡|━━━━━━━━+|────+)\s*\n/)
-    .map((p) => p.trim())
-    .filter((p) => p.length >= MIN_BLOCK_CHARS);
-
-  // 2) Double (or more) blank lines
-  if (parts.length <= 1) {
-    parts = text
-      .split(/\n(?:[ \t]*\n){2,}/)
-      .map((p) => p.trim())
-      .filter((p) => p.length >= MIN_BLOCK_CHARS);
-  }
-
-  // 3) Numbered list starts: "1." "2)" "#3" at line start after newline
-  if (parts.length <= 1) {
-    const numbered = text.split(/(?=\n\s*\d{1,3}\s*[\.\)\-\:]]\s+)/);
-    const cleaned = numbered
-      .map((p) => p.trim())
-      .filter((p) => p.length >= MIN_BLOCK_CHARS);
-    if (cleaned.length > 1) parts = cleaned;
-  }
-
-  // 4) Repeated hiring headers (common in WhatsApp / flyer dumps)
-  if (parts.length <= 1) {
-    const headerSplit = text.split(
-      /(?=\n(?:\s*(?:URGENT|HIRING|WANTED|REQUIRED|JOB\s*TITLE|POSITION|WE\s+ARE\s+HIRING|VACANCY)\b))/i
-    );
-    const cleaned = headerSplit
-      .map((p) => p.trim())
-      .filter((p) => p.length >= MIN_BLOCK_CHARS);
-    if (cleaned.length > 1) parts = cleaned;
-  }
-
-  // 5) Still one block — treat whole paste as a single post
-  if (parts.length === 0) {
-    parts = [text];
-  }
-
-  return parts.slice(0, MAX_BLOCKS);
-}
-
-/** Parse raw paste into job form fields (single block). */
+/** Parse raw paste into job form fields. */
 export function parseMagicJobRaw(raw: string): MagicJobFields {
   const text = raw.trim();
   const { title: lineTitle, body } = firstLineAsTitle(text);
@@ -129,6 +75,7 @@ export function parseMagicJobRaw(raw: string): MagicJobFields {
   const jobTitle =
     String(val(parsed.jobTitle) || lineTitle || "").trim() || "Untitled job";
   let jobDescription = String(val(parsed.jobDescription) || body || text).trim();
+  // Avoid description === title only
   if (jobDescription === jobTitle && body) jobDescription = body;
   if (!jobDescription) jobDescription = text;
 
@@ -139,39 +86,41 @@ export function parseMagicJobRaw(raw: string): MagicJobFields {
   const duration = String(val(parsed.duration) || "").trim();
   let employmentType = String(val(parsed.employmentType) || "").trim();
   if (!employmentType) {
-    employmentType =
-      duration && duration !== "Permanent" ? "temporary" : "permanent";
+    employmentType = duration && duration !== "Permanent" ? "temporary" : "permanent";
   }
-
-  const city = String(val(parsed.city) || "").trim();
-  const country = String(val(parsed.country) || "SA").trim() || "SA";
+  if (!duration && employmentType === "permanent") {
+    // leave duration empty for form defaults
+  }
 
   return {
     jobTitle,
     jobDescription,
     companyName: String(val(parsed.companyName) || "").trim(),
-    companyPhone: String(val(parsed.companyPhone) || "").trim(),
+    companyPhone: (() => {
+      const raw = String(val(parsed.companyPhone) || "").trim();
+      if (!raw) return "";
+      const first = raw.split(/\s*(?:\/|,|;|\|)\s*/)[0] || raw;
+      return first.replace(/[^\d+]/g, "");
+    })(),
     companyEmail: String(val(parsed.companyEmail) || "").trim(),
     companyAddress: String(val(parsed.companyAddress) || "").trim(),
-    country,
-    city,
-    location: String(
-      val(parsed.workLocation) || city || "Remote"
-    ).trim(),
+    country: String(val(parsed.country) || "").trim(),
+    city: String(val(parsed.city) || "").trim(),
+    location: String(val(parsed.workLocation) || val(parsed.city) || "").trim(),
     workLocation: String(val(parsed.workLocation) || "").trim(),
     employmentType,
-    duration: duration || (employmentType === "permanent" ? "Permanent" : "UnSpecified"),
+    duration: duration || (employmentType === "permanent" ? "Permanent" : ""),
     category: categories[0] || String(val(parsed.category) || "").trim(),
     categories,
     positions: String(val(parsed.positions) || "").trim(),
     salaryRate: String(val(parsed.salaryRate) || "").trim(),
     salaryType: String(val(parsed.salaryType) || "").trim(),
-    currency: String(val(parsed.currency) || "SAR").trim() || "SAR",
+    currency: String(val(parsed.currency) || "").trim(),
     mapLocation: String(val(parsed.mapLocation) || "").trim(),
   };
 }
 
-/** Parse raw paste into marketplace listing fields (single block). */
+/** Parse raw paste into marketplace listing fields. */
 export function parseMagicListingRaw(raw: string): MagicListingFields {
   const text = raw.trim();
   const { title: lineTitle, body } = firstLineAsTitle(text);
@@ -182,11 +131,7 @@ export function parseMagicListingRaw(raw: string): MagicListingFields {
 
   const title =
     lineTitle ||
-    text
-      .split("\n")
-      .map((l) => l.trim())
-      .find(Boolean)
-      ?.slice(0, 180) ||
+    text.split("\n").map((l) => l.trim()).find(Boolean)?.slice(0, 180) ||
     "Untitled listing";
 
   let description = body || text;
@@ -216,25 +161,15 @@ export function parseMagicListingRaw(raw: string): MagicListingFields {
   return {
     title,
     description: String(description).trim(),
-    category: String(val(parsed.category) || "for_sale").trim() || "for_sale",
+    category: String(val(parsed.category) || "").trim(),
     subcategory: String(val(parsed.subcategory) || "").trim(),
     condition: String(val(parsed.condition) || "").trim(),
     price: String(val(parsed.price) || "").trim(),
-    currency: String(val(parsed.currency) || "SAR").trim() || "SAR",
-    country: String(val(parsed.country) || "SA").trim() || "SA",
+    currency: String(val(parsed.currency) || "").trim(),
+    country: String(val(parsed.country) || "").trim(),
     city: String(val(parsed.city) || "").trim(),
     location: String(val(parsed.city) || "").trim(),
     contact_phone: String(val(parsed.contactPhone) || "").trim(),
     rentalPeriod: String(val(parsed.rentalPeriod) || "").trim(),
   };
-}
-
-/** Split + parse many jobs from one paste (max 100). */
-export function parseMagicJobsBatch(raw: string): MagicJobFields[] {
-  return splitMagicBlocks(raw).map(parseMagicJobRaw);
-}
-
-/** Split + parse many listings from one paste (max 100). */
-export function parseMagicListingsBatch(raw: string): MagicListingFields[] {
-  return splitMagicBlocks(raw).map(parseMagicListingRaw);
 }

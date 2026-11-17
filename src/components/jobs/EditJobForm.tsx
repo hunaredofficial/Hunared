@@ -335,7 +335,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="Leave empty for Not Specified"
+                placeholder="Select Positions"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />

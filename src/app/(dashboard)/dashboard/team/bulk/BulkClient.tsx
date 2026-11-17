@@ -7,7 +7,6 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -157,7 +156,6 @@ function val<T>(f?: { value: T } | null | undefined): T | undefined {
 }
 
 export default function BulkClient() {
-  const router = useRouter();
   const [jobs, setJobs] = useState<JobRow[]>([emptyJob()]);
   const [listings, setListings] = useState<MarketRow[]>([emptyMarket()]);
   const [jobsLoading, setJobsLoading] = useState(false);
@@ -253,7 +251,12 @@ export default function BulkClient() {
     if (key === "companyName" && val(r.companyName))
       patch.companyName = String(val(r.companyName));
     if (key === "companyPhone" && val(r.companyPhone))
-      patch.companyPhone = String(val(r.companyPhone));
+      {
+      const raw = String(val(r.companyPhone));
+      patch.companyPhone =
+        raw.split(/\s*(?:\/|,|;|\|)\s*/)[0]?.replace(/[^\d+]/g, "") ||
+        raw.replace(/[^\d+]/g, "");
+    }
     if (key === "companyEmail" && val(r.companyEmail))
       patch.companyEmail = String(val(r.companyEmail));
     if (key === "companyAddress" && val(r.companyAddress))
@@ -387,23 +390,12 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      const failed = (data.results || []).filter((r: { ok?: boolean }) => !r.ok);
       toast.success(
         `Published ${data.created}/${data.total} jobs` +
           (data.linked ? ` · ${data.linked} linked to team companies` : "")
       );
-      if (failed.length) {
-        toast.error(`${failed.length} job(s) failed — check details below`);
-      }
       setLastResult(JSON.stringify(data, null, 2));
-      if (data.created > 0) {
-        setJobs([emptyJob()]);
-        router.refresh();
-        // Open public jobs + dashboard list so team can confirm visibility
-        window.setTimeout(() => {
-          router.push("/dashboard/jobs");
-        }, 600);
-      }
+      if (data.created > 0) setJobs([emptyJob()]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -429,19 +421,9 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      const failed = (data.results || []).filter((r: { ok?: boolean }) => !r.ok);
       toast.success(`Published ${data.created}/${data.total} listings`);
-      if (failed.length) {
-        toast.error(`${failed.length} listing(s) failed — check details below`);
-      }
       setLastResult(JSON.stringify(data, null, 2));
-      if (data.created > 0) {
-        setListings([emptyMarket()]);
-        router.refresh();
-        window.setTimeout(() => {
-          router.push("/dashboard/market");
-        }, 600);
-      }
+      if (data.created > 0) setListings([emptyMarket()]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {

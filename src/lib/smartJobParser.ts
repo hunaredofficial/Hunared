@@ -456,27 +456,69 @@ function detectEmail(text: string): ParsedField<string> | undefined {
   return { value: m[0], confidence: "high", label: m[0] };
 }
 
+/** Normalize to a single phone: first valid number only (never "a / b"). */
+function pickFirstPhone(raw: string): string {
+  const cleaned = raw.replace(/[^\d+/\s,-]/g, " ").trim();
+  // Split on common multi-number separators
+  const parts = cleaned.split(/\s*(?:\/|,|;|\||\bor\b|\band\b)\s*/i);
+  for (const part of parts) {
+    const digits = part.replace(/[^\d+]/g, "");
+    // strip leading 00
+    let n = digits.replace(/^00/, "+");
+    // local SA-style 05xxxxxxxx or international
+    const onlyDigits = n.replace(/\D/g, "");
+    if (onlyDigits.length >= 9 && onlyDigits.length <= 15) {
+      // Prefer original spacing-free digits with optional leading +
+      if (n.startsWith("+")) return n;
+      return onlyDigits;
+    }
+  }
+  // Fallback: first 9–15 digit run
+  const m = cleaned.match(/(\+?\d[\d\s-]{7,16}\d)/);
+  if (m) {
+    const onlyDigits = m[1].replace(/\D/g, "");
+    if (onlyDigits.length >= 9 && onlyDigits.length <= 15) {
+      return m[1].trim().startsWith("+")
+        ? "+" + onlyDigits
+        : onlyDigits;
+    }
+  }
+  return "";
+}
+
 function detectPhone(text: string): ParsedField<string> | undefined {
-  // Prefer international format
+  // Prefer labeled / WhatsApp international
   const intl = text.match(
-    /(?:whatsapp[:\s]*)?(\+\d{1,3}[\s-]?\d{6,14})/i
+    /(?:whatsapp|tel|phone|mobile|call|contact)[:\s]*(\+\d{1,3}[\s-]?\d{6,14})/i
   );
   if (intl) {
-    const num = intl[1].replace(/[\s-]/g, "");
-    if (num.length >= 10 && num.length <= 16) {
-      return { value: num, confidence: "high", label: num };
-    }
+    const num = pickFirstPhone(intl[1]);
+    if (num) return { value: num, confidence: "high", label: num };
   }
-  // Local with 0
-  const local = text.match(
-    /(?:tel|phone|mobile|call)[:\s]*([0-9][0-9\s-]{8,16}\d)/i
+
+  // Any +country number in text
+  const anyIntl = text.match(/(\+\d{1,3}[\s-]?\d{6,14})/);
+  if (anyIntl) {
+    const num = pickFirstPhone(anyIntl[1]);
+    if (num) return { value: num, confidence: "high", label: num };
+  }
+
+  // Local 0x… (e.g. Saudi 05xxxxxxxx) — first only even if "a / b"
+  const multiLocal = text.match(
+    /(?:tel|phone|mobile|call|whatsapp|contact)?[:\s]*((?:0\d[\d\s-]{7,14}\d)(?:\s*[\/,|]\s*0\d[\d\s-]{7,14}\d)*)/i
   );
-  if (local) {
-    const num = local[1].replace(/[\s-]/g, "");
-    if (num.length >= 9) {
-      return { value: num, confidence: "medium", label: num };
-    }
+  if (multiLocal) {
+    const num = pickFirstPhone(multiLocal[1]);
+    if (num) return { value: num, confidence: "high", label: num };
   }
+
+  // Bare local mobile pattern
+  const local = text.match(/\b(0\d{8,12})\b/);
+  if (local) {
+    const num = pickFirstPhone(local[1]);
+    if (num) return { value: num, confidence: "medium", label: num };
+  }
+
   return undefined;
 }
 

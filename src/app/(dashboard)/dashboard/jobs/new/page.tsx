@@ -431,7 +431,12 @@ export default function PostJobPage() {
         next.companyName = String(smartResult.companyName.value);
       }
       if (smartResult.companyPhone && shouldApply("companyPhone", smartResult.companyPhone.confidence)) {
-        next.companyPhone = String(smartResult.companyPhone.value);
+        // One number only if Smart Fill found several (e.g. "057… / 053…")
+        const rawPhone = String(smartResult.companyPhone.value);
+        const firstPhone =
+          rawPhone.split(/\s*(?:\/|,|;|\||\bor\b)\s*/i)[0]?.replace(/[^\d+]/g, "") ||
+          rawPhone.replace(/[^\d+]/g, "");
+        next.companyPhone = firstPhone;
       }
       if (smartResult.companyEmail && shouldApply("companyEmail", smartResult.companyEmail.confidence)) {
         next.companyEmail = String(smartResult.companyEmail.value);
@@ -607,7 +612,7 @@ export default function PostJobPage() {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="Enter the position name"
+              placeholder="e.g. Senior HSE Engineer"
               value={form.jobTitle}
               onChange={(e) => {
                 const v = e.target.value;
@@ -665,9 +670,9 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="SUBCATEGORY (OPTIONAL)" className="sm:col-span-2">
+            <Field label="Subcategory" className="sm:col-span-2">
               <Input
-                placeholder="Type a relevant subcategory"
+                placeholder="e.g. NEBOSH, IOSH"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -701,7 +706,7 @@ export default function PostJobPage() {
 
             <Field label="City *">
               <Input
-                placeholder="Enter City"
+                placeholder="e.g. Jubail"
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
               />
@@ -709,7 +714,7 @@ export default function PostJobPage() {
 
             <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="Enter Project site, plant name or area"
+                placeholder="e.g. Project site, plant name, or area"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
@@ -769,7 +774,7 @@ export default function PostJobPage() {
                 type="number"
                 min="1"
                 max="999"
-                placeholder="Select Positions'"
+                placeholder="Select Positions"
                 value={form.positions}
                 onChange={(e) => set("positions", e.target.value)}
               />
@@ -906,7 +911,7 @@ export default function PostJobPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="sm:col-span-2">
               <Input
-                placeholder="Enter company name"
+                placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
