@@ -23,7 +23,8 @@ const MARK_SRC = "/assets/logos/hunared-mark.png?v=20261117gold";
 
 /**
  * Hunared brand mark + wordmark.
- * Icon unchanged; wordmark uses previous Poppins/extrabold type + logo gold (#FDC415 via CSS).
+ * Vertically centered: flex align-items center + optical nudge on wordmark
+ * (glyphs without descenders sit high — subtle translateY balances the mark).
  */
 export function HunaredLogo({
   href = "/",
@@ -45,14 +46,16 @@ export function HunaredLogo({
   const content = (
     <span
       className={cn(
-        "group/logo inline-flex items-center justify-center gap-2.5 sm:gap-3 shrink-0",
+        // Single flex row: true vertical center of mark + wordmark
+        "group/logo inline-flex flex-row items-center justify-start gap-2.5 sm:gap-3 shrink-0",
         className
       )}
     >
       {showIcon && (
         <span
           className={cn(
-            "relative shrink-0 transition-transform duration-400 ease-out",
+            "relative inline-flex shrink-0 items-center justify-center",
+            "transition-transform duration-400 ease-out",
             "group-hover/logo:scale-[1.06]"
           )}
           style={{ width: px, height: px }}
@@ -72,7 +75,8 @@ export function HunaredLogo({
             width={px}
             height={px}
             className={cn(
-              "relative z-[1] h-full w-full object-contain rounded-[18%]",
+              // block removes baseline gap that lifts text relative to the image
+              "relative z-[1] block h-full w-full object-contain rounded-[18%]",
               "drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]",
               "transition-[filter] duration-400",
               "group-hover/logo:drop-shadow-[0_2px_10px_rgba(253,196,21,0.45)]"
@@ -86,9 +90,11 @@ export function HunaredLogo({
       {showWordmark && (
         <span
           className={cn(
-            "hunared-wordmark relative inline-block leading-none select-none",
+            // Optical vertical balance with the mark (text was reading slightly high)
+            "hunared-wordmark relative inline-flex items-center leading-none select-none",
             "font-bold tracking-tight",
-            "transition-transform duration-400 ease-out group-hover/logo:translate-x-[1.5px]",
+            "transition-transform duration-400 ease-out",
+            "group-hover/logo:translate-x-[1.5px]",
             WORDMARK_CLASS[size]
           )}
         >

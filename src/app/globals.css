@@ -360,12 +360,28 @@
   }
 }
 
-/* ─── Wordmark — previous font metrics + logo-matched gold (#FDC415) ─ */
+/* ─── Wordmark — gold + optical vertical align with mark ─────────── */
+.hunared-wordmark {
+  /* Cap-height glyphs sit high vs square mark; nudge down ~1px–2% em */
+  transform: translateY(0.08em);
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+.group\/logo:hover .hunared-wordmark {
+  /* Keep optical Y while allowing slight X hover shift from Tailwind */
+  transform: translateY(0.08em) translateX(1.5px);
+}
 .hunared-wordmark-text {
   color: #FDC415;
   -webkit-text-fill-color: #FDC415;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1;
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
 }
 .dark .hunared-wordmark-text {
   color: #FDC415;
@@ -383,6 +399,9 @@
   .skeleton-shimmer {
     transition: none;
     animation: none;
+  }
+  .group\/logo:hover .hunared-wordmark {
+    transform: translateY(0.08em);
   }
 }
 
