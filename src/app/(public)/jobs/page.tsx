@@ -182,6 +182,7 @@ export default async function JobsPage({
   try {
     const supabase = createAdminClient();
 
+    const nowIso = new Date().toISOString();
     let query = supabase
       .from("jobs")
       .select(
@@ -189,7 +190,8 @@ export default async function JobsPage({
         { count: "exact" }
       )
       .eq("status", "approved")
-      .is("closed_at", null);
+      .is("closed_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
 
     if (category) query = query.eq("category", category);
     if (country) query = query.eq("country", country);

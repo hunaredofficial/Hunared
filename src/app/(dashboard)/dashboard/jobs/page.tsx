@@ -28,11 +28,14 @@ export default async function MyJobsPage() {
   // Any signed-in user can manage jobs they posted (employer_id = userId)
   if (!profile) redirect("/dashboard");
 
-  const { data: jobs } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("employer_id", userId)
-    .order("created_at", { ascending: false });
+  // Team/admin: show all jobs so bulk posts from any team member are manageable.
+  // Everyone else: only their own posts.
+  const isTeam = profile.role === "team" || profile.role === "admin";
+  let jobsQuery = supabase.from("jobs").select("*").order("created_at", { ascending: false });
+  if (!isTeam) {
+    jobsQuery = jobsQuery.eq("employer_id", userId);
+  }
+  const { data: jobs } = await jobsQuery;
 
   const allJobs = (jobs ?? []) as Job[];
 
@@ -43,6 +46,7 @@ export default async function MyJobsPage() {
           <h1 className="text-2xl font-bold">My Job Posts</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {allJobs.length} post{allJobs.length !== 1 ? "s" : ""} total
+            {isTeam ? " · team view (all posts)" : ""}
           </p>
         </div>
         <Button asChild>

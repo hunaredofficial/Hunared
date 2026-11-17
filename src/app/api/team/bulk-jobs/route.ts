@@ -54,79 +54,105 @@ function normalizePositions(v: string | number | undefined | null): number {
   return n;
 }
 
-type SupabaseAdmin = ReturnType<typeof createAdminClient>;
+/** Force a job row to be publicly listable. Returns true if status is approved. */
+async function forcePublicVisible(
+  supabase: ReturnType<typeof createAdminClient>,
+  id: string,
+  country: string
+): Promise<{ ok: boolean; status?: string; error?: string }> {
+  const patch = {
+    status: "approved" as const,
+    closed_at: null,
+    close_reason: null,
+    expires_at: null,
+    country,
+  };
 
-/** Force every public-page filter field so rows always appear on /jobs */
-async function forceJobsPublic(
-  supabase: SupabaseAdmin,
-  ids: string[],
-  countryById: Record<string, string>
-) {
-  if (!ids.length) return;
-
-  await supabase
-    .from("jobs")
-    .update({
-      status: "approved",
-      closed_at: null,
-      close_reason: null,
-      expires_at: null,
-    })
-    .in("id", ids);
-
-  for (const id of ids) {
-    await supabase
+  const { error: upErr } = await supabase.from("jobs").update(patch).eq("id", id);
+  if (upErr) {
+    // Retry without close_reason in case column is missing on older DBs
+    const { error: upErr2 } = await supabase
       .from("jobs")
       .update({
         status: "approved",
         closed_at: null,
-        close_reason: null,
         expires_at: null,
-        country: countryById[id] || "SA",
+        country,
       })
       .eq("id", id);
+    if (upErr2) {
+      return { ok: false, error: upErr2.message || upErr.message };
+    }
   }
 
-  const { data: rows } = await supabase
+  const { data: row, error: selErr } = await supabase
     .from("jobs")
-    .select("id, status, closed_at, expires_at")
-    .in("id", ids);
+    .select("id, status, closed_at, expires_at, country")
+    .eq("id", id)
+    .maybeSingle();
 
-  const ok = new Set(
-    (rows ?? [])
-      .filter(
-        (r) =>
-          r.status === "approved" &&
-          r.closed_at == null &&
-          (r.expires_at == null || new Date(r.expires_at) > new Date())
-      )
-      .map((r) => r.id)
-  );
-
-  for (const id of ids) {
-    if (ok.has(id)) continue;
-    await supabase
-      .from("jobs")
-      .update({
-        status: "approved",
-        closed_at: null,
-        close_reason: null,
-        expires_at: null,
-      })
-      .eq("id", id);
+  if (selErr || !row) {
+    return { ok: false, error: selErr?.message || "verify failed" };
   }
+
+  const visible =
+    row.status === "approved" &&
+    (row.closed_at == null || row.closed_at === undefined);
+
+  return {
+    ok: visible,
+    status: row.status,
+    error: visible ? undefined : `status=${row.status} closed_at=${row.closed_at}`,
+  };
 }
 
-function buildJobRows(
-  jobs: BulkJob[],
-  userId: string,
-  teamCoCache: Map<string, { id: string; name: string } | null>
-) {
-  const now = Date.now();
-  return jobs.map((j, i) => {
-    const title = j.jobTitle?.trim() || "";
-    const desc = j.jobDescription?.trim() || "";
+export async function POST(req: Request) {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const supabase = createAdminClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!canBulkPost(profile?.role)) {
+    return NextResponse.json({ error: "Team or admin role required." }, { status: 403 });
+  }
+
+  let body: { jobs?: BulkJob[] };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const jobs = Array.isArray(body.jobs) ? body.jobs.slice(0, 50) : [];
+  if (!jobs.length) {
+    return NextResponse.json({ error: "Provide jobs: [] (max 50)." }, { status: 400 });
+  }
+
+  const results: {
+    index: number;
+    ok: boolean;
+    id?: string;
+    status?: string;
+    linkedCompanyId?: string | null;
+    linkedCompanyName?: string | null;
+    error?: string;
+  }[] = [];
+
+  for (let i = 0; i < jobs.length; i++) {
+    const j = jobs[i];
+    const title = j.jobTitle?.trim();
+    const desc = j.jobDescription?.trim();
     const company = j.companyName?.trim() || "Hunared Team";
+    if (!title || !desc) {
+      results.push({ index: i, ok: false, error: "jobTitle and jobDescription required" });
+      continue;
+    }
+
     const cats = normalizeCategories(j);
     const primary = cats[0];
     const durationRaw = j.duration?.trim() || "";
@@ -139,29 +165,26 @@ function buildJobRows(
         : "permanent";
     const duration =
       durationRaw || (emp === "permanent" ? "Permanent" : "UnSpecified");
+
     const positions = normalizePositions(j.positions);
     const city = j.city?.trim() || null;
+    // Default SA so geo-filtered /jobs?country=SA still shows team posts
     const country = (j.country?.trim() || "SA").toUpperCase().slice(0, 2);
     const location =
       j.location?.trim() ||
       j.workLocation?.trim() ||
       (city ? `${city}` : "Remote");
+
     const salaryRate = j.salaryRate?.trim() || "Negotiable";
     let salaryType = j.salaryType?.trim() || "Negotiable";
     if (salaryType === "After Interview") salaryType = "Negotiable";
     if (!VALID_SALARY.has(salaryType)) salaryType = "Negotiable";
 
-    // Stagger created_at so every row sorts distinctly on /jobs
-    const created_at = new Date(now - (jobs.length - 1 - i) * 1000).toISOString();
+    const teamCo = await findTeamManagedCompanyByName(supabase, company);
 
-    return {
-      index: i,
-      title,
-      desc,
-      company,
-      country,
-      city,
-      full: {
+    // Richest → leanest so insert succeeds across schema variants
+    const attempts: Record<string, unknown>[] = [
+      {
         employer_id: userId,
         job_title: title,
         job_description: desc,
@@ -187,19 +210,21 @@ function buildJobRows(
         salary_type: salaryType,
         currency: j.currency?.trim() || "SAR",
         office_location_link: j.mapLocation?.trim() || null,
-        linked_company_id: teamCoCache.get(company)?.id ?? null,
-        status: "approved" as const,
+        linked_company_id: teamCo?.id ?? null,
+        status: "approved",
         show_profile_contact: false,
         closed_at: null,
         close_reason: null,
         expires_at: null,
-        created_at,
       },
-      lean: {
+      {
         employer_id: userId,
         job_title: title,
         job_description: desc,
         company_name: company,
+        company_phone: j.companyPhone?.trim() || null,
+        company_email: j.companyEmail?.trim() || null,
+        company_address: j.companyAddress?.trim() || null,
         country,
         city,
         location,
@@ -207,113 +232,40 @@ function buildJobRows(
         duration,
         category: primary,
         categories: cats,
+        subcategory: j.subcategory?.trim() || null,
         positions,
         salary_rate: salaryRate,
         salary_type: salaryType,
         currency: j.currency?.trim() || "SAR",
-        status: "approved" as const,
+        status: "approved",
         closed_at: null,
         expires_at: null,
-        created_at,
       },
-      minimal: {
+      {
         employer_id: userId,
         job_title: title,
         job_description: desc,
-        company_name: company,
+        positions,
         location,
         duration,
-        category: primary,
-        positions,
         salary_rate: salaryRate,
-        status: "approved" as const,
+        category: primary,
+        company_name: company,
+        status: "approved",
         country,
         city,
         employment_type: emp,
-        closed_at: null,
-        expires_at: null,
-        created_at,
       },
-    };
-  });
-}
-
-export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const supabase = createAdminClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (!canBulkPost(profile?.role)) {
-    return NextResponse.json(
-      { error: "Team or admin role required." },
-      { status: 403 }
-    );
-  }
-
-  let body: { jobs?: BulkJob[] };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const jobs = Array.isArray(body.jobs) ? body.jobs.slice(0, 50) : [];
-  if (!jobs.length) {
-    return NextResponse.json(
-      { error: "Provide jobs: [] (max 50)." },
-      { status: 400 }
-    );
-  }
-
-  const teamCoCache = new Map<string, { id: string; name: string } | null>();
-  for (const j of jobs) {
-    const name = j.companyName?.trim() || "Hunared Team";
-    if (teamCoCache.has(name)) continue;
-    const co = await findTeamManagedCompanyByName(supabase, name);
-    teamCoCache.set(name, co ? { id: co.id, name: co.name } : null);
-  }
-
-  const built = buildJobRows(jobs, userId, teamCoCache);
-
-  const results: {
-    index: number;
-    ok: boolean;
-    id?: string;
-    status?: string;
-    linkedCompanyId?: string | null;
-    linkedCompanyName?: string | null;
-    error?: string;
-  }[] = [];
-
-  const createdIds: string[] = [];
-  const countryById: Record<string, string> = {};
-
-  // Insert ONE BY ONE so one failure never blocks the rest
-  for (const item of built) {
-    if (!item.title || !item.desc) {
-      results.push({
-        index: item.index,
-        ok: false,
-        error: "jobTitle and jobDescription required",
-      });
-      continue;
-    }
+    ];
 
     let insertedId: string | null = null;
     let lastError = "";
 
-    for (const row of [item.full, item.lean, item.minimal]) {
+    for (const row of attempts) {
       const { data, error } = await supabase
         .from("jobs")
         .insert(row)
-        .select("id")
+        .select("id, status")
         .single();
       if (!error && data?.id) {
         insertedId = data.id;
@@ -323,15 +275,25 @@ export async function POST(req: Request) {
     }
 
     if (!insertedId) {
-      results.push({ index: item.index, ok: false, error: lastError });
+      results.push({ index: i, ok: false, error: lastError });
       continue;
     }
 
-    createdIds.push(insertedId);
-    countryById[insertedId] = item.country;
-    const teamCo = teamCoCache.get(item.company) ?? null;
+    // Always force public visibility (counters DB triggers / defaults that set pending)
+    const vis = await forcePublicVisible(supabase, insertedId, country);
+    if (!vis.ok) {
+      results.push({
+        index: i,
+        ok: false,
+        id: insertedId,
+        status: vis.status,
+        error: vis.error || "created but not publicly visible",
+      });
+      continue;
+    }
+
     results.push({
-      index: item.index,
+      index: i,
       ok: true,
       id: insertedId,
       status: "approved",
@@ -340,20 +302,14 @@ export async function POST(req: Request) {
     });
   }
 
-  if (createdIds.length) {
-    await forceJobsPublic(supabase, createdIds, countryById);
-  }
-
   const created = results.filter((r) => r.ok).length;
   if (created > 0) {
     try {
       revalidatePath("/jobs");
-      revalidatePath("/jobs", "layout");
       revalidatePath("/");
       revalidatePath("/dashboard/jobs");
-      revalidatePath("/dashboard");
       revalidatePath("/search");
-      revalidatePath("/api/jobs");
+      revalidatePath("/dashboard");
     } catch {
       /* ignore */
     }
@@ -365,6 +321,5 @@ export async function POST(req: Request) {
     total: jobs.length,
     results,
     ok: created > 0,
-    ids: createdIds,
   });
 }

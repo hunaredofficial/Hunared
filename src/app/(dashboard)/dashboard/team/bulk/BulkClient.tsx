@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -156,6 +157,7 @@ function val<T>(f?: { value: T } | null | undefined): T | undefined {
 }
 
 export default function BulkClient() {
+  const router = useRouter();
   const [jobs, setJobs] = useState<JobRow[]>([emptyJob()]);
   const [listings, setListings] = useState<MarketRow[]>([emptyMarket()]);
   const [jobsLoading, setJobsLoading] = useState(false);
@@ -385,26 +387,23 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      const failed = Array.isArray(data.results)
-        ? data.results.filter((r: { ok?: boolean }) => !r.ok)
-        : [];
-      if (data.created > 0) {
-        toast.success(
-          `Published ${data.created}/${data.total} jobs` +
-            (data.linked ? ` · ${data.linked} linked to team companies` : "") +
-            " — open /jobs (hard refresh if needed)"
-        );
-      }
+      const failed = (data.results || []).filter((r: { ok?: boolean }) => !r.ok);
+      toast.success(
+        `Published ${data.created}/${data.total} jobs` +
+          (data.linked ? ` · ${data.linked} linked to team companies` : "")
+      );
       if (failed.length) {
-        toast.error(
-          `${failed.length} job(s) failed: ` +
-            failed
-              .map((r: { index?: number; error?: string }) => `#${(r.index ?? 0) + 1} ${r.error || "error"}`)
-              .join("; ")
-        );
+        toast.error(`${failed.length} job(s) failed — check details below`);
       }
       setLastResult(JSON.stringify(data, null, 2));
-      if (data.created > 0) setJobs([emptyJob()]);
+      if (data.created > 0) {
+        setJobs([emptyJob()]);
+        router.refresh();
+        // Open public jobs + dashboard list so team can confirm visibility
+        window.setTimeout(() => {
+          router.push("/dashboard/jobs");
+        }, 600);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -430,24 +429,19 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      const failed = Array.isArray(data.results)
-        ? data.results.filter((r: { ok?: boolean }) => !r.ok)
-        : [];
-      if (data.created > 0) {
-        toast.success(
-          `Published ${data.created}/${data.total} listings — open /market (hard refresh if needed)`
-        );
-      }
+      const failed = (data.results || []).filter((r: { ok?: boolean }) => !r.ok);
+      toast.success(`Published ${data.created}/${data.total} listings`);
       if (failed.length) {
-        toast.error(
-          `${failed.length} listing(s) failed: ` +
-            failed
-              .map((r: { index?: number; error?: string }) => `#${(r.index ?? 0) + 1} ${r.error || "error"}`)
-              .join("; ")
-        );
+        toast.error(`${failed.length} listing(s) failed — check details below`);
       }
       setLastResult(JSON.stringify(data, null, 2));
-      if (data.created > 0) setListings([emptyMarket()]);
+      if (data.created > 0) {
+        setListings([emptyMarket()]);
+        router.refresh();
+        window.setTimeout(() => {
+          router.push("/dashboard/market");
+        }, 600);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -546,7 +540,7 @@ export default function BulkClient() {
                           updateJob(i, { jobTitle: v });
                           runJobSmart(i, v, row.jobDescription);
                         }}
-                        placeholder="Enter the position name"
+                        placeholder="e.g. Senior HSE Engineer"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -594,14 +588,14 @@ export default function BulkClient() {
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={labelCls}>SUBCATEGORY (OPTIONAL)</label>
+                      <label className={labelCls}>Subcategory</label>
                       <input
                         className={inputCls}
                         value={row.subcategory}
                         onChange={(e) =>
                           updateJob(i, { subcategory: e.target.value })
                         }
-                        placeholder="Type a relevant subcategory"
+                        placeholder="e.g. NEBOSH, IOSH"
                       />
                     </div>
                     <div>
@@ -614,7 +608,6 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { companyName: e.target.value })
                         }
-                        placeholder="Enter company name"
                       />
                     </div>
                     <div>
@@ -690,7 +683,6 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { workLocation: e.target.value })
                         }
-                        placeholder="Enter Project site, plant name or area"
                       />
                     </div>
                     <div>
@@ -720,7 +712,7 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { positions: e.target.value })
                         }
-                        placeholder="Select Positions'"
+                        placeholder="e.g. 3"
                       />
                     </div>
                     <div>
@@ -931,7 +923,7 @@ export default function BulkClient() {
                         </select>
                       </div>
                       <div>
-                        <label className={labelCls}>SUBCATEGORY (OPTIONAL)</label>
+                        <label className={labelCls}>Subcategory</label>
                         <select
                           className={inputCls}
                           value={row.subcategory}

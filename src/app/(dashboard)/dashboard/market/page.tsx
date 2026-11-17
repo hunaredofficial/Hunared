@@ -23,13 +23,23 @@ export default async function MyListingsPage() {
   if (!userId) redirect("/sign-in");
 
   let listings: Listing[] = [];
+  let isTeam = false;
   try {
     const supabase = createAdminClient();
-    const { data } = await supabase
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    isTeam = profile?.role === "team" || profile?.role === "admin";
+
+    // Team/admin: all listings (bulk posts from any team member). Others: own only.
+    let q = supabase
       .from("marketplace_listings")
       .select("*")
-      .eq("seller_id", userId)
       .order("created_at", { ascending: false });
+    if (!isTeam) q = q.eq("seller_id", userId);
+    const { data } = await q;
     listings = data ?? [];
   } catch {
     // empty state
@@ -42,6 +52,7 @@ export default async function MyListingsPage() {
           <h1 className="text-2xl font-bold">My Listings</h1>
           <p className="text-sm text-muted-foreground">
             {listings.length} listing{listings.length !== 1 ? "s" : ""}
+            {isTeam ? " · team view (all listings)" : ""}
           </p>
         </div>
         <Button asChild className="gap-1.5">
