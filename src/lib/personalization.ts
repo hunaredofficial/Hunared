@@ -67,28 +67,34 @@ export function scoreJob(
     ...(job.categories ?? []).map(norm),
   ].filter(Boolean);
 
-  // Category / interest overlap (strong signal)
+  const title = norm(job.job_title);
+
+  // Interests (job_interests) vs category / title — primary personalization signal
   for (const interest of interests) {
     for (const c of cats) {
       if (c === interest || c.includes(interest) || interest.includes(c)) {
-        score += 40;
+        score += 50;
       } else if (tokenOverlap(c, interest) > 0.3) {
-        score += 15;
+        score += 20;
       }
     }
-    // Title match against interests
-    const title = norm(job.job_title);
     if (title.includes(interest) || tokenOverlap(title, interest) > 0.25) {
-      score += 25;
+      score += 35;
     }
   }
 
-  // Profession vs title
+  // Profession vs title + category
   const profession = norm(profile.profession);
   if (profession) {
-    const title = norm(job.job_title);
     if (title.includes(profession) || tokenOverlap(title, profession) > 0.3) {
-      score += 30;
+      score += 45;
+    }
+    for (const c of cats) {
+      if (c === profession || c.includes(profession) || profession.includes(c)) {
+        score += 40;
+      } else if (tokenOverlap(c, profession) > 0.3) {
+        score += 18;
+      }
     }
   }
 

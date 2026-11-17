@@ -159,11 +159,13 @@ export default async function JobsPage({
     // Auth / DB optional — fall back to non-personalized
   }
 
-  // Listing order is always: active Premium Ads first, then publish date
-  // (newest → oldest by default). Personalization does NOT reorder the feed.
-  const usePersonalSort = false;
+  // Default feed: Premium → newest → oldest.
+  // Opt-in "For you" (?sort=for_you): Premium → profile/profession/interests rank → date.
+  const useForYou = sort === "for_you";
+  const usePersonalSort = useForYou && isPersonalized && !!profile;
 
   const needsInMemory =
+    useForYou ||
     sort === "comp_asc" ||
     sort === "comp_desc" ||
     sort === "rate_asc" ||
@@ -281,45 +283,53 @@ export default async function JobsPage({
         );
       }
 
-      // Order: 1) active Premium Ads (bid/recency)  2) everyone else by publish date
+      // Premium first, then either For-you rank or publish date
       const promotedIds = await getPromotedJobIds(supabase);
       promotedIdSet = new Set(promotedIds);
 
       const ascending = dateOrder === "oldest";
-      const byDate = (a: { created_at?: string | null }, b: { created_at?: string | null }) => {
+      const byDate = (
+        a: { created_at?: string | null },
+        b: { created_at?: string | null }
+      ) => {
         const ta = new Date(a.created_at ?? 0).getTime();
         const tb = new Date(b.created_at ?? 0).getTime();
         return ascending ? ta - tb : tb - ta;
       };
 
-      // Only re-apply date sort when user did not already pick compensation sort
       const isCompSort =
         sort === "comp_asc" ||
         sort === "comp_desc" ||
         sort === "rate_asc" ||
         sort === "rate_desc";
-      if (!isCompSort) {
-        rows = [...rows].sort(byDate);
-      }
 
       const promoted = promoteToFront(
         rows.filter((j) => promotedIdSet.has(j.id)),
         promotedIds
       );
-      const organic = rows
-        .filter((j) => !promotedIdSet.has(j.id))
-        .sort(isCompSort ? () => 0 : byDate);
+      let organic = rows.filter((j) => !promotedIdSet.has(j.id));
 
-      // Optional match scores for "For you" badges only — do not change order
-      let ordered = [...promoted, ...organic];
+      if (usePersonalSort && profile) {
+        // For you: rank by profession + job_interests (+ location/skill), then date
+        organic = rankByPersonalization(organic, (j) =>
+          scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
+        );
+      } else if (!isCompSort) {
+        organic = [...organic].sort(byDate);
+      }
+
+      let ordered: typeof rows = [...promoted, ...organic];
+      // Always attach scores for optional "For you" badges when profile exists
       if (profile) {
         ordered = ordered.map((j) => ({
           ...j,
-          _matchScore: scoreJob(
-            j as Parameters<typeof scoreJob>[0],
-            profile,
-            savedJobIds
-          ),
+          _matchScore:
+            (j as { _matchScore?: number })._matchScore ??
+            scoreJob(
+              j as Parameters<typeof scoreJob>[0],
+              profile,
+              savedJobIds
+            ),
         }));
       }
 
@@ -385,7 +395,8 @@ export default async function JobsPage({
     country ||
     city ||
     employmentType ||
-    sort ||
+    (sort && sort !== "for_you") ||
+    useForYou ||
     payout ||
     durationFilter ||
     posted ||
@@ -470,16 +481,62 @@ export default async function JobsPage({
               />
             </div>
 
-            {/* Result meta */}
-            <div className="flex items-center justify-between gap-3 mb-4">
+            {/* Result meta + For you chip */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} result{total !== 1 ? "s" : ""}
+                {useForYou && isPersonalized ? " · matched to your profile" : ""}
                 {search && ` for "${search}"`}
                 {category && ` in ${category}`}
                 {employmentType && ` · ${employmentType.replace("_", " ")}`}
                 {activeCountry && ` · ${activeCountry.name}`}
                 {city && ` · ${city}`}
               </p>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const params = new URLSearchParams();
+                  if (search) params.set("search", search);
+                  if (category) params.set("category", category);
+                  if (country) params.set("country", country);
+                  if (city) params.set("city", city);
+                  if (employmentType) params.set("employmentType", employmentType);
+                  if (payout) params.set("payout", payout);
+                  if (durationFilter) params.set("duration", durationFilter);
+                  if (posted) params.set("posted", posted);
+                  if (dateOrder) params.set("dateOrder", dateOrder);
+                  if (experience) params.set("experience", experience);
+                  // toggle for_you
+                  if (!useForYou) params.set("sort", "for_you");
+                  else if (sort && sort !== "for_you") params.set("sort", sort);
+                  const qs = params.toString();
+                  const href = qs ? `/jobs?${qs}` : "/jobs";
+                  if (!isPersonalized) {
+                    return (
+                      <Link
+                        href="/sign-in?redirect_url=/jobs?sort=for_you"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        For you
+                      </Link>
+                    );
+                  }
+                  return (
+                    <Link
+                      href={href}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                        useForYou
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                      )}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      For you
+                    </Link>
+                  );
+                })()}
+              </div>
             </div>
 
             {jobs.length === 0 ? (

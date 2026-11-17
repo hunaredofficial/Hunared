@@ -143,7 +143,8 @@ export default async function MarketPage({
     (minNum != null && Number.isFinite(minNum)) ||
     (maxNum != null && Number.isFinite(maxNum));
 
-  const usePersonalSort = false; // order: premium → newest; no personalization reorder
+  const useForYou = (sp.sort ?? "") === "for_you" || sort === "for_you";
+  const usePersonalSort = useForYou && isPersonalized && !!profile;
 
   const needsInMemory =
     sort === "price_asc" ||
@@ -260,9 +261,14 @@ export default async function MarketPage({
           rows.filter((r) => promotedListingSet.has(r.id)),
           promotedListingIds
         );
-        const organic = rows
-          .filter((r) => !promotedListingSet.has(r.id))
-          .sort(byDate);
+        let organic = rows.filter((r) => !promotedListingSet.has(r.id));
+        if (usePersonalSort && profile) {
+          organic = rankByPersonalization(organic, (row) =>
+            scoreListing(row, profile, savedListingIds)
+          );
+        } else {
+          organic = [...organic].sort(byDate);
+        }
         const ordered = [...promoted, ...organic];
         total = ordered.length;
         listings = ordered.slice(from, from + limit);
@@ -320,10 +326,9 @@ export default async function MarketPage({
                 {total > 0
                   ? `${total.toLocaleString()} listing${total !== 1 ? "s" : ""}`
                   : "Buy, sell, rent and find services"}
-                {isPersonalized && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Personalized for you
+                {useForYou && isPersonalized && (
+                  <span className="ml-2 text-primary text-sm font-medium">
+                    · matched to your profile
                   </span>
                 )}
               </p>
@@ -392,6 +397,56 @@ export default async function MarketPage({
               </p>
             </div>
 
+
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {total} listing{total !== 1 ? "s" : ""}
+                {useForYou && isPersonalized ? " · matched to your profile" : ""}
+              </p>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const params = new URLSearchParams();
+                  if (search) params.set("search", search);
+                  if (category) params.set("category", category);
+                  if (subcategory) params.set("subcategory", subcategory);
+                  if (country) params.set("country", country);
+                  if (city) params.set("city", city);
+                  if (minPrice) params.set("minPrice", minPrice);
+                  if (maxPrice) params.set("maxPrice", maxPrice);
+                  if (posted) params.set("posted", posted);
+                  if (status) params.set("status", status);
+                  if (!useForYou) params.set("sort", "for_you");
+                  else if (sort && sort !== "for_you") params.set("sort", sort);
+                  const qs = params.toString();
+                  const href = qs ? `/market?${qs}` : "/market";
+                  if (!isPersonalized) {
+                    return (
+                      <Link
+                        href="/sign-in?redirect_url=/market?sort=for_you"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        For you
+                      </Link>
+                    );
+                  }
+                  return (
+                    <Link
+                      href={href}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                        useForYou
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                      )}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      For you
+                    </Link>
+                  );
+                })()}
+              </div>
+            </div>
             {listings.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-lg">
                 <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
