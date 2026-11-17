@@ -607,7 +607,7 @@ export default function PostJobPage() {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="Enter the position"
+              placeholder="Enter the position name"
               value={form.jobTitle}
               onChange={(e) => {
                 const v = e.target.value;

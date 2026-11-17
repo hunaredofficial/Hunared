@@ -385,11 +385,24 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      toast.success(
-        `Published ${data.created}/${data.total} jobs` +
-          (data.linked ? ` · ${data.linked} linked to team companies` : "") +
-          " — open /jobs to view (hard refresh if needed)"
-      );
+      const failed = Array.isArray(data.results)
+        ? data.results.filter((r: { ok?: boolean }) => !r.ok)
+        : [];
+      if (data.created > 0) {
+        toast.success(
+          `Published ${data.created}/${data.total} jobs` +
+            (data.linked ? ` · ${data.linked} linked to team companies` : "") +
+            " — open /jobs (hard refresh if needed)"
+        );
+      }
+      if (failed.length) {
+        toast.error(
+          `${failed.length} job(s) failed: ` +
+            failed
+              .map((r: { index?: number; error?: string }) => `#${(r.index ?? 0) + 1} ${r.error || "error"}`)
+              .join("; ")
+        );
+      }
       setLastResult(JSON.stringify(data, null, 2));
       if (data.created > 0) setJobs([emptyJob()]);
     } catch (e) {
@@ -417,9 +430,22 @@ export default function BulkClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      toast.success(
-        `Published ${data.created}/${data.total} listings — open /market to view (hard refresh if needed)`
-      );
+      const failed = Array.isArray(data.results)
+        ? data.results.filter((r: { ok?: boolean }) => !r.ok)
+        : [];
+      if (data.created > 0) {
+        toast.success(
+          `Published ${data.created}/${data.total} listings — open /market (hard refresh if needed)`
+        );
+      }
+      if (failed.length) {
+        toast.error(
+          `${failed.length} listing(s) failed: ` +
+            failed
+              .map((r: { index?: number; error?: string }) => `#${(r.index ?? 0) + 1} ${r.error || "error"}`)
+              .join("; ")
+        );
+      }
       setLastResult(JSON.stringify(data, null, 2));
       if (data.created > 0) setListings([emptyMarket()]);
     } catch (e) {
@@ -520,7 +546,7 @@ export default function BulkClient() {
                           updateJob(i, { jobTitle: v });
                           runJobSmart(i, v, row.jobDescription);
                         }}
-                        placeholder="Enter the position"
+                        placeholder="Enter the position name"
                       />
                     </div>
                     <div className="sm:col-span-2">

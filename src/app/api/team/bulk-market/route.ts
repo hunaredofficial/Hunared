@@ -24,31 +24,58 @@ const VALID_CATS = new Set(
   LISTING_CATEGORIES.map((c: { value: string }) => c.value)
 );
 
-async function forcePublicVisible(
-  supabase: ReturnType<typeof createAdminClient>,
-  id: string,
-  country: string,
-  city: string | null
+type SupabaseAdmin = ReturnType<typeof createAdminClient>;
+
+async function forceListingsPublic(
+  supabase: SupabaseAdmin,
+  ids: string[],
+  countryById: Record<string, string>
 ) {
-  const visibility = {
-    status: "approved",
-    closed_at: null,
-    close_reason: null,
-    expires_at: null,
-    listing_type: "standard",
-    country,
-    ...(city ? { city } : {}),
-  };
+  if (!ids.length) return;
 
-  await supabase.from("marketplace_listings").update(visibility).eq("id", id);
-
-  const { data: check } = await supabase
+  await supabase
     .from("marketplace_listings")
-    .select("id, status, closed_at, expires_at, country, city")
-    .eq("id", id)
-    .maybeSingle();
+    .update({
+      status: "approved",
+      closed_at: null,
+      close_reason: null,
+      expires_at: null,
+      listing_type: "standard",
+    })
+    .in("id", ids);
 
-  if (!check || check.status !== "approved" || check.closed_at != null) {
+  for (const id of ids) {
+    await supabase
+      .from("marketplace_listings")
+      .update({
+        status: "approved",
+        closed_at: null,
+        close_reason: null,
+        expires_at: null,
+        listing_type: "standard",
+        country: countryById[id] || "SA",
+      })
+      .eq("id", id);
+  }
+
+  const { data: rows } = await supabase
+    .from("marketplace_listings")
+    .select("id, status, closed_at, expires_at")
+    .in("id", ids);
+
+  const ok = new Set(
+    (rows ?? [])
+      .filter(
+        (r) =>
+          r.status === "approved" &&
+          r.closed_at == null &&
+          (r.expires_at == null || new Date(r.expires_at) > new Date())
+      )
+      .map((r) => r.id)
+  );
+
+  for (const id of ids) {
+    if (ok.has(id)) continue;
     await supabase
       .from("marketplace_listings")
       .update({
@@ -60,13 +87,12 @@ async function forcePublicVisible(
       })
       .eq("id", id);
   }
-
-  return check;
 }
 
 export async function POST(req: Request) {
   const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = createAdminClient();
   const { data: profile } = await supabase
@@ -76,7 +102,10 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (!canBulkPost(profile?.role)) {
-    return NextResponse.json({ error: "Team or admin role required." }, { status: 403 });
+    return NextResponse.json(
+      { error: "Team or admin role required." },
+      { status: 403 }
+    );
   }
 
   let body: { listings?: BulkListing[] };
@@ -86,9 +115,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const listings = Array.isArray(body.listings) ? body.listings.slice(0, 50) : [];
+  const listings = Array.isArray(body.listings)
+    ? body.listings.slice(0, 50)
+    : [];
   if (!listings.length) {
-    return NextResponse.json({ error: "Provide listings: [] (max 50)." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Provide listings: [] (max 50)." },
+      { status: 400 }
+    );
   }
 
   const results: {
@@ -97,15 +131,22 @@ export async function POST(req: Request) {
     id?: string;
     status?: string;
     error?: string;
-    verified?: boolean;
   }[] = [];
+
+  const createdIds: string[] = [];
+  const countryById: Record<string, string> = {};
+  const now = Date.now();
 
   for (let i = 0; i < listings.length; i++) {
     const L = listings[i];
     const title = L.title?.trim();
     const description = L.description?.trim();
     if (!title || !description) {
-      results.push({ index: i, ok: false, error: "title and description required" });
+      results.push({
+        index: i,
+        ok: false,
+        error: "title and description required",
+      });
       continue;
     }
 
@@ -115,6 +156,9 @@ export async function POST(req: Request) {
     const city = L.city?.trim() || null;
     const country = (L.country?.trim() || "SA").toUpperCase().slice(0, 2);
     const location = L.location?.trim() || city || null;
+    const created_at = new Date(
+      now - (listings.length - 1 - i) * 1000
+    ).toISOString();
 
     const attempts: Record<string, unknown>[] = [
       {
@@ -135,6 +179,7 @@ export async function POST(req: Request) {
         close_reason: null,
         expires_at: null,
         image_url: null,
+        created_at,
         ...(L.condition?.trim() ? { condition: L.condition.trim() } : {}),
         ...(L.rentalPeriod?.trim()
           ? { rental_period: L.rentalPeriod.trim() }
@@ -155,6 +200,7 @@ export async function POST(req: Request) {
         status: "approved",
         closed_at: null,
         expires_at: null,
+        created_at,
       },
       {
         seller_id: userId,
@@ -168,6 +214,7 @@ export async function POST(req: Request) {
         country,
         closed_at: null,
         expires_at: null,
+        created_at,
       },
     ];
 
@@ -178,7 +225,7 @@ export async function POST(req: Request) {
       const { data, error } = await supabase
         .from("marketplace_listings")
         .insert(row)
-        .select("id, status")
+        .select("id")
         .single();
       if (!error && data?.id) {
         insertedId = data.id;
@@ -192,15 +239,18 @@ export async function POST(req: Request) {
       continue;
     }
 
-    const verified = await forcePublicVisible(supabase, insertedId, country, city);
-
+    createdIds.push(insertedId);
+    countryById[insertedId] = country;
     results.push({
       index: i,
       ok: true,
       id: insertedId,
       status: "approved",
-      verified: verified?.status === "approved" && verified?.closed_at == null,
     });
+  }
+
+  if (createdIds.length) {
+    await forceListingsPublic(supabase, createdIds, countryById);
   }
 
   const created = results.filter((r) => r.ok).length;
@@ -223,5 +273,6 @@ export async function POST(req: Request) {
     total: listings.length,
     results,
     ok: created > 0,
+    ids: createdIds,
   });
 }
