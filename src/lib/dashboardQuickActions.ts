@@ -89,6 +89,16 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
     iconBg: "bg-indigo-100 dark:bg-indigo-900/30",
     iconColor: "text-indigo-600",
   },
+  magic_post: {
+    id: "magic_post",
+    href: "/dashboard/team/magic",
+    title: "Magic Post",
+    desc: "Paste many jobs or listings — auto-fill and publish",
+    icon: "Sparkles",
+    iconBg: "bg-violet-100 dark:bg-violet-900/30",
+    iconColor: "text-violet-600",
+  },
+
   team_profiles: {
     id: "team_profiles",
     href: "/dashboard/team/profiles",
@@ -334,6 +344,7 @@ export const ROLE_ACTION_POOL: Record<UserRole, QuickActionId[]> = {
   team: [
     "post_center",
     "bulk_post",
+    "magic_post",
     "team_profiles",
     "my_listings",
     "post_listing",
@@ -391,6 +402,7 @@ export const ROLE_DEFAULT_ACTIONS: Record<UserRole, QuickActionId[]> = {
   team: [
     "post_center",
     "bulk_post",
+    "magic_post",
     "my_job_posts",
     "my_listings",
     "team_profiles",

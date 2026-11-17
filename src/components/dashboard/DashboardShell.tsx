@@ -26,6 +26,7 @@ import {
   Layers,
   FolderOpen,
   Tag,
+  Wand2,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,7 @@ function getNavItems(role: UserRole): NavItem[] {
       { href: "/dashboard/team/profiles", label: "Team Profiles", icon: <Users className="h-4 w-4" /> },
       { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
       { href: "/dashboard/team/bulk", label: "Bulk Post", icon: <Layers className="h-4 w-4" /> },
+      { href: "/dashboard/team/magic", label: "Magic Post", icon: <Wand2 className="h-4 w-4" /> },
       { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
       { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
       { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
