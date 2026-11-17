@@ -401,7 +401,7 @@ export default async function MarketPage({
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} listing{total !== 1 ? "s" : ""}
-                {useForYou && isPersonalized ? " · recommended for you" : ""}
+                {useForYou && isPersonalized ? " · matched to your profile" : ""}
               </p>
             </div>
             {listings.length === 0 ? (

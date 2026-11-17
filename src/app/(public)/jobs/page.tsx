@@ -485,7 +485,7 @@ export default async function JobsPage({
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} result{total !== 1 ? "s" : ""}
-                {useForYou && isPersonalized ? " · recommended for you" : ""}
+                {useForYou && isPersonalized ? " · matched to your profile" : ""}
                 {search && ` for "${search}"`}
                 {category && ` in ${category}`}
                 {employmentType && ` · ${employmentType.replace("_", " ")}`}

@@ -388,7 +388,7 @@ export function JobsFilter({
         <p className="text-xs text-muted-foreground px-2 mt-2 mb-1">Sort order</p>
         <RadioRow
           checked={compSort === "for_you"}
-          label="Recommended for you"
+          label="Recommended"
           onSelect={() => {
             setCompSort("for_you");
             setDateOrder("");

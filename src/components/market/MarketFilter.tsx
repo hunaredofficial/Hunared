@@ -34,7 +34,7 @@ const SUBCATEGORIES = LISTING_SUBCATEGORIES;
 
 const SORT_OPTIONS = [
   { value: "", label: "Newest First" },
-  { value: "for_you", label: "Recommended for you" },
+  { value: "for_you", label: "Recommended" },
   { value: "newest", label: "Newest only" },
   { value: "oldest", label: "Oldest First" },
   { value: "price_asc", label: "Price: Low to High" },
