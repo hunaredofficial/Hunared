@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Briefcase,
   User,
+  Building2,
   ShoppingBag,
   GraduationCap,
   Search as SearchIcon,
@@ -32,11 +33,23 @@ type Job = {
 type Candidate = {
   id: string;
   full_name: string;
+  username?: string | null;
   profession: string | null;
   location: string | null;
   avatar_url: string | null;
   country?: string | null;
   city?: string | null;
+};
+
+type Company = {
+  id: string;
+  name: string;
+  slug: string | null;
+  industry: string | null;
+  city: string | null;
+  country: string | null;
+  logo_url?: string | null;
+  hiring?: boolean | null;
 };
 
 type Listing = {
@@ -68,12 +81,19 @@ interface Props {
   results: {
     jobs: Job[];
     candidates: Candidate[];
+    companies: Company[];
     listings: Listing[];
     articles: Article[];
   };
 }
 
-type TabKey = "all" | "jobs" | "candidates" | "listings" | "articles";
+type TabKey =
+  | "all"
+  | "jobs"
+  | "candidates"
+  | "companies"
+  | "listings"
+  | "articles";
 
 export function SearchResultsView({ query, country, city, results }: Props) {
   const router = useRouter();
@@ -92,6 +112,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
   const totalCount =
     results.jobs.length +
     results.candidates.length +
+    (results.companies?.length ?? 0) +
     results.listings.length +
     results.articles.length;
 
@@ -134,6 +155,12 @@ export function SearchResultsView({ query, country, city, results }: Props) {
       count: results.candidates.length,
     },
     {
+      key: "companies",
+      label: "Companies",
+      icon: Building2,
+      count: results.companies?.length ?? 0,
+    },
+    {
       key: "listings",
       label: "Marketplace",
       icon: ShoppingBag,
@@ -154,7 +181,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
           Universal Search
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-          Search across Jobs, Candidates, Marketplace and Learning Hub.
+          Search across Jobs, Candidates, Companies, Marketplace and Learning Hub.
         </p>
 
         <form
@@ -287,7 +314,52 @@ export function SearchResultsView({ query, country, city, results }: Props) {
                       {c.full_name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {c.profession} &bull; {c.location}
+                      {c.username ? `@${c.username}` : c.profession}
+                      {(c.profession || c.location) && c.username
+                        ? ` · ${[c.profession, c.location].filter(Boolean).join(" · ")}`
+                        : c.location && !c.username
+                          ? ` · ${c.location}`
+                          : ""}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Section>
+        )}
+
+
+      {(tab === "all" || tab === "companies") &&
+        (results.companies?.length ?? 0) > 0 && (
+          <Section title="Companies" icon={Building2}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {results.companies.map((co) => (
+                <Link
+                  key={co.id}
+                  href={co.slug ? `/companies/${co.slug}` : "/companies"}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                >
+                  {co.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={co.logo_url}
+                      alt={co.name}
+                      className="h-10 w-10 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                      <Building2 className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground truncate">
+                      {co.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {[co.industry, co.city, co.country]
+                        .filter(Boolean)
+                        .join(" · ")}
+                      {co.hiring ? " · Hiring" : ""}
                     </p>
                   </div>
                 </Link>
