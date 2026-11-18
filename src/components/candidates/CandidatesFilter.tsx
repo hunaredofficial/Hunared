@@ -122,7 +122,7 @@ export function CandidatesFilter({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap [&>*]:w-full sm:[&>*]:w-auto">
         {/* Search */}
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -168,7 +168,7 @@ export function CandidatesFilter({
             });
           }}
         >
-          <SelectTrigger className="sm:w-[180px] cursor-pointer">
+          <SelectTrigger className="w-full sm:w-[180px] cursor-pointer">
             <SelectValue>{professionLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-background text-foreground border-border">
@@ -197,7 +197,7 @@ export function CandidatesFilter({
             });
           }}
         >
-          <SelectTrigger className="sm:w-[180px] cursor-pointer">
+          <SelectTrigger className="w-full sm:w-[180px] cursor-pointer">
             <SelectValue>{countryLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-background text-foreground border-border">
@@ -219,7 +219,7 @@ export function CandidatesFilter({
         </Select>
 
         {/* City — type any name or pick from list */}
-        <div className="sm:w-[160px]">
+        <div className="w-full sm:w-[160px]">
           <CityCombobox
             id="candidates-city"
             country={country === "all" ? "" : country}
@@ -245,7 +245,7 @@ export function CandidatesFilter({
             });
           }}
         >
-          <SelectTrigger className="sm:w-[150px] cursor-pointer">
+          <SelectTrigger className="w-full sm:w-[150px] cursor-pointer">
             <SelectValue>{levelLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-background text-foreground border-border">
@@ -273,7 +273,7 @@ export function CandidatesFilter({
             });
           }}
         >
-          <SelectTrigger className="sm:w-[170px] cursor-pointer">
+          <SelectTrigger className="w-full sm:w-[170px] cursor-pointer">
             <SelectValue>{availableLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-background text-foreground border-border">

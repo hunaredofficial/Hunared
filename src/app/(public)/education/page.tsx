@@ -149,16 +149,16 @@ export default async function EducationPage({
             <form
               action="/education"
               method="get"
-              className="mt-6 flex flex-col sm:flex-row gap-2 max-w-xl"
+              className="mt-6 flex flex-col sm:flex-row gap-2 w-full max-w-2xl"
             >
               {category ? <input type="hidden" name="category" value={category} /> : null}
               <input
                 name="q"
                 defaultValue={q}
                 placeholder="Search articles…"
-                className="flex-1 h-11 rounded-xl border border-border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full flex-1 min-h-12 h-12 rounded-xl border border-border bg-background px-4 text-base sm:text-sm outline-none focus:ring-2 focus:ring-primary/30"
               />
-              <Button type="submit" className="h-11 px-6">
+              <Button type="submit" className="h-12 w-full sm:w-auto px-8 shrink-0">
                 Search
               </Button>
             </form>

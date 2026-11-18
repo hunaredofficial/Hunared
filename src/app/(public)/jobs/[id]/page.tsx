@@ -211,17 +211,18 @@ export default async function JobDetailPage({
             <Link href="/jobs" className="hover:text-primary transition-colors">Jobs</Link>
             {job.category && (
               <>
-                <span>/</span>
+                <span className="shrink-0">/</span>
                 <Link
                   href={`/jobs?category=${encodeURIComponent(job.category)}`}
-                  className="hover:text-primary transition-colors"
+                  className="hover:text-primary transition-colors truncate max-w-[9rem] sm:max-w-[14rem]"
+                  title={job.category}
                 >
                   {job.category}
                 </Link>
               </>
             )}
-            <span>/</span>
-            <span className="text-foreground font-medium truncate max-w-[12rem] sm:max-w-xs">
+            <span className="shrink-0">/</span>
+            <span className="text-foreground font-medium truncate min-w-0 max-w-[40vw] sm:max-w-xs">
               {job.job_title}
             </span>
           </nav>
@@ -243,11 +244,11 @@ export default async function JobDetailPage({
             {/* Header card */}
             <Card>
               <CardContent className="pt-6 pb-5">
-                <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 mb-3">
                   {job.category ? (
                     <Badge
                       className={cn(
-                        "text-xs",
+                        "text-xs max-w-full w-fit whitespace-normal text-left leading-snug h-auto py-1 px-2.5",
                         CATEGORY_COLORS[job.category] ??
                           CATEGORY_COLORS["Other"]
                       )}
@@ -255,9 +256,9 @@ export default async function JobDetailPage({
                       {job.category}
                     </Badge>
                   ) : (
-                    <span />
+                    <span className="hidden sm:block" />
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0 self-start">
                     <ShareButton
                       url={`/jobs/${job.id}`}
                       title={job.job_title}

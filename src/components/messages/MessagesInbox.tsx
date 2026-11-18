@@ -998,10 +998,10 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
         </div>
       ) : (
         <>
-          <header className="flex items-center gap-2 px-3 py-2.5 border-b border-border">
+          <header className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2.5 border-b border-border w-full max-w-full">
             <button
               type="button"
-              className="md:hidden p-1.5 rounded-lg hover:bg-muted"
+              className="md:hidden p-1.5 rounded-lg hover:bg-muted shrink-0"
               onClick={() => router.push("/dashboard/messages")}
               aria-label="Back"
             >
@@ -1060,8 +1060,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
           </header>
 
           {conv?.context_title && (
-            <div className="mx-3 mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 flex items-center justify-between gap-2">
-              <div className="min-w-0">
+            <div className="mx-3 mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   {conv.context_type}
                 </p>
@@ -1071,14 +1071,19 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
                 )}
               </div>
               {conv.context_href && (
-                <Button size="sm" variant="outline" className="h-7 text-[11px] shrink-0" asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-[11px] w-full sm:w-auto shrink-0 self-stretch sm:self-center"
+                  asChild
+                >
                   <Link href={conv.context_href}>View</Link>
                 </Button>
               )}
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 w-full max-w-full">
             {messages.map((m) => {
               const mine = m.sender_id === currentUserId;
               const displayName =
@@ -1302,11 +1307,11 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   );
 
   return (
-    <div className="h-[calc(100vh-8rem)] min-h-[480px] rounded-xl border border-border overflow-hidden grid md:grid-cols-[minmax(260px,320px)_1fr]">
-      <div className={cn("min-h-0", activeId ? "hidden md:flex md:flex-col" : "flex flex-col")}>
+    <div className="h-[calc(100dvh-7.5rem)] md:h-[calc(100vh-8rem)] min-h-[420px] w-full max-w-full rounded-xl border border-border overflow-hidden grid grid-cols-1 md:grid-cols-[minmax(260px,320px)_1fr]">
+      <div className={cn("min-h-0 w-full", activeId ? "hidden md:flex md:flex-col" : "flex flex-col")}>
         {listPane}
       </div>
-      <div className={cn("min-h-0", !activeId ? "hidden md:flex md:flex-col" : "flex flex-col")}>
+      <div className={cn("min-h-0 w-full max-w-full", !activeId ? "hidden md:flex md:flex-col" : "flex flex-col")}>
         {chatPane}
       </div>
 
