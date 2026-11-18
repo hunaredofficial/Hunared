@@ -30,13 +30,13 @@ const FOOTER_LINKS: Record<string, FooterLink[]> = {
   Programs: [
     { href: "https://hunared.org/programs", label: "Hunared Program", external: true },
     { href: "https://hunared.org/programs", label: "Training Courses", external: true },
+    { href: "/finder", label: "Finder Center" },
+    { href: "/dashboard/premium-ads", label: "Premium Ads" },
     {
       href: "https://hunared.org/referral-program",
       label: "Referral Program",
       external: true,
     },
-    { href: "/finder", label: "Finder Center" },
-    { href: "/dashboard/premium-ads", label: "Premium Ads" },
   ],
   Company: [
     { href: "/about", label: "About Us" },
