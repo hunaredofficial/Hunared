@@ -263,8 +263,8 @@ export function Header() {
                         "shadow-lg shadow-black/20 ring-1 ring-black/5",
                         "animate-in fade-in-0 zoom-in-95 duration-150",
                         item.columns && item.columns.length > 1
-                          ? "left-1/2 -translate-x-1/2 w-[min(90vw,22rem)] p-1.5"
-                          : "left-0 w-[13.5rem] p-1"
+                          ? "left-1/2 -translate-x-1/2 w-max max-w-[min(90vw,20rem)] p-1"
+                          : "left-0 w-max min-w-[10.5rem] max-w-[15rem] p-1"
                       )}
                       role="menu"
                       onMouseLeave={() => setOpenMega(null)}
@@ -307,12 +307,12 @@ export function Header() {
                                       {sub.icon ? (
                                         <sub.icon className="h-3.5 w-3.5 text-primary/80 shrink-0" />
                                       ) : null}
-                                      <span className="min-w-0 leading-tight">
-                                        <span className="font-medium block truncate">
+                                      <span className="min-w-0 leading-tight pr-0.5">
+                                        <span className="font-medium block whitespace-nowrap">
                                           {sub.label}
                                         </span>
                                         {sub.desc ? (
-                                          <span className="text-[10px] text-muted-foreground leading-tight block truncate mt-0.5">
+                                          <span className="text-[10px] text-muted-foreground leading-tight block whitespace-nowrap mt-0.5 opacity-80">
                                             {sub.desc}
                                           </span>
                                         ) : null}
