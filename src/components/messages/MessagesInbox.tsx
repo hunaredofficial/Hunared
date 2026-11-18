@@ -1060,8 +1060,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
           </header>
 
           {conv?.context_title && (
-            <div className="mx-3 mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0 flex-1">
+            <div className="mx-3 mt-2 rounded-lg border border-border bg-muted/30 px-3 py-2 flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1 pr-1">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   {conv.context_type}
                 </p>
@@ -1073,8 +1073,8 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
               {conv.context_href && (
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="h-8 text-[11px] w-full sm:w-auto shrink-0 self-stretch sm:self-center"
+                  variant="secondary"
+                  className="h-8 min-w-[4.25rem] px-3 text-[11px] font-semibold shrink-0 rounded-md border border-primary/30 bg-primary/15 text-primary hover:bg-primary/25"
                   asChild
                 >
                   <Link href={conv.context_href}>View</Link>
