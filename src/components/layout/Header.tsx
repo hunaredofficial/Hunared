@@ -258,10 +258,13 @@ export function Header() {
                   {isOpen && (
                     <div
                       className={cn(
-                        "absolute top-full mt-2 rounded-xl border border-border bg-card shadow-xl p-3 z-50",
+                        "absolute top-full mt-1.5 z-50 overflow-hidden",
+                        "rounded-lg border border-border/80 bg-card/95 backdrop-blur-md",
+                        "shadow-lg shadow-black/20 ring-1 ring-black/5",
+                        "animate-in fade-in-0 zoom-in-95 duration-150",
                         item.columns && item.columns.length > 1
-                          ? "left-1/2 -translate-x-1/2 w-[min(92vw,28rem)]"
-                          : "left-0 w-64"
+                          ? "left-1/2 -translate-x-1/2 w-[min(90vw,22rem)] p-1.5"
+                          : "left-0 w-[13.5rem] p-1"
                       )}
                       role="menu"
                       onMouseLeave={() => setOpenMega(null)}
@@ -269,42 +272,54 @@ export function Header() {
                       {item.columns && (
                         <div
                           className={cn(
-                            "grid gap-4",
-                            item.columns.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                            "grid",
+                            item.columns.length > 1
+                              ? "grid-cols-2 gap-1"
+                              : "grid-cols-1 gap-0.5"
                           )}
                         >
                           {item.columns.map((col) => (
-                            <div key={col.title} className="space-y-1">
-                              <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <div key={col.title} className="min-w-0">
+                              <p className="px-2 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
                                 {col.title}
                               </p>
-                              {col.items
-                                .filter((sub) => !sub.guestOnly || !isSignedIn)
-                                .map((sub) => (
-                                <Link
-                                  key={sub.href + sub.label}
-                                  href={sub.href}
-                                  role="menuitem"
-                                  className="flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
-                                  {...(sub.href.startsWith("http")
-                                    ? { target: "_blank", rel: "noopener noreferrer" }
-                                    : {})}
-                                >
-                                  {sub.icon && (
-                                    <sub.icon className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                                  )}
-                                  <span className="min-w-0">
-                                    <span className="font-medium block leading-tight">
-                                      {sub.label}
-                                    </span>
-                                    {sub.desc && (
-                                      <span className="text-[11px] text-muted-foreground leading-snug block mt-0.5">
-                                        {sub.desc}
+                              <div className="space-y-0.5">
+                                {col.items
+                                  .filter((sub) => !sub.guestOnly || !isSignedIn)
+                                  .map((sub) => (
+                                    <Link
+                                      key={sub.href + sub.label}
+                                      href={sub.href}
+                                      role="menuitem"
+                                      onClick={() => setOpenMega(null)}
+                                      className={cn(
+                                        "flex items-center gap-2 rounded-md px-2 py-1.5",
+                                        "text-[12.5px] text-foreground/90",
+                                        "hover:bg-primary/10 hover:text-primary transition-colors"
+                                      )}
+                                      {...(sub.href.startsWith("http")
+                                        ? {
+                                            target: "_blank",
+                                            rel: "noopener noreferrer",
+                                          }
+                                        : {})}
+                                    >
+                                      {sub.icon ? (
+                                        <sub.icon className="h-3.5 w-3.5 text-primary/80 shrink-0" />
+                                      ) : null}
+                                      <span className="min-w-0 leading-tight">
+                                        <span className="font-medium block truncate">
+                                          {sub.label}
+                                        </span>
+                                        {sub.desc ? (
+                                          <span className="text-[10px] text-muted-foreground leading-tight block truncate mt-0.5">
+                                            {sub.desc}
+                                          </span>
+                                        ) : null}
                                       </span>
-                                    )}
-                                  </span>
-                                </Link>
-                              ))}
+                                    </Link>
+                                  ))}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -484,7 +499,7 @@ export function Header() {
                             key={sub.href + sub.label}
                             href={sub.href}
                             onClick={() => setMobileOpen(false)}
-                            className="flex items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors"
+                            className="flex items-start gap-2 rounded-lg px-2.5 py-2 text-[13px] text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors"
                             {...(sub.href.startsWith("http")
                               ? { target: "_blank", rel: "noopener noreferrer" }
                               : {})}
