@@ -649,20 +649,19 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       className={cn(
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
-          ? "w-[min(100vw-1rem,22rem)] rounded-2xl border"
+          ? [
+              "fixed z-[9998] top-[3.75rem] bottom-auto m-0 rounded-2xl border",
+              // Mobile: centered horizontally; desktop: aligned to the right
+              "left-1/2 -translate-x-1/2 right-auto",
+              "sm:left-auto sm:right-3 sm:translate-x-0",
+              "w-[min(100vw-1rem,22rem)]",
+            ].join(" ")
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
       )}
       style={
         variant === "float"
           ? {
-              position: "fixed",
-              top: "3.75rem",
-              right: "0.75rem",
-              left: "auto",
-              bottom: "auto",
-              zIndex: 9998,
-              margin: 0,
               height: panelHeight,
               maxHeight: "calc(100dvh - 4rem)",
             }

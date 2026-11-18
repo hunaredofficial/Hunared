@@ -111,8 +111,8 @@ export default function RootLayout({
                 </Suspense>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark"
+            enableSystem={false}
             themes={["light", "dark"]}
             disableTransitionOnChange
           >
