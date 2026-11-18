@@ -21,6 +21,13 @@ import {
   Users,
   Building2,
   BedDouble,
+  Briefcase,
+  GraduationCap,
+  Sparkles,
+  MapPin,
+  LogIn,
+  UserPlus,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -389,92 +396,180 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile */}
+      {/* Mobile menu — polished full-width drawer */}
       <div
         className={cn(
-          "lg:hidden overflow-hidden transition-all duration-300 ease-in-out",
-          mobileOpen ? "max-h-[42rem] opacity-100" : "max-h-0 opacity-0"
+          "lg:hidden overflow-hidden transition-all duration-300 ease-out",
+          mobileOpen
+            ? "max-h-[min(88dvh,44rem)] opacity-100"
+            : "max-h-0 opacity-0 pointer-events-none"
         )}
       >
-        <div className="border-t border-border/50 bg-background/95 px-4 pt-3 pb-4 space-y-0.5 overflow-y-auto max-h-[38rem]">
-          <div className="px-3 py-2">
-            <LocationPicker />
+        <div className="border-t border-border/60 bg-gradient-to-b from-card via-background to-background px-3 pt-3 pb-5 space-y-3 overflow-y-auto max-h-[min(82dvh,40rem)] overscroll-contain">
+          {/* Location chip */}
+          <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-2.5 flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <LocationPicker />
+            </div>
           </div>
 
+          {/* Primary CTA */}
           <Link
             href="/post"
-            className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-md text-primary bg-primary/10 hover:bg-primary/15 transition-colors"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary shadow-md shadow-primary/25 hover:opacity-95 active:scale-[0.99] transition"
           >
             <Plus className="h-4 w-4" />
             Post
           </Link>
 
-          {NAV_ITEMS.map((item) => {
-            if (item.type === "link") {
-              const isActive =
-                pathname === item.href || pathname.startsWith(item.href + "/");
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
-                    isActive
-                      ? "text-foreground bg-muted"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            }
-            return (
-              <details key={item.label} className="group">
-                <summary className="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 cursor-pointer list-none">
-                  {item.label}
-                  <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="pl-4 space-y-0.5 pb-1">
-                  {(item.columns
-                    ? item.columns.flatMap((c) => c.items)
-                    : []
-                  )
-                    .filter((sub) => !sub.guestOnly || !isSignedIn)
-                    .map((sub) => (
-                    <Link
-                      key={sub.href + sub.label}
-                      href={sub.href}
-                      className="block px-3 py-2 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70"
-                      {...(sub.href.startsWith("http")
-                        ? { target: "_blank", rel: "noopener noreferrer" }
-                        : {})}
-                    >
-                      {sub.label}
-                    </Link>
-                  ))}
-                </div>
-              </details>
-            );
-          })}
+          {/* Nav accordion groups */}
+          <nav className="rounded-xl border border-border/70 bg-card/60 overflow-hidden divide-y divide-border/50">
+            {NAV_ITEMS.map((item) => {
+              if (item.type === "link") {
+                const isActive =
+                  pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3.5 py-3 text-sm font-medium transition-colors",
+                      isActive
+                        ? "text-primary bg-primary/10"
+                        : "text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
 
-          <div className="flex gap-2 pt-3 border-t border-border/50">
+              const GroupIcon =
+                item.label === "Jobs"
+                  ? Briefcase
+                  : item.label === "Talent"
+                    ? Users
+                    : item.label === "Companies"
+                      ? Building2
+                      : item.label === "Marketplace"
+                        ? Tag
+                        : item.label === "Learning"
+                          ? GraduationCap
+                          : item.label === "Programs"
+                            ? Sparkles
+                            : LayoutDashboard;
+
+              return (
+                <details key={item.label} className="group/acc">
+                  <summary className="flex items-center gap-3 px-3.5 py-3 text-sm font-semibold text-foreground cursor-pointer list-none select-none hover:bg-muted/40 transition-colors [&::-webkit-details-marker]:hidden">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                      <GroupIcon className="h-4 w-4" />
+                    </span>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-open/acc:rotate-180 shrink-0" />
+                  </summary>
+                  <div className="pb-2 px-2 space-y-0.5 bg-muted/20">
+                    {(item.columns
+                      ? item.columns.flatMap((c) => c.items)
+                      : []
+                    )
+                      .filter((sub) => !sub.guestOnly || !isSignedIn)
+                      .map((sub) => {
+                        const SubIcon = sub.icon;
+                        return (
+                          <Link
+                            key={sub.href + sub.label}
+                            href={sub.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors"
+                            {...(sub.href.startsWith("http")
+                              ? { target: "_blank", rel: "noopener noreferrer" }
+                              : {})}
+                          >
+                            {SubIcon ? (
+                              <SubIcon className="h-4 w-4 mt-0.5 shrink-0 text-primary/70" />
+                            ) : (
+                              <span className="mt-2 h-1 w-1 rounded-full bg-primary/50 shrink-0 ml-1.5" />
+                            )}
+                            <span className="min-w-0">
+                              <span className="block font-medium text-foreground/90">
+                                {sub.label}
+                              </span>
+                              {sub.desc ? (
+                                <span className="block text-[11px] text-muted-foreground leading-snug mt-0.5">
+                                  {sub.desc}
+                                </span>
+                              ) : null}
+                            </span>
+                          </Link>
+                        );
+                      })}
+                  </div>
+                </details>
+              );
+            })}
+          </nav>
+
+          {/* Auth footer */}
+          <div className="pt-1 space-y-2">
             <Show when="signed-out">
-              <Button variant="outline" size="sm" className="flex-1" asChild>
-                <Link href="/sign-in">Sign In</Link>
-              </Button>
-              <Button size="sm" className="flex-1 font-semibold" asChild>
-                <Link href="/register">Get Started</Link>
-              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 rounded-xl font-medium"
+                  asChild
+                >
+                  <Link href="/sign-in" onClick={() => setMobileOpen(false)}>
+                    <LogIn className="h-3.5 w-3.5 mr-1.5" />
+                    Sign In
+                  </Link>
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-11 rounded-xl font-semibold shadow-sm"
+                  asChild
+                >
+                  <Link href="/register" onClick={() => setMobileOpen(false)}>
+                    <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                    Get Started
+                  </Link>
+                </Button>
+              </div>
             </Show>
             <Show when="signed-in">
-              <Button variant="outline" size="sm" className="flex-1" asChild>
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1" asChild>
-                <Link href="/dashboard/messages">Messages</Link>
-              </Button>
-              <div className="flex items-center justify-center shrink-0">
-                <UserButton />
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 rounded-xl"
+                  asChild
+                >
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                    <LayoutDashboard className="h-3.5 w-3.5 mr-1.5" />
+                    Dashboard
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 rounded-xl"
+                  asChild
+                >
+                  <Link
+                    href="/dashboard/messages"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                    Messages
+                  </Link>
+                </Button>
+                <div className="flex items-center justify-center h-11 w-11 rounded-xl border border-border bg-muted/30">
+                  <UserButton />
+                </div>
               </div>
             </Show>
           </div>
