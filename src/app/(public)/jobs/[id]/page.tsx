@@ -637,26 +637,31 @@ export default async function JobDetailPage({
 
         {/* Related / similar jobs */}
         {relatedJobs.length > 0 && (
-          <div className="mt-10 space-y-4">
-            <h2 className="text-lg font-semibold">
-              Similar jobs
+          <div className="mt-10 space-y-4 w-full min-w-0 max-w-full overflow-x-hidden">
+            <h2 className="text-lg font-semibold flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span>Similar jobs</span>
               {job.category ? (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
+                <span className="text-sm font-normal text-muted-foreground min-w-0">
                   in {job.category}
                   {relatedJobs.length > 0 ? ` · ${relatedJobs.length}` : ""}
                 </span>
               ) : null}
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full min-w-0">
               {relatedJobs.map((rj) => (
                 <div
                   key={rj.id}
-                  className="relative rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors space-y-2"
+                  className="relative rounded-xl border border-border bg-card p-3.5 sm:p-4 hover:border-primary/40 transition-colors space-y-2 w-full min-w-0 max-w-full overflow-hidden"
                 >
-                  <div className="absolute top-3 right-3 z-10">
-                    <SaveButton itemType="job" itemId={rj.id} size="sm" />
+                  <div className="absolute top-2.5 right-2.5 z-10">
+                    <SaveButton
+                      itemType="job"
+                      itemId={rj.id}
+                      size="icon"
+                      className="h-8 w-8 rounded-md border border-border/80 bg-background/90 backdrop-blur-sm hover:bg-muted"
+                    />
                   </div>
-                  <Link href={`/jobs/${rj.id}`} className="block space-y-2 pr-8">
+                  <Link href={`/jobs/${rj.id}`} className="block space-y-2 pr-10 min-w-0">
                     {rj.category && (
                       <Badge
                         className={cn(
