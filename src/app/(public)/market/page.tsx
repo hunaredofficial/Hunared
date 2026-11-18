@@ -143,8 +143,7 @@ export default async function MarketPage({
     (minNum != null && Number.isFinite(minNum)) ||
     (maxNum != null && Number.isFinite(maxNum));
 
-  const useForYou = (sp.sort ?? "") === "for_you" || sort === "for_you";
-  const usePersonalSort = useForYou && isPersonalized && !!profile;
+  const usePersonalSort = isPersonalized && !sort;
 
   const needsInMemory =
     sort === "price_asc" ||
@@ -246,32 +245,21 @@ export default async function MarketPage({
       promotedListingSet = new Set(promotedListingIds);
       rows = promoteToFront(rows, promotedListingIds);
 
-      // Premium ads first, then newest → oldest by published date
-      {
-        const ascending = sort === "oldest";
-        const byDate = (
-          a: { created_at?: string | null },
-          b: { created_at?: string | null }
-        ) => {
-          const ta = new Date(a.created_at ?? 0).getTime();
-          const tb = new Date(b.created_at ?? 0).getTime();
-          return ascending ? ta - tb : tb - ta;
-        };
+      if (usePersonalSort && profile) {
         const promoted = promoteToFront(
           rows.filter((r) => promotedListingSet.has(r.id)),
           promotedListingIds
         );
-        let organic = rows.filter((r) => !promotedListingSet.has(r.id));
-        if (usePersonalSort && profile) {
-          organic = rankByPersonalization(organic, (row) =>
-            scoreListing(row, profile, savedListingIds)
-          );
-        } else {
-          organic = [...organic].sort(byDate);
-        }
-        const ordered = [...promoted, ...organic];
-        total = ordered.length;
-        listings = ordered.slice(from, from + limit);
+        const rest = rows.filter((r) => !promotedListingSet.has(r.id));
+        const rankedRest = rankByPersonalization(rest, (row) =>
+          scoreListing(row, profile, savedListingIds)
+        );
+        const ranked = [...promoted, ...rankedRest];
+        total = ranked.length;
+        listings = ranked.slice(from, from + limit);
+      } else {
+        total = rows.length;
+        listings = rows.slice(from, from + limit);
       }
     } else {
       const ascending = sort === "oldest";
@@ -317,8 +305,8 @@ export default async function MarketPage({
       {/* Compact page header */}
       <section className="border-b border-border bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-            <div>
+          <div className="flex flex-row items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 Marketplace
               </h1>
@@ -326,14 +314,19 @@ export default async function MarketPage({
                 {total > 0
                   ? `${total.toLocaleString()} listing${total !== 1 ? "s" : ""}`
                   : "Buy, sell, rent and find services"}
-                {useForYou && isPersonalized && (
-                  <span className="ml-2 text-primary text-sm font-medium">
-                    · matched to your profile
+                {isPersonalized && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Personalized for you
                   </span>
                 )}
               </p>
             </div>
-            <Button size="sm" className="shrink-0 font-semibold" asChild>
+            <Button
+              size="sm"
+              className="shrink-0 h-8 px-3 text-xs font-semibold rounded-md"
+              asChild
+            >
               <Link href="/dashboard/market/new">Post a Listing</Link>
             </Button>
           </div>
@@ -394,10 +387,8 @@ export default async function MarketPage({
                 {activeCountry && ` · ${activeCountry.name}`}
                 {city && ` · ${city}`}
                 {search && ` matching "${search}"`}
-                {useForYou && isPersonalized ? " · Recommended" : ""}
               </p>
             </div>
-
 
             {listings.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-lg">
@@ -411,7 +402,7 @@ export default async function MarketPage({
               <>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                   {listings.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} isPromoted={promotedListingSet.has(listing.id)} showRecommended={useForYou && isPersonalized} />
+                    <ListingCard key={listing.id} listing={listing} isPromoted={promotedListingSet.has(listing.id)} />
                   ))}
                 </div>
 
@@ -484,7 +475,7 @@ export default async function MarketPage({
   );
 }
 
-function ListingCard({ listing, isPromoted = false, showRecommended = false }: { listing: Listing & { _matchScore?: number }; isPromoted?: boolean; showRecommended?: boolean }) {
+function ListingCard({ listing, isPromoted = false }: { listing: Listing & { _matchScore?: number }; isPromoted?: boolean }) {
   const catLabel =
     LISTING_CATEGORIES.find((c) => c.value === listing.category)?.label ??
     listing.category;
@@ -492,7 +483,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
     LISTING_CATEGORY_COLORS[listing.category] ??
     "bg-muted text-muted-foreground";
 
-  const isRecommended = showRecommended && (listing._matchScore ?? 0) >= 20;
+  const isRecommended = (listing._matchScore ?? 0) >= 20;
 
   return (
     <div className={cn(
