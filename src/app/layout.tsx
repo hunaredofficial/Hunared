@@ -54,17 +54,15 @@ export const metadata: Metadata = {
     shortcut: "/assets/logos/hunared-mark-v4-32.png",
     apple: [{ url: "/assets/logos/hunared-mark-v4-192.png", sizes: "192x192", type: "image/png" }],
   },
-  // Site under development — block search indexing until launch
+  // Production — allow search indexing
   robots: {
-    index: false,
-    follow: false,
-    nocache: true,
+    index: true,
+    follow: true,
     googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
+      index: true,
+      follow: true,
       "max-video-preview": -1,
-      "max-image-preview": "none",
+      "max-image-preview": "large",
       "max-snippet": -1,
     },
   },
@@ -111,8 +109,8 @@ export default function RootLayout({
                 </Suspense>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
+            defaultTheme="system"
+            enableSystem
             themes={["light", "dark"]}
             disableTransitionOnChange
           >

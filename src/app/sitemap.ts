@@ -11,6 +11,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/market`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
     { url: `${baseUrl}/education`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/education/resources`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
+    { url: `${baseUrl}/companies`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
+    { url: `${baseUrl}/search`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
+    { url: `${baseUrl}/finder`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.5 },
+    { url: `${baseUrl}/help`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
@@ -53,7 +57,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
-    return [...staticRoutes, ...jobRoutes, ...candidateRoutes];
+
+    const { data: listings } = await supabase
+      .from("marketplace_listings")
+      .select("id, created_at")
+      .eq("status", "approved")
+      .limit(5000);
+
+    const listingRoutes: MetadataRoute.Sitemap = (listings ?? []).map((row) => ({
+      url: `${baseUrl}/market/${row.id}`,
+      lastModified: row.created_at ? new Date(row.created_at) : new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+
+    const { data: companies } = await supabase
+      .from("companies")
+      .select("slug, created_at")
+      .not("slug", "is", null)
+      .limit(2000);
+
+    const companyRoutes: MetadataRoute.Sitemap = (companies ?? [])
+      .filter((c) => c.slug)
+      .map((c) => ({
+        url: `${baseUrl}/companies/${c.slug}`,
+        lastModified: c.created_at ? new Date(c.created_at) : new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      }));
+
+    return [...staticRoutes, ...jobRoutes, ...candidateRoutes, ...listingRoutes, ...companyRoutes];
+
   } catch {
     return staticRoutes;
   }
