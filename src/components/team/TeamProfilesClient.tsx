@@ -263,52 +263,103 @@ export function TeamProfilesClient() {
 
   async function addGulfCompanies() {
     if (seedingGulf) return;
+    const total = GULF_COMPANY_PROFILES.length;
     const ok = window.confirm(
-      "Add up to 200 companies (100 Gulf + 100 Worldwide) as Team Profiles? Existing company names will be skipped. This may take up to a minute."
+      `Add ${total} companies (100 Gulf + 100 Worldwide) using the same Create profile API?\n\nThis runs in small batches and can take 2–4 minutes. Keep this tab open.`
     );
     if (!ok) return;
     setSeedingGulf(true);
+    let created = 0;
+    let failed = 0;
+    let skipped = 0;
+    const failSamples: string[] = [];
+
     try {
-      const res = await fetch("/api/team/bulk-company-profiles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region: "all", limit: 200 }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || `Request failed (${res.status})`);
+      for (let i = 0; i < total; i++) {
+        const c = GULF_COMPANY_PROFILES[i];
+        try {
+          const res = await fetch("/api/team/create-profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+              role: "employer",
+              full_name: c.company_name,
+              company_name: c.company_name,
+              username: `${c.username}_${i}`,
+              email: `bulk_${i}_${Date.now().toString(36)}@team-managed.hunared.local`,
+              phone: c.phone || "",
+              country: c.country,
+              city: c.city,
+              location: [c.city, c.country].filter(Boolean).join(", "),
+              company_address: c.company_address,
+              company_location: [c.city, c.country].filter(Boolean).join(", "),
+              company_website: c.company_website,
+              company_cr: c.company_cr,
+              industries: c.industries,
+              services: c.services,
+              short_description: c.short_description,
+              company_about: c.company_about,
+              listed_publicly: true,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            failed += 1;
+            if (failSamples.length < 5) {
+              failSamples.push(
+                `${c.company_name}: ${data.error || res.status}`
+              );
+            }
+            // stop early if unauthorized — session problem
+            if (res.status === 401 || res.status === 403) {
+              toast.error(
+                data.error || "Not authorized — sign in again as Team"
+              );
+              break;
+            }
+          } else {
+            created += 1;
+          }
+        } catch (err) {
+          failed += 1;
+          if (failSamples.length < 5) {
+            failSamples.push(
+              `${c.company_name}: ${err instanceof Error ? err.message : "network"}`
+            );
+          }
+        }
+
+        // progress every 10
+        if ((i + 1) % 10 === 0 || i + 1 === total) {
+          toast.message(`Progress: ${created} created, ${failed} failed (${i + 1}/${total})`);
+          // refresh list periodically
+          if (created > 0 && (i + 1) % 20 === 0) void load();
+        }
+
+        // small delay to avoid hammering API
+        await new Promise((r) => setTimeout(r, 120));
       }
-      const created = Number(data.created || 0);
-      const skipped = Number(data.skipped || 0);
-      const failed = Number(data.failed || 0);
+
+      void load();
+
       if (created > 0) {
         toast.success(
-          `${created} companies created` +
-            (skipped ? `, ${skipped} skipped (already exist)` : "") +
+          `Done: ${created} companies added` +
             (failed ? `, ${failed} failed` : "")
         );
-      } else if (skipped > 0 && failed === 0) {
-        toast.message(`All ${skipped} already exist — nothing new to add`);
       } else {
-        const first = data.errors?.[0];
-        const firstErr =
-          (first ? `${first.step}: ${first.error}` : null) ||
-          data.error ||
-          data.hint ||
-          "Unknown error — check Network tab for /api/team/bulk-company-profiles";
-        toast.error(`No companies created. ${firstErr}`);
-        console.error("bulk-company-profiles response", data);
+        toast.error(
+          failSamples[0] ||
+            "Nothing created. Open console/Network for /api/team/create-profile errors."
+        );
+        if (failSamples.length) console.error("bulk failures", failSamples);
       }
-      if (data.errors?.length) {
-        console.warn("bulk-company-profiles errors", data.errors);
-      }
-      void load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Bulk create failed");
     } finally {
       setSeedingGulf(false);
     }
   }
+
 
   const inputCls =
     "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
@@ -343,7 +394,7 @@ export function TeamProfilesClient() {
           ) : (
             <>
               <Plus className="h-4 w-4 mr-1.5" />
-              Add 200 companies (Gulf + World)
+              Add 200 companies now
             </>
           )}
         </Button>
@@ -769,16 +820,37 @@ export function TeamProfilesClient() {
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className="font-semibold text-sm">Team-managed profiles</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void load()}
-            className="gap-1"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              type="button"
+              size="sm"
+              disabled={seedingGulf}
+              onClick={() => void addGulfCompanies()}
+              className="gap-1"
+            >
+              {seedingGulf ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Adding…
+                </>
+              ) : (
+                <>
+                  <Plus className="h-3.5 w-3.5" />
+                  Add 200 companies
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void load()}
+              className="gap-1"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </Button>
+          </div>
         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
