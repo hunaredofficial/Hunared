@@ -560,7 +560,7 @@ export async function GET(req: Request) {
     .eq("team_managed", true)
     .neq("id", userId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(500);
 
   if (caller?.role === "team") {
     listQ = listQ.eq("created_by_team_id", userId);

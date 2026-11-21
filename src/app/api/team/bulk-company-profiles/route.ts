@@ -23,7 +23,6 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   Pakistan: "PK",
   "United Kingdom": "GB",
   "United States": "US",
-  USA: "US",
   Germany: "DE",
   France: "FR",
   Singapore: "SG",
@@ -45,25 +44,38 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
 
 /**
  * POST /api/team/bulk-company-profiles
- * Body optional: { region?: "gulf" | "worldwide" | "all", limit?: number }
- * Creates team-managed employer profiles + companies (same as Create full profile → Company).
- * Skips company names that already exist (case-insensitive).
+ * Creates team-managed company profiles the same way as manual Create full profile.
  */
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized — sign in as team" }, { status: 401 });
   }
 
-  const supabase = createAdminClient();
-  const { data: caller } = await supabase
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Supabase admin client failed" },
+      { status: 500 }
+    );
+  }
+
+  const { data: caller, error: callerErr } = await supabase
     .from("profiles")
     .select("id, role, email")
     .eq("id", userId)
     .maybeSingle();
 
+  if (callerErr) {
+    return NextResponse.json({ error: `Caller lookup: ${callerErr.message}` }, { status: 500 });
+  }
   if (!canBypassVerification(caller?.role)) {
-    return NextResponse.json({ error: "Team or admin role required" }, { status: 403 });
+    return NextResponse.json(
+      { error: `Team or admin role required (your role: ${caller?.role || "none"})` },
+      { status: 403 }
+    );
   }
 
   let region: "gulf" | "worldwide" | "all" = "all";
@@ -77,19 +89,25 @@ export async function POST(req: Request) {
       limit = Math.min(200, Math.floor(body.limit));
     }
   } catch {
-    /* empty body ok */
+    /* ok */
   }
 
-  let list = GULF_COMPANY_PROFILES;
-  if (region === "gulf") list = list.filter((c) => c.region === "gulf");
-  if (region === "worldwide") list = list.filter((c) => c.region === "worldwide");
+  let list = [...GULF_COMPANY_PROFILES];
+  if (region === "gulf") list = list.filter((c) => (c as { region?: string }).region === "gulf");
+  if (region === "worldwide")
+    list = list.filter((c) => (c as { region?: string }).region === "worldwide");
   list = list.slice(0, limit);
+
+  if (!list.length) {
+    return NextResponse.json({ error: "No companies in seed list", requested: 0 }, { status: 500 });
+  }
 
   const created: string[] = [];
   const skipped: string[] = [];
-  const errors: { name: string; error: string }[] = [];
+  const errors: { name: string; step: string; error: string }[] = [];
 
-  for (const item of list) {
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
     const name = (item.company_name || "").trim();
     if (!name) continue;
 
@@ -100,102 +118,103 @@ export async function POST(req: Request) {
         .ilike("name", name)
         .limit(1)
         .maybeSingle();
-
       if (existingCo) {
         skipped.push(name);
         continue;
       }
 
       const placeholderId = `team_${randomUUID().replace(/-/g, "")}`;
-      const email =
-        item.email?.trim().toLowerCase() ||
-        `${placeholderId}@team-managed.hunared.local`;
+      const email = `team_${placeholderId.slice(-12)}@team-managed.hunared.local`;
 
-      let username = (item.username || name)
+      let username = (item.username || `co${i}`)
         .toLowerCase()
         .replace(/[^a-z0-9_]/g, "")
-        .slice(0, 24);
+        .slice(0, 20);
       if (username.length < 3) username = `co_${placeholderId.slice(0, 8)}`;
-
-      const { data: userTaken } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", username)
-        .maybeSingle();
-      if (userTaken) username = `${username}_${placeholderId.slice(-6)}`;
+      username = `${username}_${placeholderId.slice(-4)}`;
 
       const location = [item.city, item.country].filter(Boolean).join(", ");
-      const industries = item.industries || [];
-      const services = item.services || [];
+      const industries = Array.isArray(item.industries) ? item.industries : [];
+      const services = Array.isArray(item.services) ? item.services : [];
+
+      const profileRow: Record<string, unknown> = {
+        id: placeholderId,
+        full_name: name,
+        role: "employer",
+        email,
+        phone: item.phone || null,
+        username,
+        country: item.country || null,
+        city: item.city || null,
+        location: location || null,
+        profession: industries[0] || "Company",
+        available_for_hire: false,
+        listed_publicly: true,
+        phone_verified_at: new Date().toISOString(),
+        team_managed: true,
+        created_by_team_id: userId,
+        company_cr: item.company_cr || null,
+        company_website: item.company_website || null,
+        company_address: item.company_address || null,
+        company_location: location || null,
+      };
 
       const { data: profile, error: pErr } = await supabase
         .from("profiles")
-        .insert({
-          id: placeholderId,
-          full_name: name,
-          role: "employer",
-          email,
-          phone: item.phone || null,
-          username,
-          country: item.country || null,
-          city: item.city || null,
-          location: location || null,
-          profession: industries[0] || "Company",
-          available_for_hire: false,
-          listed_publicly: true,
-          phone_verified_at: new Date().toISOString(),
-          team_managed: true,
-          created_by_team_id: userId,
-          company_cr: item.company_cr || null,
-          company_website: item.company_website || null,
-          company_address: item.company_address || null,
-          company_location: location || null,
-        })
+        .insert(profileRow)
         .select("id")
         .single();
 
       if (pErr || !profile) {
-        errors.push({ name, error: pErr?.message || "profile insert failed" });
+        errors.push({
+          name,
+          step: "profile",
+          error: pErr?.message || "profile insert returned null",
+        });
+        if (errors.length >= 15) break;
         continue;
       }
 
-      const slugBase = slugifyCompany(name) || "company";
-      const slug = `${slugBase}-${placeholderId.slice(-8)}`.slice(0, 60);
-      const countryCode =
-        (item.country && COUNTRY_CODE_MAP[item.country]) || null;
+      const slug = `${slugifyCompany(name)}-${placeholderId.slice(-8)}`.slice(0, 60);
+      const countryCode = (item.country && COUNTRY_CODE_MAP[item.country]) || null;
+
+      const companyRow: Record<string, unknown> = {
+        owner_id: placeholderId,
+        name,
+        slug,
+        display_name: name,
+        website: item.company_website || null,
+        about: item.company_about || null,
+        short_description: item.short_description || null,
+        email: null,
+        phone: item.phone || null,
+        headquarters_country: item.country || null,
+        headquarters_city: item.city || null,
+        headquarters_address: item.company_address || null,
+        industry: industries,
+        services,
+        verification_status: "verified",
+        status: "active",
+        team_managed: true,
+        created_by_team_id: userId,
+      };
+      if (countryCode) companyRow.headquarters_country_code = countryCode;
+      if (services.length) companyRow.services_count = services.length;
 
       const { data: co, error: cErr } = await supabase
         .from("companies")
-        .insert({
-          owner_id: placeholderId,
-          name,
-          slug,
-          display_name: name,
-          website: item.company_website || null,
-          about: item.company_about || null,
-          short_description: item.short_description || null,
-          email: email.endsWith("@team-managed.hunared.local") ? null : email,
-          phone: item.phone || null,
-          headquarters_country: item.country || null,
-          headquarters_country_code: countryCode,
-          headquarters_city: item.city || null,
-          headquarters_address: item.company_address || null,
-          industry: industries,
-          services,
-          services_count: services.length,
-          verification_status: "verified",
-          status: "active",
-          is_hiring: false,
-          is_featured: false,
-          team_managed: true,
-          created_by_team_id: userId,
-        })
-        .select("id, name, slug, status")
+        .insert(companyRow)
+        .select("id, name, status")
         .single();
 
       if (cErr || !co) {
         await supabase.from("profiles").delete().eq("id", placeholderId);
-        errors.push({ name, error: cErr?.message || "company insert failed" });
+        errors.push({
+          name,
+          step: "company",
+          error: cErr?.message || "company insert returned null",
+        });
+        if (errors.length >= 15) break;
         continue;
       }
 
@@ -203,19 +222,26 @@ export async function POST(req: Request) {
     } catch (e) {
       errors.push({
         name,
-        error: e instanceof Error ? e.message : "unknown error",
+        step: "exception",
+        error: e instanceof Error ? e.message : String(e),
       });
+      if (errors.length >= 15) break;
     }
   }
 
   return NextResponse.json({
-    ok: true,
+    ok: created.length > 0 || skipped.length > 0,
     requested: list.length,
     created: created.length,
     skipped: skipped.length,
     failed: errors.length,
-    createdNames: created.slice(0, 30),
-    skippedNames: skipped.slice(0, 30),
-    errors: errors.slice(0, 20),
+    createdNames: created.slice(0, 20),
+    errors,
+    hint:
+      created.length === 0 && errors.length > 0
+        ? "DB rejected inserts — see errors[0]. Fix that constraint/column first."
+        : created.length === 0 && skipped.length === list.length
+          ? "All names already exist in companies table."
+          : undefined,
   });
 }

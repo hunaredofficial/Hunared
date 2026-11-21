@@ -287,11 +287,17 @@ export function TeamProfilesClient() {
             (skipped ? `, ${skipped} skipped (already exist)` : "") +
             (failed ? `, ${failed} failed` : "")
         );
-      } else if (skipped > 0) {
+      } else if (skipped > 0 && failed === 0) {
         toast.message(`All ${skipped} already exist — nothing new to add`);
       } else {
-        const firstErr = data.errors?.[0]?.error || data.error || "Unknown error";
+        const first = data.errors?.[0];
+        const firstErr =
+          (first ? `${first.step}: ${first.error}` : null) ||
+          data.error ||
+          data.hint ||
+          "Unknown error — check Network tab for /api/team/bulk-company-profiles";
         toast.error(`No companies created. ${firstErr}`);
+        console.error("bulk-company-profiles response", data);
       }
       if (data.errors?.length) {
         console.warn("bulk-company-profiles errors", data.errors);
