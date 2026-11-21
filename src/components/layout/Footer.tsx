@@ -34,7 +34,7 @@ const FOOTER_LINKS: Record<string, FooterLink[]> = {
     { href: "/dashboard/premium-ads", label: "Premium Ads" },
     {
       href: "https://hunared.org/referral-program",
-      label: "Referral Program",
+      label: "Refer & Earn",
       external: true,
     },
   ],

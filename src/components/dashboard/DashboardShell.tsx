@@ -26,6 +26,7 @@ import {
   Layers,
   FolderOpen,
   Tag,
+  Sparkles,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,7 @@ function getNavItems(role: UserRole): NavItem[] {
       { href: "/dashboard/team/profiles", label: "Team Profiles", icon: <Users className="h-4 w-4" /> },
       { href: "/post", label: "Post", icon: <Plus className="h-4 w-4" /> },
       { href: "/dashboard/team/bulk", label: "Bulk Post", icon: <Layers className="h-4 w-4" /> },
+      { href: "/dashboard/team/magic", label: "Magic Post", icon: <Sparkles className="h-4 w-4" /> },
       { href: "/dashboard/jobs", label: "My Job Posts", icon: <Briefcase className="h-4 w-4" />, exact: true },
       { href: "/dashboard/market", label: "My Listings", icon: <ShoppingBag className="h-4 w-4" />, exact: true },
       { href: "/dashboard/articles", label: "My Articles", icon: <BookOpen className="h-4 w-4" /> },
@@ -264,7 +266,7 @@ export function DashboardShell({
 
       {/* Main — flex-1 fills remaining width; sits flush against sidebar */}
       <main className="min-h-dvh min-w-0 flex-1 pt-14 md:pt-0">
-        <div className="w-full px-3 py-4 sm:px-5 lg:px-6 pb-10 max-w-full overflow-x-hidden">
+        <div className="w-full px-4 py-5 sm:px-5 lg:px-6 pb-10">
           {children}
         </div>
       </main>

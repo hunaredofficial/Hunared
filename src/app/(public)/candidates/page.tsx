@@ -99,8 +99,8 @@ export default async function CandidatesPage({
       {/* Header — same pattern as Jobs */}
       <section className="border-b border-border bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-            <div>
+          <div className="flex flex-row items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Talent</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0
@@ -108,6 +108,13 @@ export default async function CandidatesPage({
                   : "Find talent ready to work"}
               </p>
             </div>
+            <Button
+              size="sm"
+              className="shrink-0 h-8 px-3 text-xs font-semibold rounded-md"
+              asChild
+            >
+              <Link href="/register?goal=seeker">Create profile</Link>
+            </Button>
           </div>
         </div>
       </section>
