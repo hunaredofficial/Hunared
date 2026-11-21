@@ -31,7 +31,7 @@ import { CityCombobox } from "@/components/shared/CityCombobox";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
 
-export type CompSort = "" | "comp_asc" | "comp_desc";
+export type CompSort = "" | "comp_asc" | "comp_desc" | "for_you";
 export type DateOrder = "" | "newest" | "oldest";
 
 const PAYOUT_OPTIONS = [
@@ -385,21 +385,38 @@ export function JobsFilter({
             onSelect={() => setPosted(o.value)}
           />
         ))}
-        <p className="text-xs text-muted-foreground px-2 mt-2 mb-1">Sort by date</p>
+        <p className="text-xs text-muted-foreground px-2 mt-2 mb-1">Sort order</p>
         <RadioRow
-          checked={dateOrder === ""}
-          label="Default"
-          onSelect={() => setDateOrder("")}
+          checked={compSort === "for_you"}
+          label="Recommended"
+          onSelect={() => {
+            setCompSort("for_you");
+            setDateOrder("");
+          }}
+        />
+        <RadioRow
+          checked={compSort !== "for_you" && dateOrder === ""}
+          label="Newest First"
+          onSelect={() => {
+            if (compSort === "for_you") setCompSort("");
+            setDateOrder("");
+          }}
         />
         <RadioRow
           checked={dateOrder === "newest"}
-          label="Newest First"
-          onSelect={() => setDateOrder("newest")}
+          label="Newest only"
+          onSelect={() => {
+            if (compSort === "for_you") setCompSort("");
+            setDateOrder("newest");
+          }}
         />
         <RadioRow
           checked={dateOrder === "oldest"}
           label="Oldest First"
-          onSelect={() => setDateOrder("oldest")}
+          onSelect={() => {
+            if (compSort === "for_you") setCompSort("");
+            setDateOrder("oldest");
+          }}
         />
       </Section>
 
@@ -456,7 +473,11 @@ export function JobsFilter({
       )}
       {compSort && (
         <Badge variant="secondary" className="gap-1 text-xs">
-          {compSort === "comp_asc" ? "Pay ↑" : "Pay ↓"}
+          {compSort === "for_you"
+            ? "Recommended"
+            : compSort === "comp_asc"
+              ? "Pay ↑"
+              : "Pay ↓"}
           <button type="button" onClick={() => { setCompSort(""); applyQuick({ sort: "" }); }} aria-label="Remove">
             <X className="h-3 w-3" />
           </button>
@@ -655,7 +676,7 @@ export function JobsFilter({
   /* ─── BAR VARIANT (default — horizontal + sheet) ──────────── */
   return (
     <div className="space-y-3">
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap [&>*]:w-full sm:[&>*]:w-auto">
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -686,7 +707,7 @@ export function JobsFilter({
             applyQuick({ category: val });
           }}
         >
-          <SelectTrigger className="w-full sm:w-[180px] cursor-pointer">
+          <SelectTrigger className="sm:w-[180px] cursor-pointer">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent className="bg-background text-foreground border-border">
@@ -710,7 +731,7 @@ export function JobsFilter({
             applyQuick({ country: val, city: "" });
           }}
         >
-          <SelectTrigger className="w-full sm:w-[200px] cursor-pointer">
+          <SelectTrigger className="sm:w-[200px] cursor-pointer">
             <SelectValue placeholder="All countries">
               {country
                 ? COUNTRIES.find((c) => c.code === country)?.name ?? country
@@ -734,7 +755,7 @@ export function JobsFilter({
           country={country}
           value={city}
           onChange={setCity}
-          className="w-full sm:w-[160px]"
+          className="sm:w-[160px]"
           size="sm"
           variant="select"
         />

@@ -159,11 +159,13 @@ export default async function JobsPage({
     // Auth / DB optional — fall back to non-personalized
   }
 
-  // Personalization forces in-memory ranking when user is signed in and no explicit sort
-  const usePersonalSort =
-    isPersonalized && !sort && !dateOrder;
+  // Default feed: Premium → newest → oldest.
+  // Opt-in "For you" (?sort=for_you): Premium → profile/profession/interests rank → date.
+  const useForYou = sort === "for_you";
+  const usePersonalSort = useForYou && isPersonalized && !!profile;
 
   const needsInMemory =
+    useForYou ||
     sort === "comp_asc" ||
     sort === "comp_desc" ||
     sort === "rate_asc" ||
@@ -172,7 +174,7 @@ export default async function JobsPage({
     !!posted ||
     !!experience ||
     dateOrder === "oldest" ||
-    usePersonalSort;
+    dateOrder === "newest";
 
   let jobs: (Partial<Job> & { _matchScore?: number })[] = [];
   let promotedIdSet = new Set<string>();
@@ -189,7 +191,8 @@ export default async function JobsPage({
         { count: "exact" }
       )
       .eq("status", "approved")
-      .is("closed_at", null);
+      .is("closed_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
     if (category) query = query.eq("category", category);
     if (country) query = query.eq("country", country);
@@ -280,31 +283,60 @@ export default async function JobsPage({
         );
       }
 
-      // Premium-promoted jobs always first (higher bid → newer if same bid)
+      // Premium first, then either For-you rank or publish date
       const promotedIds = await getPromotedJobIds(supabase);
       promotedIdSet = new Set(promotedIds);
-      rows = promoteToFront(rows, promotedIds);
 
-      // Personalization: rank by profile match when signed in
+      const ascending = dateOrder === "oldest";
+      const byDate = (
+        a: { created_at?: string | null },
+        b: { created_at?: string | null }
+      ) => {
+        const ta = new Date(a.created_at ?? 0).getTime();
+        const tb = new Date(b.created_at ?? 0).getTime();
+        return ascending ? ta - tb : tb - ta;
+      };
+
+      const isCompSort =
+        sort === "comp_asc" ||
+        sort === "comp_desc" ||
+        sort === "rate_asc" ||
+        sort === "rate_desc";
+
+      const promoted = promoteToFront(
+        rows.filter((j) => promotedIdSet.has(j.id)),
+        promotedIds
+      );
+      let organic = rows.filter((j) => !promotedIdSet.has(j.id));
+
       if (usePersonalSort && profile) {
-        // Keep bid-ordered promoted at top, personalize the rest
-        const promoted = promoteToFront(
-          rows.filter((j) => promotedIdSet.has(j.id)),
-          promotedIds
-        );
-        const rest = rows.filter((j) => !promotedIdSet.has(j.id));
-        const rankedRest = rankByPersonalization(rest, (j) =>
+        // For you: rank by profession + job_interests (+ location/skill), then date
+        organic = rankByPersonalization(organic, (j) =>
           scoreJob(j as Parameters<typeof scoreJob>[0], profile, savedJobIds)
         );
-        const ranked = [...promoted, ...rankedRest];
-        total = ranked.length;
-        jobs = ranked.slice(from, from + limit);
-      } else {
-        total = rows.length;
-        jobs = rows.slice(from, from + limit);
+      } else if (!isCompSort) {
+        organic = [...organic].sort(byDate);
       }
+
+      let ordered: typeof rows = [...promoted, ...organic];
+      // Always attach scores for optional "For you" badges when profile exists
+      if (profile) {
+        ordered = ordered.map((j) => ({
+          ...j,
+          _matchScore:
+            (j as { _matchScore?: number })._matchScore ??
+            scoreJob(
+              j as Parameters<typeof scoreJob>[0],
+              profile,
+              savedJobIds
+            ),
+        }));
+      }
+
+      total = ordered.length;
+      jobs = ordered.slice(from, from + limit);
     } else {
-      // DB-side order + inject ALL active promotions on page 1
+      // DB-side: premium first, then publish date (newest → oldest by default)
       const ascending = dateOrder === "oldest";
       const promotedIdsDb = await getPromotedJobIds(supabase);
       promotedIdSet = new Set(promotedIdsDb);
@@ -322,6 +354,7 @@ export default async function JobsPage({
         if (city) pq = pq.ilike("city", `%${city}%`);
         if (employmentType) pq = pq.eq("employment_type", employmentType);
         const { data: promoData } = await pq;
+        // Keep premium bid order from getPromotedJobIds
         promotedRows = promoteToFront(promoData ?? [], promotedIdsDb);
       }
 
@@ -331,16 +364,25 @@ export default async function JobsPage({
       const { data, count } = await query;
       const organic = (data ?? []).filter((j) => !promotedIdSet.has(j.id));
 
+      // Attach optional match scores for badges (order unchanged)
+      const attachScore = (list: typeof jobs) => {
+        if (!profile) return list;
+        return list.map((j) => ({
+          ...j,
+          _matchScore: scoreJob(
+            j as Parameters<typeof scoreJob>[0],
+            profile,
+            savedJobIds
+          ),
+        }));
+      };
+
       if (page <= 1) {
-        // All promotions (any user, any bid) at top, then organic fill
-        const merged = [...promotedRows, ...organic];
-        jobs = merged.slice(0, limit);
+        jobs = attachScore([...promotedRows, ...organic]).slice(0, limit);
       } else {
-        jobs = organic;
+        jobs = attachScore(organic);
       }
-      // total counts organic + promoted so pagination stays sane
-      total = (count ?? 0) + (page <= 1 ? 0 : 0);
-      if (count != null) total = count;
+      total = count ?? 0;
     }
   } catch {
     // DB not configured — show empty state
@@ -353,7 +395,8 @@ export default async function JobsPage({
     country ||
     city ||
     employmentType ||
-    sort ||
+    (sort && sort !== "for_you") ||
+    useForYou ||
     payout ||
     durationFilter ||
     posted ||
@@ -379,19 +422,14 @@ export default async function JobsPage({
                 {total > 0
                   ? `${total.toLocaleString()} opportunit${total !== 1 ? "ies" : "y"}`
                   : "Find your next opportunity"}
-                {isPersonalized && usePersonalSort && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-primary text-sm font-medium">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Personalized for you
+                {useForYou && isPersonalized && (
+                  <span className="ml-2 text-primary text-sm font-medium">
+                    · matched to your profile
                   </span>
                 )}
               </p>
             </div>
-            <Button
-              size="sm"
-              className="shrink-0 h-8 px-3 text-xs font-semibold rounded-md"
-              asChild
-            >
+            <Button size="sm" className="shrink-0 font-semibold" asChild>
               <Link href="/dashboard/jobs/new">Post a Job</Link>
             </Button>
           </div>
@@ -447,8 +485,8 @@ export default async function JobsPage({
               />
             </div>
 
-            {/* Result meta */}
-            <div className="flex items-center justify-between gap-3 mb-4">
+                        {/* Result meta */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <p className="text-sm text-muted-foreground">
                 {total} result{total !== 1 ? "s" : ""}
                 {search && ` for "${search}"`}
@@ -456,6 +494,7 @@ export default async function JobsPage({
                 {employmentType && ` · ${employmentType.replace("_", " ")}`}
                 {activeCountry && ` · ${activeCountry.name}`}
                 {city && ` · ${city}`}
+                {useForYou && isPersonalized ? " · Recommended" : ""}
               </p>
             </div>
 
@@ -472,7 +511,7 @@ export default async function JobsPage({
               <>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr">
                   {jobs.map((job) => (
-                    <JobCard key={job.id} job={job} isPromoted={promotedIdSet.has(job.id)} />
+                    <JobCard key={job.id} job={job} isPromoted={promotedIdSet.has(job.id)} showRecommended={useForYou && isPersonalized} />
                   ))}
                 </div>
 
@@ -539,9 +578,12 @@ export default async function JobsPage({
 function JobCard({
   job,
   isPromoted = false,
+  showRecommended = false,
 }: {
   job: Partial<Job> & { _matchScore?: number };
   isPromoted?: boolean;
+  /** Only true when user opted into Recommended (For you) filter */
+  showRecommended?: boolean;
 }) {
   const createdAt = job.created_at
     ? new Date(job.created_at).toLocaleDateString("en-GB", {
@@ -556,7 +598,7 @@ function JobCard({
     (job.salary_type === "Negotiable" ? "Negotiable" : "") ||
     "";
 
-  const isRecommended = (job._matchScore ?? 0) >= 25;
+  const isRecommended = showRecommended && (job._matchScore ?? 0) >= 25;
 
   const empLabel = job.employment_type
     ? job.employment_type.toLowerCase() === "permanent"
@@ -586,12 +628,7 @@ function JobCard({
       <CardContent className={cn("p-4 flex flex-col h-full gap-3", isPromoted && "pt-8")}>
         {/* Top: badges */}
         <div className="flex items-center gap-1.5 flex-wrap min-h-[1.25rem]">
-          {isRecommended && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-semibold tracking-wide">
-              <Sparkles className="h-3 w-3" />
-              For you
-            </span>
-          )}
+          {/* recommended ring only — no For you chip on cards */}
           {job.category && (
             <span
               className={cn(
