@@ -663,7 +663,7 @@ export function CompaniesDirectory() {
         const all: CompanyRecord[] = [];
         let total = 0;
         let pageNum = 1;
-        const maxPages = 5; // up to 1000 rows
+        const maxPages = 10; // up to 1000 rows
         while (pageNum <= maxPages) {
           const params = new URLSearchParams(base);
           params.set("page", String(pageNum));
@@ -883,10 +883,10 @@ export function CompaniesDirectory() {
       {/* Compact header — same idea as Jobs */}
       <section className="border-b border-border bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-          <div className="flex flex-row items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                <span className="text-white">Companies</span>
+                <span className="gradient-text">Companies</span>
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {remoteLoading

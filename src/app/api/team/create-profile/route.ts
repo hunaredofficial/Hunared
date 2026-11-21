@@ -6,6 +6,41 @@ import { slugifyCompany } from "@/lib/team-profiles";
 import type { UserRole } from "@/types/database";
 import { randomUUID } from "crypto";
 
+
+const COUNTRY_CODE_MAP: Record<string, string> = {
+  "Saudi Arabia": "SA",
+  "United Arab Emirates": "AE",
+  UAE: "AE",
+  Qatar: "QA",
+  Kuwait: "KW",
+  Bahrain: "BH",
+  Oman: "OM",
+  Egypt: "EG",
+  Jordan: "JO",
+  India: "IN",
+  Pakistan: "PK",
+  "United Kingdom": "GB",
+  "United States": "US",
+  USA: "US",
+  Germany: "DE",
+  France: "FR",
+  Singapore: "SG",
+  Malaysia: "MY",
+  Indonesia: "ID",
+  Philippines: "PH",
+  China: "CN",
+  Japan: "JP",
+  "South Korea": "KR",
+  Australia: "AU",
+  Canada: "CA",
+  Turkey: "TR",
+  Nigeria: "NG",
+  Kenya: "KE",
+  "South Africa": "ZA",
+  Brazil: "BR",
+  Mexico: "MX",
+};
+
 async function requireTeam(userId: string) {
   const supabase = createAdminClient();
   const { data: caller } = await supabase
@@ -238,12 +273,17 @@ export async function POST(req: Request) {
           : null,
         phone: body.phone || null,
         headquarters_country: body.country || null,
+        headquarters_country_code:
+          (body.country && COUNTRY_CODE_MAP[body.country]) || null,
         headquarters_city: body.city || null,
         headquarters_address: body.company_address || null,
         industry: Array.isArray(body.industries) ? body.industries : [],
         services: Array.isArray(body.services) ? body.services : [],
+        services_count: Array.isArray(body.services) ? body.services.length : 0,
         verification_status: "verified",
         status: "active",
+        is_hiring: false,
+        is_featured: false,
         team_managed: true,
         created_by_team_id: userId,
         logo_url: body.avatar_url || null,

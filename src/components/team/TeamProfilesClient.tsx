@@ -264,14 +264,16 @@ export function TeamProfilesClient() {
   async function addGulfCompanies() {
     if (seedingGulf) return;
     const ok = window.confirm(
-      "Add 50 Gulf companies to Team Profiles? This creates the same company profiles as Create full profile (Company). Names that already exist will still create a new entry if username differs — continue?"
+      "Add 200 companies (100 Gulf + 100 Worldwide) to Team Profiles? This creates the same company profiles as Create full profile (Company). Names that already exist will still create a new entry if username differs — continue?"
     );
     if (!ok) return;
     setSeedingGulf(true);
     let created = 0;
     let failed = 0;
     try {
-      for (const c of GULF_COMPANY_PROFILES) {
+      const total = GULF_COMPANY_PROFILES.length;
+      for (let i = 0; i < total; i++) {
+        const c = GULF_COMPANY_PROFILES[i];
         try {
           const res = await fetch("/api/team/create-profile", {
             method: "POST",
@@ -303,6 +305,9 @@ export function TeamProfilesClient() {
             console.warn("Gulf company failed", c.company_name, data.error);
           } else {
             created += 1;
+            if (created % 25 === 0) {
+              toast.message(`Added ${created}/${total} companies…`);
+            }
           }
         } catch (err) {
           failed += 1;
@@ -310,7 +315,7 @@ export function TeamProfilesClient() {
         }
       }
       if (created > 0) {
-        toast.success(`${created} Gulf companies added to Team Profiles` + (failed ? ` (${failed} failed)` : ""));
+        toast.success(`${created} companies added to Team Profiles & Companies directory` + (failed ? ` (${failed} failed)` : ""));
       } else {
         toast.error(failed ? `None created (${failed} failed)` : "No companies created");
       }
@@ -352,7 +357,7 @@ export function TeamProfilesClient() {
           ) : (
             <>
               <Plus className="h-4 w-4 mr-1.5" />
-              Add 50 Gulf companies
+              Add 200 companies (Gulf + World)
             </>
           )}
         </Button>
