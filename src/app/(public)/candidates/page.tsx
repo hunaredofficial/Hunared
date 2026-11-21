@@ -108,12 +108,8 @@ export default async function CandidatesPage({
                   : "Find talent ready to work"}
               </p>
             </div>
-            <Button
-              size="sm"
-              className="shrink-0 h-8 px-3 text-xs font-semibold rounded-md"
-              asChild
-            >
-              <Link href="/register?goal=seeker">Create profile</Link>
+            <Button size="sm" className="shrink-0 font-semibold" asChild>
+              <Link href="/register?goal=seeker">Add Candidate</Link>
             </Button>
           </div>
         </div>

@@ -883,8 +883,8 @@ export function CompaniesDirectory() {
       {/* Compact header — same idea as Jobs */}
       <section className="border-b border-border bg-muted/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-            <div>
+          <div className="flex flex-row items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 <span className="text-white">Companies</span>
               </h1>
