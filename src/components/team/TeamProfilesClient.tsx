@@ -264,66 +264,46 @@ export function TeamProfilesClient() {
   async function addGulfCompanies() {
     if (seedingGulf) return;
     const ok = window.confirm(
-      "Add 200 companies (100 Gulf + 100 Worldwide) to Team Profiles? This creates the same company profiles as Create full profile (Company). Names that already exist will still create a new entry if username differs — continue?"
+      "Add up to 200 companies (100 Gulf + 100 Worldwide) as Team Profiles? Existing company names will be skipped. This may take up to a minute."
     );
     if (!ok) return;
     setSeedingGulf(true);
-    let created = 0;
-    let failed = 0;
     try {
-      const total = GULF_COMPANY_PROFILES.length;
-      for (let i = 0; i < total; i++) {
-        const c = GULF_COMPANY_PROFILES[i];
-        try {
-          const res = await fetch("/api/team/create-profile", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              role: "employer",
-              full_name: c.company_name,
-              company_name: c.company_name,
-              username: c.username,
-              email: c.email,
-              phone: c.phone,
-              country: c.country,
-              city: c.city,
-              location: [c.city, c.country].filter(Boolean).join(", "),
-              company_address: c.company_address,
-              company_location: [c.city, c.country].filter(Boolean).join(", "),
-              company_website: c.company_website,
-              company_cr: c.company_cr,
-              industries: c.industries,
-              services: c.services,
-              short_description: c.short_description,
-              company_about: c.company_about,
-              listed_publicly: true,
-            }),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            failed += 1;
-            console.warn("Gulf company failed", c.company_name, data.error);
-          } else {
-            created += 1;
-            if (created % 25 === 0) {
-              toast.message(`Added ${created}/${total} companies…`);
-            }
-          }
-        } catch (err) {
-          failed += 1;
-          console.warn("Gulf company error", c.company_name, err);
-        }
+      const res = await fetch("/api/team/bulk-company-profiles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ region: "all", limit: 200 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed (${res.status})`);
       }
+      const created = Number(data.created || 0);
+      const skipped = Number(data.skipped || 0);
+      const failed = Number(data.failed || 0);
       if (created > 0) {
-        toast.success(`${created} companies added to Team Profiles & Companies directory` + (failed ? ` (${failed} failed)` : ""));
+        toast.success(
+          `${created} companies created` +
+            (skipped ? `, ${skipped} skipped (already exist)` : "") +
+            (failed ? `, ${failed} failed` : "")
+        );
+      } else if (skipped > 0) {
+        toast.message(`All ${skipped} already exist — nothing new to add`);
       } else {
-        toast.error(failed ? `None created (${failed} failed)` : "No companies created");
+        const firstErr = data.errors?.[0]?.error || data.error || "Unknown error";
+        toast.error(`No companies created. ${firstErr}`);
+      }
+      if (data.errors?.length) {
+        console.warn("bulk-company-profiles errors", data.errors);
       }
       void load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bulk create failed");
     } finally {
       setSeedingGulf(false);
     }
   }
+
   const inputCls =
     "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
   const labelCls = "text-xs space-y-1.5 block";
