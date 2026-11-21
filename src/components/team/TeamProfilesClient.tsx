@@ -12,6 +12,7 @@ import {
   recommendServicesForIndustries,
   allServices,
 } from "@/lib/industryServiceRecommendations";
+import { GULF_COMPANY_PROFILES } from "@/lib/gulfCompanyProfiles";
 
 type Row = {
   id: string;
@@ -62,6 +63,7 @@ export function TeamProfilesClient() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
+  const [seedingGulf, setSeedingGulf] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -258,6 +260,65 @@ export function TeamProfilesClient() {
     }
   }
 
+
+  async function addGulfCompanies() {
+    if (seedingGulf) return;
+    const ok = window.confirm(
+      "Add 50 Gulf companies to Team Profiles? This creates the same company profiles as Create full profile (Company). Names that already exist will still create a new entry if username differs — continue?"
+    );
+    if (!ok) return;
+    setSeedingGulf(true);
+    let created = 0;
+    let failed = 0;
+    try {
+      for (const c of GULF_COMPANY_PROFILES) {
+        try {
+          const res = await fetch("/api/team/create-profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              role: "employer",
+              full_name: c.company_name,
+              company_name: c.company_name,
+              username: c.username,
+              email: c.email,
+              phone: c.phone,
+              country: c.country,
+              city: c.city,
+              location: [c.city, c.country].filter(Boolean).join(", "),
+              company_address: c.company_address,
+              company_location: [c.city, c.country].filter(Boolean).join(", "),
+              company_website: c.company_website,
+              company_cr: c.company_cr,
+              industries: c.industries,
+              services: c.services,
+              short_description: c.short_description,
+              company_about: c.company_about,
+              listed_publicly: true,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            failed += 1;
+            console.warn("Gulf company failed", c.company_name, data.error);
+          } else {
+            created += 1;
+          }
+        } catch (err) {
+          failed += 1;
+          console.warn("Gulf company error", c.company_name, err);
+        }
+      }
+      if (created > 0) {
+        toast.success(`${created} Gulf companies added to Team Profiles` + (failed ? ` (${failed} failed)` : ""));
+      } else {
+        toast.error(failed ? `None created (${failed} failed)` : "No companies created");
+      }
+      void load();
+    } finally {
+      setSeedingGulf(false);
+    }
+  }
   const inputCls =
     "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
   const labelCls = "text-xs space-y-1.5 block";
@@ -266,13 +327,35 @@ export function TeamProfilesClient() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Create <strong>separate</strong> candidate or company profiles for publishing —
-          without email/phone verification. This never changes your own Team login profile
-          (use <strong>My Profile</strong> only for your account).
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create <strong>separate</strong> candidate or company profiles for publishing —
+            without email/phone verification. This never changes your own Team login profile
+            (use <strong>My Profile</strong> only for your account).
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          disabled={seedingGulf}
+          onClick={() => void addGulfCompanies()}
+        >
+          {seedingGulf ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              Adding…
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add 50 Gulf companies
+            </>
+          )}
+        </Button>
       </div>
 
       <section
