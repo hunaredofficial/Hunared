@@ -62,7 +62,6 @@ export function TeamProfilesClient() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
-  const [seedingGulf, setSeedingGulf] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -260,28 +259,6 @@ export function TeamProfilesClient() {
   }
 
 
-  async function seedGulfCompanies() {
-    if (seedingGulf) return;
-    const ok = window.confirm(
-      "Create 50 Gulf company profiles (team-managed)? Existing names will be skipped."
-    );
-    if (!ok) return;
-    setSeedingGulf(true);
-    try {
-      const res = await fetch("/api/team/seed-gulf-companies", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Seed failed");
-      toast.success(
-        `Gulf companies: ${data.created} created, ${data.skipped} skipped` +
-          (data.errors ? `, ${data.errors} errors` : "")
-      );
-      void load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Seed failed");
-    } finally {
-      setSeedingGulf(false);
-    }
-  }
 
   const inputCls =
     "w-full h-10 rounded-md border border-input bg-background px-3 text-sm";
@@ -291,35 +268,13 @@ export function TeamProfilesClient() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create <strong>separate</strong> candidate or company profiles for publishing —
-            without email/phone verification. This never changes your own Team login profile
-            (use <strong>My Profile</strong> only for your account).
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          disabled={seedingGulf}
-          onClick={() => void seedGulfCompanies()}
-        >
-          {seedingGulf ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              Seeding…
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add 50 Gulf companies
-            </>
-          )}
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Team profiles</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Create <strong>separate</strong> candidate or company profiles for publishing —
+          without email/phone verification. This never changes your own Team login profile
+          (use <strong>My Profile</strong> only for your account).
+        </p>
       </div>
 
       <section
