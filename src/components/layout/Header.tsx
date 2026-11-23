@@ -405,28 +405,36 @@ export function Header() {
         className={cn(
           "lg:hidden overflow-hidden transition-all duration-300 ease-out",
           mobileOpen
-            ? "max-h-[min(88dvh,44rem)] opacity-100"
+            ? "max-h-[min(90dvh,46rem)] opacity-100"
             : "max-h-0 opacity-0 pointer-events-none"
         )}
       >
-        <div className="border-t border-border/60 bg-gradient-to-b from-card via-background to-background px-3 pt-3 pb-5 space-y-3 overflow-y-auto max-h-[min(82dvh,40rem)] overscroll-contain">
-          {/* Location chip */}
+        <div className="border-t border-border/60 bg-gradient-to-b from-card via-background to-background px-3 pt-3 pb-5 space-y-3 overflow-y-auto max-h-[min(84dvh,42rem)] overscroll-contain">
+          {/* Primary CTA — top highlight (Post) */}
+          <Link
+            href="/post"
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center justify-center gap-2.5 w-full rounded-2xl px-4 py-3.5",
+              "text-[15px] font-bold tracking-tight text-primary-foreground",
+              "bg-primary shadow-lg shadow-primary/30",
+              "ring-2 ring-primary/40 ring-offset-2 ring-offset-background",
+              "hover:opacity-95 active:scale-[0.98] transition"
+            )}
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-foreground/15">
+              <Plus className="h-4 w-4" strokeWidth={2.5} />
+            </span>
+            Post
+          </Link>
+
+          {/* Location chip — full width under Post */}
           <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-2.5 flex items-center gap-2">
             <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
             <div className="min-w-0 flex-1">
               <LocationPicker />
             </div>
           </div>
-
-          {/* Primary CTA */}
-          <Link
-            href="/post"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary shadow-md shadow-primary/25 hover:opacity-95 active:scale-[0.99] transition"
-          >
-            <Plus className="h-4 w-4" />
-            Post
-          </Link>
 
           {/* Nav accordion groups */}
           <nav className="rounded-xl border border-border/70 bg-card/60 overflow-hidden divide-y divide-border/50">
