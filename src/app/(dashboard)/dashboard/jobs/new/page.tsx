@@ -592,7 +592,7 @@ export default function PostJobPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-8">
+    <div className="max-w-4xl mx-auto space-y-6 pb-8">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
           <Link href="/dashboard/jobs">
@@ -650,7 +650,7 @@ export default function PostJobPage() {
             }}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <Field label="Job Categories *">
               <MultiSelectChips
                 options={JOB_CATEGORIES}
@@ -691,7 +691,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
@@ -736,7 +736,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -753,7 +753,7 @@ export default function PostJobPage() {
                   if (v) set("experienceLevel", v, true);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -799,7 +799,7 @@ export default function PostJobPage() {
                   markTouched("duration");
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -826,7 +826,7 @@ export default function PostJobPage() {
                     );
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Never / Keep Open" />
                 </SelectTrigger>
                 <SelectContent>
@@ -849,7 +849,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -871,7 +871,7 @@ export default function PostJobPage() {
                   set("currency", v);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -908,7 +908,7 @@ export default function PostJobPage() {
 
         {/* Company Details */}
         <Section title="Company Details">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <Field label="Company Name *">
               <Input
                 placeholder="Company or organization name"
@@ -998,11 +998,13 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-1.5 min-w-0 w-full", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      {children}
+      <div className="w-full min-w-0 [&_button]:w-full [&_input]:w-full [&_textarea]:w-full">
+        {children}
+      </div>
     </div>
   );
 }

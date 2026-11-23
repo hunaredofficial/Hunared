@@ -341,13 +341,13 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder={getListingTitlePlaceholder(category)}
               maxLength={100}
-              className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          {/* Category + Location */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          {/* Category + Location — equal two-column rows */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
+            <div className="min-w-0 w-full">
               <label className="text-sm font-medium block mb-1.5">
                 Category <span className="text-destructive">*</span>
               </label>
@@ -357,7 +357,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCategory(v);
                 }}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -369,67 +369,65 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Country <span className="text-destructive">*</span>
-                </label>
-                <Select
-                  value={country}
-                  onValueChange={(v) => {
-                    if (v) {
-                      setCountry(v);
-                      setCity("");
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select country..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  City <span className="text-destructive">*</span>
-                </label>
-                <Select
-                  value={city || undefined}
-                  onValueChange={(v) => { if (v) setCity(v); }}
-                  disabled={!country}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={country ? "Select city" : "Select country first"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getCitiesForCountry(country).map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="text-sm font-medium block mb-1.5">
-                  Location Map Link (Optional)
-                </label>
-                <input
-                  value={mapsUrl}
-                  onChange={(e) => setMapsUrl(e.target.value)}
-                  placeholder="https://maps.app.goo.gl/..."
-                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+            <div className="min-w-0 w-full">
+              <label className="text-sm font-medium block mb-1.5">
+                Country <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={country}
+                onValueChange={(v) => {
+                  if (v) {
+                    setCountry(v);
+                    setCity("");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Select country..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-0 w-full">
+              <label className="text-sm font-medium block mb-1.5">
+                City <span className="text-destructive">*</span>
+              </label>
+              <Select
+                value={city || undefined}
+                onValueChange={(v) => { if (v) setCity(v); }}
+                disabled={!country}
+              >
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder={country ? "Select city" : "Select country first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {getCitiesForCountry(country).map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-0 w-full">
+              <label className="text-sm font-medium block mb-1.5">
+                Location Map Link (Optional)
+              </label>
+              <input
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="Google Maps link (optional)"
+                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
           </div>
 
           {/* Price + Currency - Price optional for services */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <div>
               <label className="text-sm font-medium block mb-1.5">
                 Price{" "}
@@ -449,7 +447,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                     ? "e.g. 2500, Free, or leave blank"
                     : "e.g. 2500 or Free"
                 }
-                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -537,7 +535,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               onChange={(e) => setContactPhone(e.target.value)}
               placeholder="+966 5XX XXX XXXX"
               type="tel"
-              className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users

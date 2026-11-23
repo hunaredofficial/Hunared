@@ -247,7 +247,7 @@ export function EditJobForm({ job }: { job: Job }) {
             />
           </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <Field label="Category *">
               <Select
                 value={form.category}
@@ -255,7 +255,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("category", v);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -285,7 +285,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
@@ -306,7 +306,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 }}
                 disabled={!form.country}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -350,7 +350,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("experienceLevel", v);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -379,7 +379,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -409,7 +409,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }));
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -439,7 +439,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("salaryType", v);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full h-10">
                   <SelectValue placeholder="Select salary type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -474,7 +474,7 @@ export function EditJobForm({ job }: { job: Job }) {
           </Section>
 
         <Section title="Company Details">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <Field label="Company Name *">
               <Input
                 value={form.companyName}
@@ -554,11 +554,13 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-1.5 min-w-0 w-full", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      {children}
+      <div className="w-full min-w-0 [&_button]:w-full [&_input]:w-full [&_textarea]:w-full">
+        {children}
+      </div>
     </div>
   );
 }
