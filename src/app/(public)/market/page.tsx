@@ -514,8 +514,10 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
       ) : (
         <ListingCategoryIcon
           category={listing.category}
+          subcategory={listing.subcategory}
+          title={listing.title}
           boxClassName="aspect-square w-full"
-          size="md"
+          size="lg"
         />
       )}
 

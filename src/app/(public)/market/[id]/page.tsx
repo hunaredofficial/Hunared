@@ -179,7 +179,7 @@ export default async function ListingDetailPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* ── Left: Image gallery — sticky while details scroll; unsticks when grid ends (before Similar) ── */}
         <div className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start z-0">
-          <ListingGallery images={allImages} title={listing.title} category={listing.category} />
+          <ListingGallery images={allImages} title={listing.title} category={listing.category} subcategory={listing.subcategory} />
         </div>
 
         {/* ── Right: Product details (5 cols, scrolls normally) ── */}
@@ -398,7 +398,9 @@ export default async function ListingDetailPage({
                     ) : (
                       <ListingCategoryIcon
                         category={item.category}
-                        size="md"
+                        subcategory={item.subcategory}
+                        title={item.title}
+                        size="lg"
                         boxClassName="h-40 w-full"
                       />
                     )}

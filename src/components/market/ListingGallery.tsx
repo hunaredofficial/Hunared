@@ -13,12 +13,14 @@ interface ListingGalleryProps {
   title: string;
   /** Used for vector icon when there is no real photo */
   category?: string | null;
+  subcategory?: string | null;
 }
 
 export function ListingGallery({
   images: imagesProp,
   title,
   category,
+  subcategory,
 }: ListingGalleryProps) {
   const images: string[] = (
     Array.isArray(imagesProp)
@@ -34,6 +36,8 @@ export function ListingGallery({
     return (
       <ListingCategoryIcon
         category={category}
+        subcategory={subcategory}
+        title={title}
         size="lg"
         boxClassName="w-full h-[420px] rounded-2xl border border-border"
       />
