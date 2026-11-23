@@ -23,15 +23,16 @@ const FOOTER_LINKS: Record<string, FooterLink[]> = {
   Tools: [
     { href: "/post", label: "Post Ads" },
     { href: "/dashboard/cv", label: "CV Builder" },
-    { href: "/dashboard/saved", label: "My Saved" },
-    { href: "#", label: "Hunared AI", openAgent: true },
-    { href: "/dashboard/settings", label: "Settings" },
-  ],
-  Resources: [
     { href: "/finder", label: "Finder Center" },
-    { href: "/dashboard/premium-ads", label: "Premium Ads" },
     { href: "/education/resources", label: "Resources" },
-    { href: "/search", label: "Search" },
+    { href: "#", label: "Hunared AI", openAgent: true },
+  ],
+  Account: [
+    { href: "/dashboard/settings", label: "Settings" },
+    { href: "/dashboard/messages", label: "Messages" },
+    { href: "/dashboard/saved", label: "My Saved" },
+    { href: "/dashboard/notifications", label: "Notification" },
+    { href: "/dashboard/premium-ads", label: "Premium Ads" },
   ],
   Company: [
     { href: "/about", label: "About Us" },
