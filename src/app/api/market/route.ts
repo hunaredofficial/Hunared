@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { notifyCompanyFollowers } from "@/lib/notifyCompanyFollowers";
 import { LISTING_CATEGORIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { ListingCategory, ListingStatus } from "@/types/database";
@@ -159,6 +160,25 @@ export async function POST(req: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (newStatus === "approved" && data?.id) {
+    const { data: ownedCo } = await supabase
+      .from("companies")
+      .select("id, name")
+      .eq("owner_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (ownedCo?.id) {
+      void notifyCompanyFollowers(supabase, {
+        companyId: ownedCo.id,
+        companyName: ownedCo.name,
+        kind: "listing",
+        entityId: data.id,
+        title: body.title?.trim() || "New listing",
+        actorUserId: userId,
+      });
+    }
+  }
 
   return NextResponse.json({ listing: data }, { status: 201 });
 }

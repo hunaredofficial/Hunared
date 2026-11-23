@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  loadNotificationPrefs,
+  saveNotificationPrefs,
+  DEFAULT_NOTIF_PREFS,
+  type NotificationPrefs,
+} from "@/lib/notificationPrefs";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
@@ -56,6 +63,8 @@ export function SettingsClient() {
   const { setTheme, theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIF_PREFS);
+
   const [savedFlash, setSavedFlash] = useState(false);
   const [active, setActive] = useState<string>("account");
   const [s, setS] = useState<SettingsState | null>(null);
@@ -97,6 +106,7 @@ export function SettingsClient() {
   }, [setTheme]);
 
   useEffect(() => {
+    setNotifPrefs(loadNotificationPrefs());
     void load();
   }, [load]);
 
@@ -408,12 +418,94 @@ export function SettingsClient() {
           <Section
             id="notifications"
             title="Notifications"
-            desc="Email alerts (when email delivery is configured)"
+            desc="Header bell, alert types, and email (when email delivery is configured)"
           >
             <div className="space-y-1">
               <Toggle
-                label="Job & listing alerts"
-                desc="Updates about jobs or marketplace activity related to you"
+                label="Show notification icon in header"
+                desc="Bell icon next to Messages. Turn off to hide it completely."
+                checked={notifPrefs.showHeaderBell}
+                disabled={saving}
+                onChange={(v) => {
+                  const next = { ...notifPrefs, showHeaderBell: v };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <Toggle
+                label="Silence all notifications"
+                desc="No badge counts or alert emphasis until you turn this off"
+                checked={notifPrefs.silenceAll}
+                disabled={saving}
+                onChange={(v) => {
+                  const next = { ...notifPrefs, silenceAll: v };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <p className="text-[11px] text-muted-foreground pt-2 pb-1 font-medium">
+                Alert types in header
+              </p>
+              <Toggle
+                label="Subscription alerts"
+                desc="New jobs / listings matching your category subscriptions"
+                checked={notifPrefs.categories.subscriptions}
+                disabled={saving || notifPrefs.silenceAll}
+                onChange={(v) => {
+                  const next = {
+                    ...notifPrefs,
+                    categories: { ...notifPrefs.categories, subscriptions: v },
+                  };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <Toggle
+                label="Order alerts"
+                desc="Orders and purchase-related updates"
+                checked={notifPrefs.categories.orders}
+                disabled={saving || notifPrefs.silenceAll}
+                onChange={(v) => {
+                  const next = {
+                    ...notifPrefs,
+                    categories: { ...notifPrefs.categories, orders: v },
+                  };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <Toggle
+                label="Followed companies"
+                desc="When companies you follow post new jobs or listings"
+                checked={notifPrefs.categories.company}
+                disabled={saving || notifPrefs.silenceAll}
+                onChange={(v) => {
+                  const next = {
+                    ...notifPrefs,
+                    categories: { ...notifPrefs.categories, company: v },
+                  };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <Toggle
+                label="Message alerts"
+                desc="New message indicators in the notification center"
+                checked={notifPrefs.categories.messages}
+                disabled={saving || notifPrefs.silenceAll}
+                onChange={(v) => {
+                  const next = {
+                    ...notifPrefs,
+                    categories: { ...notifPrefs.categories, messages: v },
+                  };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <div className="h-px bg-border my-3" />
+              <Toggle
+                label="Job & listing emails"
+                desc="Email updates about jobs or marketplace activity related to you"
                 checked={s.email_job_alerts}
                 disabled={saving}
                 onChange={(v) => void save({ email_job_alerts: v })}

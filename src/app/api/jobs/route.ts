@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { notifyCompanyFollowers } from "@/lib/notifyCompanyFollowers";
 import { JOB_CATEGORIES, DURATIONS, SALARY_TYPES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { computeExpiresAt } from "@/lib/expiration";
@@ -249,6 +250,17 @@ export async function POST(req: Request) {
   if (error) {
     console.error("[POST /api/jobs] Supabase error:", error.message);
     return NextResponse.json({ error: "Failed to create job" }, { status: 500 });
+  }
+
+  if (jobStatus === "approved" && linkedCompanyId && data?.id) {
+    void notifyCompanyFollowers(supabase, {
+      companyId: linkedCompanyId,
+      companyName: body.companyName?.trim() || null,
+      kind: "job",
+      entityId: data.id,
+      title: body.jobTitle?.trim() || "New job",
+      actorUserId: userId,
+    });
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

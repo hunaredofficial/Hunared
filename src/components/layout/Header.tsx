@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { MessagesHeaderIcon } from "@/components/messages/MessagesHeaderIcon";
+import { NotificationsHeaderIcon } from "@/components/notifications/NotificationsHeaderIcon";
 import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
@@ -337,6 +338,8 @@ export function Header() {
             <ThemeToggle />
 
             <AgentHeaderButton />
+
+            <NotificationsHeaderIcon />
 
             <MessagesHeaderIcon />
 
