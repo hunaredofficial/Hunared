@@ -810,9 +810,8 @@ export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
   health_medical: "e.g. Blood Pressure Monitor – Digital",
 };
 
-export function getListingTitlePlaceholder(category: string | null | undefined): string {
-  if (!category) return "e.g. Enter a clear title for your listing";
-  return LISTING_TITLE_PLACEHOLDERS[category] ?? "e.g. Enter a clear title for your listing";
+export function getListingTitlePlaceholder(_category: string | null | undefined): string {
+  return "Enter a clear title for your listing";
 }
 
 /** Condition options for For Sale (filter section only — not product subcategories). */

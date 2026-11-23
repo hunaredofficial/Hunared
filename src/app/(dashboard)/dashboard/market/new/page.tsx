@@ -28,7 +28,6 @@ import {
   LISTING_CONDITION_OPTIONS,
   LOST_FOUND_STATUS_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
-  getListingDefaultImage,
   getListingTitlePlaceholder,
 } from "@/lib/constants";
 import {
@@ -518,7 +517,7 @@ function NewListingForm() {
       }
       setUploading(false);
       if (imageUrls.length === 0) {
-        imageUrls = [getListingDefaultImage(category, subcategory, title.trim())];
+        imageUrls = []; // no stock photo — UI shows category vector icon
       }
 
       const countryName =
@@ -609,10 +608,7 @@ function NewListingForm() {
             {/* Photos */}
             <div>
               <label className="text-sm font-medium block mb-1.5">
-                Photos{" "}
-                <span className="text-muted-foreground text-xs font-normal">
-                  (optional — up to 8; auto image from title/category if empty)
-                </span>
+                Photos
               </label>
               <input
                 ref={fileRef}
@@ -670,9 +666,6 @@ function NewListingForm() {
                 maxLength={100}
                 className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Tip: write product type and city in the title — category, subcategory & city fill automatically.
-              </p>
               {smartNote ? (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1.5 font-medium">
                   {smartNote}
@@ -701,7 +694,9 @@ function NewListingForm() {
                   }}
                 >
                   <SelectTrigger className="h-10 w-full">
-                    <SelectValue placeholder="Select category..." />
+                    <SelectValue placeholder="Select category...">
+                      {LISTING_CATEGORIES.find((c) => c.value === category)?.label}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {LISTING_CATEGORIES.map((c) => (
@@ -985,18 +980,44 @@ function NewListingForm() {
               </div>
             )}
 
-            {/* Contact phone + SMS verify */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Contact Phone <span className="text-destructive">*</span>
-              </label>
-              <input
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                placeholder="+966 5XX XXX XXXX"
-                type="tel"
-                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
+              <div className="min-w-0 w-full">
+                <label className="text-sm font-medium block mb-1.5">
+                  Contact Phone <span className="text-destructive">*</span>
+                </label>
+                <input
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="+966 5XX XXX XXXX"
+                  type="tel"
+                  className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div className="min-w-0 w-full">
+                <label className="text-sm font-medium block mb-1.5">
+                  Close Listing Automatically
+                </label>
+                <Select
+                  value={expiration}
+                  onValueChange={(v: string | null) => {
+                    if (v) setExpiration(v as ExpirationOptionValue);
+                  }}
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Never / Keep Open">
+                      {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
+                        "Never / Keep Open"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXPIRATION_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
 
@@ -1048,42 +1069,7 @@ function NewListingForm() {
                     Write my own
                   </Button>
                 </div>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Fill title and category to unlock a suggested description, or write your own.
-                </p>
-              )}
-            </div>
-
-
-            {/* Auto-close / expiration — same options as jobs */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Close Listing Automatically
-              </label>
-              <Select
-                value={expiration}
-                onValueChange={(v: string | null) => {
-                  if (v) setExpiration(v as ExpirationOptionValue);
-                }}
-              >
-                <SelectTrigger className="h-10 w-full">
-                  <SelectValue placeholder="Never / Keep Open">
-                    {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
-                      "Never / Keep Open"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPIRATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Optional. Leave as Never to keep the listing open until you close it.
-              </p>
+              ) : null}
             </div>
 
             <div className="flex gap-3 pt-2">

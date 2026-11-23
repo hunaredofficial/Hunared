@@ -17,7 +17,6 @@ import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import {
   LISTING_CATEGORIES,
   LISTING_CURRENCIES,
-  getListingDefaultImage,
   getListingTitlePlaceholder,
 } from "@/lib/constants";
 import {
@@ -215,7 +214,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
       let finalImageUrls = [...keptImages, ...uploadedUrls];
       if (finalImageUrls.length === 0) {
-        finalImageUrls = [getListingDefaultImage(category, listing.subcategory, title.trim())];
+        finalImageUrls = []; // category vector icon in UI when empty
       }
 
       const res = await fetch(`/api/market/${listing.id}`, {
@@ -265,10 +264,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Image gallery – now mandatory */}
           <div>
             <label className="text-sm font-medium block mb-1.5">
-              Photos{" "}
-              <span className="text-muted-foreground text-xs font-normal">
-                (optional — up to 8; auto image from title/category if empty)
-              </span>
+              Photos
             </label>
             <input
               ref={fileRef}
@@ -460,7 +456,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCurrency(v);
                 }}
               >
-                <SelectTrigger className="h-10 w-full">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -484,7 +480,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               value={listingType}
               onValueChange={(v) => setListingType(v as ListingType)}
             >
-              <SelectTrigger className="h-10 w-full">
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -553,7 +549,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 if (v) setExpiration(v as ExpirationOptionValue);
               }}
             >
-              <SelectTrigger className="h-10 w-full">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Never / Keep Open">
                   {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
                     "Never / Keep Open"}
@@ -567,9 +563,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">
-              Optional. Leave as Never to keep the listing open until you close it.
-            </p>
           </div>
 
           {/* Description */}
