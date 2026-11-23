@@ -1,25 +1,14 @@
-# Hunared — production
-# https://hunared.com
+# TEMPORARY — crawl stop for site modifications
+# Restore production rules when work is done.
 
 User-agent: *
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /api/
-Disallow: /sign-in
-Disallow: /sign-in/
-Disallow: /register
-Disallow: /register/
-Disallow: /agent
-Disallow: /agent/
+Disallow: /
 
 User-agent: Googlebot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /api/
-Disallow: /sign-in
-Disallow: /register
-Disallow: /agent
+Disallow: /
 
-Sitemap: https://hunared.com/sitemap.xml
+User-agent: Googlebot-Image
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /

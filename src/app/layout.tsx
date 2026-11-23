@@ -54,16 +54,15 @@ export const metadata: Metadata = {
     shortcut: "/assets/logos/hunared-mark-v4-32.png",
     apple: [{ url: "/assets/logos/hunared-mark-v4-192.png", sizes: "192x192", type: "image/png" }],
   },
-  // Production — allow search indexing
+  // TEMPORARY — noindex while site modifications are in progress
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
+    nocache: true,
     googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      index: false,
+      follow: false,
+      noimageindex: true,
     },
   },
   openGraph: {
