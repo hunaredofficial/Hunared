@@ -37,6 +37,7 @@ import {
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { consumeAgentPrefill, readAgentPrefill, clearAgentPrefillStorage } from "@/lib/agent/prefill";
 import { COUNTRIES } from "@/lib/countries";
+import { cn } from "@/lib/utils";
 
 const RichTextEditor = dynamic(
   () => import("@/components/ui/RichTextEditor").then((m) => m.RichTextEditor),
@@ -588,7 +589,7 @@ function NewListingForm() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Post a Listing</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -604,12 +605,10 @@ function NewListingForm() {
           <CardHeader>
             <CardTitle className="text-base">Listing Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-4">
             {/* Photos */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Photos
-              </label>
+            <div className="flex flex-col gap-1.5 min-w-0 w-full">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Photos</p>
               <input
                 ref={fileRef}
                 type="file"
@@ -650,10 +649,8 @@ function NewListingForm() {
             </div>
 
             {/* Title */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Title <span className="text-destructive">*</span>
-              </label>
+            <div className="flex flex-col gap-1.5 min-w-0 w-full">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Title *</p>
               <input
                 value={title}
                 onChange={(e) => {
@@ -675,10 +672,8 @@ function NewListingForm() {
 
             {/* Category + Subcategory */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Category <span className="text-destructive">*</span>
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category *</p>
                 <Select
                   value={category}
                   onValueChange={(v: string | null) => {
@@ -707,10 +702,8 @@ function NewListingForm() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Subcategory
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Subcategory</p>
                 <Select
                   value={subcategory}
                   onValueChange={(v: string | null) => {
@@ -743,10 +736,8 @@ function NewListingForm() {
 
             {/* Rental Period — For Rent only */}
             {category === "for_rent" && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Rental Period <span className="text-destructive">*</span>
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Rental Period *</p>
                 <Select
                   value={rentalPeriod || undefined}
                   onValueChange={(v: string | null) => {
@@ -769,10 +760,8 @@ function NewListingForm() {
 
             {/* Condition — For Sale only */}
             {category === "for_sale" && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Condition
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Condition</p>
                 <Select
                   value={condition || undefined}
                   onValueChange={(v: string | null) => {
@@ -795,10 +784,8 @@ function NewListingForm() {
 
             {/* Lost / Found status — Lost & Found only */}
             {category === "lost_found" && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Status <span className="text-destructive">*</span>
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status *</p>
                 <Select
                   value={lfStatus || undefined}
                   onValueChange={(v: string | null) => {
@@ -821,10 +808,8 @@ function NewListingForm() {
 
             {/* Country + City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Country <span className="text-destructive">*</span>
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country *</p>
                 <Select
                   value={country}
                   onValueChange={(v: string | null) => {
@@ -848,10 +833,8 @@ function NewListingForm() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  City <span className="text-destructive">*</span>
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">City *</p>
                 <CityCombobox
                   id="new-listing-city"
                   country={country}
@@ -865,9 +848,7 @@ function NewListingForm() {
 
             {/* Google Maps URL */}
             <div className="min-w-0 w-full sm:col-span-2">
-              <label className="text-sm font-medium block mb-1.5">
-                Location Map Link
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Location Map Link</p>
               <input
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
@@ -878,11 +859,8 @@ function NewListingForm() {
 
             {/* Price + Currency */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Price{" "}
-                  
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Price</p>
                 <input
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
@@ -894,10 +872,8 @@ function NewListingForm() {
                   className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  Currency
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</p>
                 <Select
                   value={currency}
                   onValueChange={(v: string | null) => {
@@ -924,9 +900,7 @@ function NewListingForm() {
             {/* Listing Type — hidden for rent, property, vehicles, wanted, free items, etc. */}
             {category && !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">
-                    Listing Type
-                  </label>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Listing Type</p>
                   <Select
                     value={listingType}
                     onValueChange={(v) => setListingType(v as ListingType)}
@@ -950,11 +924,8 @@ function NewListingForm() {
             {listingType === "affiliate" &&
               category &&
               !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
-              <div>
-                <label className="text-sm font-medium block mb-1.5">
-                  External Link / Affiliate URL{" "}
-                  <span className="text-destructive">*</span>
-                </label>
+              <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">External Link / Affiliate URL *</p>
                 <div className="relative">
                   <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <input
@@ -970,9 +941,7 @@ function NewListingForm() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
               <div className="min-w-0 w-full">
-                <label className="text-sm font-medium block mb-1.5">
-                  Contact Phone <span className="text-destructive">*</span>
-                </label>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Phone *</p>
                 <input
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
@@ -982,9 +951,7 @@ function NewListingForm() {
                 />
               </div>
               <div className="min-w-0 w-full">
-                <label className="text-sm font-medium block mb-1.5">
-                  Close Listing Automatically
-                </label>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Close Listing Automatically</p>
                 <Select
                   value={expiration}
                   onValueChange={(v: string | null) => {
@@ -1011,10 +978,8 @@ function NewListingForm() {
 
 
             {/* Description */}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Description <span className="text-destructive">*</span>
-              </label>
+            <div className="flex flex-col gap-1.5 min-w-0 w-full">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description *</p>
               <RichTextEditor
                 value={description}
                 onChange={(v) => {
@@ -1089,11 +1054,33 @@ function NewListingForm() {
   );
 }
 
+
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col gap-1.5 min-w-0 w-full", className)}>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        {label}
+      </p>
+      <div className="w-full min-w-0 [&_button]:w-full [&_input]:w-full [&_textarea]:w-full">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function NewListingPage() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-3xl mx-auto px-4 py-8 text-sm text-muted-foreground">
+        <div className="max-w-4xl mx-auto px-4 py-8 text-sm text-muted-foreground">
           Loading form…
         </div>
       }

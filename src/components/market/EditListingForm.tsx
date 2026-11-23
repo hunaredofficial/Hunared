@@ -263,9 +263,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         <CardContent className="space-y-5">
           {/* Image gallery – now mandatory */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Photos
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Photos</p>
             <input
               ref={fileRef}
               type="file"
@@ -329,9 +327,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Title */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Title <span className="text-destructive">*</span>
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Title *</p>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -344,9 +340,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Category + Location — equal two-column rows */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Category <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category *</p>
               <Select
                 value={category}
                 onValueChange={(v) => {
@@ -366,9 +360,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Country <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country *</p>
               <Select
                 value={country}
                 onValueChange={(v) => {
@@ -391,9 +383,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                City <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">City *</p>
               <Select
                 value={city || undefined}
                 onValueChange={(v) => { if (v) setCity(v); }}
@@ -410,9 +400,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Location Map Link
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Location Map Link</p>
               <input
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
@@ -425,10 +413,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Price + Currency - Price optional for services */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Price{" "}
-                
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Price{" "}</p>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
@@ -441,9 +426,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Currency
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</p>
               <Select
                 value={currency}
                 onValueChange={(v) => {
@@ -467,9 +450,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Listing type — hidden for rent, property, vehicles, wanted, free items, etc. */}
           {category && !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Listing Type
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Listing Type</p>
             <Select
               value={listingType}
               onValueChange={(v) => setListingType(v as ListingType)}
@@ -495,10 +476,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             category &&
             !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
             <div>
-              <label className="text-sm font-medium block mb-1.5">
-                External Link / Affiliate URL{" "}
-                <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">External Link / Affiliate URL{" "} *</p>
               <div className="relative">
                 <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
@@ -517,9 +495,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Contact phone */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Contact Phone
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Phone</p>
             <input
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
@@ -534,9 +510,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Auto-close */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Close Listing Automatically
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Close Listing Automatically</p>
             <Select
               value={expiration}
               onValueChange={(v) => {
@@ -561,9 +535,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Description */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Description <span className="text-destructive">*</span>
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description *</p>
             <RichTextEditor
               value={description}
               onChange={setDescription}
