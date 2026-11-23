@@ -15,7 +15,7 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
 import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
-from "@/components/market/MarketFilter";
+import { MarketFilter } from "@/components/market/MarketFilter";
 import { formatRelativePosted } from "@/lib/relativeDate";
 import { auth } from "@clerk/nextjs/server";
 import {
