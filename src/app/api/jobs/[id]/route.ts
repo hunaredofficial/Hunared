@@ -49,7 +49,8 @@ export async function PATCH(
     .single();
 
   if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
-  if (profile?.role !== "admin" && job.employer_id !== userId) {
+  const isStaff = profile?.role === "admin" || profile?.role === "team";
+  if (!isStaff && job.employer_id !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -71,7 +72,7 @@ export async function PATCH(
   }
 
   // Admin can change status freely; employers can only set 'closed'
-  if (profile?.role !== "admin") {
+  if (profile?.role !== "admin" && profile?.role !== "team") {
     if ("status" in updateData && updateData.status !== "closed") {
       delete updateData["status"];
     }
@@ -119,7 +120,8 @@ export async function DELETE(
     .single();
 
   if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
-  if (profile?.role !== "admin" && job.employer_id !== userId) {
+  const isStaff = profile?.role === "admin" || profile?.role === "team";
+  if (!isStaff && job.employer_id !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

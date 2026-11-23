@@ -17,16 +17,21 @@ export default async function EditJobPage({
   const { id } = await params;
   const supabase = createAdminClient();
 
-  // Confirm user is an employer
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userId)
     .single();
 
-  if (!profile || profile.role !== "employer") redirect("/dashboard");
+  if (!profile) redirect("/dashboard");
 
-  // Fetch the job
+  const role = profile.role;
+  const isStaff = role === "team" || role === "admin";
+  const isEmployer = role === "employer";
+
+  // Employers edit their own posts; team/admin can edit any post from My Job Posts
+  if (!isStaff && !isEmployer) redirect("/dashboard");
+
   const { data: job } = await supabase
     .from("jobs")
     .select("*")
@@ -35,8 +40,9 @@ export default async function EditJobPage({
 
   if (!job) notFound();
 
-  // Ensure the employer owns this job
-  if (job.employer_id !== userId) redirect("/dashboard/jobs");
+  if (!isStaff && job.employer_id !== userId) {
+    redirect("/dashboard/jobs");
+  }
 
   return <EditJobForm job={job as Job} />;
 }

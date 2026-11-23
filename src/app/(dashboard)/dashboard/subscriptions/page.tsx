@@ -111,18 +111,20 @@ export default function SubscriptionsPage() {
     [mktSubs]
   );
 
-  async function subscribeJob() {
-    if (!selectedJobCat) return;
+  async function subscribeJob(cat?: string) {
+    const category = (cat ?? selectedJobCat).trim();
+    if (!category) return;
     setAddingJob(true);
     try {
       const res = await fetch("/api/subscriptions/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: selectedJobCat }),
+        body: JSON.stringify({ category }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      toast.success(`Subscribed to ${selectedJobCat}`);
+      toast.success(`Subscribed to ${category}`);
+      setSelectedJobCat("");
       setSelectedJobCat("");
       await load();
     } catch (e: any) {
@@ -148,18 +150,20 @@ export default function SubscriptionsPage() {
     }
   }
 
-  async function subscribeMkt() {
-    if (!selectedMktCat) return;
+  async function subscribeMkt(cat?: string) {
+    const category = (cat ?? selectedMktCat).trim();
+    if (!category) return;
     setAddingMkt(true);
     try {
       const res = await fetch("/api/subscriptions/market", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: selectedMktCat }),
+        body: JSON.stringify({ category }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      toast.success(`Subscribed to ${listingLabel(selectedMktCat)}`);
+      toast.success(`Subscribed to ${listingLabel(category)}`);
+      setSelectedMktCat("");
       setSelectedMktCat("");
       await load();
     } catch (e: any) {
@@ -206,6 +210,88 @@ export default function SubscriptionsPage() {
         </p>
       </div>
 
+      {/* Job Category Subscriptions */}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            Job Categories
+            {jobSubs.length > 0 && (
+              <Badge variant="secondary">{jobSubs.length}</Badge>
+            )}
+          </h2>
+        </div>
+
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-sm font-medium">Tap a category to subscribe or unsubscribe</p>
+            <p className="text-xs text-muted-foreground">
+              {jobSubs.length} active · {JOB_CATEGORIES.length} total
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {JOB_CATEGORIES.map((c) => {
+              const on = subscribedJobCats.has(c);
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  disabled={addingJob}
+                  onClick={() => (on ? void unsubscribeJob(c) : void subscribeJob(c))}
+                  className={
+                    on
+                      ? "inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
+                      : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }
+                  title={on ? "Click to unsubscribe" : "Click to subscribe"}
+                >
+                  {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                  {c}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Matching jobs */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Matching jobs ({matchingJobs.length})
+          </h3>
+          {matchingJobs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No approved jobs match your subscriptions yet.
+            </p>
+          ) : (
+            <ul className="divide-y rounded-lg border">
+              {matchingJobs.map((job) => (
+                <li
+                  key={job.id}
+                  className="flex flex-wrap items-center justify-between gap-3 p-3 hover:bg-muted/30"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{job.job_title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {job.company_name} · {job.location} · {job.category}
+                      {job.salary_rate &&
+                        ` · ${formatMoney(job.salary_rate, job.currency)}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Posted {formatDate(job.created_at)}
+                    </p>
+                  </div>
+                  <Button asChild size="sm" variant="outline" className="gap-1">
+                    <Link href={`/jobs/${job.id}`}>
+                      View <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
       {/* Marketplace Category Subscriptions */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -218,61 +304,38 @@ export default function SubscriptionsPage() {
           </h2>
         </div>
 
-        <div className="flex flex-wrap gap-2 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-xs text-muted-foreground mb-1 block">
-              Subscribe to a marketplace category
-            </label>
-            <select
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              value={selectedMktCat}
-              onChange={(e) => setSelectedMktCat(e.target.value)}
-            >
-              <option value="">Select category…</option>
-              {LISTING_CATEGORIES.filter(
-                (c) => !subscribedMktCats.has(c.value)
-              ).map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-sm font-medium">Tap a category to subscribe or unsubscribe</p>
+            <p className="text-xs text-muted-foreground">
+              {mktSubs.length} active · {LISTING_CATEGORIES.length} total
+            </p>
           </div>
-          <Button
-            onClick={subscribeMkt}
-            disabled={!selectedMktCat || addingMkt}
-            size="sm"
-            className="gap-1.5"
-          >
-            <Plus className="h-4 w-4" />
-            Subscribe
-          </Button>
-        </div>
-
-        {mktSubs.length === 0 ? (
-          <p className="text-sm text-muted-foreground border rounded-lg p-4">
-            You are not subscribed to any marketplace categories yet.
-          </p>
-        ) : (
           <div className="flex flex-wrap gap-2">
-            {mktSubs.map((s) => (
-              <div
-                key={s.id}
-                className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1.5 text-sm"
-              >
-                <span>{listingLabel(s.category)}</span>
+            {LISTING_CATEGORIES.map((c) => {
+              const on = subscribedMktCats.has(c.value);
+              return (
                 <button
+                  key={c.value}
                   type="button"
-                  onClick={() => unsubscribeMkt(s.category)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Unsubscribe"
+                  disabled={addingMkt}
+                  onClick={() =>
+                    on ? void unsubscribeMkt(c.value) : void subscribeMkt(c.value)
+                  }
+                  className={
+                    on
+                      ? "inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
+                      : "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }
+                  title={on ? "Click to unsubscribe" : "Click to subscribe"}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                  {c.label}
                 </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        )}
+        </div>
 
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">
@@ -312,113 +375,6 @@ export default function SubscriptionsPage() {
                   </div>
                   <Button asChild size="sm" variant="outline" className="gap-1">
                     <Link href={`/market/${listing.id}`}>
-                      View <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      {/* Job Category Subscriptions */}
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Briefcase className="h-5 w-5" />
-            Job Categories
-            {jobSubs.length > 0 && (
-              <Badge variant="secondary">{jobSubs.length}</Badge>
-            )}
-          </h2>
-        </div>
-
-        <div className="flex flex-wrap gap-2 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-xs text-muted-foreground mb-1 block">
-              Subscribe to a job category
-            </label>
-            <select
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              value={selectedJobCat}
-              onChange={(e) => setSelectedJobCat(e.target.value)}
-            >
-              <option value="">Select category…</option>
-              {JOB_CATEGORIES.filter((c) => !subscribedJobCats.has(c)).map(
-                (c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                )
-              )}
-            </select>
-          </div>
-          <Button
-            onClick={subscribeJob}
-            disabled={!selectedJobCat || addingJob}
-            size="sm"
-            className="gap-1.5"
-          >
-            <Plus className="h-4 w-4" />
-            Subscribe
-          </Button>
-        </div>
-
-        {jobSubs.length === 0 ? (
-          <p className="text-sm text-muted-foreground border rounded-lg p-4">
-            You are not subscribed to any job categories yet.
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {jobSubs.map((s) => (
-              <div
-                key={s.id}
-                className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1.5 text-sm"
-              >
-                <span>{s.category}</span>
-                <button
-                  type="button"
-                  onClick={() => unsubscribeJob(s.category)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Unsubscribe"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Matching jobs */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Matching jobs ({matchingJobs.length})
-          </h3>
-          {matchingJobs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No approved jobs match your subscriptions yet.
-            </p>
-          ) : (
-            <ul className="divide-y rounded-lg border">
-              {matchingJobs.map((job) => (
-                <li
-                  key={job.id}
-                  className="flex flex-wrap items-center justify-between gap-3 p-3 hover:bg-muted/30"
-                >
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{job.job_title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {job.company_name} · {job.location} · {job.category}
-                      {job.salary_rate &&
-                        ` · ${formatMoney(job.salary_rate, job.currency)}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Posted {formatDate(job.created_at)}
-                    </p>
-                  </div>
-                  <Button asChild size="sm" variant="outline" className="gap-1">
-                    <Link href={`/jobs/${job.id}`}>
                       View <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
                   </Button>

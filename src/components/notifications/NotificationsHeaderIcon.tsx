@@ -141,13 +141,6 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-border">
             <span className="text-sm font-semibold">Notifications</span>
-            <Link
-              href="/dashboard/settings#notifications"
-              className="text-[11px] text-primary hover:underline"
-              onClick={() => setOpen(false)}
-            >
-              Settings
-            </Link>
           </div>
           {prefs?.silenceAll && (
             <p className="px-3 py-2 text-xs text-muted-foreground border-b border-border">
