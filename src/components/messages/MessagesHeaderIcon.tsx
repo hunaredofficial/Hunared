@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
+import { MessagesSquare } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
 /**
- * Header Messages — icon only + unread badge (no text label).
- * Signed-in only.
+ * Header Messages — messenger-style double-bubble icon (distinct from notifications bell).
+ * Signed-in only. Links to inbox.
  */
 export function MessagesHeaderIcon({ className }: { className?: string }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -57,15 +57,17 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
         "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
         "text-muted-foreground hover:text-foreground hover:bg-muted/80",
         "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        count > 0 && "text-primary",
         className
       )}
     >
-      <MessageSquare className="h-4 w-4" strokeWidth={2} />
+      {/* Messenger-style double chat bubbles — clearly different from Bell */}
+      <MessagesSquare className="h-[18px] w-[18px]" strokeWidth={2} />
       {count > 0 && (
         <span
           className={cn(
-            "absolute top-0.5 right-0.5 min-w-[0.95rem] h-[0.95rem] px-0.5",
-            "rounded-full bg-primary text-primary-foreground",
+            "absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-0.5",
+            "rounded-full bg-emerald-500 text-white",
             "text-[9px] font-bold leading-none flex items-center justify-center",
             "ring-2 ring-background pointer-events-none"
           )}

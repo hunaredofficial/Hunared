@@ -1,12 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bell, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
+import {
+  Bell,
+  Briefcase,
+  CheckCheck,
+  CreditCard,
+  ExternalLink,
+  Info,
+  Package,
+  Tag,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  categoryForType,
+  CATEGORY_META,
+  type NotifCategory,
+} from "@/lib/notificationPrefs";
 
 type Notification = {
   id: string;
@@ -18,6 +32,17 @@ type Notification = {
   is_read: boolean;
   created_at: string;
 };
+
+type FilterKey = "all" | NotifCategory;
+
+const FILTERS: { key: FilterKey; label: string; icon: typeof Bell }[] = [
+  { key: "all", label: "All", icon: Bell },
+  { key: "jobs", label: "Jobs", icon: Briefcase },
+  { key: "market", label: "Market", icon: Tag },
+  { key: "orders", label: "Orders", icon: Package },
+  { key: "subscription", label: "Subscription", icon: CreditCard },
+  { key: "system", label: "System", icon: Info },
+];
 
 function formatDate(iso: string) {
   try {
@@ -46,6 +71,7 @@ export default function NotificationsPage() {
   const [items, setItems] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterKey>("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,8 +81,8 @@ export default function NotificationsPage() {
       if (!res.ok) throw new Error(data.error);
       setItems(data.notifications ?? []);
       setUnreadCount(data.unreadCount ?? 0);
-    } catch (e: any) {
-      toast.error(e.message || "Could not load notifications");
+    } catch (e: unknown) {
+      toast.error((e as Error).message || "Could not load notifications");
     } finally {
       setLoading(false);
     }
@@ -65,6 +91,29 @@ export default function NotificationsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return items;
+    return items.filter(
+      (n) => categoryForType(n.type, n.title, n.body) === filter
+    );
+  }, [items, filter]);
+
+  const counts = useMemo(() => {
+    const c: Record<FilterKey, number> = {
+      all: items.length,
+      jobs: 0,
+      market: 0,
+      orders: 0,
+      subscription: 0,
+      system: 0,
+    };
+    for (const n of items) {
+      const cat = categoryForType(n.type, n.title, n.body);
+      c[cat] += 1;
+    }
+    return c;
+  }, [items]);
 
   async function markRead(id: string) {
     const res = await fetch("/api/notifications", {
@@ -104,7 +153,7 @@ export default function NotificationsPage() {
       body: JSON.stringify({ id }),
     });
     if (!res.ok) {
-      toast.error("Could not delete notification");
+      toast.error("Could not delete");
       return;
     }
     const wasUnread = items.find((n) => n.id === id && !n.is_read);
@@ -112,30 +161,23 @@ export default function NotificationsPage() {
     if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-12 text-center text-muted-foreground">
-        Loading notifications…
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Bell className="h-6 w-6 text-primary" />
-          Notifications
-          {unreadCount > 0 && (
-            <Badge variant="default">{unreadCount} new</Badge>
-          )}
-        </h1>
+    <div className="w-full max-w-3xl mx-auto space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {unreadCount > 0
+              ? `${unreadCount} unread`
+              : "You're all caught up"}
+          </p>
+        </div>
         {unreadCount > 0 && (
           <Button
             variant="outline"
             size="sm"
-            onClick={markAllRead}
             className="gap-1.5"
+            onClick={markAllRead}
           >
             <CheckCheck className="h-4 w-4" />
             Mark all read
@@ -143,15 +185,61 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground border rounded-lg p-6 text-center">
-          No notifications yet. Subscribe to job or marketplace categories to
-          get alerts when new items are posted.
-        </p>
+      <div className="flex flex-wrap gap-1.5">
+        {FILTERS.map(({ key, label, icon: Icon }) => {
+          const active = filter === key;
+          const n = counts[key];
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFilter(key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+              {n > 0 && (
+                <span
+                  className={cn(
+                    "min-w-[1.1rem] h-4 px-1 rounded-full text-[10px] font-bold leading-none flex items-center justify-center",
+                    active
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {n}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {loading ? (
+        <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card p-10 text-center">
+          <Bell className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+          <p className="text-sm text-muted-foreground">
+            {filter === "all"
+              ? "No notifications yet"
+              : `No ${CATEGORY_META[filter as NotifCategory]?.label ?? filter} notifications`}
+          </p>
+        </div>
       ) : (
-        <ul className="divide-y rounded-lg border">
-          {items.map((n) => {
+        <ul className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
+          {filtered.map((n) => {
             const href = entityHref(n);
+            const cat = categoryForType(n.type, n.title, n.body);
+            const CatIcon =
+              FILTERS.find((f) => f.key === cat)?.icon ?? Info;
             return (
               <li
                 key={n.id}
@@ -161,10 +249,14 @@ export default function NotificationsPage() {
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {!n.is_read && (
                       <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                     )}
+                    <span className="inline-flex items-center gap-1 rounded-md bg-muted/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <CatIcon className="h-3 w-3" />
+                      {CATEGORY_META[cat].label}
+                    </span>
                     <p className="font-medium">{n.title}</p>
                   </div>
                   {n.body && (

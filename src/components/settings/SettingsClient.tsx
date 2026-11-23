@@ -447,21 +447,35 @@ export function SettingsClient() {
                 Alert types in header
               </p>
               <Toggle
-                label="Subscription alerts"
-                desc="New jobs / listings matching your category subscriptions"
-                checked={notifPrefs.categories.subscriptions}
+                label="Jobs"
+                desc="Job matches and applications"
+                checked={notifPrefs.categories.jobs}
                 disabled={saving || notifPrefs.silenceAll}
                 onChange={(v) => {
                   const next = {
                     ...notifPrefs,
-                    categories: { ...notifPrefs.categories, subscriptions: v },
+                    categories: { ...notifPrefs.categories, jobs: v },
                   };
                   setNotifPrefs(next);
                   saveNotificationPrefs(next);
                 }}
               />
               <Toggle
-                label="Order alerts"
+                label="Market"
+                desc="Marketplace listing matches and alerts"
+                checked={notifPrefs.categories.market}
+                disabled={saving || notifPrefs.silenceAll}
+                onChange={(v) => {
+                  const next = {
+                    ...notifPrefs,
+                    categories: { ...notifPrefs.categories, market: v },
+                  };
+                  setNotifPrefs(next);
+                  saveNotificationPrefs(next);
+                }}
+              />
+              <Toggle
+                label="Orders"
                 desc="Orders and purchase-related updates"
                 checked={notifPrefs.categories.orders}
                 disabled={saving || notifPrefs.silenceAll}
@@ -475,28 +489,28 @@ export function SettingsClient() {
                 }}
               />
               <Toggle
-                label="Followed companies"
-                desc="When companies you follow post new jobs or listings"
-                checked={notifPrefs.categories.company}
+                label="Subscription"
+                desc="Premium / plan and category subscription alerts"
+                checked={notifPrefs.categories.subscription}
                 disabled={saving || notifPrefs.silenceAll}
                 onChange={(v) => {
                   const next = {
                     ...notifPrefs,
-                    categories: { ...notifPrefs.categories, company: v },
+                    categories: { ...notifPrefs.categories, subscription: v },
                   };
                   setNotifPrefs(next);
                   saveNotificationPrefs(next);
                 }}
               />
               <Toggle
-                label="Message alerts"
-                desc="New message indicators in the notification center"
-                checked={notifPrefs.categories.messages}
+                label="System"
+                desc="Platform and other system notices"
+                checked={notifPrefs.categories.system}
                 disabled={saving || notifPrefs.silenceAll}
                 onChange={(v) => {
                   const next = {
                     ...notifPrefs,
-                    categories: { ...notifPrefs.categories, messages: v },
+                    categories: { ...notifPrefs.categories, system: v },
                   };
                   setNotifPrefs(next);
                   saveNotificationPrefs(next);
