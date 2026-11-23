@@ -2,7 +2,6 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { UserPathSection } from "@/components/home/UserPathSection";
 import { MarketplacePreview } from "@/components/home/MarketplacePreview";
 import { LearningPreview } from "@/components/home/LearningPreview";
-import { HunaredProgram } from "@/components/home/HunaredProgram";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { TrustSafety } from "@/components/home/TrustSafety";
 import { CtaBanner } from "@/components/home/CtaBanner";
@@ -35,7 +34,6 @@ export default function HomePage() {
       {/* Three equal mid-page promo tiles */}
       <HomeInlineAdRow />
       <LearningPreview />
-      <HunaredProgram />
       <HowItWorks />
       <TrustSafety />
       <CtaBanner />

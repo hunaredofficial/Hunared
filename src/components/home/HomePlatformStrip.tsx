@@ -5,7 +5,6 @@ import {
   Building2,
   ShoppingBag,
   BookOpen,
-  GraduationCap,
   ArrowRight,
 } from "lucide-react";
 
@@ -40,12 +39,6 @@ const ITEMS = [
     text: "Guides for careers, safety & skills.",
     href: "/education",
   },
-  {
-    icon: GraduationCap,
-    title: "Programs",
-    text: "Training and verified credentials.",
-    href: "/program",
-  },
 ];
 
 export function HomePlatformStrip() {
@@ -66,7 +59,7 @@ export function HomePlatformStrip() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {ITEMS.map(({ icon: Icon, title, text, href }) => (
             <Link
               key={title}

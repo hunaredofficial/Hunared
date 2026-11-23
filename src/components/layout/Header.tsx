@@ -146,20 +146,6 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Learning Hub", href: "/education", desc: "Articles & knowledge" },
           { label: "Resources", href: "/education/resources", desc: "Download & share files" },
           { label: "CV Builder", href: "/dashboard/cv", desc: "Professional resume" },
-        ],
-      },
-    ],
-  },
-  {
-    type: "mega",
-    label: "Programs",
-    href: "https://hunared.org/programs",
-    columns: [
-      {
-        title: "Programs",
-        items: [
-          { label: "Hunared Program", href: "https://hunared.org/programs", desc: "Hunared programs overview" },
-          { label: "Training Courses", href: "https://hunared.org/courses", desc: "Training & certification pathways" },
           { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
         ],
       },
@@ -229,7 +215,7 @@ export function Header() {
               const isActive =
                 pathname === item.href ||
                 pathname.startsWith(item.href + "/") ||
-                (item.label === "Programs" && pathname.startsWith("/finder"));
+                false;
 
               return (
                 <div key={item.label} className="relative">
@@ -473,9 +459,7 @@ export function Header() {
                         ? Tag
                         : item.label === "Learning"
                           ? GraduationCap
-                          : item.label === "Programs"
-                            ? Sparkles
-                            : LayoutDashboard;
+                          : LayoutDashboard;
 
               return (
                 <details key={item.label} className="group/acc">

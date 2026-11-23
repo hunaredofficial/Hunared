@@ -27,16 +27,11 @@ const FOOTER_LINKS: Record<string, FooterLink[]> = {
     { href: "#", label: "Hunared AI", openAgent: true },
     { href: "/dashboard/settings", label: "Settings" },
   ],
-  Programs: [
-    { href: "https://hunared.org/programs", label: "Hunared Program", external: true },
-    { href: "https://hunared.org/programs", label: "Training Courses", external: true },
+  Resources: [
     { href: "/finder", label: "Finder Center" },
     { href: "/dashboard/premium-ads", label: "Premium Ads" },
-    {
-      href: "https://hunared.org/referral-program",
-      label: "Refer & Earn",
-      external: true,
-    },
+    { href: "/education/resources", label: "Resources" },
+    { href: "/search", label: "Search" },
   ],
   Company: [
     { href: "/about", label: "About Us" },

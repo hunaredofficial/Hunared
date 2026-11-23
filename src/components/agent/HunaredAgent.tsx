@@ -57,7 +57,6 @@ const QUICK_START = [
   { icon: Users, label: "Talent", text: "Browse talent and candidates" },
   { icon: Building2, label: "Companies", text: "Browse companies" },
   { icon: MessageSquare, label: "Messages", text: "Open my messages" },
-  { icon: GraduationCap, label: "Programs", text: "Open Hunared programs" },
   { icon: MapPin, label: "Finder", text: "Open Finder Center" },
   { icon: Settings, label: "Settings", text: "Open settings" },
 ];
@@ -105,7 +104,6 @@ function contextualSuggestions(path: string): string[] {
   if (path.startsWith("/learning") || path.startsWith("/education")) {
     return [
       "Open Training Courses",
-      "Open Programs",
       "How does learning help my career?",
     ];
   }
@@ -138,7 +136,6 @@ function contextualSuggestions(path: string): string[] {
     "Open Finder Center",
     "How do I post a job?",
     "How do I change account type?",
-    "Open Programs",
     "Is Hunared free?",
   ];
 }
