@@ -60,9 +60,11 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
       return;
     }
     load();
-    const t = window.setInterval(load, 30000);
+    const t = window.setInterval(load, 15000);
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
+    const onRefresh = () => load();
+    window.addEventListener("hunared-notif-refresh", onRefresh);
     const onVis = () => {
       if (document.visibilityState === "visible") load();
     };
@@ -70,6 +72,7 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
     return () => {
       window.clearInterval(t);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("hunared-notif-refresh", onRefresh);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [isSignedIn, load]);

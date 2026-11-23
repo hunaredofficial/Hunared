@@ -64,11 +64,19 @@ export function saveNotificationPrefs(prefs: NotificationPrefs) {
 /** Map API notification.type → category */
 export function categoryForType(type: string | null | undefined): NotifCategory {
   const t = (type || "").toLowerCase();
-  if (t.includes("subscription") || t.includes("job_alert") || t.includes("listing_alert") || t === "category")
+  if (
+    t === "job_match" ||
+    t === "listing_match" ||
+    t.includes("subscription") ||
+    t.includes("job_alert") ||
+    t.includes("listing_alert") ||
+    t === "category"
+  )
     return "subscriptions";
   if (t.includes("order") || t.includes("purchase") || t.includes("sale")) return "orders";
   if (t.includes("company") || t.includes("follow") || t === "company_update") return "company";
   if (t.includes("message") || t === "chat") return "messages";
+  // system + application → show under "other" (still visible unless silenced)
   return "other";
 }
 

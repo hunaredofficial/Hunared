@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import { notifyCompanyFollowers } from "@/lib/notifyCompanyFollowers";
+import { notifyOnListingApproved } from "@/lib/notifyJobPublish";
 import { LISTING_CATEGORIES } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { ListingCategory, ListingStatus } from "@/types/database";
@@ -162,6 +163,14 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (newStatus === "approved" && data?.id) {
+    await notifyOnListingApproved(supabase, {
+      listingId: data.id,
+      title: body.title?.trim() || "New listing",
+      category: body.category,
+      sellerId: userId,
+      notifyPublisher: true,
+    });
+
     const { data: ownedCo } = await supabase
       .from("companies")
       .select("id, name")
@@ -169,7 +178,7 @@ export async function POST(req: Request) {
       .limit(1)
       .maybeSingle();
     if (ownedCo?.id) {
-      void notifyCompanyFollowers(supabase, {
+      await notifyCompanyFollowers(supabase, {
         companyId: ownedCo.id,
         companyName: ownedCo.name,
         kind: "listing",
