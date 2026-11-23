@@ -522,7 +522,7 @@ export default function BulkClient() {
                           updateJob(i, { jobTitle: v });
                           runJobSmart(i, v, row.jobDescription);
                         }}
-                        placeholder="e.g. Senior HSE Engineer"
+                        placeholder="e.g. Job title or role name"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -577,7 +577,7 @@ export default function BulkClient() {
                         onChange={(e) =>
                           updateJob(i, { subcategory: e.target.value })
                         }
-                        placeholder="e.g. NEBOSH, IOSH"
+                        placeholder="e.g. Specialty or role type (optional)"
                       />
                     </div>
                     <div>

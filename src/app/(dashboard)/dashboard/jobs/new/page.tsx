@@ -612,7 +612,7 @@ export default function PostJobPage() {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="e.g. Senior HSE Engineer"
+              placeholder="e.g. Job title or role name"
               value={form.jobTitle}
               onChange={(e) => {
                 const v = e.target.value;
@@ -624,7 +624,7 @@ export default function PostJobPage() {
 
           <Field label="Job Description *">
             <Textarea
-              placeholder="Describe the role, responsibilities, requirements..."
+              placeholder="Describe the role, responsibilities, and requirements..."
               value={form.jobDescription}
               onChange={(e) => {
                 const v = e.target.value;
@@ -651,7 +651,7 @@ export default function PostJobPage() {
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Job Categories *" className="sm:col-span-2">
+            <Field label="Job Categories *">
               <MultiSelectChips
                 options={JOB_CATEGORIES}
                 value={form.categories}
@@ -670,9 +670,9 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Subcategory" className="sm:col-span-2">
+            <Field label="Subcategory">
               <Input
-                placeholder="e.g. NEBOSH, IOSH"
+                placeholder="e.g. Specialty, skill focus, or role type (optional)"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -706,15 +706,15 @@ export default function PostJobPage() {
 
             <Field label="City *">
               <Input
-                placeholder="e.g. Jubail"
+                placeholder="City or area"
                 value={form.city}
                 onChange={(e) => set("city", e.target.value)}
               />
             </Field>
 
-            <Field label="Work Location (Optional)" className="sm:col-span-2">
+            <Field label="Work Location (Optional)">
               <Input
-                placeholder="e.g. Project site, plant name, or area"
+                placeholder="e.g. Office, site, remote, or district (optional)"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
@@ -894,9 +894,9 @@ export default function PostJobPage() {
               <Input
                 placeholder={
                   form.salaryType === "Hourly"
-                    ? "e.g. 25 - 35"
+                    ? "e.g. 20 - 40"
                     : form.salaryType === "Monthly"
-                      ? "e.g. 6000 - 9000"
+                      ? "e.g. 5000 - 10000"
                       : "Optional amount if known"
                 }
                 value={form.salaryRate}
@@ -909,9 +909,9 @@ export default function PostJobPage() {
         {/* Company Details */}
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Company Name *" className="sm:col-span-2">
+            <Field label="Company Name *">
               <Input
-                placeholder="e.g. Aramco Projects Ltd."
+                placeholder="Company or organization name"
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
@@ -920,7 +920,7 @@ export default function PostJobPage() {
             <Field label="Company Phone">
               <Input
                 type="tel"
-                placeholder="+966 1x xxx xxxx"
+                placeholder="Phone with country code"
                 value={form.companyPhone}
                 onChange={(e) => set("companyPhone", e.target.value)}
               />
@@ -929,23 +929,23 @@ export default function PostJobPage() {
             <Field label="Company Email">
               <Input
                 type="email"
-                placeholder="hr@company.com"
+                placeholder="Contact email"
                 value={form.companyEmail}
                 onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
 
-            <Field label="Company Address (Optional)" className="sm:col-span-2">
+            <Field label="Company Address (Optional)">
               <Input
-                placeholder="Street, City, Country"
+                placeholder="Street, city, country (optional)"
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
 
-            <Field label="Company Location Link (Optional)" className="sm:col-span-2">
+            <Field label="Company Location Link (Optional)">
               <Input
-                placeholder="https://maps.google.com/... or Google Maps share link"
+                placeholder="Google Maps link (optional)"
                 value={form.mapLocation}
                 onChange={(e) => set("mapLocation", e.target.value)}
               />

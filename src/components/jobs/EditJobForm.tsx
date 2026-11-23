@@ -233,6 +233,7 @@ export function EditJobForm({ job }: { job: Job }) {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
+              placeholder="e.g. Job title or role name"
               value={form.jobTitle}
               onChange={(e) => set("jobTitle", e.target.value)}
             />
@@ -240,6 +241,7 @@ export function EditJobForm({ job }: { job: Job }) {
           <Field label="Job Description *">
             <Textarea
               rows={6}
+              placeholder="Describe the role, responsibilities, and requirements..."
               value={form.jobDescription}
               onChange={(e) => set("jobDescription", e.target.value)}
             />
@@ -267,7 +269,7 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
             <Field label="Subcategory">
               <Input
-                placeholder="e.g. NEBOSH, IOSH"
+                placeholder="e.g. Specialty, skill focus, or role type (optional)"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -320,9 +322,9 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
-            <Field label="Work Location (Optional)" className="sm:col-span-2">
+            <Field label="Work Location (Optional)">
               <Input
-                placeholder="e.g. Project site, plant name, or area"
+                placeholder="e.g. Office, site, remote, or district (optional)"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value)}
               />
@@ -473,7 +475,7 @@ export function EditJobForm({ job }: { job: Job }) {
 
         <Section title="Company Details">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Company Name *" className="col-span-full">
+            <Field label="Company Name *">
               <Input
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
@@ -493,15 +495,15 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
-            <Field label="Company Address (Optional)" className="col-span-full">
+            <Field label="Company Address (Optional)">
               <Input
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
-            <Field label="Company Location Link (Optional)" className="col-span-full">
+            <Field label="Company Location Link (Optional)">
               <Input
-                placeholder="https://maps.google.com/... or Google Maps share link"
+                placeholder="Google Maps link (optional)"
                 value={form.officeLocationLink}
                 onChange={(e) => set("officeLocationLink", e.target.value)}
               />
