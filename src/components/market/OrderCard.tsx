@@ -1,5 +1,7 @@
 "use client";
 
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
+
 import { useState, useTransition } from "react";
 import type React from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,7 +55,7 @@ export function OrderCard({ order }: { order: OrderWithListing }) {
         <CardContent className="py-4">
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
             {/* Product image */}
-            {order.marketplace_listings?.image_url ? (
+            {isListingPhotoUrl(order.marketplace_listings?.image_url) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={order.marketplace_listings.image_url}
@@ -61,9 +63,11 @@ export function OrderCard({ order }: { order: OrderWithListing }) {
                 className="h-12 w-12 rounded-lg object-cover border border-border shrink-0"
               />
             ) : (
-              <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <ShoppingBag className="h-5 w-5 text-muted-foreground/40" />
-              </div>
+              <ListingCategoryIcon
+                category={(order.marketplace_listings as { category?: string } | null)?.category}
+                size="sm"
+                boxClassName="h-12 w-12 rounded-lg border border-border shrink-0"
+              />
             )}
 
             {/* Product summary */}

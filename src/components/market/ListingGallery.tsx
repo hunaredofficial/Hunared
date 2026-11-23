@@ -1,36 +1,47 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  ListingCategoryIcon,
+  isListingPhotoUrl,
+} from "@/components/market/ListingCategoryIcon";
 
 interface ListingGalleryProps {
   /** Accepts a string[] or a single string for legacy backward compatibility. */
   images: string[] | string;
   title: string;
+  /** Used for vector icon when there is no real photo */
+  category?: string | null;
 }
 
-export function ListingGallery({ images: imagesProp, title }: ListingGalleryProps) {
-  // Normalise: legacy data may pass a single string instead of an array
-  const images: string[] = Array.isArray(imagesProp)
-    ? imagesProp
-    : imagesProp
-    ? [imagesProp]
-    : [];
+export function ListingGallery({
+  images: imagesProp,
+  title,
+  category,
+}: ListingGalleryProps) {
+  const images: string[] = (
+    Array.isArray(imagesProp)
+      ? imagesProp
+      : imagesProp
+        ? [imagesProp]
+        : []
+  ).filter((src) => isListingPhotoUrl(src));
 
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (images.length === 0) {
     return (
-      <div className="w-full h-[420px] rounded-2xl bg-muted flex items-center justify-center border border-border">
-        <ShoppingBag className="h-16 w-16 text-muted-foreground/20" />
-      </div>
+      <ListingCategoryIcon
+        category={category}
+        size="lg"
+        boxClassName="w-full h-[420px] rounded-2xl border border-border"
+      />
     );
   }
 
   return (
     <div className="space-y-3">
-      {/* Main image showcase — border hugs the image itself */}
       <div className="flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -40,7 +51,6 @@ export function ListingGallery({ images: imagesProp, title }: ListingGalleryProp
         />
       </div>
 
-      {/* Thumbnail strip — only shown when there are multiple images */}
       {images.length > 1 && (
         <div className="flex gap-2 flex-wrap">
           {images.map((src, i) => (

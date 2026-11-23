@@ -19,7 +19,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { LISTING_CATEGORIES, LISTING_CATEGORY_COLORS } from "@/lib/constants";
 import type { Listing, Profile } from "@/types/database";
-import { ListingGallery } from "@/components/market/ListingGallery";
+import { ListingGallery } from "@/components/market/ListingGallery"
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
 import { NativePurchaseSection } from "@/components/market/NativePurchaseSection";
 import { formatRelativePosted, formatPostedExact } from "@/lib/relativeDate";
 
@@ -178,7 +179,7 @@ export default async function ListingDetailPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* ── Left: Image gallery — sticky while details scroll; unsticks when grid ends (before Similar) ── */}
         <div className="lg:col-span-7 lg:sticky lg:top-24 lg:self-start z-0">
-          <ListingGallery images={allImages} title={listing.title} />
+          <ListingGallery images={allImages} title={listing.title} category={listing.category} />
         </div>
 
         {/* ── Right: Product details (5 cols, scrolls normally) ── */}
@@ -387,7 +388,7 @@ export default async function ListingDetailPage({
                     <SaveButton itemType="listing" itemId={item.id} size="sm" />
                   </div>
                   <Link href={`/market/${item.id}`} className="block">
-                    {img ? (
+                    {img && isListingPhotoUrl(img) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={img}
@@ -395,7 +396,11 @@ export default async function ListingDetailPage({
                         className="h-40 w-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
                       />
                     ) : (
-                      <div className="h-40 w-full bg-muted" />
+                      <ListingCategoryIcon
+                        category={item.category}
+                        size="md"
+                        boxClassName="h-40 w-full"
+                      />
                     )}
                     <div className="p-3 space-y-1.5">
                       <Badge className={`text-[10px] border-0 ${itemColor}`}>

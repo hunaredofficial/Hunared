@@ -14,7 +14,8 @@ import {
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
-import { MarketFilter } from "@/components/market/MarketFilter";
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
+from "@/components/market/MarketFilter";
 import { formatRelativePosted } from "@/lib/relativeDate";
 import { auth } from "@clerk/nextjs/server";
 import {
@@ -501,19 +502,21 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
           Promoted
         </span>
       )}
-      {listing.image_url ? (
+      {isListingPhotoUrl(listing.image_url) ? (
         <div className="aspect-square w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={listing.image_url}
+            src={listing.image_url!}
             alt={listing.title}
             className="object-cover w-full h-full"
           />
         </div>
       ) : (
-        <div className="aspect-square w-full bg-muted flex items-center justify-center">
-          <ShoppingBag className="h-10 w-10 text-muted-foreground/30" />
-        </div>
+        <ListingCategoryIcon
+          category={listing.category}
+          boxClassName="aspect-square w-full"
+          size="md"
+        />
       )}
 
       <div className="p-3 flex flex-col flex-1">

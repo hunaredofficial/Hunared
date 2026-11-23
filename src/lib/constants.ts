@@ -779,35 +779,35 @@ export const LISTING_CATEGORIES = [
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number]["value"];
 
 export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
-  for_sale: "e.g. Clear title for your item",
-  for_rent: "e.g. What are you offering for rent?",
-  services: "e.g. Service you provide",
-  accommodation: "e.g. Room, bedspace, or housing title",
-  property: "e.g. Property title or short description",
-  vehicles: "e.g. Vehicle make, model, and year",
-  electronics: "e.g. Device or electronics title",
-  home_furniture: "e.g. Furniture or home item title",
-  personel_workwear: "e.g. Workwear or clothing title",
-  mobiles_accessories: "e.g. Phone or accessory title",
-  tools_equipment: "e.g. Tool or equipment title",
-  industrial_materials: "e.g. Material or supply title",
-  pets_animals: "e.g. Pet or animal listing title",
-  wanted: "e.g. What are you looking for?",
-  free_items: "e.g. Free item title",
-  lost_found: "e.g. Lost or found item title",
-  events: "e.g. Event name and date",
-  business_commercial: "e.g. Business or commercial listing title",
-  offers_deals: "e.g. Offer or deal title",
-  announcements: "e.g. Announcement title",
-  donations: "e.g. Donation item title",
-  community: "e.g. Community post title",
-  education_training: "e.g. Course or training title",
-  wholesale: "e.g. Wholesale product title",
-  other: "e.g. Clear title for your listing",
-  sports_outdoors: "e.g. Sport or outdoor item title",
-  kids_baby: "e.g. Kids or baby item title",
-  food_agriculture: "e.g. Food or farm product title",
-  health_medical: "e.g. Health or medical item title",
+  for_sale: "e.g. Samsung Galaxy S24 for Sale",
+  for_rent: "e.g. Excavator for Rent – Daily Rate",
+  services: "e.g. Electrical Maintenance in Riyadh",
+  accommodation: "e.g. 2-bedroom apartment in Riyadh",
+  property: "e.g. Villa for Sale in Jeddah",
+  vehicles: "e.g. Toyota Camry 2022 – Excellent Condition",
+  electronics: "e.g. MacBook Pro 14-inch M3",
+  home_furniture: "e.g. Sofa Set – 7 Seater",
+  personel_workwear: "e.g. Safety Boots Size 42 – New",
+  mobiles_accessories: "e.g. iPhone 15 Pro Max 256GB",
+  tools_equipment: "e.g. Bosch Drill Kit – Barely Used",
+  industrial_materials: "e.g. Electrical Cables – Bulk Supply",
+  pets_animals: "e.g. Persian Cat – Vaccinated",
+  wanted: "e.g. Looking for 1BHK near Downtown",
+  free_items: "e.g. Free Office Chair – Pickup Only",
+  lost_found: "e.g. Lost iPhone near Riyadh Park",
+  events: "e.g. Networking Meetup – Riyadh 15 Sep",
+  business_commercial: "e.g. Shop Space for Lease – Al Khobar",
+  offers_deals: "e.g. 50% Off Summer Collection",
+  announcements: "e.g. Community Notice – Road Closure",
+  donations: "e.g. Donating Winter Clothes – Good Condition",
+  community: "e.g. Looking for Tennis Partner in Dammam",
+  education_training: "e.g. NEBOSH Course – Weekend Batch",
+  wholesale: "e.g. Wholesale LED Lights – Bulk Orders",
+  other: "e.g. Describe your listing in a short title",
+  sports_outdoors: "e.g. Professional Football Boots – Size 42",
+  kids_baby: "e.g. Baby Stroller – Excellent Condition",
+  food_agriculture: "e.g. Fresh Dates – Bulk Available",
+  health_medical: "e.g. Blood Pressure Monitor – Digital",
 };
 
 export function getListingTitlePlaceholder(category: string | null | undefined): string {
@@ -1965,34 +1965,14 @@ const KEYWORD_DEFAULT_IMAGES: { keys: string[]; url: string }[] = [
 ];
 
 /**
- * Resolve a default image from title + category + subcategory.
- * Always returns a product / place / object image — never people.
+ * Previously returned stock Unsplash URLs. Now returns empty string so
+ * listings without user photos use category vector icons in the UI instead
+ * of misleading stock photos.
  */
 export function getListingDefaultImage(
-  category: string,
-  subcategory?: string | null,
-  title?: string | null
+  _category: string,
+  _subcategory?: string | null,
+  _title?: string | null
 ): string {
-  const haystack = [title || "", subcategory || "", category || ""]
-    .join(" ")
-    .toLowerCase();
-
-  // Prefer longer / more specific keyword matches first
-  let bestUrl: string | null = null;
-  let bestLen = 0;
-  for (const entry of KEYWORD_DEFAULT_IMAGES) {
-    for (const key of entry.keys) {
-      if (haystack.includes(key) && key.length > bestLen) {
-        bestLen = key.length;
-        bestUrl = entry.url;
-      }
-    }
-  }
-  if (bestUrl) return bestUrl;
-
-  // Category-level curated images (no people)
-  return (
-    LISTING_CATEGORY_DEFAULT_IMAGES[category] ??
-    LISTING_CATEGORY_DEFAULT_IMAGES.other
-  );
+  return "";
 }

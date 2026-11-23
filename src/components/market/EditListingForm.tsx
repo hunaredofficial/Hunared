@@ -17,7 +17,6 @@ import { ImagePlus, X, Loader2, Link2 } from "lucide-react";
 import {
   LISTING_CATEGORIES,
   LISTING_CURRENCIES,
-  getListingDefaultImage,
   getListingTitlePlaceholder,
 } from "@/lib/constants";
 import {
@@ -215,7 +214,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
       let finalImageUrls = [...keptImages, ...uploadedUrls];
       if (finalImageUrls.length === 0) {
-        finalImageUrls = [getListingDefaultImage(category, listing.subcategory, title.trim())];
+        finalImageUrls = []; // category vector icon in UI when empty
       }
 
       const res = await fetch(`/api/market/${listing.id}`, {
@@ -267,7 +266,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <label className="text-sm font-medium block mb-1.5">
               Photos{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                (optional — up to 8; auto image from title/category if empty)
+                (optional — up to 8; category icon shown if empty)
               </span>
             </label>
             <input

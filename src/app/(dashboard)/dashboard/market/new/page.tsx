@@ -28,7 +28,6 @@ import {
   LISTING_CONDITION_OPTIONS,
   LOST_FOUND_STATUS_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
-  getListingDefaultImage,
   getListingTitlePlaceholder,
 } from "@/lib/constants";
 import {
@@ -518,7 +517,7 @@ function NewListingForm() {
       }
       setUploading(false);
       if (imageUrls.length === 0) {
-        imageUrls = [getListingDefaultImage(category, subcategory, title.trim())];
+        imageUrls = []; // no stock photo — UI shows category vector icon
       }
 
       const countryName =
@@ -611,7 +610,7 @@ function NewListingForm() {
               <label className="text-sm font-medium block mb-1.5">
                 Photos{" "}
                 <span className="text-muted-foreground text-xs font-normal">
-                  (optional — up to 8; auto image from title/category if empty)
+                  (optional — up to 8; category icon shown if empty)
                 </span>
               </label>
               <input
