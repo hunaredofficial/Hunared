@@ -11,6 +11,7 @@ import {
   Settings,
   Loader2,
   MessageSquare,
+  MessagesSquare,
   Search,
   Send,
   User,
@@ -803,7 +804,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       <div className="p-3 border-b border-border space-y-2">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-sm font-semibold flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-primary" />
+            <MessagesSquare className="h-4 w-4 text-primary" />
             Messages
           </h1>
           <button
@@ -986,7 +987,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     <div className="flex flex-col h-full bg-background">
       {!activeId ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-          <MessageSquare className="h-10 w-10 mb-3 opacity-40" />
+          <MessagesSquare className="h-10 w-10 mb-3 opacity-40" />
           <p className="text-sm font-medium text-foreground">Select a conversation</p>
           <p className="text-xs mt-1 max-w-xs">
             Or open a job, listing, or profile and click Message.

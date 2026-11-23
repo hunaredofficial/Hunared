@@ -147,7 +147,6 @@ const NAV_ITEMS: NavItem[] = [
           { label: "Learning Hub", href: "/education", desc: "Articles & knowledge" },
           { label: "Resources", href: "/education/resources", desc: "Download & share files" },
           { label: "CV Builder", href: "/dashboard/cv", desc: "Professional resume" },
-          { label: "Finder Center", href: "/finder", desc: "Lost & found community" },
         ],
       },
     ],

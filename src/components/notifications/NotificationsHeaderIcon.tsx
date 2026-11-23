@@ -167,11 +167,11 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
       {open && (
         <div
           className={cn(
-            "absolute right-0 top-full mt-1.5 z-50 w-[min(100vw-1.5rem,22rem)]",
+            "absolute right-0 top-full mt-1.5 z-50 w-[min(100vw-1.5rem,16rem)]",
             "rounded-xl border border-border bg-card shadow-xl overflow-hidden"
           )}
         >
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+          <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border">
             <span className="text-sm font-semibold">Notifications</span>
             {count > 0 && (
               <span className="text-[11px] text-muted-foreground">
@@ -188,11 +188,11 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
           )}
 
           {visible.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <p className="px-3 py-3.5 text-center text-xs text-muted-foreground">
               No new notifications
             </p>
           ) : (
-            <div className="max-h-[min(60vh,22rem)] overflow-y-auto">
+            <div className="max-h-[min(40vh,14rem)] overflow-y-auto">
               {grouped.map(([cat, list]) => {
                 const Icon = CAT_ICON[cat];
                 return (
@@ -265,7 +265,7 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
             </div>
           )}
 
-          <div className="border-t border-border px-3 py-2">
+          <div className="border-t border-border px-2.5 py-1.5">
             <Link
               href="/dashboard/notifications"
               onClick={() => setOpen(false)}
