@@ -672,7 +672,7 @@ export default function PostJobPage() {
 
             <Field label="Subcategory">
               <Input
-                placeholder="e.g. Specialty, skill focus, or role type (optional)"
+                placeholder="e.g. Specialty, skill focus, or role type"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -712,9 +712,9 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Work Location (Optional)">
+            <Field label="Work Location">
               <Input
-                placeholder="e.g. Office, site, remote, or district (optional)"
+                placeholder="e.g. Office, site, remote, or district"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
@@ -746,7 +746,7 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            <Field label="Experience Level (Optional)">
+            <Field label="Experience Level">
               <Select
                 value={form.experienceLevel || "any"}
                 onValueChange={(v: string | null) => {
@@ -769,7 +769,7 @@ export default function PostJobPage() {
               </p>
             </Field>
 
-            <Field label="Number of Positions (Optional)">
+            <Field label="Number of Positions">
               <Input
                 type="number"
                 min="1"
@@ -888,7 +888,7 @@ export default function PostJobPage() {
               label={
                 salaryAmountRequired
                   ? `Salary / Rate (${form.salaryType}) *`
-                  : "Salary / Rate (Optional)"
+                  : "Salary / Rate"
               }
             >
               <Input
@@ -897,7 +897,7 @@ export default function PostJobPage() {
                     ? "e.g. 20 - 40"
                     : form.salaryType === "Monthly"
                       ? "e.g. 5000 - 10000"
-                      : "Optional amount if known"
+                      : "Amount if known"
                 }
                 value={form.salaryRate}
                 onChange={(e) => set("salaryRate", e.target.value)}
@@ -935,17 +935,17 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Company Address (Optional)">
+            <Field label="Company Address">
               <Input
-                placeholder="Street, city, country (optional)"
+                placeholder="Street, city, country"
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
 
-            <Field label="Company Location Link (Optional)">
+            <Field label="Company Location Link">
               <Input
-                placeholder="Google Maps link (optional)"
+                placeholder="Google Maps link"
                 value={form.mapLocation}
                 onChange={(e) => set("mapLocation", e.target.value)}
               />

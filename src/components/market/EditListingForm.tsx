@@ -411,12 +411,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             </div>
             <div className="min-w-0 w-full">
               <label className="text-sm font-medium block mb-1.5">
-                Location Map Link (Optional)
+                Location Map Link
               </label>
               <input
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="Google Maps link (optional)"
+                placeholder="Google Maps link"
                 className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
@@ -427,13 +427,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <div>
               <label className="text-sm font-medium block mb-1.5">
                 Price{" "}
-                {isPriceOptional ? (
-                  <span className="text-muted-foreground text-xs font-normal">
-                    (optional)
-                  </span>
-                ) : (
-                  <span className="text-destructive">*</span>
-                )}
+                
               </label>
               <input
                 value={price}
@@ -456,7 +450,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCurrency(v);
                 }}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="h-10 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -480,7 +474,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               value={listingType}
               onValueChange={(v) => setListingType(v as ListingType)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -512,7 +506,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   onChange={(e) => setExternalLink(e.target.value)}
                   placeholder="https://example.com/product"
                   type="url"
-                  className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full h-10 pl-9 pr-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -524,7 +518,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Contact phone */}
           <div>
             <label className="text-sm font-medium block mb-1.5">
-              Contact Phone (optional)
+              Contact Phone
             </label>
             <input
               value={contactPhone}
@@ -549,7 +543,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 if (v) setExpiration(v as ExpirationOptionValue);
               }}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="h-10 w-full">
                 <SelectValue placeholder="Never / Keep Open">
                   {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
                     "Never / Keep Open"}

@@ -269,7 +269,7 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
             <Field label="Subcategory">
               <Input
-                placeholder="e.g. Specialty, skill focus, or role type (optional)"
+                placeholder="e.g. Specialty, skill focus, or role type"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -322,9 +322,9 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
-            <Field label="Work Location (Optional)">
+            <Field label="Work Location">
               <Input
-                placeholder="e.g. Office, site, remote, or district (optional)"
+                placeholder="e.g. Office, site, remote, or district"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value)}
               />
@@ -332,7 +332,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 Work site name, area or address.
               </p>
             </Field>
-            <Field label="Number of Positions (Optional)">
+            <Field label="Number of Positions">
               <Input
                 type="number"
                 min="1"
@@ -343,7 +343,7 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
-            <Field label="Experience Level (Optional)">
+            <Field label="Experience Level">
               <Select
                 value={form.experienceLevel || "any"}
                 onValueChange={(v: string | null) => {
@@ -456,14 +456,14 @@ export function EditJobForm({ job }: { job: Job }) {
               label={
                 salaryAmountRequired
                   ? `Salary / Rate (${form.salaryType}) *`
-                  : "Salary / Rate (Optional)"
+                  : "Salary / Rate"
               }
             >
               <Input
                 placeholder={
                   salaryAmountRequired
                     ? "e.g. 25 or 5000"
-                    : "Optional amount if known"
+                    : "Amount if known"
                 }
                 value={form.salaryRate}
                 onChange={(e) => set("salaryRate", e.target.value)}
@@ -495,15 +495,15 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
-            <Field label="Company Address (Optional)">
+            <Field label="Company Address">
               <Input
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
-            <Field label="Company Location Link (Optional)">
+            <Field label="Company Location Link">
               <Input
-                placeholder="Google Maps link (optional)"
+                placeholder="Google Maps link"
                 value={form.officeLocationLink}
                 onChange={(e) => set("officeLocationLink", e.target.value)}
               />

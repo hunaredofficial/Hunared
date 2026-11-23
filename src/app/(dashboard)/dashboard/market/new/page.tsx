@@ -790,9 +790,6 @@ function NewListingForm() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Optional — helps buyers filter by New, Used, Refurbished, etc.
-                </p>
               </div>
             )}
 
@@ -819,9 +816,6 @@ function NewListingForm() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Required — is this item lost or found?
-                </p>
               </div>
             )}
 
@@ -869,10 +863,10 @@ function NewListingForm() {
               </div>
             </div>
 
-            {/* Google Maps URL (Optional) */}
+            {/* Google Maps URL */}
             <div className="min-w-0 w-full sm:col-span-2">
               <label className="text-sm font-medium block mb-1.5">
-                Location Map Link (Optional)
+                Location Map Link
               </label>
               <input
                 value={mapsUrl}
@@ -887,13 +881,7 @@ function NewListingForm() {
               <div>
                 <label className="text-sm font-medium block mb-1.5">
                   Price{" "}
-                  {isPriceOptional ? (
-                    <span className="text-muted-foreground text-xs font-normal">
-                      (optional)
-                    </span>
-                  ) : (
-                    <span className="text-destructive">*</span>
-                  )}
+                  
                 </label>
                 <input
                   value={price}
@@ -908,7 +896,7 @@ function NewListingForm() {
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">
-                  Currency{" "}<span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                  Currency
                 </label>
                 <Select
                   value={currency}
@@ -974,7 +962,7 @@ function NewListingForm() {
                     onChange={(e) => setExternalLink(e.target.value)}
                     placeholder="https://example.com/product"
                     type="url"
-                    className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full h-10 pl-9 pr-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
               </div>
