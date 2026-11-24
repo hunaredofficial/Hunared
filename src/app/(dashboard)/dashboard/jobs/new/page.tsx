@@ -41,6 +41,7 @@ import {
   type SmartFillFieldKey,
 } from "@/components/jobs/SmartJobFill";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import {
   EXPIRATION_OPTIONS,
   type ExpirationOptionValue,
@@ -612,7 +613,7 @@ export default function PostJobPage() {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="e.g. Senior HSE Engineer"
+              placeholder="Enter job title"
               value={form.jobTitle}
               onChange={(e) => {
                 const v = e.target.value;
@@ -672,7 +673,7 @@ export default function PostJobPage() {
 
             <Field label="Subcategory" className="sm:col-span-2">
               <Input
-                placeholder="e.g. NEBOSH, IOSH"
+                placeholder="Specialty, skill, or focus area"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -709,16 +710,19 @@ export default function PostJobPage() {
             </Field>
 
             <Field label="City *">
-              <Input
-                placeholder="e.g. Jubail"
+              <CityCombobox
+                id="job-new-city"
+                country={form.country}
                 value={form.city}
-                onChange={(e) => set("city", e.target.value)}
+                onChange={(v) => set("city", v, true)}
+                size="md"
+                variant="select"
               />
             </Field>
 
-            <Field label="Work Location (Optional)" className="sm:col-span-2">
+            <Field label="Work Location" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Project site, plant name, or area"
+                placeholder="Office, site, remote, or district"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
@@ -750,7 +754,7 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            <Field label="Experience Level (Optional)">
+            <Field label="Experience Level">
               <Select
                 value={form.experienceLevel || "any"}
                 onValueChange={(v: string | null) => {
@@ -770,7 +774,7 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            <Field label="Number of Positions (Optional)">
+            <Field label="Number of Positions">
               <Input
                 type="number"
                 min="1"
@@ -889,7 +893,7 @@ export default function PostJobPage() {
               label={
                 salaryAmountRequired
                   ? `Salary / Rate (${form.salaryType}) *`
-                  : "Salary / Rate (Optional)"
+                  : "Salary / Rate"
               }
             >
               <Input
@@ -898,7 +902,7 @@ export default function PostJobPage() {
                     ? "e.g. 25 - 35"
                     : form.salaryType === "Monthly"
                       ? "e.g. 6000 - 9000"
-                      : "Optional amount if known"
+                      : "Amount if known"
                 }
                 value={form.salaryRate}
                 onChange={(e) => set("salaryRate", e.target.value)}
@@ -936,7 +940,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Company Address (Optional)" className="sm:col-span-2">
+            <Field label="Company Address" className="sm:col-span-2">
               <Input
                 placeholder="Street, City, Country"
                 value={form.companyAddress}
@@ -944,7 +948,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Company Location Link (Optional)" className="sm:col-span-2">
+            <Field label="Company Location Link" className="sm:col-span-2">
               <Input
                 placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.mapLocation}

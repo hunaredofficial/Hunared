@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
+import { CityCombobox } from "@/components/shared/CityCombobox";
 import type { Job } from "@/types/database";
 import Link from "next/link";
 
@@ -267,7 +268,7 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
             <Field label="Subcategory">
               <Input
-                placeholder="e.g. NEBOSH, IOSH"
+                placeholder="Specialty, skill, or focus area"
                 value={form.subcategory}
                 onChange={(e) => set("subcategory", e.target.value)}
               />
@@ -301,32 +302,19 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
 
             <Field label="City *">
-              <Select
-                value={form.city || undefined}
-                onValueChange={(v: string | null) => {
-                  if (v) set("city", v);
-                }}
-                disabled={!form.country}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(form.city && !getCitiesForCountry(form.country).includes(form.city)
-                    ? [form.city, ...getCitiesForCountry(form.country)]
-                    : getCitiesForCountry(form.country)
-                  ).map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CityCombobox
+                id="job-edit-city"
+                country={form.country}
+                value={form.city}
+                onChange={(v) => set("city", v)}
+                size="md"
+                variant="select"
+              />
             </Field>
 
-            <Field label="Work Location (Optional)" className="sm:col-span-2">
+            <Field label="Work Location" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Project site, plant name, or area"
+                placeholder="Office, site, remote, or district"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value)}
               />
@@ -334,7 +322,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 Work site name, area or address.
               </p>
             </Field>
-            <Field label="Number of Positions (Optional)">
+            <Field label="Number of Positions">
               <Input
                 type="number"
                 min="1"
@@ -345,7 +333,7 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
-            <Field label="Experience Level (Optional)">
+            <Field label="Experience Level">
               <Select
                 value={form.experienceLevel || "any"}
                 onValueChange={(v: string | null) => {
@@ -455,14 +443,14 @@ export function EditJobForm({ job }: { job: Job }) {
               label={
                 salaryAmountRequired
                   ? `Salary / Rate (${form.salaryType}) *`
-                  : "Salary / Rate (Optional)"
+                  : "Salary / Rate"
               }
             >
               <Input
                 placeholder={
                   salaryAmountRequired
                     ? "e.g. 25 or 5000"
-                    : "Optional amount if known"
+                    : "Amount if known"
                 }
                 value={form.salaryRate}
                 onChange={(e) => set("salaryRate", e.target.value)}
@@ -494,13 +482,13 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
-            <Field label="Company Address (Optional)" className="col-span-full">
+            <Field label="Company Address" className="col-span-full">
               <Input
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
-            <Field label="Company Location Link (Optional)" className="col-span-full">
+            <Field label="Company Location Link" className="col-span-full">
               <Input
                 placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.officeLocationLink}

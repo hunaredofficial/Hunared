@@ -611,7 +611,7 @@ function NewListingForm() {
               <label className="text-sm font-medium block mb-1.5">
                 Photos{" "}
                 <span className="text-muted-foreground text-xs font-normal">
-                  (optional — up to 8; auto image from title/category if empty)
+                  
                 </span>
               </label>
               <input
@@ -796,7 +796,7 @@ function NewListingForm() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Optional — helps buyers filter by New, Used, Refurbished, etc.
+                  
                 </p>
               </div>
             )}
@@ -878,10 +878,10 @@ function NewListingForm() {
               </div>
             </div>
 
-            {/* Google Maps URL (Optional) */}
+            {/* Google Maps URL */}
             <div className="col-span-full">
               <label className="text-sm font-medium block mb-1.5">
-                Location Map Link (Optional)
+                Location Map Link
               </label>
               <input
                 value={mapsUrl}
@@ -897,9 +897,6 @@ function NewListingForm() {
                 <label className="text-sm font-medium block mb-1.5">
                   Price{" "}
                   {isPriceOptional ? (
-                    <span className="text-muted-foreground text-xs font-normal">
-                      (optional)
-                    </span>
                   ) : (
                     <span className="text-destructive">*</span>
                   )}
@@ -917,7 +914,7 @@ function NewListingForm() {
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">
-                  Currency{" "}<span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                  Currency
                 </label>
                 <Select
                   value={currency}
@@ -1086,7 +1083,7 @@ function NewListingForm() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                Optional. Leave as Never to keep the listing open until you close it.
+                
               </p>
             </div>
 

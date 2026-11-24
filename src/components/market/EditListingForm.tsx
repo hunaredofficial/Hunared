@@ -267,7 +267,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <label className="text-sm font-medium block mb-1.5">
               Photos{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                (optional — up to 8; auto image from title/category if empty)
+                
               </span>
             </label>
             <input
@@ -420,7 +420,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </div>
               <div className="sm:col-span-2">
                 <label className="text-sm font-medium block mb-1.5">
-                  Location Map Link (Optional)
+                  Location Map Link
                 </label>
                 <input
                   value={mapsUrl}
@@ -438,9 +438,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               <label className="text-sm font-medium block mb-1.5">
                 Price{" "}
                 {isPriceOptional ? (
-                  <span className="text-muted-foreground text-xs font-normal">
-                    (optional)
-                  </span>
                 ) : (
                   <span className="text-destructive">*</span>
                 )}
@@ -534,7 +531,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Contact phone */}
           <div>
             <label className="text-sm font-medium block mb-1.5">
-              Contact Phone (optional)
+              Contact Phone
             </label>
             <input
               value={contactPhone}
@@ -574,7 +571,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
-              Optional. Leave as Never to keep the listing open until you close it.
+              
             </p>
           </div>
 
