@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getCitiesForCountry } from "@/lib/cities";
 import { cn } from "@/lib/utils";
-import { ChevronDown, MapPin, X } from "lucide-react";
+import { ChevronDown, MapPin } from "lucide-react";
 
 /**
  * City field: type any city name + full scrollable suggestions from country list.
@@ -215,26 +215,13 @@ export function CityCombobox({
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           className={cn(
-            "w-full pl-3.5 pr-16 focus:outline-none focus:ring-2",
+            "w-full pl-3.5 pr-9 focus:outline-none focus:ring-2",
             height,
             baseStyle,
             inputClassName
           )}
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-          {(value || query) && (
-            <button
-              type="button"
-              aria-label="Clear city"
-              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-              onClick={() => {
-                commit("");
-                inputRef.current?.focus();
-              }}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
           <ChevronDown
             className={cn(
               "h-4 w-4 text-muted-foreground pointer-events-none opacity-50 transition-transform",

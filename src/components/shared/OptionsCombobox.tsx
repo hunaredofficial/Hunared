@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 export type OptionItem = { value: string; label: string };
 
@@ -195,27 +195,14 @@ export function OptionsCombobox({
           onFocus={() => setOpen(true)}
           onClick={() => setOpen(true)}
           className={cn(
-            "w-full pr-16 focus:outline-none focus:ring-2 cursor-pointer",
+            "w-full pr-9 focus:outline-none focus:ring-2 cursor-pointer",
             leadingIcon ? "pl-9" : "pl-3.5",
             height,
             baseStyle
           )}
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-          {value && (
-            <button
-              type="button"
-              aria-label="Clear"
-              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-              onClick={(e) => {
-                e.stopPropagation();
-                commit("");
-                inputRef.current?.focus();
-              }}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+          
           <ChevronDown
             className={cn(
               "h-4 w-4 text-muted-foreground pointer-events-none opacity-50 transition-transform",
