@@ -7,6 +7,7 @@ import { COUNTRIES } from "@/lib/countries";
 import { useGeo } from "@/components/providers/GeoProvider";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { CityCombobox } from "@/components/shared/CityCombobox";
+import { OptionsCombobox } from "@/components/shared/OptionsCombobox";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -133,30 +134,25 @@ export function HeroSection() {
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3 relative z-20">
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-              <select
+              <OptionsCombobox
+                id="hero-country"
                 value={country}
-                onChange={(e) => {
-                  setCountry(e.target.value);
+                onChange={(v) => {
+                  setCountry(v);
                   setCity("");
                 }}
-                data-color-scheme="dark"
-                className="w-full h-11 sm:h-12 pl-9 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
-              >
-                <option value="" className="bg-background text-foreground">
-                  All Countries
-                </option>
-                {COUNTRIES.map((c) => (
-                  <option
-                    key={c.code}
-                    value={c.code}
-                    className="bg-background text-foreground"
-                  >
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                options={[
+                  { value: "", label: "All Countries" },
+                  ...COUNTRIES.map((c) => ({ value: c.code, label: c.name })),
+                ]}
+                placeholder="All Countries"
+                size="lg"
+                variant="hero"
+                searchable
+                leadingIcon={
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+                }
+              />
             </div>
 
             <CityCombobox
@@ -169,23 +165,16 @@ export function HeroSection() {
             />
 
             <div className="relative">
-              <select
+              <OptionsCombobox
+                id="hero-category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                data-color-scheme="dark"
-                className="w-full h-11 sm:h-12 pl-3.5 pr-8 rounded-lg border border-border bg-background text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer [color-scheme:dark]"
-              >
-                {CATEGORIES.map((c) => (
-                  <option
-                    key={c.value}
-                    value={c.value}
-                    className="bg-background text-foreground"
-                  >
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                onChange={setCategory}
+                options={CATEGORIES}
+                placeholder="All Categories"
+                size="lg"
+                variant="hero"
+                searchable={false}
+              />
             </div>
           </div>
 
