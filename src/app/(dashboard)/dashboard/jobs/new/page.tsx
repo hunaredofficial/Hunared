@@ -692,7 +692,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <span className="flex-1 truncate text-left">
                     {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
                       <span className="text-muted-foreground">Select country...</span>
@@ -717,6 +717,7 @@ export default function PostJobPage() {
                 onChange={(v) => set("city", v, true)}
                 size="md"
                 variant="select"
+                inputClassName="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
               />
             </Field>
 
@@ -744,7 +745,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -761,7 +762,7 @@ export default function PostJobPage() {
                   if (v) set("experienceLevel", v, true);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -804,7 +805,7 @@ export default function PostJobPage() {
                   markTouched("duration");
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -831,7 +832,7 @@ export default function PostJobPage() {
                     );
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Never / Keep Open" />
                 </SelectTrigger>
                 <SelectContent>
@@ -854,7 +855,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -876,7 +877,7 @@ export default function PostJobPage() {
                   set("currency", v);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
