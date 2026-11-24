@@ -889,9 +889,9 @@ export default function PostJobPage() {
               <Input
                 placeholder={
                   form.salaryType === "Hourly"
-                    ? "e.g. 25 - 35"
+                    ? "Amount or range"
                     : form.salaryType === "Monthly"
-                      ? "e.g. 6000 - 9000"
+                      ? "Amount or range"
                       : "Amount if known"
                 }
                 value={form.salaryRate}
@@ -906,7 +906,7 @@ export default function PostJobPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Company Name *" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Aramco Projects Ltd."
+                placeholder="Company or organization name"
                 value={form.companyName}
                 onChange={(e) => set("companyName", e.target.value)}
               />
@@ -915,7 +915,7 @@ export default function PostJobPage() {
             <Field label="Company Phone">
               <Input
                 type="tel"
-                placeholder="+966 1x xxx xxxx"
+                placeholder="Phone number"
                 value={form.companyPhone}
                 onChange={(e) => set("companyPhone", e.target.value)}
               />
@@ -924,7 +924,7 @@ export default function PostJobPage() {
             <Field label="Company Email">
               <Input
                 type="email"
-                placeholder="hr@company.com"
+                placeholder="Email address"
                 value={form.companyEmail}
                 onChange={(e) => set("companyEmail", e.target.value)}
               />
@@ -932,7 +932,7 @@ export default function PostJobPage() {
 
             <Field label="Company Address" className="sm:col-span-2">
               <Input
-                placeholder="Street, City, Country"
+                placeholder="Street, city, country"
                 value={form.companyAddress}
                 onChange={(e) => set("companyAddress", e.target.value)}
               />
@@ -940,7 +940,7 @@ export default function PostJobPage() {
 
             <Field label="Company Location Link" className="sm:col-span-2">
               <Input
-                placeholder="https://maps.google.com/... or Google Maps share link"
+                placeholder="Google Maps link"
                 value={form.mapLocation}
                 onChange={(e) => set("mapLocation", e.target.value)}
               />

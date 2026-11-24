@@ -442,7 +442,7 @@ export function EditJobForm({ job }: { job: Job }) {
               <Input
                 placeholder={
                   salaryAmountRequired
-                    ? "e.g. 25 or 5000"
+                    ? "Amount or range"
                     : "Amount if known"
                 }
                 value={form.salaryRate}
@@ -483,7 +483,7 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
             <Field label="Company Location Link" className="col-span-full">
               <Input
-                placeholder="https://maps.google.com/... or Google Maps share link"
+                placeholder="Google Maps link"
                 value={form.officeLocationLink}
                 onChange={(e) => set("officeLocationLink", e.target.value)}
               />
