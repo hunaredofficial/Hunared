@@ -286,11 +286,15 @@ export function EditJobForm({ job }: { job: Job }) {
                 }}
               >
                 <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country">{(v) => (v ? COUNTRIES.find((c) => c.code === v)?.name ?? String(v) : null)}</SelectValue>
+                  <span className="flex-1 truncate text-left">
+                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
+                      <span className="text-muted-foreground">Select country...</span>
+                    )}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
+                    <SelectItem key={c.code} value={c.code} label={c.name}>
                       {c.name}
                     </SelectItem>
                   ))}

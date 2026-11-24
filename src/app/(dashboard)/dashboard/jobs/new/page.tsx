@@ -614,7 +614,8 @@ export default function PostJobPage() {
             <Input
               placeholder="e.g. Job title or role name"
               value={form.jobTitle}
-              onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> {
+              onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> {
                 const v = e.target.value;
                 set("jobTitle", v, true);
                 scheduleSmartParse(v, form.jobDescription);
@@ -674,7 +675,8 @@ export default function PostJobPage() {
               <Input
                 placeholder="e.g. Specialty, skill focus, or role type"
                 value={form.subcategory}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("subcategory", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("subcategory", e.target.value)}
               />
             </Field>
 
@@ -692,11 +694,15 @@ export default function PostJobPage() {
                 }}
               >
                 <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country">{(v) => (v ? COUNTRIES.find((c) => c.code === v)?.name ?? String(v) : null)}</SelectValue>
+                  <span className="flex-1 truncate text-left">
+                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
+                      <span className="text-muted-foreground">Select country...</span>
+                    )}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
+                    <SelectItem key={c.code} value={c.code} label={c.name}>
                       {c.name}
                     </SelectItem>
                   ))}
@@ -708,7 +714,8 @@ export default function PostJobPage() {
               <Input
                 placeholder="City or area"
                 value={form.city}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("city", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("city", e.target.value)}
               />
             </Field>
 
@@ -716,7 +723,8 @@ export default function PostJobPage() {
               <Input
                 placeholder="e.g. Office, site, remote, or district"
                 value={form.workLocation}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("workLocation", e.target.value, true)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("workLocation", e.target.value, true)}
               />
             </Field>
 
@@ -773,7 +781,8 @@ export default function PostJobPage() {
                 max="999"
                 placeholder="Select Positions"
                 value={form.positions}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("positions", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("positions", e.target.value)}
               />
             </Field>
 
@@ -897,7 +906,8 @@ export default function PostJobPage() {
                       : "Amount if known"
                 }
                 value={form.salaryRate}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("salaryRate", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("salaryRate", e.target.value)}
               />
             </Field>
           </div>
@@ -910,7 +920,8 @@ export default function PostJobPage() {
               <Input
                 placeholder="Company or organization name"
                 value={form.companyName}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyName", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyName", e.target.value)}
               />
             </Field>
 
@@ -919,7 +930,8 @@ export default function PostJobPage() {
                 type="tel"
                 placeholder="Phone with country code"
                 value={form.companyPhone}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyPhone", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyPhone", e.target.value)}
               />
             </Field>
 
@@ -928,7 +940,8 @@ export default function PostJobPage() {
                 type="email"
                 placeholder="Contact email"
                 value={form.companyEmail}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyEmail", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyEmail", e.target.value)}
               />
             </Field>
 
@@ -936,7 +949,8 @@ export default function PostJobPage() {
               <Input
                 placeholder="Street, city, country"
                 value={form.companyAddress}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyAddress", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyAddress", e.target.value)}
               />
             </Field>
 
@@ -944,7 +958,8 @@ export default function PostJobPage() {
               <Input
                 placeholder="Google Maps link"
                 value={form.mapLocation}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("mapLocation", e.target.value)}
+                onChange={(e) => set("city", e.target.value, true)}
+                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("mapLocation", e.target.value)}
               />
             </Field>
           </div>
