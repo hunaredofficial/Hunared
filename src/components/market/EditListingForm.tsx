@@ -436,12 +436,8 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium block mb-1.5">
-                Price{" "}
-                {isPriceOptional ? (
-                ) : (
-                  <span className="text-destructive">*</span>
-                )}
-              </label>
+                  Price
+                </label>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
