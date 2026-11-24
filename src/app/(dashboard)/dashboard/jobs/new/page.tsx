@@ -592,7 +592,7 @@ export default function PostJobPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-8">
+    <div className="max-w-3xl mx-auto space-y-6 pb-8">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
           <Link href="/dashboard/jobs">
@@ -612,9 +612,9 @@ export default function PostJobPage() {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="e.g. Job title or role name"
+              placeholder="e.g. Senior HSE Engineer"
               value={form.jobTitle}
-              onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> {
+              onChange={(e) => {
                 const v = e.target.value;
                 set("jobTitle", v, true);
                 scheduleSmartParse(v, form.jobDescription);
@@ -624,7 +624,7 @@ export default function PostJobPage() {
 
           <Field label="Job Description *">
             <Textarea
-              placeholder="Describe the role, responsibilities, and requirements..."
+              placeholder="Describe the role, responsibilities, requirements..."
               value={form.jobDescription}
               onChange={(e) => {
                 const v = e.target.value;
@@ -650,8 +650,8 @@ export default function PostJobPage() {
             }}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-            <Field label="Job Categories *">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Job Categories *" className="sm:col-span-2">
               <MultiSelectChips
                 options={JOB_CATEGORIES}
                 value={form.categories}
@@ -670,11 +670,11 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Subcategory">
+            <Field label="Subcategory" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Specialty, skill focus, or role type"
+                placeholder="e.g. NEBOSH, IOSH"
                 value={form.subcategory}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("subcategory", e.target.value)}
+                onChange={(e) => set("subcategory", e.target.value)}
               />
             </Field>
 
@@ -691,10 +691,12 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country">
-                    {COUNTRIES.find((c) => c.code === form.country)?.name}
-                  </SelectValue>
+                <SelectTrigger>
+                  <span className="flex-1 truncate text-left">
+                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
+                      <span className="text-muted-foreground">Select country...</span>
+                    )}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
@@ -708,17 +710,17 @@ export default function PostJobPage() {
 
             <Field label="City *">
               <Input
-                placeholder="City or area"
+                placeholder="e.g. Jubail"
                 value={form.city}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("city", e.target.value)}
+                onChange={(e) => set("city", e.target.value)}
               />
             </Field>
 
-            <Field label="Work Location">
+            <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Office, site, remote, or district"
+                placeholder="e.g. Project site, plant name, or area"
                 value={form.workLocation}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("workLocation", e.target.value, true)}
+                onChange={(e) => set("workLocation", e.target.value, true)}
               />
             </Field>
 
@@ -738,7 +740,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -748,14 +750,14 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            <Field label="Experience Level">
+            <Field label="Experience Level (Optional)">
               <Select
                 value={form.experienceLevel || "any"}
                 onValueChange={(v: string | null) => {
                   if (v) set("experienceLevel", v, true);
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -768,14 +770,14 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            <Field label="Number of Positions">
+            <Field label="Number of Positions (Optional)">
               <Input
                 type="number"
                 min="1"
                 max="999"
                 placeholder="Select Positions"
                 value={form.positions}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("positions", e.target.value)}
+                onChange={(e) => set("positions", e.target.value)}
               />
             </Field>
 
@@ -798,7 +800,7 @@ export default function PostJobPage() {
                   markTouched("duration");
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -825,7 +827,7 @@ export default function PostJobPage() {
                     );
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Never / Keep Open" />
                 </SelectTrigger>
                 <SelectContent>
@@ -848,7 +850,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -870,7 +872,7 @@ export default function PostJobPage() {
                   set("currency", v);
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -887,19 +889,19 @@ export default function PostJobPage() {
               label={
                 salaryAmountRequired
                   ? `Salary / Rate (${form.salaryType}) *`
-                  : "Salary / Rate"
+                  : "Salary / Rate (Optional)"
               }
             >
               <Input
                 placeholder={
                   form.salaryType === "Hourly"
-                    ? "e.g. 20 - 40"
+                    ? "e.g. 25 - 35"
                     : form.salaryType === "Monthly"
-                      ? "e.g. 5000 - 10000"
-                      : "Amount if known"
+                      ? "e.g. 6000 - 9000"
+                      : "Optional amount if known"
                 }
                 value={form.salaryRate}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("salaryRate", e.target.value)}
+                onChange={(e) => set("salaryRate", e.target.value)}
               />
             </Field>
           </div>
@@ -907,46 +909,46 @@ export default function PostJobPage() {
 
         {/* Company Details */}
         <Section title="Company Details">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-            <Field label="Company Name *">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Company Name *" className="sm:col-span-2">
               <Input
-                placeholder="Company or organization name"
+                placeholder="e.g. Aramco Projects Ltd."
                 value={form.companyName}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyName", e.target.value)}
+                onChange={(e) => set("companyName", e.target.value)}
               />
             </Field>
 
             <Field label="Company Phone">
               <Input
                 type="tel"
-                placeholder="Phone with country code"
+                placeholder="+966 1x xxx xxxx"
                 value={form.companyPhone}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyPhone", e.target.value)}
+                onChange={(e) => set("companyPhone", e.target.value)}
               />
             </Field>
 
             <Field label="Company Email">
               <Input
                 type="email"
-                placeholder="Contact email"
+                placeholder="hr@company.com"
                 value={form.companyEmail}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyEmail", e.target.value)}
+                onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
 
-            <Field label="Company Address">
+            <Field label="Company Address (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="Street, city, country"
+                placeholder="Street, City, Country"
                 value={form.companyAddress}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyAddress", e.target.value)}
+                onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
 
-            <Field label="Company Location Link">
+            <Field label="Company Location Link (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="Google Maps link"
+                placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.mapLocation}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("mapLocation", e.target.value)}
+                onChange={(e) => set("mapLocation", e.target.value)}
               />
             </Field>
           </div>
@@ -997,13 +999,11 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5 min-w-0 w-full", className)}>
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      <div className="w-full min-w-0 [&_button]:w-full [&_input]:w-full [&_textarea]:w-full">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

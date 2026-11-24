@@ -28,6 +28,7 @@ import {
   LISTING_CONDITION_OPTIONS,
   LOST_FOUND_STATUS_OPTIONS,
   RENTAL_PERIOD_OPTIONS,
+  getListingDefaultImage,
   getListingTitlePlaceholder,
 } from "@/lib/constants";
 import {
@@ -37,7 +38,6 @@ import {
 import { CityCombobox } from "@/components/shared/CityCombobox";
 import { consumeAgentPrefill, readAgentPrefill, clearAgentPrefillStorage } from "@/lib/agent/prefill";
 import { COUNTRIES } from "@/lib/countries";
-import { cn } from "@/lib/utils";
 
 const RichTextEditor = dynamic(
   () => import("@/components/ui/RichTextEditor").then((m) => m.RichTextEditor),
@@ -518,7 +518,7 @@ function NewListingForm() {
       }
       setUploading(false);
       if (imageUrls.length === 0) {
-        imageUrls = []; // no stock photo — UI shows category vector icon
+        imageUrls = [getListingDefaultImage(category, subcategory, title.trim())];
       }
 
       const countryName =
@@ -589,7 +589,7 @@ function NewListingForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Post a Listing</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -605,10 +605,15 @@ function NewListingForm() {
           <CardHeader>
             <CardTitle className="text-base">Listing Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             {/* Photos */}
-            <div className="flex flex-col gap-1.5 min-w-0 w-full">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Photos</p>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Photos{" "}
+                <span className="text-muted-foreground text-xs font-normal">
+                  (optional — up to 8; auto image from title/category if empty)
+                </span>
+              </label>
               <input
                 ref={fileRef}
                 type="file"
@@ -649,8 +654,10 @@ function NewListingForm() {
             </div>
 
             {/* Title */}
-            <div className="flex flex-col gap-1.5 min-w-0 w-full">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Title *</p>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Title <span className="text-destructive">*</span>
+              </label>
               <input
                 value={title}
                 onChange={(e) => {
@@ -661,8 +668,11 @@ function NewListingForm() {
                 onBlur={() => runTitleAutoFill(title)}
                 placeholder={getListingTitlePlaceholder(category)}
                 maxLength={100}
-                className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Tip: write product type and city in the title — category, subcategory & city fill automatically.
+              </p>
               {smartNote ? (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1.5 font-medium">
                   {smartNote}
@@ -671,9 +681,11 @@ function NewListingForm() {
             </div>
 
             {/* Category + Subcategory */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category *</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Category <span className="text-destructive">*</span>
+                </label>
                 <Select
                   value={category}
                   onValueChange={(v: string | null) => {
@@ -688,10 +700,8 @@ function NewListingForm() {
                     }
                   }}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                    <SelectValue placeholder="Select category...">
-                      {LISTING_CATEGORIES.find((c) => c.value === category)?.label}
-                    </SelectValue>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent>
                     {LISTING_CATEGORIES.map((c) => (
@@ -702,8 +712,10 @@ function NewListingForm() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Subcategory</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Subcategory
+                </label>
                 <Select
                   value={subcategory}
                   onValueChange={(v: string | null) => {
@@ -714,7 +726,7 @@ function NewListingForm() {
                   }}
                   disabled={!availableSubcategories.length}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={
                         availableSubcategories.length
@@ -736,15 +748,17 @@ function NewListingForm() {
 
             {/* Rental Period — For Rent only */}
             {category === "for_rent" && (
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Rental Period *</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Rental Period <span className="text-destructive">*</span>
+                </label>
                 <Select
                   value={rentalPeriod || undefined}
                   onValueChange={(v: string | null) => {
                     if (v) setRentalPeriod(v);
                   }}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select rental period..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -760,15 +774,17 @@ function NewListingForm() {
 
             {/* Condition — For Sale only */}
             {category === "for_sale" && (
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Condition</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Condition
+                </label>
                 <Select
                   value={condition || undefined}
                   onValueChange={(v: string | null) => {
                     if (v) setCondition(v);
                   }}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select condition..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -779,20 +795,25 @@ function NewListingForm() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Optional — helps buyers filter by New, Used, Refurbished, etc.
+                </p>
               </div>
             )}
 
             {/* Lost / Found status — Lost & Found only */}
             {category === "lost_found" && (
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status *</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Status <span className="text-destructive">*</span>
+                </label>
                 <Select
                   value={lfStatus || undefined}
                   onValueChange={(v: string | null) => {
                     if (v) setLfStatus(v);
                   }}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Lost or Found?" />
                   </SelectTrigger>
                   <SelectContent>
@@ -803,13 +824,18 @@ function NewListingForm() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Required — is this item lost or found?
+                </p>
               </div>
             )}
 
             {/* Country + City */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country *</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Country <span className="text-destructive">*</span>
+                </label>
                 <Select
                   value={country}
                   onValueChange={(v: string | null) => {
@@ -821,10 +847,12 @@ function NewListingForm() {
                     }
                   }}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                    <SelectValue placeholder="Select country...">
-                      {COUNTRIES.find((c) => c.code === country)?.name}
-                    </SelectValue>
+                  <SelectTrigger className="w-full">
+                    <span className="flex-1 truncate text-left">
+                    {COUNTRIES.find((c) => c.code === country)?.name ?? (
+                      <span className="text-muted-foreground">Select country...</span>
+                    )}
+                  </span>
                   </SelectTrigger>
                   <SelectContent>
                     {COUNTRIES.map((c) => (
@@ -835,8 +863,10 @@ function NewListingForm() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">City *</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  City <span className="text-destructive">*</span>
+                </label>
                 <CityCombobox
                   id="new-listing-city"
                   country={country}
@@ -844,26 +874,36 @@ function NewListingForm() {
                   onChange={(v) => { userLocked.current.add("city"); setCity(v); }}
                   size="md"
                   variant="select"
-                inputClassName="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                 />
               </div>
             </div>
 
-            {/* Google Maps URL */}
-            <div className="min-w-0 w-full sm:col-span-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Location Map Link</p>
+            {/* Google Maps URL (Optional) */}
+            <div className="col-span-full">
+              <label className="text-sm font-medium block mb-1.5">
+                Location Map Link (Optional)
+              </label>
               <input
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
                 placeholder="https://maps.app.goo.gl/... or Google Maps link"
-                className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
             {/* Price + Currency */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Price</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Price{" "}
+                  {isPriceOptional ? (
+                    <span className="text-muted-foreground text-xs font-normal">
+                      (optional)
+                    </span>
+                  ) : (
+                    <span className="text-destructive">*</span>
+                  )}
+                </label>
                 <input
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
@@ -872,11 +912,13 @@ function NewListingForm() {
                       ? "e.g. 2500, Free, or leave blank"
                       : "e.g. 2500 or Free"
                   }
-                  className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  Currency{" "}<span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                </label>
                 <Select
                   value={currency}
                   onValueChange={(v: string | null) => {
@@ -886,7 +928,7 @@ function NewListingForm() {
                     }
                   }}
                 >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -903,12 +945,14 @@ function NewListingForm() {
             {/* Listing Type — hidden for rent, property, vehicles, wanted, free items, etc. */}
             {category && !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Listing Type</p>
+                  <label className="text-sm font-medium block mb-1.5">
+                    Listing Type
+                  </label>
                   <Select
                     value={listingType}
                     onValueChange={(v) => setListingType(v as ListingType)}
                   >
-                    <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -927,8 +971,11 @@ function NewListingForm() {
             {listingType === "affiliate" &&
               category &&
               !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
-              <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">External Link / Affiliate URL *</p>
+              <div>
+                <label className="text-sm font-medium block mb-1.5">
+                  External Link / Affiliate URL{" "}
+                  <span className="text-destructive">*</span>
+                </label>
                 <div className="relative">
                   <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <input
@@ -936,53 +983,33 @@ function NewListingForm() {
                     onChange={(e) => setExternalLink(e.target.value)}
                     placeholder="https://example.com/product"
                     type="url"
-                    className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 pl-9"
+                    className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-              <div className="min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Phone *</p>
-                <input
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  placeholder="+966 5XX XXX XXXX"
-                  type="tel"
-                  className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-                />
-              </div>
-              <div className="min-w-0 w-full">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Close Listing Automatically</p>
-                <Select
-                  value={expiration}
-                  onValueChange={(v: string | null) => {
-                    if (v) setExpiration(v as ExpirationOptionValue);
-                  }}
-                >
-                  <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                    <SelectValue placeholder="Never / Keep Open">
-                      {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
-                        "Never / Keep Open"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EXPIRATION_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Contact phone + SMS verify */}
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Contact Phone <span className="text-destructive">*</span>
+              </label>
+              <input
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+966 5XX XXX XXXX"
+                type="tel"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
 
 
 
             {/* Description */}
-            <div className="flex flex-col gap-1.5 min-w-0 w-full">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description *</p>
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Description <span className="text-destructive">*</span>
+              </label>
               <RichTextEditor
                 value={description}
                 onChange={(v) => {
@@ -1025,7 +1052,42 @@ function NewListingForm() {
                     Write my own
                   </Button>
                 </div>
-              ) : null}
+              ) : (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Fill title and category to unlock a suggested description, or write your own.
+                </p>
+              )}
+            </div>
+
+
+            {/* Auto-close / expiration — same options as jobs */}
+            <div>
+              <label className="text-sm font-medium block mb-1.5">
+                Close Listing Automatically
+              </label>
+              <Select
+                value={expiration}
+                onValueChange={(v: string | null) => {
+                  if (v) setExpiration(v as ExpirationOptionValue);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Never / Keep Open">
+                    {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
+                      "Never / Keep Open"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Optional. Leave as Never to keep the listing open until you close it.
+              </p>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -1057,33 +1119,11 @@ function NewListingForm() {
   );
 }
 
-
-function Field({
-  label,
-  children,
-  className,
-}: {
-  label: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-1.5 min-w-0 w-full", className)}>
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {label}
-      </p>
-      <div className="w-full min-w-0 [&_button]:w-full [&_input]:w-full [&_textarea]:w-full">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export default function NewListingPage() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-4xl mx-auto px-4 py-8 text-sm text-muted-foreground">
+        <div className="max-w-3xl mx-auto px-4 py-8 text-sm text-muted-foreground">
           Loading form…
         </div>
       }

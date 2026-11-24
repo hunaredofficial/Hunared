@@ -233,21 +233,19 @@ export function EditJobForm({ job }: { job: Job }) {
         <Section title="Job Details">
           <Field label="Job Title *">
             <Input
-              placeholder="e.g. Job title or role name"
               value={form.jobTitle}
-              onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("jobTitle", e.target.value)}
+              onChange={(e) => set("jobTitle", e.target.value)}
             />
           </Field>
           <Field label="Job Description *">
             <Textarea
               rows={6}
-              placeholder="Describe the role, responsibilities, and requirements..."
               value={form.jobDescription}
               onChange={(e) => set("jobDescription", e.target.value)}
             />
           </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Category *">
               <Select
                 value={form.category}
@@ -255,7 +253,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("category", v);
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -269,9 +267,9 @@ export function EditJobForm({ job }: { job: Job }) {
             </Field>
             <Field label="Subcategory">
               <Input
-                placeholder="e.g. Specialty, skill focus, or role type"
+                placeholder="e.g. NEBOSH, IOSH"
                 value={form.subcategory}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("subcategory", e.target.value)}
+                onChange={(e) => set("subcategory", e.target.value)}
               />
             </Field>
 
@@ -285,10 +283,12 @@ export function EditJobForm({ job }: { job: Job }) {
                   }
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country">
-                    {COUNTRIES.find((c) => c.code === form.country)?.name}
-                  </SelectValue>
+                <SelectTrigger>
+                  <span className="flex-1 truncate text-left">
+                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
+                      <span className="text-muted-foreground">Select country...</span>
+                    )}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
@@ -308,7 +308,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 }}
                 disabled={!form.country}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,35 +324,35 @@ export function EditJobForm({ job }: { job: Job }) {
               </Select>
             </Field>
 
-            <Field label="Work Location">
+            <Field label="Work Location (Optional)" className="sm:col-span-2">
               <Input
-                placeholder="e.g. Office, site, remote, or district"
+                placeholder="e.g. Project site, plant name, or area"
                 value={form.workLocation}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("workLocation", e.target.value)}
+                onChange={(e) => set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
                 Work site name, area or address.
               </p>
             </Field>
-            <Field label="Number of Positions">
+            <Field label="Number of Positions (Optional)">
               <Input
                 type="number"
                 min="1"
                 max="999"
                 placeholder="Select Positions"
                 value={form.positions}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("positions", e.target.value)}
+                onChange={(e) => set("positions", e.target.value)}
               />
             </Field>
 
-            <Field label="Experience Level">
+            <Field label="Experience Level (Optional)">
               <Select
                 value={form.experienceLevel || "any"}
                 onValueChange={(v: string | null) => {
                   if (v) set("experienceLevel", v);
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -378,7 +378,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -408,7 +408,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }));
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -438,7 +438,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("salaryType", v);
                 }}
               >
-                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger>
                   <SelectValue placeholder="Select salary type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -455,17 +455,17 @@ export function EditJobForm({ job }: { job: Job }) {
               label={
                 salaryAmountRequired
                   ? `Salary / Rate (${form.salaryType}) *`
-                  : "Salary / Rate"
+                  : "Salary / Rate (Optional)"
               }
             >
               <Input
                 placeholder={
                   salaryAmountRequired
                     ? "e.g. 25 or 5000"
-                    : "Amount if known"
+                    : "Optional amount if known"
                 }
                 value={form.salaryRate}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("salaryRate", e.target.value)}
+                onChange={(e) => set("salaryRate", e.target.value)}
               />
             </Field>
           </div>
@@ -473,38 +473,38 @@ export function EditJobForm({ job }: { job: Job }) {
           </Section>
 
         <Section title="Company Details">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
-            <Field label="Company Name *">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Company Name *" className="col-span-full">
               <Input
                 value={form.companyName}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyName", e.target.value)}
+                onChange={(e) => set("companyName", e.target.value)}
               />
             </Field>
             <Field label="Company Phone">
               <Input
                 type="tel"
                 value={form.companyPhone}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyPhone", e.target.value)}
+                onChange={(e) => set("companyPhone", e.target.value)}
               />
             </Field>
             <Field label="Company Email">
               <Input
                 type="email"
                 value={form.companyEmail}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyEmail", e.target.value)}
+                onChange={(e) => set("companyEmail", e.target.value)}
               />
             </Field>
-            <Field label="Company Address">
+            <Field label="Company Address (Optional)" className="col-span-full">
               <Input
                 value={form.companyAddress}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyAddress", e.target.value)}
+                onChange={(e) => set("companyAddress", e.target.value)}
               />
             </Field>
-            <Field label="Company Location Link">
+            <Field label="Company Location Link (Optional)" className="col-span-full">
               <Input
-                placeholder="Google Maps link"
+                placeholder="https://maps.google.com/... or Google Maps share link"
                 value={form.officeLocationLink}
-                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("officeLocationLink", e.target.value)}
+                onChange={(e) => set("officeLocationLink", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
                 Company office map link.
@@ -553,13 +553,11 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5 min-w-0 w-full", className)}>
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {label}
       </p>
-      <div className="w-full min-w-0 [&_button]:w-full [&_input]:w-full [&_textarea]:w-full">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
