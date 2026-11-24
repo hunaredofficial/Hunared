@@ -932,8 +932,11 @@ export default function PostJobPage() {
         </Section>
 
         <Section title="Listing Options">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-            <Field label="Close Listing Automatically">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
+            <div className="w-full sm:max-w-sm space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Close Listing Automatically
+              </p>
               <Select
                 value={form.expiration}
                 onValueChange={(v: string | null) => {
@@ -952,13 +955,16 @@ export default function PostJobPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {EXPIRATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
+                    <SelectItem key={o.value} value={o.value} label={o.label}>
                       {o.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </Field>
+            </div>
+            <p className="text-xs text-muted-foreground sm:pb-2.5 max-w-md leading-relaxed">
+              Choose when this job should close automatically, or keep it open until you close it.
+            </p>
           </div>
         </Section>
 
