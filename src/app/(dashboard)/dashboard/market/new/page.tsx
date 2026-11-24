@@ -874,7 +874,6 @@ function NewListingForm() {
                   onChange={(v) => { userLocked.current.add("city"); setCity(v); }}
                   size="md"
                   variant="select"
-                inputClassName="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
               />
               </div>
             </div>
