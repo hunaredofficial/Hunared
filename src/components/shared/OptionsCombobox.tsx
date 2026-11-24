@@ -3,13 +3,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MapPin } from "lucide-react";
 
 export type OptionItem = { value: string; label: string };
 
 /**
  * Dropdown matching CityCombobox look: portal list, same padding/hover/panel.
- * Used for Country / Category in hero and anywhere a fixed option list is needed.
  */
 export function OptionsCombobox({
   value,
@@ -21,7 +20,7 @@ export function OptionsCombobox({
   size = "md",
   variant = "select",
   searchable = true,
-  leadingIcon,
+  showPin = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -32,10 +31,11 @@ export function OptionsCombobox({
   size?: "sm" | "md" | "lg";
   variant?: "select" | "hero";
   searchable?: boolean;
-  leadingIcon?: React.ReactNode;
+  showPin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pos, setPos] = useState<{
     top: number;
@@ -53,16 +53,13 @@ export function OptionsCombobox({
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!open) setQuery("");
-  }, [open, value]);
-
-  useEffect(() => {
     function handleClick(e: MouseEvent) {
       const target = e.target as Node;
       if (rootRef.current && rootRef.current.contains(target)) return;
       const portal = document.getElementById(`${id}-options-portal`);
       if (portal && portal.contains(target)) return;
       setOpen(false);
+      setIsTyping(false);
       setQuery("");
     }
     document.addEventListener("mousedown", handleClick);
@@ -70,6 +67,7 @@ export function OptionsCombobox({
   }, [id]);
 
   const filtered = useMemo(() => {
+    if (!isTyping) return options;
     const q = query.trim().toLowerCase();
     if (!q) return options;
     return options.filter(
@@ -77,7 +75,7 @@ export function OptionsCombobox({
         o.label.toLowerCase().includes(q) ||
         o.value.toLowerCase().includes(q)
     );
-  }, [options, query]);
+  }, [options, query, isTyping]);
 
   useLayoutEffect(() => {
     if (!open || !rootRef.current) {
@@ -119,10 +117,12 @@ export function OptionsCombobox({
   function commit(v: string) {
     onChange(v);
     setQuery("");
+    setIsTyping(false);
     setOpen(false);
   }
 
-  const display = open && searchable ? query : selectedLabel;
+  const withPin = showPin;
+  const inputValue = isTyping ? query : selectedLabel;
 
   const dropdown =
     open && pos && mounted
@@ -176,7 +176,9 @@ export function OptionsCombobox({
   return (
     <div ref={rootRef} className={cn("relative w-full", className)}>
       <div className="relative">
-        {leadingIcon}
+        {withPin ? (
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+        ) : null}
         <input
           ref={inputRef}
           id={id}
@@ -185,27 +187,28 @@ export function OptionsCombobox({
           aria-expanded={open}
           autoComplete="off"
           readOnly={!searchable}
-          value={display}
+          value={inputValue}
           placeholder={placeholder}
           onChange={(e) => {
             if (!searchable) return;
+            setIsTyping(true);
             setQuery(e.target.value);
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
           onClick={() => setOpen(true)}
           className={cn(
-            "w-full pr-9 focus:outline-none focus:ring-2 cursor-pointer",
-            leadingIcon ? "pl-9" : "pl-3.5",
+            "w-full pr-9 focus:outline-none focus:ring-2",
+            searchable ? "cursor-text" : "cursor-pointer",
+            withPin ? "pl-9" : "pl-3.5",
             height,
             baseStyle
           )}
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-          
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
           <ChevronDown
             className={cn(
-              "h-4 w-4 text-muted-foreground pointer-events-none opacity-50 transition-transform",
+              "h-4 w-4 text-muted-foreground opacity-50 transition-transform",
               open && "rotate-180"
             )}
           />

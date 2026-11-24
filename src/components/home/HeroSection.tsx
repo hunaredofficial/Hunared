@@ -149,15 +149,14 @@ export function HeroSection() {
                 size="lg"
                 variant="hero"
                 searchable
-                leadingIcon={
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-                }
+                showPin
               />
             </div>
 
             <CityCombobox
               id="hero-city"
               country={country}
+              showPin
               value={city}
               onChange={setCity}
               size="lg"

@@ -20,6 +20,7 @@ export function CityCombobox({
   id = "city-combobox",
   size = "md",
   variant = "select",
+  showPin = false,
 }: {
   country: string;
   value: string;
@@ -29,12 +30,15 @@ export function CityCombobox({
   id?: string;
   size?: "sm" | "md" | "lg";
   variant?: "select" | "hero";
+  /** Show map pin on the left of the field (hero search) */
+  showPin?: boolean;
 }) {
   const cities = getCitiesForCountry(
     !country || country === "all" ? "" : country
   );
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value || "");
+  const [isTyping, setIsTyping] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pos, setPos] = useState<{
     top: number;
@@ -49,8 +53,8 @@ export function CityCombobox({
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    setQuery(value || "");
-  }, [value]);
+    if (!isTyping) setQuery(value || "");
+  }, [value, isTyping]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -59,6 +63,7 @@ export function CityCombobox({
       const portal = document.getElementById(`${id}-city-portal`);
       if (portal && portal.contains(target)) return;
       setOpen(false);
+      setIsTyping(false);
       setQuery(value || "");
     }
     document.addEventListener("mousedown", handleClick);
@@ -66,10 +71,11 @@ export function CityCombobox({
   }, [value, id]);
 
   const filtered = useMemo(() => {
+    if (!isTyping) return cities;
     const q = query.trim().toLowerCase();
     if (!q) return cities;
     return cities.filter((c) => c.toLowerCase().includes(q));
-  }, [cities, query]);
+  }, [cities, query, isTyping]);
 
   useLayoutEffect(() => {
     if (!open || !rootRef.current) {
@@ -98,7 +104,7 @@ export function CityCombobox({
       window.removeEventListener("scroll", measure, true);
       window.removeEventListener("resize", measure);
     };
-  }, [open, cities.length, query]);
+  }, [open, filtered.length, query]);
 
   const height =
     size === "lg" ? "h-11 sm:h-12" : size === "sm" ? "h-9" : "h-10";
@@ -111,6 +117,7 @@ export function CityCombobox({
   function commit(city: string) {
     onChange(city);
     setQuery(city);
+    setIsTyping(false);
     setOpen(false);
   }
 
@@ -126,11 +133,15 @@ export function CityCombobox({
       commit(match || q);
     } else if (e.key === "Escape") {
       setOpen(false);
+      setIsTyping(false);
       setQuery(value || "");
     } else if (e.key === "ArrowDown") {
       setOpen(true);
     }
   }
+
+  const withPin = showPin || variant === "hero";
+  const inputValue = isTyping ? query : value || "";
 
   const dropdown =
     open && pos && mounted
@@ -163,7 +174,6 @@ export function CityCombobox({
                     !value && "bg-accent/50 text-foreground font-medium"
                   )}
                 >
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   All Cities
                 </button>
               </li>
@@ -198,6 +208,9 @@ export function CityCombobox({
   return (
     <div ref={rootRef} className={cn("relative w-full", className)}>
       <div className="relative">
+        {withPin ? (
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+        ) : null}
         <input
           ref={inputRef}
           id={id}
@@ -206,25 +219,28 @@ export function CityCombobox({
           aria-expanded={open}
           aria-autocomplete="list"
           autoComplete="off"
-          value={query}
+          value={inputValue}
           placeholder="All Cities"
           onChange={(e) => {
+            setIsTyping(true);
             setQuery(e.target.value);
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
           onKeyDown={onKeyDown}
           className={cn(
-            "w-full pl-3.5 pr-9 focus:outline-none focus:ring-2",
+            "w-full pr-9 focus:outline-none focus:ring-2 cursor-text",
+            withPin ? "pl-9" : "pl-3.5",
             height,
             baseStyle,
             inputClassName
           )}
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
           <ChevronDown
             className={cn(
-              "h-4 w-4 text-muted-foreground pointer-events-none opacity-50 transition-transform",
+              "h-4 w-4 text-muted-foreground opacity-50 transition-transform",
               open && "rotate-180"
             )}
           />
