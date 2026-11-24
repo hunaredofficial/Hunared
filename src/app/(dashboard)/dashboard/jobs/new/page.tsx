@@ -652,8 +652,8 @@ export default function PostJobPage() {
             }}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Job Categories *" className="sm:col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+            <Field label="Job Categories *">
               <MultiSelectChips
                 options={JOB_CATEGORIES}
                 value={form.categories}
@@ -672,7 +672,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Subcategory" className="sm:col-span-2">
+            <Field label="Subcategory">
               <Input
                 placeholder="Specialty, skill, or focus area"
                 value={form.subcategory}
@@ -680,7 +680,7 @@ export default function PostJobPage() {
               />
             </Field>
 
-                        <Field label="Country *">
+            <Field label="Country *">
               <OptionsCombobox
                 id="job-new-country"
                 value={form.country}
@@ -710,12 +710,32 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Work Location" className="sm:col-span-2">
+            <Field label="Work Location">
               <Input
                 placeholder="Office, site, remote, or district"
                 value={form.workLocation}
                 onChange={(e) => set("workLocation", e.target.value, true)}
               />
+            </Field>
+
+            <Field label="Experience Level">
+              <Select
+                value={form.experienceLevel || "any"}
+                onValueChange={(v: string | null) => {
+                  if (v) set("experienceLevel", v, true);
+                }}
+              >
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPERIENCE_LEVELS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field label="Employment Type *">
@@ -742,37 +762,6 @@ export default function PostJobPage() {
                   <SelectItem value="permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
-            </Field>
-
-            <Field label="Experience Level">
-              <Select
-                value={form.experienceLevel || "any"}
-                onValueChange={(v: string | null) => {
-                  if (v) set("experienceLevel", v, true);
-                }}
-              >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Any" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPERIENCE_LEVELS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field label="Number of Positions">
-              <Input
-                type="number"
-                min="1"
-                max="999"
-                placeholder="Select Positions"
-                value={form.positions}
-                onChange={(e) => set("positions", e.target.value)}
-              />
             </Field>
 
             <Field label="Duration *">
@@ -809,29 +798,15 @@ export default function PostJobPage() {
               </Select>
             </Field>
 
-            <Field label="Close Listing Automatically">
-              <Select
-                value={form.expiration}
-                onValueChange={(v: string | null) => {
-                  if (v)
-                    set(
-                      "expiration",
-                      v as ExpirationOptionValue,
-                      true
-                    );
-                }}
-              >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Never / Keep Open" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPIRATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Number of Positions">
+              <Input
+                type="number"
+                min="1"
+                max="999"
+                placeholder="Select Positions"
+                value={form.positions}
+                onChange={(e) => set("positions", e.target.value)}
+              />
             </Field>
 
             <Field label="Salary Type *">
@@ -948,6 +923,36 @@ export default function PostJobPage() {
           </div>
         </Section>
 
+        <Section title="Listing Options">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+            <Field label="Close Listing Automatically">
+              <Select
+                value={form.expiration}
+                onValueChange={(v: string | null) => {
+                  if (v)
+                    set(
+                      "expiration",
+                      v as ExpirationOptionValue,
+                      true
+                    );
+                }}
+              >
+                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectValue placeholder="Never / Keep Open" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </Section>
+
+
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
           <Button
@@ -992,10 +997,13 @@ function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const required = label.trimEnd().endsWith("*");
+  const text = required ? label.trimEnd().slice(0, -1).trimEnd() : label;
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {label}
+        {text}
+        {required ? <span className="text-destructive ml-0.5">*</span> : null}
       </p>
       {children}
     </div>

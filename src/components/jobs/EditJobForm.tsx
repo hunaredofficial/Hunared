@@ -247,7 +247,7 @@ export function EditJobForm({ job }: { job: Job }) {
             />
           </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             <Field label="Category *">
               <Select
                 value={form.category}
@@ -267,6 +267,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 </SelectContent>
               </Select>
             </Field>
+
             <Field label="Subcategory">
               <Input
                 placeholder="Specialty, skill, or focus area"
@@ -275,7 +276,7 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
-                        <Field label="Country *">
+            <Field label="Country *">
               <OptionsCombobox
                 id="job-edit-country"
                 value={form.country}
@@ -305,7 +306,7 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
-            <Field label="Work Location" className="sm:col-span-2">
+            <Field label="Work Location">
               <Input
                 placeholder="Office, site, remote, or district"
                 value={form.workLocation}
@@ -314,16 +315,6 @@ export function EditJobForm({ job }: { job: Job }) {
               <p className="text-[11px] text-muted-foreground">
                 Work site name, area or address.
               </p>
-            </Field>
-            <Field label="Number of Positions">
-              <Input
-                type="number"
-                min="1"
-                max="999"
-                placeholder="Select Positions"
-                value={form.positions}
-                onChange={(e) => set("positions", e.target.value)}
-              />
             </Field>
 
             <Field label="Experience Level">
@@ -410,6 +401,17 @@ export function EditJobForm({ job }: { job: Job }) {
                   ? "Locked to Permanent while Employment Type is Permanent."
                   : "Selecting any duration sets Employment Type to Temporary (Permanent duration → Permanent)."}
               </p>
+            </Field>
+
+            <Field label="Number of Positions">
+              <Input
+                type="number"
+                min="1"
+                max="999"
+                placeholder="Select Positions"
+                value={form.positions}
+                onChange={(e) => set("positions", e.target.value)}
+              />
             </Field>
 
             <Field label="Salary Type *">
@@ -533,10 +535,13 @@ function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const required = label.trimEnd().endsWith("*");
+  const text = required ? label.trimEnd().slice(0, -1).trimEnd() : label;
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {label}
+        {text}
+        {required ? <span className="text-destructive ml-0.5">*</span> : null}
       </p>
       {children}
     </div>
