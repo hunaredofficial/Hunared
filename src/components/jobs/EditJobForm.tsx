@@ -19,6 +19,7 @@ import { JOB_CATEGORIES, DURATIONS, TEMPORARY_DURATIONS, SALARY_TYPES, EXPERIENC
 import { COUNTRIES } from "@/lib/countries";
 import { getCitiesForCountry } from "@/lib/cities";
 import { CityCombobox } from "@/components/shared/CityCombobox";
+import { OptionsCombobox } from "@/components/shared/OptionsCombobox";
 import type { Job } from "@/types/database";
 import Link from "next/link";
 
@@ -274,31 +275,22 @@ export function EditJobForm({ job }: { job: Job }) {
               />
             </Field>
 
-            <Field label="Country *">
-              <Select
+                        <Field label="Country *">
+              <OptionsCombobox
+                id="job-edit-country"
                 value={form.country}
-                onValueChange={(v: string | null) => {
-                  if (v) {
-                    set("country", v);
-                    set("city", "");
+                onChange={(v) => {
+                  set("country", v);
+                  if (v && !currencyTouched) {
+                    set("currency", currencyForCountry(v));
                   }
                 }}
-              >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <span className="flex-1 truncate text-left">
-                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
-                      <span className="text-muted-foreground">Select country...</span>
-                    )}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+                placeholder="Select country..."
+                size="md"
+                variant="select"
+                searchable
+              />
             </Field>
 
             <Field label="City *">

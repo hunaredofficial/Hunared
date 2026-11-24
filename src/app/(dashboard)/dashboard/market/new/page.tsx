@@ -36,6 +36,7 @@ import {
   type ExpirationOptionValue,
 } from "@/lib/expiration";
 import { CityCombobox } from "@/components/shared/CityCombobox";
+import { OptionsCombobox } from "@/components/shared/OptionsCombobox";
 import { consumeAgentPrefill, readAgentPrefill, clearAgentPrefillStorage } from "@/lib/agent/prefill";
 import { COUNTRIES } from "@/lib/countries";
 
@@ -832,36 +833,25 @@ function NewListingForm() {
 
             {/* Country + City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+                            <div>
                 <label className="text-sm font-medium block mb-1.5">
                   Country <span className="text-destructive">*</span>
                 </label>
-                <Select
+                <OptionsCombobox
+                  id="market-new-country"
                   value={country}
-                  onValueChange={(v: string | null) => {
-                    if (v) {
-                      setCountry(v);
-                      if (!currencyTouched) {
-                        setCurrency(currencyForCountry(v));
-                      }
+                  onChange={(v) => {
+                    setCountry(v);
+                    if (v && !currencyTouched) {
+                      setCurrency(currencyForCountry(v));
                     }
                   }}
-                >
-                  <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                    <span className="flex-1 truncate text-left">
-                    {COUNTRIES.find((c) => c.code === country)?.name ?? (
-                      <span className="text-muted-foreground">Select country...</span>
-                    )}
-                  </span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+                  placeholder="Select country..."
+                  size="md"
+                  variant="select"
+                  searchable
+                />
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">

@@ -42,6 +42,7 @@ import {
 } from "@/components/jobs/SmartJobFill";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { CityCombobox } from "@/components/shared/CityCombobox";
+import { OptionsCombobox } from "@/components/shared/OptionsCombobox";
 import {
   EXPIRATION_OPTIONS,
   type ExpirationOptionValue,
@@ -679,34 +680,22 @@ export default function PostJobPage() {
               />
             </Field>
 
-            <Field label="Country *">
-              <Select
+                        <Field label="Country *">
+              <OptionsCombobox
+                id="job-new-country"
                 value={form.country}
-                onValueChange={(v: string | null) => {
-                  if (v) {
-                    set("country", v, true);
-                    // Keep currency in sync with country until user overrides currency
-                    if (!currencyTouched) {
-                      set("currency", currencyForCountry(v));
-                    }
+                onChange={(v) => {
+                  set("country", v, true);
+                  if (v && !currencyTouched) {
+                    set("currency", currencyForCountry(v));
                   }
                 }}
-              >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <span className="flex-1 truncate text-left">
-                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
-                      <span className="text-muted-foreground">Select country...</span>
-                    )}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
+                placeholder="Select country..."
+                size="md"
+                variant="select"
+                searchable
+              />
             </Field>
 
             <Field label="City *">
