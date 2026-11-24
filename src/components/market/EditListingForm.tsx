@@ -371,7 +371,9 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 }}
               >
                 <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country..." />
+                  <SelectValue placeholder="Select country...">
+                    {COUNTRIES.find((c) => c.code === country)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
