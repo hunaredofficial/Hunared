@@ -4,7 +4,7 @@
  */
 
 export const EXPIRATION_OPTIONS = [
-  { value: "never", label: "Never / Keep Open", days: null as number | null },
+  { value: "never", label: "Never", days: null as number | null },
   { value: "1d", label: "1 Day", days: 1 },
   { value: "3d", label: "3 Days", days: 3 },
   { value: "1w", label: "1 Week", days: 7 },

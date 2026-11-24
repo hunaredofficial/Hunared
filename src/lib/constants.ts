@@ -142,7 +142,7 @@ export const TEMPORARY_DURATIONS = [
   "UnSpecified",
 ] as const;
 
-export const SALARY_TYPES = ["Hourly", "Monthly", "Negotiable"] as const;
+export const SALARY_TYPES = ["Hourly", "Monthly", "Yearly", "Fixed", "Negotiable"] as const;
 export type SalaryType = (typeof SALARY_TYPES)[number];
 
 /** Job experience level options (optional on post form; filter uses same values) */
@@ -810,8 +810,9 @@ export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
   health_medical: "e.g. Blood Pressure Monitor – Digital",
 };
 
-export function getListingTitlePlaceholder(_category: string | null | undefined): string {
-  return "Enter a clear title for your listing";
+export function getListingTitlePlaceholder(category: string | null | undefined): string {
+  if (!category) return "e.g. Enter a clear title for your listing";
+  return LISTING_TITLE_PLACEHOLDERS[category] ?? "e.g. Enter a clear title for your listing";
 }
 
 /** Condition options for For Sale (filter section only — not product subcategories). */
@@ -1964,14 +1965,34 @@ const KEYWORD_DEFAULT_IMAGES: { keys: string[]; url: string }[] = [
 ];
 
 /**
- * Previously returned stock Unsplash URLs. Now returns empty string so
- * listings without user photos use category vector icons in the UI instead
- * of misleading stock photos.
+ * Resolve a default image from title + category + subcategory.
+ * Always returns a product / place / object image — never people.
  */
 export function getListingDefaultImage(
-  _category: string,
-  _subcategory?: string | null,
-  _title?: string | null
+  category: string,
+  subcategory?: string | null,
+  title?: string | null
 ): string {
-  return "";
+  const haystack = [title || "", subcategory || "", category || ""]
+    .join(" ")
+    .toLowerCase();
+
+  // Prefer longer / more specific keyword matches first
+  let bestUrl: string | null = null;
+  let bestLen = 0;
+  for (const entry of KEYWORD_DEFAULT_IMAGES) {
+    for (const key of entry.keys) {
+      if (haystack.includes(key) && key.length > bestLen) {
+        bestLen = key.length;
+        bestUrl = entry.url;
+      }
+    }
+  }
+  if (bestUrl) return bestUrl;
+
+  // Category-level curated images (no people)
+  return (
+    LISTING_CATEGORY_DEFAULT_IMAGES[category] ??
+    LISTING_CATEGORY_DEFAULT_IMAGES.other
+  );
 }

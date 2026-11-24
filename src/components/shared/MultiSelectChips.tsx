@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronsUpDown, X, Search } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 
 type MultiSelectChipsProps = {
   options: readonly string[] | string[];
@@ -21,8 +18,8 @@ type MultiSelectChipsProps = {
 };
 
 /**
- * Searchable multi-select with removable chips.
- * Prevents duplicates; selection is optional unless parent validates.
+ * Inline-search multi-select matching form control height (h-10).
+ * Search types in the same row; dropdown lists matches below.
  */
 export function MultiSelectChips({
   options,
@@ -39,6 +36,7 @@ export function MultiSelectChips({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const selected = useMemo(() => new Set(value), [value]);
 
@@ -49,9 +47,15 @@ export function MultiSelectChips({
   }, [options, query]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setQuery("");
+      return;
+    }
     function onDoc(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -64,95 +68,109 @@ export function MultiSelectChips({
     }
     if (max != null && value.length >= max) return;
     onChange([...value, opt]);
+    setQuery("");
+    inputRef.current?.focus();
   }
 
   function remove(opt: string) {
     onChange(value.filter((v) => v !== opt));
   }
 
+  const display =
+    open && query
+      ? query
+      : value.length === 0
+        ? ""
+        : value.length === 1
+          ? value[0]
+          : `${value.length} selected`;
+
   return (
-    <div ref={rootRef} className={cn("relative space-y-2", className)}>
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+    <div ref={rootRef} className={cn("relative w-full", className)}>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-label={label ?? placeholder}
+          disabled={disabled}
+          autoComplete="off"
+          value={open ? query : display}
+          placeholder={placeholder}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
+          className={cn(
+            "flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 pr-9 text-sm text-foreground shadow-none outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30 dark:hover:bg-input/40",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+        />
+        <ChevronDown
+          className={cn(
+            "absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50 pointer-events-none transition-transform",
+            open && "rotate-180"
+          )}
+        />
+      </div>
+
+      {value.length > 1 && !open && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
           {value.map((v) => (
-            <Badge
+            <span
               key={v}
-              variant="secondary"
-              className="gap-1 pr-1 font-normal"
+              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-foreground"
             >
               {v}
               <button
                 type="button"
                 disabled={disabled}
                 aria-label={`Remove ${v}`}
-                className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                className="rounded-full p-0.5 hover:bg-muted-foreground/20"
                 onClick={() => remove(v)}
               >
                 <X className="h-3 w-3" />
               </button>
-            </Badge>
+            </span>
           ))}
         </div>
       )}
 
-      <Button
-        type="button"
-        variant="outline"
-        role="combobox"
-        aria-expanded={open}
-        aria-label={label ?? placeholder}
-        disabled={disabled}
-        className="w-full justify-between font-normal"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="truncate text-muted-foreground">
-          {value.length === 0 ? placeholder : `${value.length} selected`}
-        </span>
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-      </Button>
-
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
-          <div className="flex items-center border-b px-2">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="h-10 border-0 shadow-none focus-visible:ring-0"
-              autoFocus
-            />
-          </div>
-          <div className="max-h-56 overflow-y-auto p-1">
+        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-xl">
+          <ul className="py-1">
             {filtered.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                {emptyText}
-              </p>
+              <li className="px-3 py-2.5 text-sm text-muted-foreground">{emptyText}</li>
             ) : (
               filtered.map((opt) => {
                 const isOn = selected.has(opt);
                 return (
-                  <button
-                    key={opt}
-                    type="button"
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent",
-                      isOn && "bg-accent/60"
-                    )}
-                    onClick={() => toggle(opt)}
-                  >
-                    <Check
+                  <li key={opt}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => toggle(opt)}
                       className={cn(
-                        "h-4 w-4 shrink-0",
-                        isOn ? "opacity-100" : "opacity-0"
+                        "w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-accent hover:text-accent-foreground",
+                        isOn && "bg-accent/50 font-medium"
                       )}
-                    />
-                    <span className="truncate">{opt}</span>
-                  </button>
+                    >
+                      <Check
+                        className={cn(
+                          "h-4 w-4 shrink-0",
+                          isOn ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {opt}
+                    </button>
+                  </li>
                 );
               })
             )}
-          </div>
+          </ul>
         </div>
       )}
     </div>

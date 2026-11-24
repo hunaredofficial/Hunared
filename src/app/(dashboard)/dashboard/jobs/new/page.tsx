@@ -726,11 +726,13 @@ export default function PostJobPage() {
                 }}
               >
                 <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Any" />
+                  <span className="flex-1 truncate text-left">
+                    {EXPERIENCE_LEVELS.find((o) => o.value === (form.experienceLevel || "any"))?.label ?? "Any"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {EXPERIENCE_LEVELS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
+                    <SelectItem key={o.value} value={o.value} label={o.label}>
                       {o.label}
                     </SelectItem>
                   ))}
@@ -755,11 +757,17 @@ export default function PostJobPage() {
                 }}
               >
                 <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select Temporary or Permanent" />
+                  <span className="flex-1 truncate text-left">
+                    {form.employmentType === "permanent"
+                      ? "Permanent"
+                      : form.employmentType === "temporary"
+                        ? "Temporary"
+                        : <span className="text-muted-foreground">Select Temporary or Permanent</span>}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="temporary">Temporary</SelectItem>
-                  <SelectItem value="permanent">Permanent</SelectItem>
+                  <SelectItem value="temporary" label="Temporary">Temporary</SelectItem>
+                  <SelectItem value="permanent" label="Permanent">Permanent</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -938,7 +946,9 @@ export default function PostJobPage() {
                 }}
               >
                 <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Never / Keep Open" />
+                  <span className="flex-1 truncate text-left">
+                    {EXPIRATION_OPTIONS.find((o) => o.value === form.expiration)?.label ?? "Never"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {EXPIRATION_OPTIONS.map((o) => (
