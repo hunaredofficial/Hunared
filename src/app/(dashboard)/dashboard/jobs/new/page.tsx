@@ -960,9 +960,6 @@ export default function PostJobPage() {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Choose when this job should close automatically, or keep it open until you close it.
-            </p>
           </div>
         </Section>
 
