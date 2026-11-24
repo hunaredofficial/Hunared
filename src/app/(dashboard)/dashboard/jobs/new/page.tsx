@@ -932,37 +932,35 @@ export default function PostJobPage() {
         </Section>
 
         <Section title="Listing Options">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-            <div className="w-full sm:max-w-sm space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Close Listing Automatically
-              </p>
-              <Select
-                value={form.expiration}
-                onValueChange={(v: string | null) => {
-                  if (v)
-                    set(
-                      "expiration",
-                      v as ExpirationOptionValue,
-                      true
-                    );
-                }}
-              >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <span className="flex-1 truncate text-left">
-                    {EXPIRATION_OPTIONS.find((o) => o.value === form.expiration)?.label ?? "Never"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPIRATION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value} label={o.label}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="text-xs text-muted-foreground sm:pb-2.5 max-w-md leading-relaxed">
+          <div className="w-full space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Close Listing Automatically
+            </p>
+            <Select
+              value={form.expiration}
+              onValueChange={(v: string | null) => {
+                if (v)
+                  set(
+                    "expiration",
+                    v as ExpirationOptionValue,
+                    true
+                  );
+              }}
+            >
+              <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <span className="flex-1 truncate text-left">
+                  {EXPIRATION_OPTIONS.find((o) => o.value === form.expiration)?.label ?? "Never"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {EXPIRATION_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value} label={o.label}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Choose when this job should close automatically, or keep it open until you close it.
             </p>
           </div>
