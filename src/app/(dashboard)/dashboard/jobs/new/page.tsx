@@ -706,6 +706,7 @@ export default function PostJobPage() {
                 onChange={(v) => set("city", v, true)}
                 size="md"
                 variant="select"
+                            allowEmpty={false}
               />
             </Field>
 

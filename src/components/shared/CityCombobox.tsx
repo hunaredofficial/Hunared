@@ -21,6 +21,8 @@ export function CityCombobox({
   size = "md",
   variant = "select",
   showPin = false,
+  allowEmpty = true,
+  placeholder,
 }: {
   country: string;
   value: string;
@@ -32,6 +34,9 @@ export function CityCombobox({
   variant?: "select" | "hero";
   /** Show map pin on the left of the field (hero search) */
   showPin?: boolean;
+  /** When true, show All Cities option (search). Forms set false. */
+  allowEmpty?: boolean;
+  placeholder?: string;
 }) {
   const cities = getCitiesForCountry(
     !country || country === "all" ? "" : country
@@ -126,7 +131,7 @@ export function CityCombobox({
       e.preventDefault();
       const q = query.trim();
       if (!q) {
-        commit("");
+        if (allowEmpty) commit("");
         return;
       }
       const match = filtered.find((c) => c.toLowerCase() === q.toLowerCase());
@@ -163,6 +168,7 @@ export function CityCombobox({
               className="overflow-y-auto overscroll-contain py-1"
               style={{ maxHeight: pos.maxH }}
             >
+              {allowEmpty ? (
               <li>
                 <button
                   type="button"
@@ -177,6 +183,7 @@ export function CityCombobox({
                   All Cities
                 </button>
               </li>
+              ) : null}
               {filtered.length === 0 ? (
                 <li className="px-3 py-3 text-sm text-muted-foreground">
                   No match — press Enter to use “{query.trim()}”
@@ -220,7 +227,7 @@ export function CityCombobox({
           aria-autocomplete="list"
           autoComplete="off"
           value={inputValue}
-          placeholder="All Cities"
+          placeholder={placeholder ?? (allowEmpty ? "All Cities" : "Select city")}
           onChange={(e) => {
             setIsTyping(true);
             setQuery(e.target.value);

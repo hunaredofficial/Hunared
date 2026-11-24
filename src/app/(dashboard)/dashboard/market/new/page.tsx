@@ -864,6 +864,7 @@ function NewListingForm() {
                   onChange={(v) => { userLocked.current.add("city"); setCity(v); }}
                   size="md"
                   variant="select"
+                            allowEmpty={false}
               />
               </div>
             </div>

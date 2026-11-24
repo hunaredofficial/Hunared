@@ -301,6 +301,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 onChange={(v) => set("city", v)}
                 size="md"
                 variant="select"
+                            allowEmpty={false}
               />
             </Field>
 
