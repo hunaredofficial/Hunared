@@ -614,7 +614,7 @@ export default function PostJobPage() {
             <Input
               placeholder="e.g. Job title or role name"
               value={form.jobTitle}
-              onChange={(e) => {
+              onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> {
                 const v = e.target.value;
                 set("jobTitle", v, true);
                 scheduleSmartParse(v, form.jobDescription);
@@ -674,7 +674,7 @@ export default function PostJobPage() {
               <Input
                 placeholder="e.g. Specialty, skill focus, or role type"
                 value={form.subcategory}
-                onChange={(e) => set("subcategory", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("subcategory", e.target.value)}
               />
             </Field>
 
@@ -691,16 +691,12 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger className="w-full h-10">
-                  <span className="flex-1 truncate text-left">
-                    {COUNTRIES.find((c) => c.code === form.country)?.name ?? (
-                      <span className="text-muted-foreground">Select country...</span>
-                    )}
-                  </span>
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectValue placeholder="Select country">{(v) => (v ? COUNTRIES.find((c) => c.code === v)?.name ?? String(v) : null)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code} label={c.name}>
+                    <SelectItem key={c.code} value={c.code}>
                       {c.name}
                     </SelectItem>
                   ))}
@@ -712,7 +708,7 @@ export default function PostJobPage() {
               <Input
                 placeholder="City or area"
                 value={form.city}
-                onChange={(e) => set("city", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("city", e.target.value)}
               />
             </Field>
 
@@ -720,7 +716,7 @@ export default function PostJobPage() {
               <Input
                 placeholder="e.g. Office, site, remote, or district"
                 value={form.workLocation}
-                onChange={(e) => set("workLocation", e.target.value, true)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("workLocation", e.target.value, true)}
               />
             </Field>
 
@@ -740,7 +736,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -757,7 +753,7 @@ export default function PostJobPage() {
                   if (v) set("experienceLevel", v, true);
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -777,7 +773,7 @@ export default function PostJobPage() {
                 max="999"
                 placeholder="Select Positions"
                 value={form.positions}
-                onChange={(e) => set("positions", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("positions", e.target.value)}
               />
             </Field>
 
@@ -800,7 +796,7 @@ export default function PostJobPage() {
                   markTouched("duration");
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -827,7 +823,7 @@ export default function PostJobPage() {
                     );
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Never / Keep Open" />
                 </SelectTrigger>
                 <SelectContent>
@@ -850,7 +846,7 @@ export default function PostJobPage() {
                   }
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -872,7 +868,7 @@ export default function PostJobPage() {
                   set("currency", v);
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -901,7 +897,7 @@ export default function PostJobPage() {
                       : "Amount if known"
                 }
                 value={form.salaryRate}
-                onChange={(e) => set("salaryRate", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("salaryRate", e.target.value)}
               />
             </Field>
           </div>
@@ -914,7 +910,7 @@ export default function PostJobPage() {
               <Input
                 placeholder="Company or organization name"
                 value={form.companyName}
-                onChange={(e) => set("companyName", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyName", e.target.value)}
               />
             </Field>
 
@@ -923,7 +919,7 @@ export default function PostJobPage() {
                 type="tel"
                 placeholder="Phone with country code"
                 value={form.companyPhone}
-                onChange={(e) => set("companyPhone", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyPhone", e.target.value)}
               />
             </Field>
 
@@ -932,7 +928,7 @@ export default function PostJobPage() {
                 type="email"
                 placeholder="Contact email"
                 value={form.companyEmail}
-                onChange={(e) => set("companyEmail", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyEmail", e.target.value)}
               />
             </Field>
 
@@ -940,7 +936,7 @@ export default function PostJobPage() {
               <Input
                 placeholder="Street, city, country"
                 value={form.companyAddress}
-                onChange={(e) => set("companyAddress", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyAddress", e.target.value)}
               />
             </Field>
 
@@ -948,7 +944,7 @@ export default function PostJobPage() {
               <Input
                 placeholder="Google Maps link"
                 value={form.mapLocation}
-                onChange={(e) => set("mapLocation", e.target.value)}
+                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("mapLocation", e.target.value)}
               />
             </Field>
           </div>
