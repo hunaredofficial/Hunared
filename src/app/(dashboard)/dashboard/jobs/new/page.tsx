@@ -992,13 +992,10 @@ function Field({
   children: React.ReactNode;
   className?: string;
 }) {
-  const required = label.trimEnd().endsWith("*");
-  const text = required ? label.trimEnd().slice(0, -1).trimEnd() : label;
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {text}
-        {required ? <span className="text-destructive ml-0.5">*</span> : null}
+        {label}
       </p>
       {children}
     </div>
