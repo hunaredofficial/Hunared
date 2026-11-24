@@ -263,9 +263,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         <CardContent className="space-y-5">
           {/* Image gallery – now mandatory */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Photos
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Photos</p>
             <input
               ref={fileRef}
               type="file"
@@ -329,31 +327,27 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Title */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Title <span className="text-destructive">*</span>
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Title *</p>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={getListingTitlePlaceholder(category)}
               maxLength={100}
-              className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
           </div>
 
           {/* Category + Location — equal two-column rows */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Category <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category *</p>
               <Select
                 value={category}
                 onValueChange={(v) => {
                   if (v) setCategory(v);
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -366,9 +360,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Country <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country *</p>
               <Select
                 value={country}
                 onValueChange={(v) => {
@@ -378,7 +370,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   }
                 }}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select country..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -391,15 +383,13 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                City <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">City *</p>
               <Select
                 value={city || undefined}
                 onValueChange={(v) => { if (v) setCity(v); }}
                 disabled={!country}
               >
-                <SelectTrigger className="w-full h-10">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder={country ? "Select city" : "Select country first"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -410,14 +400,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="min-w-0 w-full">
-              <label className="text-sm font-medium block mb-1.5">
-                Location Map Link
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Location Map Link</p>
               <input
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
                 placeholder="Google Maps link"
-                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               />
             </div>
           </div>
@@ -425,10 +413,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Price + Currency - Price optional for services */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 items-start">
             <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Price{" "}
-                
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Price{" "}</p>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
@@ -437,20 +422,18 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                     ? "e.g. 2500, Free, or leave blank"
                     : "e.g. 2500 or Free"
                 }
-                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1.5">
-                Currency
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</p>
               <Select
                 value={currency}
                 onValueChange={(v) => {
                   if (v) setCurrency(v);
                 }}
               >
-                <SelectTrigger className="h-10 w-full">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -467,14 +450,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           {/* Listing type — hidden for rent, property, vehicles, wanted, free items, etc. */}
           {category && !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Listing Type
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Listing Type</p>
             <Select
               value={listingType}
               onValueChange={(v) => setListingType(v as ListingType)}
             >
-              <SelectTrigger className="h-10 w-full">
+              <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -495,10 +476,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             category &&
             !HIDE_LISTING_TYPE_CATEGORIES.has(category) && (
             <div>
-              <label className="text-sm font-medium block mb-1.5">
-                External Link / Affiliate URL{" "}
-                <span className="text-destructive">*</span>
-              </label>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">External Link / Affiliate URL{" "} *</p>
               <div className="relative">
                 <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
@@ -506,7 +484,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   onChange={(e) => setExternalLink(e.target.value)}
                   placeholder="https://example.com/product"
                   type="url"
-                  className="w-full h-10 pl-9 pr-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 pl-9"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -517,15 +495,13 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Contact phone */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Contact Phone
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Phone</p>
             <input
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
               placeholder="+966 5XX XXX XXXX"
               type="tel"
-              className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users
@@ -534,16 +510,14 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Auto-close */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Close Listing Automatically
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Close Listing Automatically</p>
             <Select
               value={expiration}
               onValueChange={(v) => {
                 if (v) setExpiration(v as ExpirationOptionValue);
               }}
             >
-              <SelectTrigger className="h-10 w-full">
+              <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                 <SelectValue placeholder="Never / Keep Open">
                   {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
                     "Never / Keep Open"}
@@ -561,9 +535,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
 
           {/* Description */}
           <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Description <span className="text-destructive">*</span>
-            </label>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description *</p>
             <RichTextEditor
               value={description}
               onChange={setDescription}
