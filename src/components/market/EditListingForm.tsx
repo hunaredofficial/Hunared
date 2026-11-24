@@ -333,7 +333,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder={getListingTitlePlaceholder(category)}
               maxLength={100}
-              className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+              className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
           </div>
 
@@ -347,7 +347,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCategory(v);
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -370,8 +370,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   }
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country...">{(v) => (v ? COUNTRIES.find((c) => c.code === v)?.name ?? String(v) : null)}</SelectValue>
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectValue placeholder="Select country...">
+                    {COUNTRIES.find((c) => c.code === country)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
@@ -389,7 +391,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 onValueChange={(v) => { if (v) setCity(v); }}
                 disabled={!country}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder={country ? "Select city" : "Select country first"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -405,7 +407,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
                 placeholder="Google Maps link"
-                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+                className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               />
             </div>
           </div>
@@ -422,7 +424,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                     ? "e.g. 2500, Free, or leave blank"
                     : "e.g. 2500 or Free"
                 }
-                className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+                className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               />
             </div>
             <div>
@@ -433,7 +435,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCurrency(v);
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -455,7 +457,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               value={listingType}
               onValueChange={(v) => setListingType(v as ListingType)}
             >
-              <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+              <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -484,7 +486,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   onChange={(e) => setExternalLink(e.target.value)}
                   placeholder="https://example.com/product"
                   type="url"
-                  className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+                  className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 pl-9"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -501,7 +503,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               onChange={(e) => setContactPhone(e.target.value)}
               placeholder="+966 5XX XXX XXXX"
               type="tel"
-              className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+              className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users
@@ -517,7 +519,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 if (v) setExpiration(v as ExpirationOptionValue);
               }}
             >
-              <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+              <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                 <SelectValue placeholder="Never / Keep Open">
                   {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
                     "Never / Keep Open"}

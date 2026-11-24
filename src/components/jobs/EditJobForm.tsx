@@ -235,7 +235,7 @@ export function EditJobForm({ job }: { job: Job }) {
             <Input
               placeholder="e.g. Job title or role name"
               value={form.jobTitle}
-              onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("jobTitle", e.target.value)}
+              onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("jobTitle", e.target.value)}
             />
           </Field>
           <Field label="Job Description *">
@@ -255,7 +255,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("category", v);
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -271,7 +271,7 @@ export function EditJobForm({ job }: { job: Job }) {
               <Input
                 placeholder="e.g. Specialty, skill focus, or role type"
                 value={form.subcategory}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("subcategory", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("subcategory", e.target.value)}
               />
             </Field>
 
@@ -285,8 +285,10 @@ export function EditJobForm({ job }: { job: Job }) {
                   }
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select country">{(v) => (v ? COUNTRIES.find((c) => c.code === v)?.name ?? String(v) : null)}</SelectValue>
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectValue placeholder="Select country">
+                    {COUNTRIES.find((c) => c.code === form.country)?.name}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map((c) => (
@@ -306,7 +308,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 }}
                 disabled={!form.country}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder={form.country ? "Select city" : "Select country first"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -326,7 +328,7 @@ export function EditJobForm({ job }: { job: Job }) {
               <Input
                 placeholder="e.g. Office, site, remote, or district"
                 value={form.workLocation}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("workLocation", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("workLocation", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
                 Work site name, area or address.
@@ -339,7 +341,7 @@ export function EditJobForm({ job }: { job: Job }) {
                 max="999"
                 placeholder="Select Positions"
                 value={form.positions}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("positions", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("positions", e.target.value)}
               />
             </Field>
 
@@ -350,7 +352,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("experienceLevel", v);
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
@@ -376,7 +378,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select Temporary or Permanent" />
                 </SelectTrigger>
                 <SelectContent>
@@ -406,7 +408,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   }));
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -436,7 +438,7 @@ export function EditJobForm({ job }: { job: Job }) {
                   if (v) set("salaryType", v);
                 }}
               >
-                <SelectTrigger className="flex !h-10 h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="!h-10 h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Select salary type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -463,7 +465,7 @@ export function EditJobForm({ job }: { job: Job }) {
                     : "Amount if known"
                 }
                 value={form.salaryRate}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("salaryRate", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("salaryRate", e.target.value)}
               />
             </Field>
           </div>
@@ -475,34 +477,34 @@ export function EditJobForm({ job }: { job: Job }) {
             <Field label="Company Name *">
               <Input
                 value={form.companyName}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyName", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyName", e.target.value)}
               />
             </Field>
             <Field label="Company Phone">
               <Input
                 type="tel"
                 value={form.companyPhone}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyPhone", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyPhone", e.target.value)}
               />
             </Field>
             <Field label="Company Email">
               <Input
                 type="email"
                 value={form.companyEmail}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyEmail", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyEmail", e.target.value)}
               />
             </Field>
             <Field label="Company Address">
               <Input
                 value={form.companyAddress}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("companyAddress", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("companyAddress", e.target.value)}
               />
             </Field>
             <Field label="Company Location Link">
               <Input
                 placeholder="Google Maps link"
                 value={form.officeLocationLink}
-                onChange={(e) = className="flex h-10 min-h-10 w-full items-center rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"> set("officeLocationLink", e.target.value)}
+                onChange={(e) = className="h-10 w-full min-h-10 rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"> set("officeLocationLink", e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
                 Company office map link.
