@@ -142,7 +142,7 @@ export const TEMPORARY_DURATIONS = [
   "UnSpecified",
 ] as const;
 
-export const SALARY_TYPES = ["Hourly", "Monthly", "Yearly", "Fixed", "Negotiable"] as const;
+export const SALARY_TYPES = ["Hourly", "Monthly", "Negotiable"] as const;
 export type SalaryType = (typeof SALARY_TYPES)[number];
 
 /** Job experience level options (optional on post form; filter uses same values) */
@@ -779,40 +779,40 @@ export const LISTING_CATEGORIES = [
 export type ListingCategoryValue = (typeof LISTING_CATEGORIES)[number]["value"];
 
 export const LISTING_TITLE_PLACEHOLDERS: Record<string, string> = {
-  for_sale: "e.g. Samsung Galaxy S24 for Sale",
-  for_rent: "e.g. Excavator for Rent – Daily Rate",
-  services: "e.g. Electrical Maintenance in Riyadh",
-  accommodation: "e.g. 2-bedroom apartment in Riyadh",
-  property: "e.g. Villa for Sale in Jeddah",
-  vehicles: "e.g. Toyota Camry 2022 – Excellent Condition",
-  electronics: "e.g. MacBook Pro 14-inch M3",
-  home_furniture: "e.g. Sofa Set – 7 Seater",
-  personel_workwear: "e.g. Safety Boots Size 42 – New",
-  mobiles_accessories: "e.g. iPhone 15 Pro Max 256GB",
-  tools_equipment: "e.g. Bosch Drill Kit – Barely Used",
-  industrial_materials: "e.g. Electrical Cables – Bulk Supply",
-  pets_animals: "e.g. Persian Cat – Vaccinated",
-  wanted: "e.g. Looking for 1BHK near Downtown",
-  free_items: "e.g. Free Office Chair – Pickup Only",
-  lost_found: "e.g. Lost iPhone near Riyadh Park",
-  events: "e.g. Networking Meetup – Riyadh 15 Sep",
-  business_commercial: "e.g. Shop Space for Lease – Al Khobar",
-  offers_deals: "e.g. 50% Off Summer Collection",
-  announcements: "e.g. Community Notice – Road Closure",
-  donations: "e.g. Donating Winter Clothes – Good Condition",
-  community: "e.g. Looking for Tennis Partner in Dammam",
-  education_training: "e.g. NEBOSH Course – Weekend Batch",
-  wholesale: "e.g. Wholesale LED Lights – Bulk Orders",
-  other: "e.g. Describe your listing in a short title",
-  sports_outdoors: "e.g. Professional Football Boots – Size 42",
-  kids_baby: "e.g. Baby Stroller – Excellent Condition",
-  food_agriculture: "e.g. Fresh Dates – Bulk Available",
-  health_medical: "e.g. Blood Pressure Monitor – Digital",
+  for_sale: "Enter a clear title for your listing",
+  for_rent: "Enter a clear title for your listing",
+  services: "Enter a clear title for your listing",
+  accommodation: "Enter a clear title for your listing",
+  property: "Enter a clear title for your listing",
+  vehicles: "Enter a clear title for your listing",
+  electronics: "Enter a clear title for your listing",
+  home_furniture: "Enter a clear title for your listing",
+  personel_workwear: "Enter a clear title for your listing",
+  mobiles_accessories: "Enter a clear title for your listing",
+  tools_equipment: "Enter a clear title for your listing",
+  industrial_materials: "Enter a clear title for your listing",
+  pets_animals: "Enter a clear title for your listing",
+  wanted: "Enter a clear title for your listing",
+  free_items: "Enter a clear title for your listing",
+  lost_found: "Enter a clear title for your listing",
+  events: "Enter a clear title for your listing",
+  business_commercial: "Enter a clear title for your listing",
+  offers_deals: "Enter a clear title for your listing",
+  announcements: "Enter a clear title for your listing",
+  donations: "Enter a clear title for your listing",
+  community: "Enter a clear title for your listing",
+  education_training: "Enter a clear title for your listing",
+  wholesale: "Enter a clear title for your listing",
+  other: "Enter a clear title for your listing",
+  sports_outdoors: "Enter a clear title for your listing",
+  kids_baby: "Enter a clear title for your listing",
+  food_agriculture: "Enter a clear title for your listing",
+  health_medical: "Enter a clear title for your listing",
 };
 
 export function getListingTitlePlaceholder(category: string | null | undefined): string {
-  if (!category) return "e.g. Enter a clear title for your listing";
-  return LISTING_TITLE_PLACEHOLDERS[category] ?? "e.g. Enter a clear title for your listing";
+  if (!category) return "Enter a clear title for your listing";
+  return LISTING_TITLE_PLACEHOLDERS[category] ?? "Enter a clear title for your listing";
 }
 
 /** Condition options for For Sale (filter section only — not product subcategories). */

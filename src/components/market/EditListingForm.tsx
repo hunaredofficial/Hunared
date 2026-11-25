@@ -359,11 +359,15 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 }}
               >
                 <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <SelectValue placeholder="Select category..." />
+                  <span className="flex-1 truncate text-left">
+                    {LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? (
+                      <span className="text-muted-foreground">Select category...</span>
+                    )}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {LISTING_CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
+                    <SelectItem key={c.value} value={c.value} label={c.label}>
                       {c.label}
                     </SelectItem>
                   ))}
@@ -435,8 +439,8 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder={
                   isPriceOptional
-                    ? "e.g. 2500, Free, or leave blank"
-                    : "e.g. 2500 or Free"
+                    ? "Price or Free"
+                    : "Price or Free"
                 }
                 className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
               />
@@ -505,7 +509,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 <input
                   value={externalLink}
                   onChange={(e) => setExternalLink(e.target.value)}
-                  placeholder="https://example.com/product"
+                  placeholder="Website or product link"
                   type="url"
                   className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30 pl-9"
                 />
@@ -524,7 +528,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <input
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="+966 5XX XXX XXXX"
+              placeholder="Phone number"
               type="tel"
               className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
             />
@@ -545,7 +549,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               }}
             >
               <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                <SelectValue placeholder="Never / Keep Open">
+                <SelectValue placeholder="Never">
                   {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
                     "Never / Keep Open"}
                 </SelectValue>

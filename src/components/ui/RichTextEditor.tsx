@@ -59,7 +59,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        "rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring",
+        "rounded-md border border-input bg-input/30 focus-within:ring-2 focus-within:ring-ring/40 dark:bg-input/30",
         className
       )}
     >
