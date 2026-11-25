@@ -218,7 +218,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
   function maxPanelHeight() {
     if (typeof window === "undefined") return 720;
-    return Math.max(MIN_H, window.innerHeight - 72);
+    // leave room above panel under header
+    return Math.max(MIN_H, window.innerHeight - 80);
   }
 
   function maxPanelWidth() {
@@ -677,8 +678,8 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
           ? [
-              // fixed only — do NOT add relative (it overrides fixed in CSS cascade)
-              "fixed z-[9998] top-[3.75rem] right-3 left-auto bottom-auto m-0",
+              // Same placement model as Messages: fixed bottom-right
+              "fixed z-[9998] right-3 bottom-3 sm:right-4 sm:bottom-4 left-auto top-auto m-0",
               "translate-x-0 rounded-2xl",
             ].join(" ")
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
@@ -688,14 +689,14 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         variant === "float"
           ? {
               position: "fixed",
-              top: "3.75rem",
               right: 12,
+              bottom: 12,
               left: "auto",
-              bottom: "auto",
+              top: "auto",
               zIndex: 9998,
               height: panelHeight,
               width: panelWidth,
-              maxHeight: "calc(100dvh - 4rem)",
+              maxHeight: "calc(100dvh - 4.5rem)",
               maxWidth: "calc(100vw - 1.5rem)",
             }
           : undefined
@@ -1004,19 +1005,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             AI guidance only — verify important details. You stay in control of applications and
             payments.
           </p>
-          {/* Bottom edge — resize height */}
-          <div
-            role="separator"
-            aria-orientation="horizontal"
-            aria-label="Resize agent panel height"
-            title="Drag up/down to resize height"
-            onMouseDown={onResizeStart("bottom")}
-            onTouchStart={onResizeStart("bottom")}
-            className="shrink-0 h-3 cursor-ns-resize flex items-center justify-center border-t border-border/50 hover:bg-muted/40 active:bg-muted/60 touch-none relative z-[2]"
-          >
-            <span className="h-1 w-10 rounded-full bg-muted-foreground/35" />
-          </div>
-          {/* Left edge — resize width */}
+          {/* Left edge — width (same as Messages) */}
           <div
             role="separator"
             aria-orientation="vertical"
@@ -1026,6 +1015,18 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             onTouchStart={onResizeStart("left")}
             className="absolute left-0 top-0 bottom-3 w-2 cursor-ew-resize hover:bg-primary/20 active:bg-primary/30 touch-none z-[2]"
           />
+          {/* Bottom edge — height (same as Messages) */}
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize agent panel height"
+            title="Drag up/down to resize height"
+            onMouseDown={onResizeStart("bottom")}
+            onTouchStart={onResizeStart("bottom")}
+            className="absolute left-2 right-0 bottom-0 h-3 cursor-ns-resize flex items-center justify-center border-t border-border/50 hover:bg-muted/40 active:bg-muted/60 touch-none z-[2]"
+          >
+            <span className="h-1 w-10 rounded-full bg-muted-foreground/35" />
+          </div>
           {/* Corner — both */}
           <div
             aria-label="Resize agent panel"
