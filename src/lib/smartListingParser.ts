@@ -532,35 +532,65 @@ function detectRentalPeriod(text: string): string | null {
 }
 
 function detectPrice(text: string): string | null {
-  // Prefer full numbers: 50000, 2,500, 2500.00 — never truncate to first 1–3 digits
-  const patterns = [
-    // labeled price
-    /(?:price|cost|rate|asking)\s*[:\-]?\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
-    // currency before amount
-    /(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
-    // comma-grouped thousands
-    /\b(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)\b/,
-    // plain integer/decimal (4+ digits first to avoid year noise handled below)
-    /\b(\d{4,}(?:\.\d{1,2})?)\b/,
-    // shorter amounts with currency/price context nearby
-    /\b(\d{1,3}(?:\.\d{1,2})?)\b(?=\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)|.*\b(?:price|cost|rate|asking)\b)/i,
-  ];
-  let raw: string | null = null;
-  for (const re of patterns) {
-    const m = text.match(re);
-    if (m?.[1]) {
-      raw = m[1].replace(/[,\s]/g, "");
-      break;
-    }
+  if (/\bfree\b/i.test(text)) return "Free";
+
+  // Collect candidate amounts; prefer labeled / rental-period context, never truncate
+  type Hit = { raw: string; score: number; index: number };
+  const hits: Hit[] = [];
+
+  const push = (raw: string, score: number, index: number) => {
+    const cleaned = raw.replace(/[,\s]/g, "");
+    if (!cleaned) return;
+    const n = Number(cleaned);
+    if (!Number.isFinite(n) || n <= 0) return;
+    // skip years unless clearly a price context (score high)
+    if (n >= 1900 && n <= 2100 && score < 5) return;
+    hits.push({ raw: cleaned, score, index });
+  };
+
+  // 1) price/cost/rate/asking + amount
+  for (const m of text.matchAll(
+    /(?:price|cost|rate|asking)\s*[:\-]?\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/gi
+  )) {
+    if (m[1] != null && m.index != null) push(m[1], 10, m.index);
   }
-  if (!raw) {
-    if (/\bfree\b/i.test(text)) return "Free";
-    return null;
+
+  // 2) currency then amount
+  for (const m of text.matchAll(
+    /(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/gi
+  )) {
+    if (m[1] != null && m.index != null) push(m[1], 9, m.index);
   }
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  // ignore years like 2020-2026 if alone (no price context)
-  if (n >= 1900 && n <= 2100 && !/price|sar|aed|usd|cost|rate|asking/i.test(text)) return null;
+
+  // 3) amount then currency
+  for (const m of text.matchAll(
+    /(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)/gi
+  )) {
+    if (m[1] != null && m.index != null) push(m[1], 9, m.index);
+  }
+
+  // 4) after rental period words: monthly / daily / weekly / yearly / rent
+  for (const m of text.matchAll(
+    /\b(?:monthly|daily|weekly|yearly|per\s*month|per\s*day|per\s*week|per\s*year|rent(?:al)?)\s*[:\-]?\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/gi
+  )) {
+    if (m[1] != null && m.index != null) push(m[1], 8, m.index);
+  }
+
+  // 5) comma-grouped thousands
+  for (const m of text.matchAll(/\b(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)\b/g)) {
+    if (m[1] != null && m.index != null) push(m[1], 6, m.index);
+  }
+
+  // 6) any remaining plain number (1+ digits) — includes 12, 50, 500, 50000
+  for (const m of text.matchAll(/\b(\d+(?:\.\d{1,2})?)\b/g)) {
+    if (m[1] != null && m.index != null) push(m[1], 3, m.index);
+  }
+
+  if (hits.length === 0) return null;
+
+  // Best: highest score, then last occurrence (titles often end with price)
+  hits.sort((a, b) => b.score - a.score || b.index - a.index);
+  const n = Number(hits[0].raw);
   return String(Math.round(n));
 }
 
