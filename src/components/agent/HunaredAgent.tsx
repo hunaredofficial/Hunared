@@ -187,15 +187,29 @@ export function HunaredAgent({ variant = "float", className }: Props) {
   const [open, setOpen] = useState(variant === "page");
   const MIN_H = 280;
   const DEFAULT_H = 420;
+  const MIN_W = 300;
+  const DEFAULT_W = 352; // ~22rem
   const [panelHeight, setPanelHeight] = useState(DEFAULT_H);
-  const dragRef = useRef<{ startY: number; startH: number } | null>(null);
+  const [panelWidth, setPanelWidth] = useState(DEFAULT_W);
+  const dragRef = useRef<{
+    edge: "left" | "bottom" | "corner";
+    startX: number;
+    startY: number;
+    startW: number;
+    startH: number;
+  } | null>(null);
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("hunared_agent_height");
-      if (saved) {
-        const n = parseInt(saved, 10);
+      const savedH = localStorage.getItem("hunared_agent_height");
+      if (savedH) {
+        const n = parseInt(savedH, 10);
         if (!Number.isNaN(n) && n >= MIN_H) setPanelHeight(n);
+      }
+      const savedW = localStorage.getItem("hunared_agent_width");
+      if (savedW) {
+        const n = parseInt(savedW, 10);
+        if (!Number.isNaN(n) && n >= MIN_W) setPanelWidth(n);
       }
     } catch {
       /* ignore */
@@ -207,51 +221,67 @@ export function HunaredAgent({ variant = "float", className }: Props) {
     return Math.max(MIN_H, window.innerHeight - 72);
   }
 
-  function onResizeStart(e: ReactMouseEvent | ReactTouchEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    dragRef.current = { startY: clientY, startH: panelHeight };
-    const onMove = (ev: MouseEvent | TouchEvent) => {
-      if (!dragRef.current) return;
-      const y = "touches" in ev ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
-      // Dragging bottom edge down increases height
-      const delta = y - dragRef.current.startY;
-      const next = Math.min(maxPanelHeight(), Math.max(MIN_H, dragRef.current.startH + delta));
-      setPanelHeight(next);
-    };
-    const onUp = () => {
-      dragRef.current = null;
-      try {
-        localStorage.setItem("hunared_agent_height", String(panelHeight));
-      } catch {
-        /* ignore */
-      }
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onUp);
-    };
-    // Fix: save height on up with latest via functional - use ref for height during drag
-    const onUpSave = () => {
-      setPanelHeight((h) => {
-        try {
-          localStorage.setItem("hunared_agent_height", String(h));
-        } catch {
-          /* ignore */
+  function maxPanelWidth() {
+    if (typeof window === "undefined") return 560;
+    return Math.max(MIN_W, Math.min(560, window.innerWidth - 24));
+  }
+
+  function onResizeStart(edge: "left" | "bottom" | "corner") {
+    return (e: ReactMouseEvent | ReactTouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      dragRef.current = {
+        edge,
+        startX: clientX,
+        startY: clientY,
+        startW: panelWidth,
+        startH: panelHeight,
+      };
+      const onMove = (ev: MouseEvent | TouchEvent) => {
+        if (!dragRef.current) return;
+        const x = "touches" in ev ? ev.touches[0].clientX : (ev as MouseEvent).clientX;
+        const y = "touches" in ev ? ev.touches[0].clientY : (ev as MouseEvent).clientY;
+        const d = dragRef.current;
+        if (d.edge === "left" || d.edge === "corner") {
+          // Drag left edge leftward → wider panel
+          const deltaX = d.startX - x;
+          setPanelWidth(Math.min(maxPanelWidth(), Math.max(MIN_W, d.startW + deltaX)));
         }
-        return h;
-      });
-      dragRef.current = null;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUpSave);
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onUpSave);
+        if (d.edge === "bottom" || d.edge === "corner") {
+          const deltaY = y - d.startY;
+          setPanelHeight(Math.min(maxPanelHeight(), Math.max(MIN_H, d.startH + deltaY)));
+        }
+      };
+      const onUpSave = () => {
+        setPanelHeight((h) => {
+          try {
+            localStorage.setItem("hunared_agent_height", String(h));
+          } catch {
+            /* ignore */
+          }
+          return h;
+        });
+        setPanelWidth((w) => {
+          try {
+            localStorage.setItem("hunared_agent_width", String(w));
+          } catch {
+            /* ignore */
+          }
+          return w;
+        });
+        dragRef.current = null;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUpSave);
+        window.removeEventListener("touchmove", onMove);
+        window.removeEventListener("touchend", onUpSave);
+      };
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUpSave);
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("touchend", onUpSave);
     };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUpSave);
-    window.addEventListener("touchmove", onMove, { passive: false });
-    window.addEventListener("touchend", onUpSave);
   }
 
   // Header button controls the drawer (no floating FAB)
@@ -647,11 +677,10 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
           ? [
-              "fixed z-[9998] top-[3.75rem] bottom-auto m-0 rounded-2xl border",
+              "fixed z-[9998] top-[3.75rem] bottom-auto m-0 rounded-2xl border relative",
               // Mobile: centered horizontally; desktop: aligned to the right
               "left-1/2 -translate-x-1/2 right-auto",
               "sm:left-auto sm:right-3 sm:translate-x-0",
-              "w-[min(100vw-1rem,22rem)]",
             ].join(" ")
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
@@ -660,7 +689,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         variant === "float"
           ? {
               height: panelHeight,
+              width: panelWidth,
               maxHeight: "calc(100dvh - 4rem)",
+              maxWidth: "calc(100vw - 1rem)",
             }
           : undefined
       }
@@ -968,18 +999,36 @@ export function HunaredAgent({ variant = "float", className }: Props) {
             AI guidance only — verify important details. You stay in control of applications and
             payments.
           </p>
-          {/* Drag bottom edge to resize (min ↔ max under header) */}
+          {/* Bottom edge — resize height */}
           <div
             role="separator"
             aria-orientation="horizontal"
-            aria-label="Resize agent panel"
-            title="Drag to resize"
-            onMouseDown={onResizeStart}
-            onTouchStart={onResizeStart}
-            className="shrink-0 h-3 cursor-ns-resize flex items-center justify-center border-t border-border/50 hover:bg-muted/40 active:bg-muted/60 touch-none"
+            aria-label="Resize agent panel height"
+            title="Drag up/down to resize height"
+            onMouseDown={onResizeStart("bottom")}
+            onTouchStart={onResizeStart("bottom")}
+            className="shrink-0 h-3 cursor-ns-resize flex items-center justify-center border-t border-border/50 hover:bg-muted/40 active:bg-muted/60 touch-none relative z-[2]"
           >
             <span className="h-1 w-10 rounded-full bg-muted-foreground/35" />
           </div>
+          {/* Left edge — resize width */}
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize agent panel width"
+            title="Drag left/right to resize width"
+            onMouseDown={onResizeStart("left")}
+            onTouchStart={onResizeStart("left")}
+            className="absolute left-0 top-0 bottom-3 w-2 cursor-ew-resize hover:bg-primary/20 active:bg-primary/30 touch-none z-[2]"
+          />
+          {/* Corner — both */}
+          <div
+            aria-label="Resize agent panel"
+            title="Drag to resize"
+            onMouseDown={onResizeStart("corner")}
+            onTouchStart={onResizeStart("corner")}
+            className="absolute left-0 bottom-0 h-4 w-4 cursor-nesw-resize touch-none z-[3]"
+          />
         </>
       )}
     </div>
