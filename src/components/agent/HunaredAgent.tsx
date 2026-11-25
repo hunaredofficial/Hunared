@@ -677,9 +677,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
           ? [
-              // Always fixed under header on the RIGHT (same side as Messages)
+              // fixed only — do NOT add relative (it overrides fixed in CSS cascade)
               "fixed z-[9998] top-[3.75rem] right-3 left-auto bottom-auto m-0",
-              "translate-x-0 rounded-2xl border relative",
+              "translate-x-0 rounded-2xl",
             ].join(" ")
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
@@ -687,13 +687,16 @@ export function HunaredAgent({ variant = "float", className }: Props) {
       style={
         variant === "float"
           ? {
+              position: "fixed",
+              top: "3.75rem",
+              right: 12,
+              left: "auto",
+              bottom: "auto",
+              zIndex: 9998,
               height: panelHeight,
               width: panelWidth,
               maxHeight: "calc(100dvh - 4rem)",
               maxWidth: "calc(100vw - 1.5rem)",
-              right: 12,
-              left: "auto",
-              top: "3.75rem",
             }
           : undefined
       }
