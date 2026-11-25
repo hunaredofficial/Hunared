@@ -11,7 +11,6 @@ import {
   Settings,
   Loader2,
   MessageSquare,
-  MessagesSquare,
   Search,
   Send,
   User,
@@ -133,11 +132,29 @@ function attachmentHref(m: {
   return "#";
 }
 
-export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
+export function MessagesInbox({
+  currentUserId,
+  embedded = false,
+}: {
+  currentUserId: string;
+  /** Overlay panel mode — local conversation state, no route navigation */
+  embedded?: boolean;
+}) {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const activeId = (params?.id as string) || "";
+  const [panelActiveId, setPanelActiveId] = useState("");
+  const routeId = (params?.id as string) || "";
+  const activeId = embedded ? panelActiveId : routeId;
+
+  function openConversation(id: string) {
+    if (embedded) setPanelActiveId(id);
+    else router.push(`/dashboard/messages/${id}`);
+  }
+  function closeToList() {
+    if (embedded) setPanelActiveId("");
+    else router.push("/dashboard/messages");
+  }
   const draftFromUrl = searchParams?.get("draft") || "";
 
   const [filter, setFilter] = useState("all");
@@ -639,7 +656,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       body: JSON.stringify({ archive: on }),
     });
     toast.success(on ? "Archived" : "Removed from archive");
-    if (on) router.push("/dashboard/messages");
+    if (on) closeToList();
     void loadList();
   }
 
@@ -763,7 +780,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       return;
     }
     toast.success(forEveryone ? "Conversation deleted for everyone" : "Conversation removed");
-    router.push("/dashboard/messages");
+    closeToList();
     void loadList();
   }
 
@@ -804,7 +821,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
       <div className="p-3 border-b border-border space-y-2">
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-sm font-semibold flex items-center gap-2">
-            <MessagesSquare className="h-4 w-4 text-primary" />
+            <MessageSquare className="h-4 w-4 text-primary" />
             Messages
           </h1>
           <button
@@ -934,7 +951,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             <button
               key={c.id}
               type="button"
-              onClick={() => router.push(`/dashboard/messages/${c.id}`)}
+              onClick={() => openConversation(c.id)}
               className={cn(
                 "w-full text-left px-3 py-2.5 border-b border-border/50 hover:bg-muted/40 transition-colors",
                 activeId === c.id && "bg-primary/10"
@@ -987,7 +1004,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
     <div className="flex flex-col h-full bg-background">
       {!activeId ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-          <MessagesSquare className="h-10 w-10 mb-3 opacity-40" />
+          <MessageSquare className="h-10 w-10 mb-3 opacity-40" />
           <p className="text-sm font-medium text-foreground">Select a conversation</p>
           <p className="text-xs mt-1 max-w-xs">
             Or open a job, listing, or profile and click Message.
@@ -1003,7 +1020,7 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
             <button
               type="button"
               className="md:hidden p-1.5 rounded-lg hover:bg-muted shrink-0"
-              onClick={() => router.push("/dashboard/messages")}
+              onClick={() => closeToList()}
               aria-label="Back"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -1308,7 +1325,12 @@ export function MessagesInbox({ currentUserId }: { currentUserId: string }) {
   );
 
   return (
-    <div className="h-[calc(100dvh-7.5rem)] md:h-[calc(100vh-8rem)] min-h-[420px] w-full max-w-full rounded-xl border border-border overflow-hidden grid grid-cols-1 md:grid-cols-[minmax(260px,320px)_1fr]">
+    <div className={cn(
+      embedded
+        ? "h-full min-h-0 rounded-none border-0"
+        : "h-[calc(100dvh-7.5rem)] md:h-[calc(100vh-8rem)] min-h-[420px] rounded-xl border border-border",
+      "w-full max-w-full overflow-hidden grid grid-cols-1 md:grid-cols-[minmax(220px,280px)_1fr]"
+    )}>
       <div className={cn("min-h-0 w-full", activeId ? "hidden md:flex md:flex-col" : "flex flex-col")}>
         {listPane}
       </div>

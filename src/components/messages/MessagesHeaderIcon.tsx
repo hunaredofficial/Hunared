@@ -1,18 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { MessagesSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
 /**
- * Header Messages — messenger-style double-bubble icon (distinct from notifications bell).
- * Signed-in only. Links to inbox.
+ * Header Messages — opens same-screen resizable panel (not full page navigation).
+ * Signed-in only.
  */
 export function MessagesHeaderIcon({ className }: { className?: string }) {
   const { isSignedIn, isLoaded } = useAuth();
   const [count, setCount] = useState(0);
+  const [open, setOpen] = useState(false);
 
   const load = useCallback(() => {
     if (!isSignedIn) return;
@@ -37,10 +37,16 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
       if (document.visibilityState === "visible") load();
     };
     document.addEventListener("visibilitychange", onVis);
+    const onOpenState = (e: Event) => {
+      const d = (e as CustomEvent<{ open?: boolean }>).detail;
+      if (typeof d?.open === "boolean") setOpen(d.open);
+    };
+    window.addEventListener("hunared-messages-open-state", onOpenState as EventListener);
     return () => {
       window.clearInterval(t);
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("hunared-messages-open-state", onOpenState as EventListener);
     };
   }, [isSignedIn, load]);
 
@@ -49,25 +55,28 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
   const aria = count > 0 ? `Messages, ${count} unread` : "Messages";
 
   return (
-    <Link
-      href="/dashboard/messages"
+    <button
+      type="button"
       title={aria}
       aria-label={aria}
+      aria-pressed={open}
+      onClick={() => {
+        window.dispatchEvent(new CustomEvent("hunared-messages-toggle"));
+      }}
       className={cn(
         "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
         "text-muted-foreground hover:text-foreground hover:bg-muted/80",
         "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-        count > 0 && "text-primary",
+        open && "bg-primary/15 text-primary",
         className
       )}
     >
-      {/* Messenger-style double chat bubbles — clearly different from Bell */}
-      <MessagesSquare className="h-[18px] w-[18px]" strokeWidth={2} />
+      <MessageSquare className="h-4 w-4" strokeWidth={2} />
       {count > 0 && (
         <span
           className={cn(
-            "absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-0.5",
-            "rounded-full bg-emerald-500 text-white",
+            "absolute top-0.5 right-0.5 min-w-[0.95rem] h-[0.95rem] px-0.5",
+            "rounded-full bg-primary text-primary-foreground",
             "text-[9px] font-bold leading-none flex items-center justify-center",
             "ring-2 ring-background pointer-events-none"
           )}
@@ -75,6 +84,6 @@ export function MessagesHeaderIcon({ className }: { className?: string }) {
           {count > 99 ? "99+" : count > 9 ? "9+" : count}
         </span>
       )}
-    </Link>
+    </button>
   );
 }

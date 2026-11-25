@@ -34,6 +34,7 @@ import { HunaredLogo } from "@/components/brand/HunaredLogo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton";
 import { HunaredAgent } from "@/components/agent/HunaredAgent";
+import { MessagesPanel } from "@/components/messages/MessagesPanel";
 import type { UserRole } from "@/types/database";
 
 interface NavItem {
@@ -271,6 +272,7 @@ export function DashboardShell({
         </div>
       </main>
       <HunaredAgent />
+      <MessagesPanel />
     </div>
     </DashboardShellContext.Provider>
   );
