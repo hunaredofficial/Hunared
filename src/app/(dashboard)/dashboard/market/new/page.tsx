@@ -1037,8 +1037,7 @@ function NewListingForm() {
                     Write my own
                   </Button>
                 </div>
-              ) : (
-              )}
+              ) : null}
             </div>
 
 
@@ -1056,7 +1055,7 @@ function NewListingForm() {
                 <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
                   <SelectValue placeholder="Never">
                     {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
-                      "Never / Keep Open"}
+                      "Never"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -1067,9 +1066,6 @@ function NewListingForm() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                
-              </p>
             </div>
 
             <div className="flex gap-3 pt-2">
