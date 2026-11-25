@@ -1,24 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  Bell,
-  Briefcase,
-  Tag,
-  Package,
-  CreditCard,
-  Info,
-} from "lucide-react";
+import { Bell } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import {
   loadNotificationPrefs,
   isTypeEnabled,
-  categoryForType,
-  CATEGORY_META,
   type NotificationPrefs,
-  type NotifCategory,
 } from "@/lib/notificationPrefs";
 
 type NotifRow = {
@@ -32,16 +22,8 @@ type NotifRow = {
   created_at: string;
 };
 
-const CAT_ICON: Record<NotifCategory, typeof Bell> = {
-  jobs: Briefcase,
-  market: Tag,
-  orders: Package,
-  subscription: CreditCard,
-  system: Info,
-};
-
 /**
- * Header notifications bell — unread badge, category sections, respects Settings prefs.
+ * Header notifications bell — unread badge, respects Settings prefs.
  * Signed-in only. Hidden when showHeaderBell is false.
  */
 export function NotificationsHeaderIcon({ className }: { className?: string }) {
@@ -49,7 +31,21 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [items, setItems] = useState<NotifRow[]>([]);
   const [open, setOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ top: number; right: number }>({
+    top: 0,
+    right: 0,
+  });
   const rootRef = useRef<HTMLDivElement>(null);
+
+  const updatePanelPos = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPanelPos({
+      top: Math.round(r.bottom + 6),
+      right: Math.round(Math.max(8, window.innerWidth - r.right)),
+    });
+  }, []);
 
   useEffect(() => {
     setPrefs(loadNotificationPrefs());
@@ -97,38 +93,32 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
 
   useEffect(() => {
     if (!open) return;
+    updatePanelPos();
+    const onResize = () => updatePanelPos();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onResize, true);
     const onDoc = (e: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onResize, true);
+    };
   }, [open]);
-
-  const visible = useMemo(() => {
-    return items.filter((n) =>
-      prefs ? isTypeEnabled(prefs, n.type, n.title, n.body) : !n.is_read
-    );
-  }, [items, prefs]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<NotifCategory, NotifRow[]>();
-    for (const n of visible) {
-      const cat = categoryForType(n.type, n.title, n.body);
-      const list = map.get(cat) || [];
-      list.push(n);
-      map.set(cat, list);
-    }
-    return Array.from(map.entries()).sort(
-      (a, b) => CATEGORY_META[a[0]].order - CATEGORY_META[b[0]].order
-    );
-  }, [visible]);
 
   if (!isLoaded || !isSignedIn) return null;
   if (prefs && !prefs.showHeaderBell) return null;
 
+  const visible = items.filter((n) =>
+    prefs ? isTypeEnabled(prefs, n.type) : !n.is_read
+  );
   const count = prefs?.silenceAll ? 0 : visible.length;
+  const preview = visible.slice(0, 6);
+
   const aria =
     count > 0 ? `Notifications, ${count} unread` : "Notifications";
 
@@ -140,8 +130,15 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
         aria-label={aria}
         aria-expanded={open}
         onClick={() => {
-          setOpen((o) => !o);
-          if (!open) load();
+          setOpen((o) => {
+            const next = !o;
+            if (next) {
+              // Align panel to the right edge of the bell
+              requestAnimationFrame(() => updatePanelPos());
+              load();
+            }
+            return next;
+          });
         }}
         className={cn(
           "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
@@ -167,105 +164,46 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
       {open && (
         <div
           className={cn(
-            "absolute right-0 top-full mt-1.5 z-50 w-[min(100vw-1.5rem,16rem)]",
+            "fixed z-[100] w-[min(100vw-1.5rem,20rem)]",
             "rounded-xl border border-border bg-card shadow-xl overflow-hidden"
           )}
+          style={{ top: panelPos.top, right: panelPos.right }}
         >
-          <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
             <span className="text-sm font-semibold">Notifications</span>
-            {count > 0 && (
-              <span className="text-[11px] text-muted-foreground">
-                {count} new
-              </span>
-            )}
           </div>
-
           {prefs?.silenceAll && (
             <p className="px-3 py-2 text-xs text-muted-foreground border-b border-border">
-              All alerts are silenced. Turn off Silence in Settings to see
-              badges.
+              All alerts are silenced. Turn off Silence in Settings to see badges.
             </p>
           )}
-
-          {visible.length === 0 ? (
-            <p className="px-3 py-3.5 text-center text-xs text-muted-foreground">
-              No new notifications
-            </p>
-          ) : (
-            <div className="max-h-[min(40vh,14rem)] overflow-y-auto">
-              {grouped.map(([cat, list]) => {
-                const Icon = CAT_ICON[cat];
-                return (
-                  <div key={cat} className="border-b border-border/60 last:border-0">
-                    <div className="sticky top-0 z-[1] flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 backdrop-blur-sm">
-                      <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        {CATEGORY_META[cat].label}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/80">
-                        ({list.length})
-                      </span>
-                    </div>
-                    <ul className="divide-y divide-border/40">
-                      {list.slice(0, 4).map((n) => (
-                        <li key={n.id}>
-                          <button
-                            type="button"
-                            className={cn(
-                              "w-full text-left px-3 py-2.5 hover:bg-muted/40 transition-colors",
-                              !n.is_read && "bg-primary/5"
-                            )}
-                            onClick={() => {
-                              void fetch("/api/notifications", {
-                                method: "PATCH",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({ id: n.id }),
-                              }).then(() => {
-                                setItems((prev) =>
-                                  prev.filter((x) => x.id !== n.id)
-                                );
-                                window.dispatchEvent(
-                                  new Event("hunared-notif-refresh")
-                                );
-                              });
-                              setOpen(false);
-                              if (n.entity_type === "job" && n.entity_id) {
-                                window.location.href = `/jobs/${n.entity_id}`;
-                              } else if (
-                                n.entity_type === "listing" &&
-                                n.entity_id
-                              ) {
-                                window.location.href = `/market/${n.entity_id}`;
-                              } else if (n.entity_type === "order") {
-                                window.location.href =
-                                  "/dashboard/market/orders";
-                              } else {
-                                window.location.href =
-                                  "/dashboard/notifications";
-                              }
-                            }}
-                          >
-                            <p className="text-[13px] font-medium line-clamp-1">
-                              {n.title}
-                            </p>
-                            {n.body ? (
-                              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
-                                {n.body}
-                              </p>
-                            ) : null}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="border-t border-border px-2.5 py-1.5">
+          <ul className="max-h-72 overflow-y-auto">
+            {preview.length === 0 ? (
+              <li className="px-3 py-6 text-center text-xs text-muted-foreground">
+                No new notifications
+              </li>
+            ) : (
+              preview.map((n) => (
+                <li key={n.id} className="border-b border-border/60 last:border-0">
+                  <Link
+                    href="/dashboard/notifications"
+                    onClick={() => setOpen(false)}
+                    className="block px-3 py-2.5 hover:bg-muted/50 transition-colors"
+                  >
+                    <p className="text-xs font-medium text-foreground line-clamp-1">
+                      {n.title}
+                    </p>
+                    {n.body ? (
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                        {n.body}
+                      </p>
+                    ) : null}
+                  </Link>
+                </li>
+              ))
+            )}
+          </ul>
+          <div className="border-t border-border px-3 py-2">
             <Link
               href="/dashboard/notifications"
               onClick={() => setOpen(false)}
