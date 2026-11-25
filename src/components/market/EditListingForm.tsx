@@ -414,17 +414,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="sm:col-span-2">
-                <label className="text-sm font-medium block mb-1.5">
-                  Location Map Link
-                </label>
-                <input
-                  value={mapsUrl}
-                  onChange={(e) => setMapsUrl(e.target.value)}
-                  placeholder="https://maps.app.goo.gl/..."
-                  className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
-                />
-              </div>
             </div>
           </div>
 
@@ -480,14 +469,24 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               onValueChange={(v) => setListingType(v as ListingType)}
             >
               <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                <SelectValue />
+                <span className="flex-1 truncate text-left">
+                  {listingType === "standard"
+                    ? "Standard (Contact to Buy)"
+                    : listingType === "native"
+                      ? "Native Purchase"
+                      : listingType === "affiliate"
+                        ? "Affiliate / External Link"
+                        : "Standard (Contact to Buy)"}
+                </span>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="standard">
+                <SelectItem value="standard" label="Standard (Contact to Buy)">
                   Standard (Contact to Buy)
                 </SelectItem>
-                <SelectItem value="native">Native Purchase</SelectItem>
-                <SelectItem value="affiliate">
+                <SelectItem value="native" label="Native Purchase">
+                  Native Purchase
+                </SelectItem>
+                <SelectItem value="affiliate" label="Affiliate / External Link">
                   Affiliate / External Link
                 </SelectItem>
               </SelectContent>
@@ -536,6 +535,19 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               Only shown to signed-in users
             </p>
           </div>
+
+          <div>
+            <label className="text-sm font-medium block mb-1.5">
+              Location Map Link
+            </label>
+            <input
+              value={mapsUrl}
+              onChange={(e) => setMapsUrl(e.target.value)}
+              placeholder="Google Maps link"
+              className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+            />
+          </div>
+
 
           {/* Auto-close */}
           <div>
