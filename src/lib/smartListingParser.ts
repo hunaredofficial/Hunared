@@ -532,19 +532,35 @@ function detectRentalPeriod(text: string): string | null {
 }
 
 function detectPrice(text: string): string | null {
-  // 2,500 or 2500 or 2500.00
-  const m =
-    text.match(/(?:price|cost|rate|asking)?\s*[:\-]?\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)?\s*([\d]{1,3}(?:[,\s]\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i) ||
-    text.match(/\b([\d]{1,3}(?:,\d{3})+(?:\.\d{1,2})?)\b/);
-  if (!m) {
+  // Prefer full numbers: 50000, 2,500, 2500.00 — never truncate to first 1–3 digits
+  const patterns = [
+    // labeled price
+    /(?:price|cost|rate|asking)\s*[:\-]?\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    // currency before amount
+    /(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)\s*(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/i,
+    // comma-grouped thousands
+    /\b(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)\b/,
+    // plain integer/decimal (4+ digits first to avoid year noise handled below)
+    /\b(\d{4,}(?:\.\d{1,2})?)\b/,
+    // shorter amounts with currency/price context nearby
+    /\b(\d{1,3}(?:\.\d{1,2})?)\b(?=\s*(?:SAR|AED|USD|QAR|KWD|OMR|BHD|PKR|INR|\$|£)|.*\b(?:price|cost|rate|asking)\b)/i,
+  ];
+  let raw: string | null = null;
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m?.[1]) {
+      raw = m[1].replace(/[,\s]/g, "");
+      break;
+    }
+  }
+  if (!raw) {
     if (/\bfree\b/i.test(text)) return "Free";
     return null;
   }
-  const raw = m[1].replace(/[,\s]/g, "");
   const n = Number(raw);
   if (!Number.isFinite(n) || n <= 0) return null;
-  // ignore years like 2020-2026 if alone
-  if (n >= 1900 && n <= 2100 && !/price|sar|aed|usd|cost|rate/i.test(text)) return null;
+  // ignore years like 2020-2026 if alone (no price context)
+  if (n >= 1900 && n <= 2100 && !/price|sar|aed|usd|cost|rate|asking/i.test(text)) return null;
   return String(Math.round(n));
 }
 
