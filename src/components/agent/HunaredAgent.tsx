@@ -677,10 +677,9 @@ export function HunaredAgent({ variant = "float", className }: Props) {
         "flex flex-col overflow-hidden border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl",
         variant === "float"
           ? [
-              "fixed z-[9998] top-[3.75rem] bottom-auto m-0 rounded-2xl border relative",
-              // Mobile: centered horizontally; desktop: aligned to the right
-              "left-1/2 -translate-x-1/2 right-auto",
-              "sm:left-auto sm:right-3 sm:translate-x-0",
+              // Always fixed under header on the RIGHT (same side as Messages)
+              "fixed z-[9998] top-[3.75rem] right-3 left-auto bottom-auto m-0",
+              "translate-x-0 rounded-2xl border relative",
             ].join(" ")
           : "w-full h-[min(82vh,42rem)] rounded-2xl",
         className
@@ -691,7 +690,10 @@ export function HunaredAgent({ variant = "float", className }: Props) {
               height: panelHeight,
               width: panelWidth,
               maxHeight: "calc(100dvh - 4rem)",
-              maxWidth: "calc(100vw - 1rem)",
+              maxWidth: "calc(100vw - 1.5rem)",
+              right: 12,
+              left: "auto",
+              top: "3.75rem",
             }
           : undefined
       }
