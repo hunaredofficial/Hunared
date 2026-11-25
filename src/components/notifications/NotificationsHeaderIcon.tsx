@@ -31,20 +31,15 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [items, setItems] = useState<NotifRow[]>([]);
   const [open, setOpen] = useState(false);
-  const [panelPos, setPanelPos] = useState<{ top: number; right: number }>({
-    top: 0,
-    right: 0,
-  });
+  const [panelTop, setPanelTop] = useState(56);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const updatePanelPos = useCallback(() => {
     const el = rootRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setPanelPos({
-      top: Math.round(r.bottom + 6),
-      right: Math.round(Math.max(8, window.innerWidth - r.right)),
-    });
+    // Keep panel under the bell, always flush to the right side of the viewport
+    setPanelTop(Math.round(r.bottom + 8));
   }, []);
 
   useEffect(() => {
@@ -133,7 +128,7 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
           setOpen((o) => {
             const next = !o;
             if (next) {
-              // Align panel to the right edge of the bell
+              updatePanelPos();
               requestAnimationFrame(() => updatePanelPos());
               load();
             }
@@ -164,10 +159,11 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
       {open && (
         <div
           className={cn(
-            "fixed z-[100] w-[min(100vw-1.5rem,20rem)]",
-            "rounded-xl border border-border bg-card shadow-xl overflow-hidden"
+            "fixed z-[100] right-3 sm:right-4 w-[min(calc(100vw-1.5rem),20rem)]",
+            "rounded-xl border border-border bg-card shadow-xl overflow-hidden",
+            "origin-top-right"
           )}
-          style={{ top: panelPos.top, right: panelPos.right }}
+          style={{ top: panelTop }}
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-border">
             <span className="text-sm font-semibold">Notifications</span>
