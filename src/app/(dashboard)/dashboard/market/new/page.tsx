@@ -826,9 +826,6 @@ function NewListingForm() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Required — is this item lost or found?
-                </p>
               </div>
             )}
 
