@@ -31,7 +31,7 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [items, setItems] = useState<NotifRow[]>([]);
   const [open, setOpen] = useState(false);
-  const [panelTop, setPanelTop] = useState(56);
+  const [panelTop, setPanelTop] = useState(64);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const updatePanelPos = useCallback(() => {
@@ -39,7 +39,7 @@ export function NotificationsHeaderIcon({ className }: { className?: string }) {
     if (!el) return;
     const r = el.getBoundingClientRect();
     // Keep panel under the bell, always flush to the right side of the viewport
-    setPanelTop(Math.round(r.bottom + 8));
+    setPanelTop(Math.round(r.bottom + 14));
   }, []);
 
   useEffect(() => {
