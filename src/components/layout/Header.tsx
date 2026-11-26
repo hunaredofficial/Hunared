@@ -177,7 +177,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="fixed z-50 inset-x-0 top-0 w-full border-b border-border/60 bg-background/95">
+    <header className="fixed z-50 inset-x-0 top-0 w-full border-b border-border/50 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto w-full max-w-7xl px-3 sm:px-5 lg:px-6">
         <div className="flex h-14 items-center justify-between gap-2 min-w-0">
           <div className="shrink-0 min-w-0 flex items-center self-center">
@@ -318,7 +318,7 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 max-w-full">
             <div className="hidden md:block max-w-[12rem]">
               <LocationPicker />
             </div>
@@ -326,7 +326,7 @@ export function Header() {
             <Button
               size="sm"
               variant="outline"
-              className="hidden md:inline-flex h-8 text-[13px] font-medium border-border/80"
+              className="hidden md:inline-flex h-8 text-[13px] font-medium border-border/80 rounded-lg px-3"
               asChild
             >
               <Link href="/post">
@@ -335,15 +335,32 @@ export function Header() {
               </Link>
             </Button>
 
-            <ThemeToggle />
+            {/* Utility icon group — consistent sizing & hover */}
+            <div className="flex items-center gap-0.5">
+              <ThemeToggle />
+              <AgentHeaderButton />
+              <NotificationsHeaderIcon />
+              <MessagesHeaderIcon />
+              <Show when="signed-in">
+                <Link
+                  href="/dashboard"
+                  aria-label="Dashboard"
+                  title="Dashboard"
+                  className={cn(
+                    "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                    "text-muted-foreground hover:text-foreground hover:bg-muted/80",
+                    "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) &&
+                      "bg-primary/15 text-primary"
+                  )}
+                >
+                  <LayoutDashboard className="h-5 w-5" strokeWidth={2} />
+                </Link>
+              </Show>
+            </div>
 
-            <AgentHeaderButton />
-
-            <NotificationsHeaderIcon />
-
-            <MessagesHeaderIcon />
-
-            <div className="hidden lg:flex items-center gap-1.5">
+            {/* Auth / avatar */}
+            <div className="hidden lg:flex items-center gap-2 pl-1.5 border-l border-border/50">
               <Show when="signed-out">
                 <Button
                   variant="ghost"
@@ -355,28 +372,13 @@ export function Header() {
                 </Button>
                 <Button
                   size="sm"
-                  className="h-8 text-[13px] font-semibold px-3.5 shadow-sm"
+                  className="h-8 text-[13px] font-semibold px-3.5 shadow-sm rounded-lg"
                   asChild
                 >
                   <Link href="/register">Get Started</Link>
                 </Button>
               </Show>
               <Show when="signed-in">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 shrink-0 p-0"
-                  asChild
-                >
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center justify-center"
-                    aria-label="Dashboard"
-                    title="Dashboard"
-                  >
-                    <LayoutDashboard className="h-6 w-6" />
-                  </Link>
-                </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
                   <UserButton
                     appearance={{
