@@ -37,7 +37,6 @@ import { NotificationsHeaderIcon } from "@/components/notifications/Notification
 import { AgentHeaderButton } from "@/components/agent/AgentHeaderButton";
 import { LocationPicker } from "@/components/layout/LocationPicker";
 import { HunaredLogo } from "@/components/brand/HunaredLogo";
-import { DashboardIcon } from "@/components/icons/DashboardIcon";
 import { Show, UserButton, useAuth } from "@clerk/nextjs";
 
 type MegaItem = {
@@ -375,7 +374,7 @@ export function Header() {
                     aria-label="Dashboard"
                     title="Dashboard"
                   >
-                    <DashboardIcon className="h-5 w-5" />
+                    <LayoutDashboard className="h-5 w-5" />
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
