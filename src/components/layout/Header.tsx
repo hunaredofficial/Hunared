@@ -178,23 +178,25 @@ export function Header() {
 
   return (
     <header className="fixed z-50 inset-x-0 top-0 w-full pointer-events-none">
-      {/* Ambient top glow — Fello-style */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-24 h-56 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.22),transparent_70%)]"
-      />
-      <div className="pointer-events-auto mx-auto w-full max-w-6xl px-3 sm:px-4 pt-3 sm:pt-4">
+      {/* Ambient animated color field — Fello-style */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-32 h-72 overflow-hidden">
+        <div className="fello-aurora absolute inset-0 opacity-90" />
+      </div>
+      <div className="pointer-events-auto mx-auto w-full max-w-5xl px-3 sm:px-4 pt-3.5 sm:pt-5">
         <div
           className={cn(
-            "flex h-12 sm:h-[3.25rem] items-center justify-between gap-2 min-w-0 px-2.5 sm:px-3",
-            "rounded-full border border-white/10",
-            "bg-[linear-gradient(135deg,rgba(49,30,99,0.92)_0%,rgba(30,27,75,0.94)_45%,rgba(15,12,35,0.96)_100%)]",
-            "backdrop-blur-xl shadow-[0_8px_40px_rgba(79,70,229,0.25),0_0_0_1px_rgba(165,180,252,0.08)_inset]",
-            "transition-shadow duration-300"
+            "relative flex h-14 sm:h-16 items-center justify-between gap-3 min-w-0 px-3 sm:px-4",
+            "rounded-full border border-white/12",
+            "bg-[linear-gradient(135deg,rgba(55,35,120,0.88)_0%,rgba(36,28,90,0.92)_40%,rgba(18,14,45,0.95)_100%)]",
+            "backdrop-blur-2xl",
+            "shadow-[0_12px_48px_rgba(99,70,229,0.35),0_0_0_1px_rgba(199,210,254,0.1)_inset]",
+            "overflow-hidden transition-shadow duration-300"
           )}
         >
+          {/* soft moving sheen on bar */}
+          <div aria-hidden className="fello-bar-sheen pointer-events-none absolute inset-0 rounded-full" />
           <div className="shrink-0 min-w-0 flex items-center self-center pl-1">
-            <HunaredLogo size="md" />
+            <HunaredLogo size="lg" />
           </div>
 
           <nav
@@ -211,7 +213,7 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-full transition-all duration-200",
+                      "relative px-3.5 py-2 text-[14px] font-medium tracking-tight rounded-full transition-all duration-200",
                       isActive
                         ? "text-white bg-white/10"
                         : "text-white/70 hover:text-white hover:bg-white/5"
@@ -238,7 +240,7 @@ export function Header() {
                     onClick={() => setOpenMega(isOpen ? null : item.label)}
                     onMouseEnter={() => setOpenMega(item.label)}
                     className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-full transition-all duration-200",
+                      "flex items-center gap-1 px-3.5 py-2 text-[14px] font-medium tracking-tight rounded-full transition-all duration-200",
                       isActive || isOpen
                         ? "text-white bg-white/10"
                         : "text-white/70 hover:text-white hover:bg-white/5"
@@ -361,14 +363,14 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-[13px] font-medium"
+                  className="h-9 text-[13px] font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-full"
                   asChild
                 >
                   <Link href="/sign-in">Sign In</Link>
                 </Button>
                 <Button
                   size="sm"
-                  className="h-8 text-[13px] font-semibold px-4 rounded-full bg-white text-slate-900 hover:bg-white/90 shadow-md shadow-indigo-500/20 border-0"
+                  className="h-9 sm:h-10 text-[13px] sm:text-sm font-semibold px-5 rounded-full bg-white text-slate-900 hover:bg-white/90 shadow-md shadow-indigo-500/25 border-0"
                   asChild
                 >
                   <Link href="/register">Get Started</Link>
