@@ -177,10 +177,23 @@ export function Header() {
   }, []);
 
   return (
-    <header className="fixed z-50 inset-x-0 top-0 w-full border-b border-border/60 bg-background/95">
-      <div className="mx-auto w-full max-w-7xl px-3 sm:px-5 lg:px-6">
-        <div className="flex h-14 items-center justify-between gap-2 min-w-0">
-          <div className="shrink-0 min-w-0 flex items-center self-center">
+    <header className="fixed z-50 inset-x-0 top-0 w-full pointer-events-none">
+      {/* Ambient top glow — Fello-style */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-24 h-56 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.22),transparent_70%)]"
+      />
+      <div className="pointer-events-auto mx-auto w-full max-w-6xl px-3 sm:px-4 pt-3 sm:pt-4">
+        <div
+          className={cn(
+            "flex h-12 sm:h-[3.25rem] items-center justify-between gap-2 min-w-0 px-2.5 sm:px-3",
+            "rounded-full border border-white/10",
+            "bg-[linear-gradient(135deg,rgba(49,30,99,0.92)_0%,rgba(30,27,75,0.94)_45%,rgba(15,12,35,0.96)_100%)]",
+            "backdrop-blur-xl shadow-[0_8px_40px_rgba(79,70,229,0.25),0_0_0_1px_rgba(165,180,252,0.08)_inset]",
+            "transition-shadow duration-300"
+          )}
+        >
+          <div className="shrink-0 min-w-0 flex items-center self-center pl-1">
             <HunaredLogo size="md" />
           </div>
 
@@ -198,15 +211,15 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
+                      "relative px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-full transition-all duration-200",
                       isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "text-white bg-white/10"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     )}
                   >
                     {item.label}
                     {isActive && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-primary" />
+                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-[2px] w-4 rounded-full bg-indigo-300/90" />
                     )}
                   </Link>
                 );
@@ -225,10 +238,10 @@ export function Header() {
                     onClick={() => setOpenMega(isOpen ? null : item.label)}
                     onMouseEnter={() => setOpenMega(item.label)}
                     className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-md transition-colors duration-150",
+                      "flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium tracking-tight rounded-full transition-all duration-200",
                       isActive || isOpen
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "text-white bg-white/10"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     )}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
@@ -355,7 +368,7 @@ export function Header() {
                 </Button>
                 <Button
                   size="sm"
-                  className="h-8 text-[13px] font-semibold px-3.5 shadow-sm"
+                  className="h-8 text-[13px] font-semibold px-4 rounded-full bg-white text-slate-900 hover:bg-white/90 shadow-md shadow-indigo-500/20 border-0"
                   asChild
                 >
                   <Link href="/register">Get Started</Link>
@@ -398,42 +411,34 @@ export function Header() {
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile menu — polished full-width drawer */}
+      {/* Mobile menu — under floating pill */}
       <div
         className={cn(
-          "lg:hidden overflow-hidden transition-all duration-300 ease-out",
+          "lg:hidden overflow-hidden transition-all duration-300 ease-out mt-2",
           mobileOpen
             ? "max-h-[min(88dvh,44rem)] opacity-100"
             : "max-h-0 opacity-0 pointer-events-none"
         )}
       >
-        <div className="border-t border-border/60 bg-gradient-to-b from-card via-background to-background px-3 pt-3 pb-5 space-y-3 overflow-y-auto max-h-[min(82dvh,40rem)] overscroll-contain">
-          {/* Location + Post (Post under location) */}
-          <div className="rounded-xl border border-border/70 bg-card/70 overflow-hidden shadow-sm">
-            <div className="px-3 py-2.5 flex items-center gap-2.5 border-b border-border/50 bg-muted/20">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                <MapPin className="h-3.5 w-3.5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-0.5">
-                  Location
-                </p>
-                <LocationPicker />
-              </div>
-            </div>
-            <div className="p-2.5">
-              <Link
-                href="/post"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary shadow-sm shadow-primary/20 hover:opacity-95 active:scale-[0.99] transition"
-              >
-                <Plus className="h-4 w-4" />
-                Post
-              </Link>
+        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(30,27,75,0.98),rgba(15,12,35,0.98))] backdrop-blur-xl shadow-2xl shadow-indigo-950/40 px-3 pt-3 pb-5 space-y-3 overflow-y-auto max-h-[min(82dvh,40rem)] overscroll-contain">
+          {/* Location chip */}
+          <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-2.5 flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <LocationPicker />
             </div>
           </div>
+
+          {/* Primary CTA */}
+          <Link
+            href="/post"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-3 text-sm font-semibold text-primary-foreground bg-primary shadow-md shadow-primary/25 hover:opacity-95 active:scale-[0.99] transition"
+          >
+            <Plus className="h-4 w-4" />
+            Post
+          </Link>
 
           {/* Nav accordion groups */}
           <nav className="rounded-xl border border-border/70 bg-card/60 overflow-hidden divide-y divide-border/50">
@@ -583,6 +588,7 @@ export function Header() {
             </Show>
           </div>
         </div>
+      </div>
       </div>
     </header>
   );

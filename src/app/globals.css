@@ -147,10 +147,10 @@
   --sidebar-border: oklch(0.9 0.012 265);
   --sidebar-ring: oklch(0.5 0.16 265);
 
-  --brand-from: #312e81;
-  --brand-via: #4f46e5;
-  --brand-to: #6366f1;
-  --brand-glow: rgba(79, 70, 229, 0.14);
+  --brand-from: #4c1d95;
+  --brand-via: #6366f1;
+  --brand-to: #818cf8;
+  --brand-glow: rgba(129, 140, 248, 0.22);
 
   --premium: oklch(0.78 0.12 85);
   --premium-foreground: oklch(0.22 0.04 85);
@@ -161,26 +161,27 @@
   color-scheme: dark;
 
   /* Canvas — deep slate-charcoal, not pure black */
-  --background: oklch(0.145 0.016 265);
-  --foreground: oklch(0.97 0.006 265);
+  /* Deep violet-black canvas — Fello-inspired */
+  --background: oklch(0.12 0.028 290);
+  --foreground: oklch(0.97 0.008 280);
 
   /* Cards / main surfaces */
-  --card: oklch(0.185 0.018 265);
-  --card-foreground: oklch(0.97 0.006 265);
+  --card: oklch(0.165 0.03 290);
+  --card-foreground: oklch(0.97 0.008 280);
 
   /* Elevated: modals, dropdowns, sticky panels */
-  --popover: oklch(0.2 0.02 265);
-  --popover-foreground: oklch(0.97 0.006 265);
-  --elevated: oklch(0.21 0.022 265);
-  --elevated-foreground: oklch(0.97 0.006 265);
+  --popover: oklch(0.185 0.032 290);
+  --popover-foreground: oklch(0.97 0.008 280);
+  --elevated: oklch(0.195 0.034 290);
+  --elevated-foreground: oklch(0.97 0.008 280);
 
   /* Interactive layers */
-  --surface-hover: oklch(0.22 0.022 265);
-  --surface-active: oklch(0.25 0.03 265);
+  --surface-hover: oklch(0.21 0.036 290);
+  --surface-active: oklch(0.24 0.04 290);
 
-  /* Primary accent — refined indigo */
-  --primary: oklch(0.7 0.155 270);
-  --primary-foreground: oklch(0.14 0.03 265);
+  /* Primary accent — bright indigo / violet */
+  --primary: oklch(0.72 0.17 280);
+  --primary-foreground: oklch(0.14 0.03 290);
 
   --secondary: oklch(0.22 0.022 265);
   --secondary-foreground: oklch(0.94 0.008 265);
@@ -471,4 +472,40 @@ datalist option {
   -webkit-text-fill-color: #FDC415;
   background-image: none;
   animation: none;
+}
+
+
+/* ─── Fello-inspired ambient utilities ───────────────────────── */
+.fello-ambient-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.28), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 85% 20%, rgba(168, 85, 247, 0.12), transparent 50%),
+    var(--background);
+}
+
+@keyframes fello-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.fello-float {
+  animation: fello-float 6s ease-in-out infinite;
+}
+
+@keyframes fello-glow-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.fello-glow-pulse {
+  animation: fello-glow-pulse 4s ease-in-out infinite;
+}
+
+.fello-cta {
+  background: linear-gradient(135deg, #60a5fa 0%, #6366f1 50%, #8b5cf6 100%);
+  color: white;
+  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fello-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.45);
 }

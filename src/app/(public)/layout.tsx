@@ -3,15 +3,14 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 import { HunaredAgent } from "@/components/agent/HunaredAgent";
-import { MessagesPanel } from "@/components/messages/MessagesPanel";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col fello-ambient-bg">
       <Header />
       {/* Single sitewide header banner — one active campaign at a time */}
       <div className="w-full border-b border-border/15">
-        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 pt-20 sm:pt-22 pb-2">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 pt-22 sm:pt-24 pb-2">
           <PremiumAdSlot
             slotId="header_leaderboard"
             legacySlotName="header"
@@ -31,7 +30,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <ScrollToTop />
       {/* Listens for hunared-agent-toggle from header + footer on all public pages */}
       <HunaredAgent />
-      <MessagesPanel />
     </div>
   );
 }
