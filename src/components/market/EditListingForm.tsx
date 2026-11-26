@@ -26,7 +26,6 @@ import {
   type ExpirationOptionValue,
 } from "@/lib/expiration";
 import { COUNTRIES } from "@/lib/countries";
-import { OptionsCombobox } from "@/components/shared/OptionsCombobox";
 import { getCitiesForCountry } from "@/lib/cities";
 import type { Listing } from "@/types/database";
 
@@ -193,6 +192,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
       toast.error("Please select a category");
       return;
     }
+    if (listingType !== "affiliate" && !contactPhone.trim()) {
+      toast.error("Contact phone is required");
+      return;
+    }
     if (listingType === "affiliate" && !externalLink.trim()) {
       toast.error("Please enter an external / affiliate URL");
       return;
@@ -268,7 +271,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <label className="text-sm font-medium block mb-1.5">
               Photos{" "}
               <span className="text-muted-foreground text-xs font-normal">
-                
+                (optional — up to 8; auto image from title/category if empty)
               </span>
             </label>
             <input
@@ -342,7 +345,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               onChange={(e) => setTitle(e.target.value)}
               placeholder={getListingTitlePlaceholder(category)}
               maxLength={100}
-              className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+              className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -358,16 +361,12 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCategory(v);
                 }}
               >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                  <span className="flex-1 truncate text-left">
-                    {LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? (
-                      <span className="text-muted-foreground">Select category...</span>
-                    )}
-                  </span>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
                 <SelectContent>
                   {LISTING_CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value} label={c.label}>
+                    <SelectItem key={c.value} value={c.value}>
                       {c.label}
                     </SelectItem>
                   ))}
@@ -375,25 +374,30 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </Select>
             </div>
             <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
+              <div>
                 <label className="text-sm font-medium block mb-1.5">
                   Country <span className="text-destructive">*</span>
                 </label>
-                <OptionsCombobox
-                  id="market-edit-country"
+                <Select
                   value={country}
-                  onChange={(v) => {
-                    setCountry(v);
-                    if (v && !currencyTouched) {
-                      setCurrency(currencyForCountry(v));
+                  onValueChange={(v) => {
+                    if (v) {
+                      setCountry(v);
+                      setCity("");
                     }
                   }}
-                  options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))}
-                  placeholder="Select country..."
-                  size="md"
-                  variant="select"
-                  searchable
-                />
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select country..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1.5">
@@ -404,7 +408,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   onValueChange={(v) => { if (v) setCity(v); }}
                   disabled={!country}
                 >
-                  <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder={country ? "Select city" : "Select country first"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -414,6 +418,17 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium block mb-1.5">
+                  Location Map Link (Optional)
+                </label>
+                <input
+                  value={mapsUrl}
+                  onChange={(e) => setMapsUrl(e.target.value)}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
             </div>
           </div>
 
@@ -421,17 +436,24 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium block mb-1.5">
-                  Price
-                </label>
+                Price{" "}
+                {isPriceOptional ? (
+                  <span className="text-muted-foreground text-xs font-normal">
+                    (optional)
+                  </span>
+                ) : (
+                  <span className="text-destructive">*</span>
+                )}
+              </label>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder={
                   isPriceOptional
-                    ? "Price or Free"
-                    : "Price or Free"
+                    ? "e.g. 2500, Free, or leave blank"
+                    : "e.g. 2500 or Free"
                 }
-                className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+                className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -444,7 +466,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                   if (v) setCurrency(v);
                 }}
               >
-                <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -468,25 +490,15 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               value={listingType}
               onValueChange={(v) => setListingType(v as ListingType)}
             >
-              <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                <span className="flex-1 truncate text-left">
-                  {listingType === "standard"
-                    ? "Standard (Contact to Buy)"
-                    : listingType === "native"
-                      ? "Native Purchase"
-                      : listingType === "affiliate"
-                        ? "Affiliate / External Link"
-                        : "Standard (Contact to Buy)"}
-                </span>
+              <SelectTrigger className="w-full">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="standard" label="Standard (Contact to Buy)">
+                <SelectItem value="standard">
                   Standard (Contact to Buy)
                 </SelectItem>
-                <SelectItem value="native" label="Native Purchase">
-                  Native Purchase
-                </SelectItem>
-                <SelectItem value="affiliate" label="Affiliate / External Link">
+                <SelectItem value="native">Native Purchase</SelectItem>
+                <SelectItem value="affiliate">
                   Affiliate / External Link
                 </SelectItem>
               </SelectContent>
@@ -508,9 +520,9 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 <input
                   value={externalLink}
                   onChange={(e) => setExternalLink(e.target.value)}
-                  placeholder="Website or product link"
+                  placeholder="https://example.com/product"
                   type="url"
-                  className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30 pl-9"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -523,31 +535,21 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           <div>
             <label className="text-sm font-medium block mb-1.5">
               Contact Phone
+              {listingType !== "affiliate" && (
+                <span className="text-destructive"> *</span>
+              )}
             </label>
             <input
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="Phone number"
+              placeholder="+966 5XX XXX XXXX"
               type="tel"
-              className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
+              className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Only shown to signed-in users
             </p>
           </div>
-
-          <div>
-            <label className="text-sm font-medium block mb-1.5">
-              Location Map Link
-            </label>
-            <input
-              value={mapsUrl}
-              onChange={(e) => setMapsUrl(e.target.value)}
-              placeholder="Google Maps link"
-              className="h-10 min-h-10 w-full rounded-md border border-input bg-input/30 px-3 text-sm text-foreground shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:bg-input/30"
-            />
-          </div>
-
 
           {/* Auto-close */}
           <div>
@@ -560,8 +562,8 @@ export function EditListingForm({ listing }: { listing: Listing }) {
                 if (v) setExpiration(v as ExpirationOptionValue);
               }}
             >
-              <SelectTrigger className="flex h-10 min-h-10 w-full items-center justify-between rounded-md border border-input bg-input/30 px-3 text-sm shadow-none dark:bg-input/30 dark:hover:bg-input/40">
-                <SelectValue placeholder="Never">
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Never / Keep Open">
                   {EXPIRATION_OPTIONS.find((o) => o.value === expiration)?.label ??
                     "Never / Keep Open"}
                 </SelectValue>
@@ -575,7 +577,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
-              
+              Optional. Leave as Never to keep the listing open until you close it.
             </p>
           </div>
 
