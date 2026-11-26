@@ -365,7 +365,7 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 shrink-0 p-0"
+                  className="h-9 w-9 shrink-0 p-0"
                   asChild
                 >
                   <Link
@@ -374,7 +374,7 @@ export function Header() {
                     aria-label="Dashboard"
                     title="Dashboard"
                   >
-                    <LayoutDashboard className="h-5 w-5" />
+                    <LayoutDashboard className="h-6 w-6" />
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center shrink-0 [&_button]:!outline-none">
