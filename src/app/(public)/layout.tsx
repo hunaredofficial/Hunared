@@ -10,7 +10,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <Header />
       {/* Single sitewide header banner — one active campaign at a time */}
       <div className="w-full border-b border-border/15">
-        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 pt-24 sm:pt-28 pb-2">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 pt-22 sm:pt-24 pb-2">
           <PremiumAdSlot
             slotId="header_leaderboard"
             legacySlotName="header"
