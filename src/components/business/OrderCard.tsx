@@ -23,7 +23,7 @@ import {
 import { Eye, Loader2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type { OrderWithListing, OrderStatus } from "@/types/database";
-import { updateOrderStatus } from "@/app/(dashboard)/dashboard/market/orders/actions";
+import { updateOrderStatus } from "@/app/(dashboard)/dashboard/business/orders/actions";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800 border-amber-200",
