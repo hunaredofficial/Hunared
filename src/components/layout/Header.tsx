@@ -72,7 +72,7 @@ export function Header() {
           </div>
 
           <nav
-            className="hidden lg:flex items-center gap-1 relative"
+            className="hidden lg:flex items-center gap-0.5 relative"
             aria-label="Main navigation"
           >
             {NAV_ITEMS.map((item) => {
@@ -84,7 +84,7 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-0.5 min-w-[3.5rem] px-2.5 py-1 rounded-md transition-colors duration-150",
+                    "relative flex flex-col items-center justify-center gap-0.5 min-w-[3.25rem] px-2 py-1 rounded-md transition-colors duration-150",
                     isActive
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
@@ -100,6 +100,26 @@ export function Header() {
                 </Link>
               );
             })}
+
+            {/* Agent / Notifications / Messages — same icon+label style as nav pages */}
+            <div className="relative flex flex-col items-center justify-center gap-0.5 min-w-[3.25rem] px-1.5 py-1 text-muted-foreground hover:text-foreground">
+              <AgentHeaderButton className="!h-6 !w-6" />
+              <span className="text-[11px] font-medium leading-none tracking-tight pointer-events-none">
+                Agent
+              </span>
+            </div>
+            <div className="relative flex flex-col items-center justify-center gap-0.5 min-w-[3.75rem] px-1.5 py-1 text-muted-foreground hover:text-foreground">
+              <NotificationsHeaderIcon className="[&_button]:!h-6 [&_button]:!w-6" />
+              <span className="text-[11px] font-medium leading-none tracking-tight pointer-events-none">
+                Notifications
+              </span>
+            </div>
+            <div className="relative flex flex-col items-center justify-center gap-0.5 min-w-[3.5rem] px-1.5 py-1 text-muted-foreground hover:text-foreground">
+              <MessagesHeaderIcon className="!h-6 !w-6" />
+              <span className="text-[11px] font-medium leading-none tracking-tight pointer-events-none">
+                Messages
+              </span>
+            </div>
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 max-w-full">
@@ -119,12 +139,15 @@ export function Header() {
               </Link>
             </Button>
 
-            {/* Utility icon group — consistent sizing & hover */}
+            {/* Theme + Dashboard (Agent / Notifications / Messages live in main nav) */}
             <div className="flex items-center gap-0.5">
               <ThemeToggle />
-              <AgentHeaderButton />
-              <NotificationsHeaderIcon />
-              <MessagesHeaderIcon />
+              {/* Mobile still shows compact icons */}
+              <div className="flex lg:hidden items-center gap-0.5">
+                <AgentHeaderButton />
+                <NotificationsHeaderIcon />
+                <MessagesHeaderIcon />
+              </div>
               <Show when="signed-in">
                 <Link
                   href="/dashboard"
