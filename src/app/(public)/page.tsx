@@ -9,8 +9,7 @@ import {
   getFeedSidebarData,
 } from "@/lib/home/feed";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
-import { Button } from "@/components/ui/button";
-import { Compass, Search } from "lucide-react";
+import { DiscoverySearchBar } from "@/components/home/discovery/DiscoverySearchBar";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
 import type { PersonalizationProfile } from "@/lib/personalization";
@@ -76,28 +75,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-background">
-      <div className="border-b border-border/50 bg-card/40">
-        <div className="mx-auto max-w-7xl px-3 sm:px-5 lg:px-6 py-3 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <Compass className="h-4 w-4 text-primary shrink-0" />
-            <p className="text-sm text-muted-foreground truncate">
-              <span className="font-semibold text-foreground">Discover</span>{" "}
-              jobs, business, learning — and refresh in MindSpace
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="h-8 rounded-lg" asChild>
-              <Link href="/search">
-                <Search className="h-3.5 w-3.5 mr-1.5" />
-                Search everything
-              </Link>
-            </Button>
-            <Button size="sm" className="h-8 rounded-lg" asChild>
-              <Link href="/post">Create</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DiscoverySearchBar />
 
       <div className="mx-auto max-w-7xl px-3 sm:px-5 lg:px-6 py-4 lg:py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_280px] gap-4 lg:gap-5 items-start">
