@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { CityCombobox } from "@/components/shared/CityCombobox";
+import { OptionsCombobox } from "@/components/shared/OptionsCombobox";
 import { VoiceSearchButton } from "@/components/shared/VoiceSearchButton";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,14 @@ export function DiscoverySearchBar() {
   const [category, setCategory] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
+
+  const countryOptions = useMemo(
+    () => [
+      { value: "", label: "All countries" },
+      ...COUNTRIES.map((c) => ({ value: c.code, label: c.name })),
+    ],
+    []
+  );
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -51,7 +60,7 @@ export function DiscoverySearchBar() {
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search jobs, talent, companies, business, learning…"
+              placeholder="What are you looking for? Search Here"
               className="w-full h-11 rounded-xl border-0 bg-transparent pl-10 pr-10 text-sm focus:outline-none focus:ring-0"
               aria-label="Search"
             />
@@ -63,41 +72,41 @@ export function DiscoverySearchBar() {
             </div>
           </div>
 
-          {/* Category */}
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="h-11 rounded-xl border border-border/60 bg-muted/30 px-3 text-sm text-foreground lg:w-[9.5rem] shrink-0"
-            aria-label="Category"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c.value || "all"} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          {/* Category — same dropdown style as City */}
+          <div className="lg:w-[9.5rem] shrink-0">
+            <OptionsCombobox
+              id="discovery-category"
+              value={category}
+              onChange={setCategory}
+              options={CATEGORIES}
+              placeholder="All"
+              size="md"
+              searchable={false}
+              className="w-full"
+            />
+          </div>
 
-          {/* Country */}
-          <select
-            value={country}
-            onChange={(e) => {
-              setCountry(e.target.value);
-              setCity("");
-            }}
-            className="h-11 rounded-xl border border-border/60 bg-muted/30 px-3 text-sm text-foreground lg:w-[11rem] shrink-0"
-            aria-label="Country"
-          >
-            <option value="">All countries</option>
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          {/* Country — same dropdown style as City */}
+          <div className="lg:w-[11rem] shrink-0">
+            <OptionsCombobox
+              id="discovery-country"
+              value={country}
+              onChange={(v) => {
+                setCountry(v);
+                setCity("");
+              }}
+              options={countryOptions}
+              placeholder="All countries"
+              size="md"
+              searchable
+              className="w-full"
+            />
+          </div>
 
           {/* City */}
           <div className="lg:w-[11rem] shrink-0">
             <CityCombobox
+              id="discovery-city"
               country={country}
               value={city}
               onChange={setCity}
@@ -105,7 +114,6 @@ export function DiscoverySearchBar() {
               allowEmpty
               placeholder="All cities"
               className="w-full"
-              inputClassName="h-11 rounded-xl border border-border/60 bg-muted/30 text-sm"
             />
           </div>
 
