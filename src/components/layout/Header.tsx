@@ -28,6 +28,7 @@ import {
   LogIn,
   UserPlus,
   MessageSquare,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -347,7 +348,7 @@ export function Header() {
                   aria-label="Dashboard"
                   title="Dashboard"
                   className={cn(
-                    "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                    "relative hidden lg:inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                     "text-muted-foreground hover:text-foreground hover:bg-muted/80",
                     "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) &&
@@ -416,26 +417,26 @@ export function Header() {
         )}
       >
         <div className="border-t border-border/60 bg-gradient-to-b from-card via-background to-background px-3 pt-3 pb-5 space-y-3 overflow-y-auto max-h-[min(82dvh,40rem)] overscroll-contain">
-          {/* Location + Post (Post under location) */}
-          <div className="rounded-xl border border-border/70 bg-card/70 overflow-hidden shadow-sm">
-            <div className="px-3 py-2.5 flex items-center gap-2.5 border-b border-border/50 bg-muted/20">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                <MapPin className="h-3.5 w-3.5" />
+          {/* Location + Post (Post under location) — mobile polished */}
+          <div className="rounded-2xl border border-border/60 bg-card/80 overflow-hidden shadow-md shadow-black/10">
+            <div className="px-3.5 pt-3 pb-2.5 flex items-center gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary shrink-0 ring-1 ring-primary/15">
+                <MapPin className="h-4 w-4" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-0.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/90 mb-1">
                   Location
                 </p>
                 <LocationPicker />
               </div>
             </div>
-            <div className="p-2.5">
+            <div className="px-3.5 pb-3.5 pt-1">
               <Link
                 href="/post"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary shadow-sm shadow-primary/20 hover:opacity-95 active:scale-[0.99] transition"
+                className="flex items-center justify-center gap-2 w-full rounded-xl px-4 py-3 text-[15px] font-semibold text-primary-foreground bg-primary shadow-md shadow-primary/25 hover:opacity-95 active:scale-[0.99] transition"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" strokeWidth={2.5} />
                 Post
               </Link>
             </div>
@@ -575,11 +576,11 @@ export function Header() {
                   asChild
                 >
                   <Link
-                    href="/dashboard/messages"
+                    href="/dashboard/settings"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                    Messages
+                    <Settings className="h-3.5 w-3.5 mr-1.5" />
+                    Settings
                   </Link>
                 </Button>
                 <div className="flex items-center justify-center h-11 w-11 rounded-xl border border-border bg-muted/30">
