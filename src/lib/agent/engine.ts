@@ -551,7 +551,7 @@ export function parseUserMessage(
         "I'm **Hunared AI** — your guide across the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning\n• Learning Hub (articles + resource library) · Finder Center · Programs & Training (hunared.org)\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · Settings · Premium Ads\n\n**Account types**\n• Personal · Seeker · Company · Team (assigned)\n• To switch type: register again with a new goal — data is kept\n\n**Ask me**\n• *Search jobs by profession*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *How do I change account type?*\n• *Open Premium Ads*\n• *How does Hunared work?*\n\nPlain language is fine — no special commands.",
       secondary: [
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
         { label: "How Hunared works", href: "/about" },
         { label: "Contact", href: "/contact" },
       ],
@@ -659,7 +659,7 @@ export function parseUserMessage(
       secondary: [
         { label: "Messages", href: "/dashboard/messages" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
       ],
     };
   }
@@ -704,7 +704,7 @@ export function parseUserMessage(
       secondary: [
         { label: "Finder Center", href: "/finder" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
       ],
     };
   }
@@ -957,7 +957,7 @@ function draftJobDescription(opts: {
       rentalPeriod: entities.rentalPeriod,
     });
 
-    const href = `/dashboard/market/new${qs({
+    const href = `/dashboard/business/new${qs({
       category: entities.category,
       subcategory: entities.subcategory,
       city: entities.city,
@@ -1121,7 +1121,7 @@ function draftJobDescription(opts: {
       autoNavigate: false,
       entities,
       secondary: [
-        { label: "All marketplace", href: "/market" },
+        { label: "All marketplace", href: "/business" },
         { label: "Post listing", href: "/post" },
       ],
     };
@@ -1210,7 +1210,7 @@ function draftJobDescription(opts: {
       "I want to help, but that was unclear.\n\nTry:\n• *Search jobs by profession*\n• *Browse marketplace listings*\n• *Open CV Builder*\n• *Open my messages*\n• *How do I post a job?*\n• *What can you do?*",
     secondary: [
       { label: "Jobs", href: "/jobs" },
-      { label: "Marketplace", href: "/market" },
+      { label: "Marketplace", href: "/business" },
       { label: "Capabilities", href: "/agent" },
     ],
   };
@@ -1250,7 +1250,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
         "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — permanent & temporary roles with filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Marketplace** — products, services, property, vehicles, electronics, lost & found, offers\n• **Learning Hub** — articles, downloadable **resource library**, programs & courses\n• **Programs** — official programs & training on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse without an account. Sign in to save, post, message, build a CV, and manage settings.\n\nTry: *How do I search for jobs?* · *How do I post an ad?* · *Open CV Builder*",
       secondary: [
         { label: "Browse jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
         { label: "Register", href: "/register" },
       ],
     };
@@ -1279,7 +1279,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
         "**Post a marketplace listing**\n\n1. Sign in\n2. **Post an Ad** → category (For Sale, For Rent, Services, Vehicles, etc.)\n3. Add photos, price (optional), location, description\n4. Publish\n\nAccurate categories help buyers filter and find you.",
       secondary: [
         { label: "Post an Ad", href: "/post" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
       ],
     };
   }
@@ -1340,7 +1340,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       secondary: [
         { label: "Home", href: "/" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
       ],
     };
   }
@@ -1357,7 +1357,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       secondary: [
         { label: "Messages", href: "/dashboard/messages" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/market" },
+        { label: "Marketplace", href: "/business" },
       ],
     };
   }

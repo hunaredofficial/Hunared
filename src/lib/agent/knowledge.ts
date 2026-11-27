@@ -25,7 +25,7 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
     label: "About Hunared",
     secondary: [
       { label: "Jobs", href: "/jobs" },
-      { label: "Marketplace", href: "/market" },
+      { label: "Marketplace", href: "/business" },
     ],
   },
   {
@@ -67,9 +67,9 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
     title: "Marketplace guide",
     answer:
       "**Hunared Marketplace**\n\nBrowse **For Sale**, **For Rent**, **Accommodation**, **Vehicles**, **Services**, **Property**, **Lost & Found**, **Offers & Deals**, and more.\n\n**Post a listing**\n1. Sign in → **Post** or **Dashboard → My Listings → New**\n2. Choose category → fill title, price, location, photos, description\n3. Publish\n\nUse filters (country, city, price, condition). Message sellers from the listing page.",
-    href: "/market",
+    href: "/business",
     label: "Marketplace",
-    secondary: [{ label: "Create listing", href: "/dashboard/market/new" }],
+    secondary: [{ label: "Create listing", href: "/dashboard/business/new" }],
   },
   {
     id: "cv-builder",

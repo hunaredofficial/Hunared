@@ -30,7 +30,7 @@ export default async function OrderSuccessPage({
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <Button asChild>
-            <Link href="/market">Back to Marketplace</Link>
+            <Link href="/business">Back to Marketplace</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/dashboard/business">My Listings</Link>

@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import type { Listing } from "@/types/database";
-import { EditListingForm } from "@/components/market/EditListingForm";
+import { EditListingForm } from "@/components/business/EditListingForm";
 
 export const dynamic = "force-dynamic";
 

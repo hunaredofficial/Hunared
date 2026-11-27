@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ShoppingBag, Plus, Pencil } from "lucide-react";
-import { ListingRowActions } from "@/components/market/ListingRowActions";
+import { ListingRowActions } from "@/components/business/ListingRowActions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -121,7 +121,7 @@ export default async function MyListingsPage() {
                         </Button>
                         {listing.status === "approved" && (
                           <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
-                            <Link href={`/market/${listing.id}`} target="_blank">View</Link>
+                            <Link href={`/business/${listing.id}`} target="_blank">View</Link>
                           </Button>
                         )}
                         <ListingRowActions id={listing.id} title={listing.title} />

@@ -216,7 +216,7 @@ export function MarketFilter({
 
   function applyQuick(overrides: Record<string, string> = {}) {
     const q = buildParams(overrides);
-    router.push(q ? `/market?${q}` : "/market");
+    router.push(q ? `/market?${q}` : "/business");
   }
 
   function applyAll() {
@@ -235,7 +235,7 @@ export function MarketFilter({
     setPosted("");
     setSubcategory("");
     setLfStatus("");
-    router.push("/market");
+    router.push("/business");
     setSheetOpen(false);
   }
 

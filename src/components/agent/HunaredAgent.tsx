@@ -71,7 +71,7 @@ function contextualSuggestions(path: string): string[] {
       "How do I search for jobs?",
     ];
   }
-  if (path.startsWith("/market")) {
+  if (path.startsWith("/business")) {
     return [
       "How does the marketplace work?",
       "Browse services",
@@ -575,7 +575,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
           const base =
             navHref ||
-            (action.intent === "post_job" ? "/dashboard/jobs/new" : "/dashboard/market/new");
+            (action.intent === "post_job" ? "/dashboard/jobs/new" : "/dashboard/business/new");
           try {
             navHref = buildPrefillHref(base, prefill);
           } catch {

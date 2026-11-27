@@ -1,6 +1,6 @@
 "use client";
 
-import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/business/ListingCategoryIcon";
 
 import { useState, useTransition } from "react";
 import type React from "react";

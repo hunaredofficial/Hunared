@@ -520,7 +520,7 @@ export function HunaredFinder() {
             {/* Report actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
-                href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=lost`}
+                href={`/dashboard/business/new?category=${FINDER_CATEGORY}&status=lost`}
                 className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all "
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
@@ -536,7 +536,7 @@ export function HunaredFinder() {
                 </span>
               </Link>
               <Link
-                href={`/dashboard/market/new?category=${FINDER_CATEGORY}&status=found`}
+                href={`/dashboard/business/new?category=${FINDER_CATEGORY}&status=found`}
                 className="group flex items-center gap-3 rounded-2xl border border-border bg-muted/50 hover:bg-muted px-4 py-3.5 transition-all "
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
@@ -580,7 +580,7 @@ export function HunaredFinder() {
                     />
                   </button>
                   <Link
-                    href={`/market?category=${FINDER_CATEGORY}`}
+                    href={`/business?category=${FINDER_CATEGORY}`}
                     className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                   >
                     <List className="h-3.5 w-3.5" />

@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import type { Listing } from "@/types/database";
-import { CheckoutForm } from "@/components/market/CheckoutForm";
+import { CheckoutForm } from "@/components/business/CheckoutForm";
 import { ShoppingBag } from "lucide-react";
 
 export const dynamic = "force-dynamic";

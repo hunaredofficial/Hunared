@@ -219,7 +219,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         finalImageUrls = [getListingDefaultImage(category, listing.subcategory, title.trim())];
       }
 
-      const res = await fetch(`/api/market/${listing.id}`, {
+      const res = await fetch(`/api/business/${listing.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -245,7 +245,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to update listing");
       toast.success("Listing updated and resubmitted for review!");
-      router.push("/dashboard/market");
+      router.push("/dashboard/business");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setUploading(false);
@@ -606,7 +606,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/dashboard/market")}
+              onClick={() => router.push("/dashboard/business")}
               disabled={loading}
             >
               Cancel

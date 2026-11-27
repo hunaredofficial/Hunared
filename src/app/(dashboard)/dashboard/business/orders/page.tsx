@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { OrderWithListing } from "@/types/database";
-import { OrderCard } from "@/components/market/OrderCard";
+import { OrderCard } from "@/components/business/OrderCard";
 
 export const dynamic = "force-dynamic";
 

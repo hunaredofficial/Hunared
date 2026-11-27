@@ -529,7 +529,7 @@ function NewListingForm() {
           .filter(Boolean)
           .join(" | ") || undefined;
 
-      const res = await fetch("/api/market", {
+      const res = await fetch("/api/business", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

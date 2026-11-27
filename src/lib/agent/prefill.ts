@@ -114,7 +114,7 @@ function fromSearchString(search: string): AgentPrefill | null {
 
 /** Build create-form URL with discrete query params */
 export function buildPrefillHref(baseHref: string, data: AgentPrefill): string {
-  const path = baseHref.split("?")[0] || "/dashboard/market/new";
+  const path = baseHref.split("?")[0] || "/dashboard/business/new";
   const u = new URL(path, "https://hunared.local");
   // Keep any existing non-agent params from base
   try {
@@ -168,5 +168,5 @@ export function consumeAgentPrefill(): AgentPrefill | null {
 }
 
 export function encodeAgentPrefillForUrl(data: AgentPrefill): string {
-  return buildPrefillHref("/dashboard/market/new", data).replace(/^[^?]*\?/, "");
+  return buildPrefillHref("/dashboard/business/new", data).replace(/^[^?]*\?/, "");
 }

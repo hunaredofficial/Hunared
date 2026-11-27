@@ -14,8 +14,8 @@ import {
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
-import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
-import { MarketFilter } from "@/components/market/MarketFilter";
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/business/ListingCategoryIcon";
+import { MarketFilter } from "@/components/business/MarketFilter";
 import { formatRelativePosted } from "@/lib/relativeDate";
 import { auth } from "@clerk/nextjs/server";
 import {
@@ -417,7 +417,7 @@ export default async function MarketPage({
                     {page > 1 && (
                       <Button variant="outline" size="sm" asChild>
                         <Link
-                          href={`/market?${buildParams({
+                          href={`/business?${buildParams({
                             category,
                             subcategory,
                             country,
@@ -440,7 +440,7 @@ export default async function MarketPage({
                     {page < totalPages && (
                       <Button variant="outline" size="sm" asChild>
                         <Link
-                          href={`/market?${buildParams({
+                          href={`/business?${buildParams({
                             category,
                             subcategory,
                             country,
@@ -530,7 +530,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
         </div>
 
         <h3 className="font-semibold text-sm leading-snug mb-1 group-hover:text-primary transition-colors line-clamp-2">
-          <Link href={`/market/${listing.id}`}>{listing.title}</Link>
+          <Link href={`/business/${listing.id}`}>{listing.title}</Link>
         </h3>
 
         {formatMoney(listing.price, listing.currency) ? (
@@ -562,7 +562,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
             className="flex-1 h-7 text-xs gap-1 group-hover:border-primary/50"
             asChild
           >
-            <Link href={`/market/${listing.id}`}>
+            <Link href={`/business/${listing.id}`}>
               View <ArrowRight className="h-3 w-3" />
             </Link>
           </Button>

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   ListingCategoryIcon,
   isListingPhotoUrl,
-} from "@/components/market/ListingCategoryIcon";
+} from "@/components/business/ListingCategoryIcon";
 
 interface ListingGalleryProps {
   /** Accepts a string[] or a single string for legacy backward compatibility. */

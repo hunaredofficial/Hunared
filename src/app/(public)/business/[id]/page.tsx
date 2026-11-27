@@ -19,9 +19,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { LISTING_CATEGORIES, LISTING_CATEGORY_COLORS } from "@/lib/constants";
 import type { Listing, Profile } from "@/types/database";
-import { ListingGallery } from "@/components/market/ListingGallery"
-import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
-import { NativePurchaseSection } from "@/components/market/NativePurchaseSection";
+import { ListingGallery } from "@/components/business/ListingGallery"
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/business/ListingCategoryIcon";
+import { NativePurchaseSection } from "@/components/business/NativePurchaseSection";
 import { formatRelativePosted, formatPostedExact } from "@/lib/relativeDate";
 
 import type { Metadata } from "next";
@@ -44,7 +44,7 @@ export async function generateMetadata({
       const loc = data.location ? ` · ${data.location}` : "";
       return {
         title: data.title,
-        description: `View ${data.title}${loc} on Hunared Business.`,
+        description: `View ${data.title}${loc} on Hunared Marketplace.`,
       };
     }
   } catch {
@@ -147,12 +147,12 @@ export default async function ListingDetailPage({
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/market" className="hover:text-primary transition-colors">Business</Link>
+            <Link href="/business" className="hover:text-primary transition-colors">Marketplace</Link>
             {catMeta && (
               <>
                 <span>/</span>
                 <Link
-                  href={`/market?category=${encodeURIComponent(listing.category ?? "")}`}
+                  href={`/business?category=${encodeURIComponent(listing.category ?? "")}`}
                   className="hover:text-primary transition-colors"
                 >
                   {catMeta.label}
@@ -169,8 +169,8 @@ export default async function ListingDetailPage({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 h-8 text-muted-foreground" asChild>
-          <Link href="/market">
-            <ArrowLeft className="h-4 w-4" /> Business
+          <Link href="/business">
+            <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
         </Button>
       </div>
@@ -344,7 +344,7 @@ export default async function ListingDetailPage({
             </div>
 
             <Button variant="ghost" size="sm" className="w-full" asChild>
-              <Link href="/market">← Browse More Listings</Link>
+              <Link href="/business">← Browse More Listings</Link>
             </Button>
           </div>
         </div>
@@ -387,7 +387,7 @@ export default async function ListingDetailPage({
                   <div className="absolute top-2 right-2 z-10">
                     <SaveButton itemType="listing" itemId={item.id} size="sm" />
                   </div>
-                  <Link href={`/market/${item.id}`} className="block">
+                  <Link href={`/business/${item.id}`} className="block">
                     {img && isListingPhotoUrl(img) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img

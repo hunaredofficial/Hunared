@@ -88,7 +88,7 @@ export function FinderExperience() {
       <section className="pb-8 px-4 sm:px-6">
         <div className="mx-auto max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link
-            href="/dashboard/market/new?category=lost_found&status=lost"
+            href="/dashboard/business/new?category=lost_found&status=lost"
             className="group flex items-start gap-4 rounded-xl border-2 border-border bg-card p-5 hover:border-primary/40 hover:shadow-sm transition-all"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
@@ -104,7 +104,7 @@ export function FinderExperience() {
             </div>
           </Link>
           <Link
-            href="/dashboard/market/new?category=lost_found&status=found"
+            href="/dashboard/business/new?category=lost_found&status=found"
             className="group flex items-start gap-4 rounded-xl border-2 border-border bg-card p-5 hover:border-primary/40 hover:shadow-sm transition-all"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
