@@ -26,7 +26,7 @@ export function ListingRowActions({
     }
     setBusy(true);
     try {
-      const res = await fetch(`/api/business/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/market/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         toast.error(data.error || "Delete failed");

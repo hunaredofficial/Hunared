@@ -121,7 +121,7 @@ export default async function MyListingsPage() {
                         </Button>
                         {listing.status === "approved" && (
                           <Button size="sm" variant="outline" className="h-7 text-xs" asChild>
-                            <Link href={`/business/${listing.id}`} target="_blank">View</Link>
+                            <Link href={`/market/${listing.id}`} target="_blank">View</Link>
                           </Button>
                         )}
                         <ListingRowActions id={listing.id} title={listing.title} />

@@ -56,7 +56,7 @@ export function NativePurchaseSection({
 
       {/* Purchase button */}
       <Button className="w-full gap-2 py-6" asChild>
-        <Link href={`/business/checkout?listingId=${listingId}&qty=${qty}`}>
+        <Link href={`/market/checkout?listingId=${listingId}&qty=${qty}`}>
           <ShoppingBag className="h-4 w-4" />
           Purchase Now{qty > 1 ? ` (x${qty})` : ""}
         </Link>

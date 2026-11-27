@@ -219,7 +219,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         finalImageUrls = [getListingDefaultImage(category, listing.subcategory, title.trim())];
       }
 
-      const res = await fetch(`/api/business/${listing.id}`, {
+      const res = await fetch(`/api/market/${listing.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
