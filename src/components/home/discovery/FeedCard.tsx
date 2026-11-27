@@ -21,6 +21,8 @@ import type { FeedItem } from "@/lib/home/feed";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PostComments } from "./PostComments";
+import { FollowButton } from "@/components/shared/FollowButton";
 
 const TYPE_META: Record<
   string,
@@ -242,6 +244,20 @@ export function FeedCard({ item }: { item: FeedItem }) {
             ) : null}
           </div>
         </div>
+        {item.type === "post" ? (
+          <div className="space-y-1">
+            <div className="flex justify-end">
+              {item.meta?.authorId ? (
+                <FollowButton
+                  targetType="user"
+                  targetId={String(item.meta.authorId)}
+                  className="h-7 text-xs"
+                />
+              ) : null}
+            </div>
+            <PostComments postId={rawId(item)} />
+          </div>
+        ) : null}
       </div>
     </article>
   );

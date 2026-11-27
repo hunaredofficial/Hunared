@@ -212,6 +212,7 @@ export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
   const postItems: FeedItem[] = (postsRes.data ?? []).map(
     (p: {
       id: string;
+      author_id?: string;
       title: string | null;
       body: string;
       category: string | null;
@@ -232,7 +233,7 @@ export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
       createdAt: p.created_at,
       authorName: "Community",
       authorImage: null,
-      meta: { likes: p.likes_count ?? 0 },
+      meta: { likes: p.likes_count ?? 0, authorId: p.author_id },
     })
   );
 

@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   Briefcase,
+  Calendar,
   FileText,
   HelpCircle,
   ImageIcon,
   Loader2,
+  MessageCircle,
   PenSquare,
   ShoppingBag,
 } from "lucide-react";
@@ -15,20 +17,30 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const SHORTCUTS = [
-  { href: "/post", label: "Update", icon: PenSquare },
   { href: "/dashboard/jobs/new", label: "Job", icon: Briefcase },
   { href: "/dashboard/business/new", label: "Listing", icon: ShoppingBag },
   { href: "/dashboard/articles/new", label: "Article", icon: FileText },
-  { href: "/post", label: "Ask", icon: HelpCircle },
+  { href: "/post", label: "Full post", icon: PenSquare },
 ];
+
+const POST_TYPES = [
+  { id: "update", label: "Update", icon: PenSquare },
+  { id: "question", label: "Question", icon: HelpCircle },
+  { id: "discussion", label: "Discussion", icon: MessageCircle },
+  { id: "event", label: "Event", icon: Calendar },
+] as const;
 
 export function CreatePostBar() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [title, setTitle] = useState("");
+  const [postType, setPostType] =
+    useState<(typeof POST_TYPES)[number]["id"]>("update");
   const [posting, setPosting] = useState(false);
 
   async function publish() {
@@ -46,7 +58,11 @@ export function CreatePostBar() {
       const res = await fetch("/api/community/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body, post_type: "update" }),
+        body: JSON.stringify({
+          body,
+          title: title.trim() || undefined,
+          post_type: postType,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -55,6 +71,8 @@ export function CreatePostBar() {
       }
       toast.success("Posted to the community feed");
       setText("");
+      setTitle("");
+      setPostType("update");
       setOpen(false);
       router.refresh();
     } finally {
@@ -73,7 +91,7 @@ export function CreatePostBar() {
           onClick={() => setOpen((v) => !v)}
           className="flex-1 rounded-full border border-border/70 bg-muted/40 px-4 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted/70 hover:text-foreground transition"
         >
-          Share an update, opportunity, or listing…
+          Share an update, question, or discussion…
         </button>
         <Button size="sm" className="hidden sm:inline-flex h-9 rounded-full px-4" asChild>
           <Link href="/post">Post</Link>
@@ -81,12 +99,44 @@ export function CreatePostBar() {
       </div>
 
       {open ? (
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-3">
+          <div className="flex flex-wrap gap-1.5">
+            {POST_TYPES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setPostType(t.id)}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition",
+                  postType === t.id
+                    ? "border-primary bg-primary/15 text-foreground"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <t.icon className="h-3 w-3" />
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {(postType === "event" || postType === "discussion") && (
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={postType === "event" ? "Event title" : "Topic title (optional)"}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          )}
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
-            placeholder="What's on your mind? (community update)"
+            placeholder={
+              postType === "question"
+                ? "What would you like to ask the community?"
+                : postType === "event"
+                  ? "Event details, date, location…"
+                  : "Share with the Hunared community…"
+            }
             className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <div className="flex justify-end gap-2">
