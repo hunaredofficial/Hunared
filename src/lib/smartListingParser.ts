@@ -667,7 +667,7 @@ export function buildDescription(
 ): string {
   const t = title.trim() || "This listing";
   const catLabel =
-    LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? category ?? "Marketplace";
+    LISTING_CATEGORIES.find((c) => c.value === category)?.label ?? category ?? "Business";
   const sub = subcategory?.trim();
   const city = extras?.city?.trim();
   const condition = extras?.condition?.trim();

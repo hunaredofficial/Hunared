@@ -798,12 +798,12 @@ export default function BulkClient() {
         </Button>
       </section>
 
-      {/* Marketplace */}
+      {/* Business */}
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h2 className="font-semibold flex items-center gap-2">
             <Store className="h-4 w-4 text-primary" />
-            Marketplace listings
+            Business listings
             <span className="text-xs font-normal text-muted-foreground">
               ({marketCount} ready)
             </span>

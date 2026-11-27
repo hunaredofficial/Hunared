@@ -15,7 +15,7 @@ const CATEGORIES = [
   { value: "jobs", label: "Jobs" },
   { value: "candidates", label: "Talent" },
   { value: "companies", label: "Companies" },
-  { value: "marketplace", label: "Marketplace" },
+  { value: "marketplace", label: "Business" },
   { value: "services", label: "Services" },
   { value: "learning Hub", label: "Learning" },
   { value: "properties", label: "Property" },

@@ -1,6 +1,6 @@
 export type SlotDisplay = { frameClass: string; objectFit: "cover" | "contain" };
 
-/** Display rules aligned with Jobs / Marketplace (role models) */
+/** Display rules aligned with Jobs / Business (role models) */
 export const SLOT_DISPLAY: Record<string, SlotDisplay> = {
   // Full-width top banners (like jobs_list_top)
   header_leaderboard: { frameClass: "w-full h-[50px] sm:h-[90px]", objectFit: "cover" },

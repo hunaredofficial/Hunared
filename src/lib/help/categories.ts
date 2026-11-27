@@ -33,7 +33,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
   },
   {
     id: "marketplace",
-    title: "Marketplace",
+    title: "Business",
     description: "Listings for sale, rent, services, property, and more",
     icon: "Store",
   },

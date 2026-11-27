@@ -529,7 +529,7 @@ function NewListingForm() {
           .filter(Boolean)
           .join(" | ") || undefined;
 
-      const res = await fetch("/api/business", {
+      const res = await fetch("/api/market", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -576,7 +576,7 @@ function NewListingForm() {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" as ScrollBehavior : "auto" });
       }
-      router.push("/dashboard/business");
+      router.push("/dashboard/market");
       // Ensure top after navigation
       setTimeout(() => {
         if (typeof window !== "undefined") window.scrollTo(0, 0);
@@ -594,7 +594,7 @@ function NewListingForm() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Post a Listing</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Listings are reviewed before appearing on the Marketplace.
+          Listings are reviewed before appearing on the Business.
         </p>
       </div>
 
@@ -1093,7 +1093,7 @@ function NewListingForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/dashboard/business")}
+                onClick={() => router.push("/dashboard/market")}
                 disabled={loading}
               >
                 Cancel

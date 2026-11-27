@@ -10,7 +10,7 @@ const CONTACT_REASONS = [
   { value: "account_issue", label: "Account / login issue" },
   { value: "website_issue", label: "Website or technical issue" },
   { value: "job_listing", label: "Job listing problem" },
-  { value: "marketplace", label: "Marketplace listing problem" },
+  { value: "marketplace", label: "Business listing problem" },
   { value: "suggestion", label: "Suggestion / feedback" },
   { value: "premium_ads", label: "Premium advertising" },
   { value: "partnership", label: "Partnership / business inquiry" },

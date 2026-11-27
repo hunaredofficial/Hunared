@@ -461,8 +461,8 @@ export function SettingsClient() {
                 }}
               />
               <Toggle
-                label="Market"
-                desc="Marketplace listing matches and alerts"
+                label="Business"
+                desc="Business listing matches and alerts"
                 checked={notifPrefs.categories.market}
                 disabled={saving || notifPrefs.silenceAll}
                 onChange={(v) => {

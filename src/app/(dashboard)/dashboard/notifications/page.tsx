@@ -38,7 +38,7 @@ type FilterKey = "all" | NotifCategory;
 const FILTERS: { key: FilterKey; label: string; icon: typeof Bell }[] = [
   { key: "all", label: "All", icon: Bell },
   { key: "jobs", label: "Jobs", icon: Briefcase },
-  { key: "market", label: "Market", icon: Tag },
+  { key: "market", label: "Business", icon: Tag },
   { key: "orders", label: "Orders", icon: Package },
   { key: "subscription", label: "Subscription", icon: CreditCard },
   { key: "system", label: "System", icon: Info },
@@ -62,7 +62,7 @@ function entityHref(n: Notification): string | null {
   if (!n.entity_id || !n.entity_type) return null;
   if (n.entity_type === "job") return `/jobs/${n.entity_id}`;
   if (n.entity_type === "listing") return `/market/${n.entity_id}`;
-  if (n.entity_type === "order") return `/dashboard/business/orders`;
+  if (n.entity_type === "order") return `/dashboard/market/orders`;
   if (n.entity_type === "article") return `/articles/${n.entity_id}`;
   return null;
 }

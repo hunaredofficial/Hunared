@@ -268,7 +268,7 @@ export const COMMAND_PACKS: {
     ],
   },
   {
-    title: "Marketplace",
+    title: "Business",
     commands: [
       { label: "Apartment rent", text: "Browse property and rentals" },
       { label: "Used laptops", text: "Search used laptops for sale" },
@@ -548,10 +548,10 @@ export function parseUserMessage(
       intent: "help",
       label: "What I can do",
       message:
-        "I'm **Hunared AI** — your guide across the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Marketplace · Learning\n• Learning Hub (articles + resource library) · Finder Center · Programs & Training (hunared.org)\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · Settings · Premium Ads\n\n**Account types**\n• Personal · Seeker · Company · Team (assigned)\n• To switch type: register again with a new goal — data is kept\n\n**Ask me**\n• *Search jobs by profession*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *How do I change account type?*\n• *Open Premium Ads*\n• *How does Hunared work?*\n\nPlain language is fine — no special commands.",
+        "I'm **Hunared AI** — your guide across the whole platform.\n\n**Discover**\n• Jobs · Talent · Companies · Business · Learning\n• Learning Hub (articles + resource library) · Finder Center · Programs & Training (hunared.org)\n\n**Create & manage**\n• CV Builder · Post job/ad · Messages · Saved · Settings · Premium Ads\n\n**Account types**\n• Personal · Seeker · Company · Team (assigned)\n• To switch type: register again with a new goal — data is kept\n\n**Ask me**\n• *Search jobs by profession*\n• *How do I message a seller?*\n• *Open CV Builder*\n• *How do I change account type?*\n• *Open Premium Ads*\n• *How does Hunared work?*\n\nPlain language is fine — no special commands.",
       secondary: [
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
         { label: "How Hunared works", href: "/about" },
         { label: "Contact", href: "/contact" },
       ],
@@ -659,7 +659,7 @@ export function parseUserMessage(
       secondary: [
         { label: "Messages", href: "/dashboard/messages" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
       ],
     };
   }
@@ -704,7 +704,7 @@ export function parseUserMessage(
       secondary: [
         { label: "Finder Center", href: "/finder" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
       ],
     };
   }
@@ -741,7 +741,7 @@ export function parseUserMessage(
       intent: "lost_found",
       href: "/market?category=lost_found",
       label: "Lost & Found",
-      message: "Opening **Lost & Found** in the marketplace.",
+      message: "Opening **Lost & Found** in Business.",
       autoNavigate: true,
     };
   }
@@ -750,7 +750,7 @@ export function parseUserMessage(
       intent: "offers",
       href: "/market?category=offers",
       label: "Offers & Deals",
-      message: "Opening **Offers & Deals** in the marketplace.",
+      message: "Opening **Offers & Deals** in Business.",
       autoNavigate: true,
     };
   }
@@ -767,7 +767,7 @@ function polishListingTitle(rawTitle: string, city?: string, price?: string, cat
     } else if (category === "vehicles") {
       t = "Vehicle for sale";
     } else {
-      t = city ? `Listing in ${city}` : "Marketplace listing";
+      t = city ? `Listing in ${city}` : "Business listing";
     }
   }
   // Title case light
@@ -957,7 +957,7 @@ function draftJobDescription(opts: {
       rentalPeriod: entities.rentalPeriod,
     });
 
-    const href = `/dashboard/business/new${qs({
+    const href = `/dashboard/market/new${qs({
       category: entities.category,
       subcategory: entities.subcategory,
       city: entities.city,
@@ -977,7 +977,7 @@ function draftJobDescription(opts: {
       label: "Open listing form",
       message: bits.length
         ? `I prepared a clearer **title** and **description** from your words (no invented facilities).\n\nPre-fill: ${bits.join(", ")}.\n\nReview the form, add photos if needed, then publish. **Agent actions** must be ON.`
-        : "Opening the marketplace listing form. Sign-in required. Enable **Agent actions** so I can pre-fill fields from natural language.",
+        : "Opening Business listing form. Sign-in required. Enable **Agent actions** so I can pre-fill fields from natural language.",
       autoNavigate: true,
       entities,
     };
@@ -1083,7 +1083,7 @@ function draftJobDescription(opts: {
     };
   }
 
-  // ── Marketplace ─────────────────────────────────────────────────────
+  // ── Business ─────────────────────────────────────────────────────
   let marketCat: string | undefined;
   let marketLabel: string | undefined;
   for (const [re, cat, label] of MARKET_CATEGORY_RULES) {
@@ -1121,7 +1121,7 @@ function draftJobDescription(opts: {
       autoNavigate: false,
       entities,
       secondary: [
-        { label: "All marketplace", href: "/business" },
+        { label: "All marketplace", href: "/market" },
         { label: "Post listing", href: "/post" },
       ],
     };
@@ -1210,7 +1210,7 @@ function draftJobDescription(opts: {
       "I want to help, but that was unclear.\n\nTry:\n• *Search jobs by profession*\n• *Browse marketplace listings*\n• *Open CV Builder*\n• *Open my messages*\n• *How do I post a job?*\n• *What can you do?*",
     secondary: [
       { label: "Jobs", href: "/jobs" },
-      { label: "Marketplace", href: "/business" },
+      { label: "Business", href: "/market" },
       { label: "Capabilities", href: "/agent" },
     ],
   };
@@ -1247,10 +1247,10 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/about",
       label: "About Hunared",
       message:
-        "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — permanent & temporary roles with filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Marketplace** — products, services, property, vehicles, electronics, lost & found, offers\n• **Learning Hub** — articles, downloadable **resource library**, programs & courses\n• **Programs** — official programs & training on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse without an account. Sign in to save, post, message, build a CV, and manage settings.\n\nTry: *How do I search for jobs?* · *How do I post an ad?* · *Open CV Builder*",
+        "**Hunared** is a global opportunity platform connecting people and businesses across:\n\n• **Jobs** — permanent & temporary roles with filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Business** — products, services, property, vehicles, electronics, lost & found, offers\n• **Learning Hub** — articles, downloadable **resource library**, programs & courses\n• **Programs** — official programs & training on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse without an account. Sign in to save, post, message, build a CV, and manage settings.\n\nTry: *How do I search for jobs?* · *How do I post an ad?* · *Open CV Builder*",
       secondary: [
         { label: "Browse jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
         { label: "Register", href: "/register" },
       ],
     };
@@ -1279,7 +1279,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
         "**Post a marketplace listing**\n\n1. Sign in\n2. **Post an Ad** → category (For Sale, For Rent, Services, Vehicles, etc.)\n3. Add photos, price (optional), location, description\n4. Publish\n\nAccurate categories help buyers filter and find you.",
       secondary: [
         { label: "Post an Ad", href: "/post" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
       ],
     };
   }
@@ -1336,11 +1336,11 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       href: "/",
       label: "Go to home",
       message:
-        "**How to use Hunared**\n\n1. **Header menus** — Jobs, Talent, Companies, Marketplace, Learning\n2. **Filters** on each page (city, category, employment type)\n3. **Post an Ad** — jobs or marketplace\n4. **Dashboard** (signed in) — profile, CV, saved, notifications\n5. **Hunared AI** (me) — ask in plain language anytime\n\nStart with Jobs or Marketplace, or tell me what you need.",
+        "**How to use Hunared**\n\n1. **Header menus** — Jobs, Talent, Companies, Business, Learning\n2. **Filters** on each page (city, category, employment type)\n3. **Post an Ad** — jobs or marketplace\n4. **Dashboard** (signed in) — profile, CV, saved, notifications\n5. **Hunared AI** (me) — ask in plain language anytime\n\nStart with Jobs or Business, or tell me what you need.",
       secondary: [
         { label: "Home", href: "/" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
       ],
     };
   }
@@ -1357,7 +1357,7 @@ export function enhanceAction(action: AgentAction, q: string, role?: string): Ag
       secondary: [
         { label: "Messages", href: "/dashboard/messages" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Marketplace", href: "/business" },
+        { label: "Business", href: "/market" },
       ],
     };
   }

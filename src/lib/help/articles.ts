@@ -16,14 +16,14 @@ export const HELP_ARTICLES: HelpArticle[] = [
 ## What you can do
 - Search and filter **jobs** (permanent and temporary)
 - Browse **candidates / talent** and **company** directories
-- Use the **Marketplace** for products, services, property, vehicles, and more
+- Use the **Business** for products, services, property, vehicles, and more
 - Build a professional **CV** with templates and AI assist
 - Message other users about jobs or listings
 - Use **Hunared Agent** for guided help across the site
 - Manage everything from your **Dashboard**
 
 ## Main navigation
-Use the top header: Jobs, Talent, Companies, Marketplace, Learning, Programs (opens hunared.org), plus Finder Center, CV Builder, and Hunared Agent in the header.
+Use the top header: Jobs, Talent, Companies, Business, Learning, Programs (opens hunared.org), plus Finder Center, CV Builder, and Hunared Agent in the header.
 
 ## Account types
 Hunared supports different roles (Personal, Talent, Company, Team, Admin). Features available to you depend on your role — see the Account types guide.`,
@@ -338,21 +338,21 @@ A strong company profile improves trust on job posts linked to your company.`,
   {
     slug: "browse-and-post",
     category: "marketplace",
-    title: "Marketplace: browse and post listings",
+    title: "Business: browse and post listings",
     summary: "Find items and services or create your own listing.",
     keywords: ["marketplace", "listing", "for sale", "rent", "services", "property"],
     roles: ["all"],
-    action: { href: "/market", label: "Open Marketplace" },
+    action: { href: "/market", label: "Open Business" },
     related: ["messaging/how-messaging-works", "premium/premium-ads"],
     updated: "2026-10-21",
     steps: [
-      { title: "Browse", body: "Header → Marketplace. Use category filters and search." },
+      { title: "Browse", body: "Header → Business. Use category filters and search." },
       { title: "Open a listing", body: "View details and contact the advertiser via Message when available." },
       { title: "Post", body: "Use Post an Ad / create listing flow. Choose category then fill fields." },
       { title: "Manage", body: "Dashboard → My Listings to edit or close listings." },
     ],
     body: `## Categories
-Marketplace covers multiple verticals (for sale, rent, services, property, vehicles, electronics, lost & found, offers, etc.) as configured on the site.
+Business covers multiple verticals (for sale, rent, services, property, vehicles, electronics, lost & found, offers, etc.) as configured on the site.
 
 ## Tips
 Clear photos, honest condition, and complete location help buyers respond faster.`,
@@ -738,7 +738,7 @@ Open **+ Post** in the header or **/post**.
 
 ## Step 1 — Choose category
 - **Job** — hire talent
-- **Marketplace** — For Sale, For Rent, Service, Property, Accommodation, Vehicle, Electronics
+- **Business** — For Sale, For Rent, Service, Property, Accommodation, Vehicle, Electronics
 - **Learning / Article** — learning or news-style posts
 - **Community** — Wanted, Free Items, Community, Lost & Found, Events
 

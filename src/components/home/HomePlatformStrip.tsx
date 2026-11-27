@@ -29,7 +29,7 @@ const ITEMS = [
   },
   {
     icon: ShoppingBag,
-    title: "Marketplace",
+    title: "Business",
     text: "Buy, sell, and offer services.",
     href: "/market",
   },

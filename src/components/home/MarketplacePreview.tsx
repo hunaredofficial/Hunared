@@ -27,20 +27,20 @@ export function MarketplacePreview() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
           <div className="space-y-1.5">
             <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Marketplace
+              Business
             </p>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               Buy, sell, rent & find services
             </h2>
             <p className="text-sm text-muted-foreground max-w-md">
-              High-level categories — full filters live on the marketplace page.
+              High-level categories — full filters live on Business page.
             </p>
           </div>
           <Link
             href="/market"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline shrink-0"
           >
-            Explore marketplace
+            Explore Business
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

@@ -14,8 +14,8 @@ import {
 } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/countries";
 import type { Listing } from "@/types/database";
-import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/business/ListingCategoryIcon";
-import { MarketFilter } from "@/components/business/MarketFilter";
+import { ListingCategoryIcon, isListingPhotoUrl } from "@/components/market/ListingCategoryIcon";
+import { MarketFilter } from "@/components/market/MarketFilter";
 import { formatRelativePosted } from "@/lib/relativeDate";
 import { auth } from "@clerk/nextjs/server";
 import {
@@ -29,9 +29,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Marketplace",
+  title: "Business",
   description:
-    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
+    "Buy, sell, and rent on Hunared Business. Browse property, vehicles, electronics, services, and more worldwide.",
 };
 
 interface SearchParams {
@@ -321,7 +321,7 @@ export default async function MarketPage({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Marketplace
+                Business
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0
@@ -331,7 +331,7 @@ export default async function MarketPage({
               </p>
             </div>
             <Button size="sm" className="shrink-0 font-semibold" asChild>
-              <Link href="/dashboard/business/new">Post a Listing</Link>
+              <Link href="/dashboard/market/new">Post a Listing</Link>
             </Button>
           </div>
         </div>
@@ -401,7 +401,7 @@ export default async function MarketPage({
                 <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-muted-foreground text-lg">No listings found.</p>
                 <Button variant="outline" className="mt-4" asChild>
-                  <Link href="/dashboard/business/new">Post the first listing</Link>
+                  <Link href="/dashboard/market/new">Post the first listing</Link>
                 </Button>
               </div>
             ) : (
@@ -417,7 +417,7 @@ export default async function MarketPage({
                     {page > 1 && (
                       <Button variant="outline" size="sm" asChild>
                         <Link
-                          href={`/business?${buildParams({
+                          href={`/market?${buildParams({
                             category,
                             subcategory,
                             country,
@@ -440,7 +440,7 @@ export default async function MarketPage({
                     {page < totalPages && (
                       <Button variant="outline" size="sm" asChild>
                         <Link
-                          href={`/business?${buildParams({
+                          href={`/market?${buildParams({
                             category,
                             subcategory,
                             country,
@@ -473,7 +473,7 @@ export default async function MarketPage({
             Sign in to post a listing. All listings are reviewed before publishing.
           </p>
           <Button asChild>
-            <Link href="/dashboard/business/new">Post a Listing</Link>
+            <Link href="/dashboard/market/new">Post a Listing</Link>
           </Button>
         </div>
       </section>
@@ -530,7 +530,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
         </div>
 
         <h3 className="font-semibold text-sm leading-snug mb-1 group-hover:text-primary transition-colors line-clamp-2">
-          <Link href={`/business/${listing.id}`}>{listing.title}</Link>
+          <Link href={`/market/${listing.id}`}>{listing.title}</Link>
         </h3>
 
         {formatMoney(listing.price, listing.currency) ? (
@@ -562,7 +562,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
             className="flex-1 h-7 text-xs gap-1 group-hover:border-primary/50"
             asChild
           >
-            <Link href={`/business/${listing.id}`}>
+            <Link href={`/market/${listing.id}`}>
               View <ArrowRight className="h-3 w-3" />
             </Link>
           </Button>

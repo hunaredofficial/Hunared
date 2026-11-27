@@ -300,7 +300,7 @@ export function PremiumAdCreateForm() {
               </h2>
               <p className="text-xs text-muted-foreground">
                 Choose one of your posts. When approved and live, it ranks first in{" "}
-                {kind === "job" ? "Jobs" : "Marketplace"} results.
+                {kind === "job" ? "Jobs" : "Business"} results.
               </p>
               {loadingTargets ? (
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
@@ -566,7 +566,7 @@ export function PremiumAdCreateForm() {
                 {selectedItem ? (
                   <div className="space-y-3">
                     <span className="inline-flex items-center rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
-                      {kind === "job" ? "Top of Jobs" : "Top of Marketplace"}
+                      {kind === "job" ? "Top of Jobs" : "Top of Business"}
                     </span>
                     <p className="text-lg font-semibold leading-snug text-foreground">
                       {selectedItem.title}

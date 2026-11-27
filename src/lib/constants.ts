@@ -1649,7 +1649,7 @@ export const LISTING_SUBCATEGORIES: Record<string, string[]> = {
 };
 
 /**
- * Shared currency codes for Jobs + Marketplace.
+ * Shared currency codes for Jobs + Business.
  * Prefer importing CURRENCIES from @/lib/currencies and mapping .code
  * in new forms. This export stays for backward compatibility.
  */

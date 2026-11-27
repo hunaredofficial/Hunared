@@ -17,7 +17,7 @@ const FOOTER_LINKS: Record<string, FooterLink[]> = {
     { href: "/jobs", label: "Browse Jobs" },
     { href: "/candidates", label: "Find Talent" },
     { href: "/companies", label: "Companies" },
-    { href: "/market", label: "Marketplace" },
+    { href: "/market", label: "Business" },
     { href: "/education", label: "Education Hub" },
   ],
   Tools: [

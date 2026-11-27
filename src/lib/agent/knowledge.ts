@@ -20,12 +20,12 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
       /\b(what is hunared|about hunared|who (are|is) hunared|hunared platform|explain hunared)\b/i,
     title: "What is Hunared?",
     answer:
-      "**Hunared** is a global opportunity platform that connects people and businesses.\n\n**Core areas**\n• **Jobs** — permanent & temporary roles with smart filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Marketplace** — products, services, property, vehicles, accommodation, lost & found, offers\n• **Learning Hub** — articles + downloadable **resource library**\n• **Programs** — official training & credentials on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse freely. Sign in to save, post, message, build a CV, and manage settings.",
+      "**Hunared** is a global opportunity platform that connects people and businesses.\n\n**Core areas**\n• **Jobs** — permanent & temporary roles with smart filters\n• **Talent** — professionals available for hire\n• **Companies** — employer directory (hiring / verified)\n• **Business** — products, services, property, vehicles, accommodation, lost & found, offers\n• **Learning Hub** — articles + downloadable **resource library**\n• **Programs** — official training & credentials on hunared.org\n• **CV Builder** — create, upload, AI-improve, export CVs\n• **Finder Center** — lost & found community board\n• **Messages** — chat about jobs, listings, and profiles\n• **Premium Ads** — promote jobs/listings from the dashboard\n\nBrowse freely. Sign in to save, post, message, build a CV, and manage settings.",
     href: "/about",
     label: "About Hunared",
     secondary: [
       { label: "Jobs", href: "/jobs" },
-      { label: "Marketplace", href: "/business" },
+      { label: "Business", href: "/market" },
     ],
   },
   {
@@ -64,12 +64,12 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
     id: "how-marketplace",
     keywords:
       /\b(how (does |do i use )?marketplace|marketplace work|buy and sell|how (do i |to )?post (an? )?(ad|listing))\b/i,
-    title: "Marketplace guide",
+    title: "Business guide",
     answer:
-      "**Hunared Marketplace**\n\nBrowse **For Sale**, **For Rent**, **Accommodation**, **Vehicles**, **Services**, **Property**, **Lost & Found**, **Offers & Deals**, and more.\n\n**Post a listing**\n1. Sign in → **Post** or **Dashboard → My Listings → New**\n2. Choose category → fill title, price, location, photos, description\n3. Publish\n\nUse filters (country, city, price, condition). Message sellers from the listing page.",
-    href: "/business",
-    label: "Marketplace",
-    secondary: [{ label: "Create listing", href: "/dashboard/business/new" }],
+      "**Hunared Business**\n\nBrowse **For Sale**, **For Rent**, **Accommodation**, **Vehicles**, **Services**, **Property**, **Lost & Found**, **Offers & Deals**, and more.\n\n**Post a listing**\n1. Sign in → **Post** or **Dashboard → My Listings → New**\n2. Choose category → fill title, price, location, photos, description\n3. Publish\n\nUse filters (country, city, price, condition). Message sellers from the listing page.",
+    href: "/market",
+    label: "Business",
+    secondary: [{ label: "Create listing", href: "/dashboard/market/new" }],
   },
   {
     id: "cv-builder",
@@ -131,7 +131,7 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
       /\b(finder center|lost and found|report (lost|found)|how (do i |to )?report (a )?(lost|found))\b/i,
     title: "Finder Center",
     answer:
-      "**Finder Center** is the community lost & found board.\n\nReport lost or found items, browse recent posts, and contact via Messages when appropriate. Also available under Marketplace → Lost & Found.",
+      "**Finder Center** is the community lost & found board.\n\nReport lost or found items, browse recent posts, and contact via Messages when appropriate. Also available under Business → Lost & Found.",
     href: "/finder",
     label: "Finder Center",
   },
@@ -192,7 +192,7 @@ export const HUNARED_KNOWLEDGE: KnowledgeEntry[] = [
       /\b(where is|header|navigation|menu|mega menu)\b/i,
     title: "Navigation",
     answer:
-      "Top navigation includes **Jobs**, **Talent**, **Companies**, **Marketplace**, **Learning**, and **More** (Programs, Finder, etc.).\n\nSigned-in users get **Dashboard** with role-based items: Overview, Profile, CV, Job Posts, Listings, Messages, Resources, Settings, and more.",
+      "Top navigation includes **Jobs**, **Talent**, **Companies**, **Business**, **Learning**, and **More** (Programs, Finder, etc.).\n\nSigned-in users get **Dashboard** with role-based items: Overview, Profile, CV, Job Posts, Listings, Messages, Resources, Settings, and more.",
     href: "/",
     label: "Home",
   },

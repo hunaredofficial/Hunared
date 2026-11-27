@@ -53,7 +53,7 @@ type Msg = {
 const QUICK_START = [
   { icon: Briefcase, label: "Find jobs", text: "Browse all jobs" },
   { icon: FileText, label: "CV Builder", text: "Open CV Builder" },
-  { icon: ShoppingBag, label: "Marketplace", text: "Browse marketplace" },
+  { icon: ShoppingBag, label: "Business", text: "Browse marketplace" },
   { icon: Users, label: "Talent", text: "Browse talent and candidates" },
   { icon: Building2, label: "Companies", text: "Browse companies" },
   { icon: MessageSquare, label: "Messages", text: "Open my messages" },
@@ -71,9 +71,9 @@ function contextualSuggestions(path: string): string[] {
       "How do I search for jobs?",
     ];
   }
-  if (path.startsWith("/business")) {
+  if (path.startsWith("/market")) {
     return [
-      "How does the marketplace work?",
+      "How does Business work?",
       "Browse services",
       "How do I post a listing?",
       "Open Finder Center",
@@ -429,7 +429,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
           {
             id: `a-${Date.now()}`,
             role: "assistant",
-            text: "Hunared AI is **OFF** for your account.\n\nJobs, Marketplace, and other features still work. Turn AI on anytime in Privacy & AI settings.",
+            text: "Hunared AI is **OFF** for your account.\n\nJobs, Business, and other features still work. Turn AI on anytime in Privacy & AI settings.",
             action: {
               intent: "ai_settings",
               href: "/ai-settings",
@@ -575,7 +575,7 @@ export function HunaredAgent({ variant = "float", className }: Props) {
 
           const base =
             navHref ||
-            (action.intent === "post_job" ? "/dashboard/jobs/new" : "/dashboard/business/new");
+            (action.intent === "post_job" ? "/dashboard/jobs/new" : "/dashboard/market/new");
           try {
             navHref = buildPrefillHref(base, prefill);
           } catch {

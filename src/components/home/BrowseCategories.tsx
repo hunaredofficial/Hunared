@@ -18,7 +18,7 @@ type TabKey = "careers" | "learning" | "marketplace";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "careers", label: "Careers", icon: Briefcase },
   { key: "learning", label: "Learning Hub", icon: GraduationCap },
-  { key: "marketplace", label: "Marketplace", icon: ShoppingBag },
+  { key: "marketplace", label: "Business", icon: ShoppingBag },
 ];
 
 const LEARNING_CATEGORIES: { label: string; href: string }[] = [
@@ -31,7 +31,7 @@ const LEARNING_CATEGORIES: { label: string; href: string }[] = [
   },
 ];
 
-/** Marketplace groups — products, property, and services */
+/** Business groups — products, property, and services */
 const MARKETPLACE_GROUPS: {
   group: string;
   items: { label: string; category: string; subcategory?: string }[];

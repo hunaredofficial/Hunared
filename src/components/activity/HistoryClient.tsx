@@ -26,7 +26,7 @@ const FILTERS = [
   { id: "", label: "All" },
   { id: "page_view", label: "Pages" },
   { id: "job_view", label: "Jobs" },
-  { id: "listing_view", label: "Marketplace" },
+  { id: "listing_view", label: "Business" },
   { id: "company_view", label: "Companies" },
   { id: "candidate_view", label: "Talent" },
   { id: "search", label: "Search" },

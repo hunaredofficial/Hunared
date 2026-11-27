@@ -2,7 +2,7 @@
 
 /**
  * Company Directory
- * Matches Jobs / Marketplace page pattern:
+ * Matches Jobs / Business page pattern:
  * compact header · left sidebar filters (Jobs-style) · results grid · mobile sheet
  */
 

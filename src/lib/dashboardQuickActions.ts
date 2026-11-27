@@ -46,7 +46,7 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   },
   my_listings: {
     id: "my_listings",
-    href: "/dashboard/business",
+    href: "/dashboard/market",
     title: "My Listings",
     desc: "View and manage marketplace listings",
     icon: "ShoppingBag",
@@ -55,7 +55,7 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   },
   post_listing: {
     id: "post_listing",
-    href: "/dashboard/business/new",
+    href: "/dashboard/market/new",
     title: "Post Listing",
     desc: "Sell, rent, or offer a service",
     icon: "Tag",
@@ -64,8 +64,8 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   },
   marketplace: {
     id: "marketplace",
-    href: "/business",
-    title: "Marketplace",
+    href: "/market",
+    title: "Business",
     desc: "Browse buy, sell and services",
     icon: "ShoppingBag",
     iconBg: "bg-orange-100 dark:bg-orange-900/30",
@@ -264,7 +264,7 @@ export const QUICK_ACTION_CATALOG: Record<string, QuickActionDef> = {
   admin_market: {
     id: "admin_market",
     href: "/dashboard/admin/market",
-    title: "Marketplace Review",
+    title: "Business Review",
     desc: "Approve marketplace listings",
     icon: "ShoppingBag",
     iconBg: "bg-orange-100 dark:bg-orange-900/30",

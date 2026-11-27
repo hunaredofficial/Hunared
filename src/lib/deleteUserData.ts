@@ -80,7 +80,7 @@ export async function deleteUserData(
     supabase.from("marketplace_listings").delete().eq("seller_id", userId)
   );
 
-  // Marketplace orders
+  // Business orders
   await run("orders_as_buyer", () =>
     supabase.from("orders").delete().eq("buyer_id", userId)
   );

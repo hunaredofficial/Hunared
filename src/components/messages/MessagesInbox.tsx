@@ -87,7 +87,7 @@ const FILTERS = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
   { id: "job", label: "Jobs" },
-  { id: "marketplace", label: "Marketplace" },
+  { id: "marketplace", label: "Business" },
   { id: "talent", label: "Talent" },
   { id: "company", label: "Companies" },
   { id: "archived", label: "Archived" },
@@ -942,7 +942,7 @@ export function MessagesInbox({
                 <Link href="/jobs">Explore Jobs</Link>
               </Button>
               <Button size="sm" variant="outline" asChild>
-                <Link href="/market">Marketplace</Link>
+                <Link href="/market">Business</Link>
               </Button>
             </div>
           </div>

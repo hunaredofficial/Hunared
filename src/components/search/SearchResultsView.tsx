@@ -162,7 +162,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
     },
     {
       key: "listings",
-      label: "Marketplace",
+      label: "Business",
       icon: ShoppingBag,
       count: results.listings.length,
     },
@@ -181,7 +181,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
           Universal Search
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-          Search across Jobs, Candidates, Companies, Marketplace and Learning Hub.
+          Search across Jobs, Candidates, Companies, Business and Learning Hub.
         </p>
 
         <form
@@ -369,7 +369,7 @@ export function SearchResultsView({ query, country, city, results }: Props) {
         )}
 
       {(tab === "all" || tab === "listings") && results.listings.length > 0 && (
-        <Section title="Marketplace" icon={ShoppingBag}>
+        <Section title="Business" icon={ShoppingBag}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {results.listings.map((l) => (
               <Link

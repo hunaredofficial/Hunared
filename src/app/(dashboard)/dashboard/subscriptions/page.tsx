@@ -292,12 +292,12 @@ export default function SubscriptionsPage() {
         </div>
       </section>
 
-      {/* Marketplace Category Subscriptions */}
+      {/* Business Category Subscriptions */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <ShoppingBag className="h-5 w-5" />
-            Marketplace Categories
+            Business Categories
             {mktSubs.length > 0 && (
               <Badge variant="secondary">{mktSubs.length}</Badge>
             )}
@@ -374,7 +374,7 @@ export default function SubscriptionsPage() {
                     </div>
                   </div>
                   <Button asChild size="sm" variant="outline" className="gap-1">
-                    <Link href={`/business/${listing.id}`}>
+                    <Link href={`/market/${listing.id}`}>
                       View <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
                   </Button>

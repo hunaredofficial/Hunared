@@ -33,10 +33,10 @@ const PATHS = [
   },
   {
     icon: ShoppingBag,
-    title: "Marketplace",
+    title: "Business",
     text: "Buy, sell, rent, and find services.",
     href: "/market",
-    cta: "Open marketplace",
+    cta: "Open Business",
   },
   {
     icon: BookOpen,

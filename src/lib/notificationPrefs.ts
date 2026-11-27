@@ -38,7 +38,7 @@ export const CATEGORY_META: Record<
   { label: string; order: number }
 > = {
   jobs: { label: "Jobs", order: 0 },
-  market: { label: "Market", order: 1 },
+  market: { label: "Business", order: 1 },
   orders: { label: "Orders", order: 2 },
   subscription: { label: "Subscription", order: 3 },
   system: { label: "System", order: 4 },

@@ -518,14 +518,8 @@ function RegisterInner() {
     icon: typeof User;
   }[] = [
     {
-      id: "personal",
-      title: "Personal",
-      desc: "Browse jobs, market & learning",
-      icon: UserRound,
-    },
-    {
       id: "seeker",
-      title: "Job Seeker",
+      title: "Talent",
       desc: "Find your next opportunity",
       icon: User,
     },
@@ -534,6 +528,12 @@ function RegisterInner() {
       title: "Company",
       desc: "Post jobs & hire talent",
       icon: Building2,
+    },
+    {
+      id: "personal",
+      title: "Business",
+      desc: "Buy, sell, rent & list services",
+      icon: UserRound,
     },
   ];
 

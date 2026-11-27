@@ -54,7 +54,7 @@ export const INDUSTRIES = [
   "Defense & Security",
   "Digital Services & Platforms",
   "Distribution & Wholesale",
-  "E-Commerce & Online Marketplaces",
+  "E-Commerce & Online Businesss",
   "Education & Training",
   "Electronics & Electrical",
   "Energy & Power",
@@ -159,7 +159,7 @@ export const BUSINESS_ACTIVITIES = [
   "Property Developer",
   "Franchise Operator",
   "E-Commerce",
-  "Marketplace",
+  "Business",
   "Other",
 ] as const;
 

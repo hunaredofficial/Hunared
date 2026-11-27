@@ -51,7 +51,7 @@ export function AiStatusWidget({ className }: { className?: string }) {
           <p className="text-xs text-muted-foreground mt-0.5">
             {enabled
               ? "Ask for jobs, CV help, marketplace search, and career guidance."
-              : "AI assistance is disabled. Jobs, Marketplace, and other features still work."}
+              : "AI assistance is disabled. Jobs, Business, and other features still work."}
           </p>
         </div>
       </div>
