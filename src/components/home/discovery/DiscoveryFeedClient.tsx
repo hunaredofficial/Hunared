@@ -1,21 +1,19 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FeedCard } from "./FeedCard";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 import { cn } from "@/lib/utils";
 import type { FeedItem } from "@/lib/home/feed";
 import Link from "next/link";
 
-const FILTERS: { id: "all" | "job" | "listing" | "article"; label: string }[] =
-  [
-    { id: "all", label: "All" },
-    { id: "job", label: "Jobs" },
-    { id: "listing", label: "Business" },
-    { id: "article", label: "Learning" },
-  ];
+const FILTERS: { id: "all" | "job" | "listing" | "article"; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "job", label: "Jobs" },
+  { id: "listing", label: "Business" },
+  { id: "article", label: "Learning" },
+];
 
 export function DiscoveryFeedClient({
   initialItems,
@@ -29,6 +27,8 @@ export function DiscoveryFeedClient({
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
 
   const load = useCallback(
     async (opts: {
@@ -36,10 +36,7 @@ export function DiscoveryFeedClient({
       cursor: string | null;
       append: boolean;
     }) => {
-      const q = new URLSearchParams({
-        type: opts.type,
-        limit: "12",
-      });
+      const q = new URLSearchParams({ type: opts.type, limit: "12" });
       if (opts.cursor) q.set("cursor", opts.cursor);
       const res = await fetch(`/api/feed?${q.toString()}`);
       const data = (await res.json()) as {
@@ -65,15 +62,28 @@ export function DiscoveryFeedClient({
     }
   }
 
-  async function onMore() {
-    if (!cursor || loading) return;
-    setLoading(true);
-    try {
-      await load({ type, cursor, append: true });
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Infinite scroll
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const hit = entries[0]?.isIntersecting;
+        if (!hit || !cursor || loadingRef.current) return;
+        loadingRef.current = true;
+        setLoading(true);
+        load({ type, cursor, append: true })
+          .catch(() => null)
+          .finally(() => {
+            loadingRef.current = false;
+            setLoading(false);
+          });
+      },
+      { rootMargin: "240px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [cursor, type, load]);
 
   return (
     <div className="space-y-4">
@@ -124,29 +134,13 @@ export function DiscoveryFeedClient({
               ) : null}
             </div>
           ))}
-          {cursor ? (
-            <div className="flex justify-center pt-2">
-              <Button
-                variant="outline"
-                className="rounded-xl min-w-[10rem]"
-                disabled={loading}
-                onClick={onMore}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading…
-                  </>
-                ) : (
-                  "Load more"
-                )}
-              </Button>
-            </div>
-          ) : (
-            <p className="text-center text-xs text-muted-foreground py-2">
-              You&apos;re caught up
-            </p>
-          )}
+          <div ref={sentinelRef} className="h-8 flex items-center justify-center">
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : !cursor ? (
+              <span className="text-xs text-muted-foreground">You&apos;re caught up</span>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

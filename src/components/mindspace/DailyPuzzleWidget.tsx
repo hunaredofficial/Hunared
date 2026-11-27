@@ -11,6 +11,7 @@ const DAILY = [
   { id: "words", name: "Word Search", blurb: "Vocabulary · 5 min" },
   { id: "pattern", name: "Patterns", blurb: "Reasoning · 3 min" },
   { id: "crossword", name: "Crossword", blurb: "Clues · 4 min" },
+  { id: "jigsaw", name: "Jigsaw", blurb: "Spatial · 4 min" },
 ];
 
 function dayIndex() {

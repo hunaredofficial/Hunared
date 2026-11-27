@@ -10,6 +10,7 @@ import { SudokuMini } from "./games/SudokuMini";
 import { WordSearch } from "./games/WordSearch";
 import { PatternGame } from "./games/PatternGame";
 import { MiniCrossword } from "./games/MiniCrossword";
+import { JigsawMini } from "./games/JigsawMini";
 
 const GAMES = [
   { id: "sudoku", name: "Sudoku", desc: "Mini 4×4 logic grid" },
@@ -18,6 +19,7 @@ const GAMES = [
   { id: "words", name: "Word Search", desc: "Find hidden words" },
   { id: "pattern", name: "Patterns", desc: "Next number in series" },
   { id: "crossword", name: "Crossword", desc: "Mini clue challenge" },
+  { id: "jigsaw", name: "Jigsaw", desc: "Swap tiles to restore" },
 ] as const;
 
 type GameId = (typeof GAMES)[number]["id"];
@@ -43,6 +45,8 @@ export function MindSpaceHub() {
         return <PatternGame />;
       case "crossword":
         return <MiniCrossword />;
+      case "jigsaw":
+        return <JigsawMini />;
       default:
         return <MemoryMatch />;
     }

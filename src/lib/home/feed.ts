@@ -9,7 +9,8 @@ export type FeedItemType =
   | "listing"
   | "article"
   | "company"
-  | "candidate";
+  | "candidate"
+  | "post";
 
 export type FeedItem = {
   id: string;
@@ -187,17 +188,59 @@ export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
   const needJobs = type === "all" || type === "job";
   const needList = type === "all" || type === "listing";
   const needArt = type === "all" || type === "article";
+  const needPosts = type === "all";
 
-  const [jobsRes, listingsRes, articlesRes] = await Promise.all([
+  let postsQ = supabase
+    .from("community_posts")
+    .select(
+      "id, author_id, post_type, title, body, category, country, city, created_at, status, likes_count"
+    )
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(per);
+  if (cursor) postsQ = postsQ.lt("created_at", cursor);
+
+  const [jobsRes, listingsRes, articlesRes, postsRes] = await Promise.all([
     needJobs ? jobsQ : Promise.resolve({ data: [] as never[] }),
     needList ? listQ : Promise.resolve({ data: [] as never[] }),
     needArt ? artQ : Promise.resolve({ data: [] as never[] }),
+    needPosts
+      ? postsQ.then((r) => r).catch(() => ({ data: [] as never[] }))
+      : Promise.resolve({ data: [] as never[] }),
   ]);
+
+  const postItems: FeedItem[] = (postsRes.data ?? []).map(
+    (p: {
+      id: string;
+      title: string | null;
+      body: string;
+      category: string | null;
+      country: string | null;
+      city: string | null;
+      created_at: string;
+      post_type: string;
+      likes_count?: number;
+    }) => ({
+      id: `post-${p.id}`,
+      type: "post" as FeedItemType,
+      title: p.title || p.body.slice(0, 80),
+      description: p.body.slice(0, 280),
+      href: `/#post-${p.id}`,
+      image: null,
+      category: p.category || p.post_type || "Community",
+      location: [p.city, p.country].filter(Boolean).join(", ") || null,
+      createdAt: p.created_at,
+      authorName: "Community",
+      authorImage: null,
+      meta: { likes: p.likes_count ?? 0 },
+    })
+  );
 
   let items: FeedItem[] = [
     ...(needJobs ? mapJobs(jobsRes.data ?? [], opts.profile) : []),
     ...(needList ? mapListings(listingsRes.data ?? []) : []),
     ...(needArt ? mapArticles(articlesRes.data ?? []) : []),
+    ...postItems,
   ];
 
   // Sort: personalized jobs float slightly; then by date
