@@ -8,12 +8,16 @@ import { MemoryMatch } from "./games/MemoryMatch";
 import { SlidingPuzzle } from "./games/SlidingPuzzle";
 import { SudokuMini } from "./games/SudokuMini";
 import { WordSearch } from "./games/WordSearch";
+import { PatternGame } from "./games/PatternGame";
+import { MiniCrossword } from "./games/MiniCrossword";
 
 const GAMES = [
   { id: "sudoku", name: "Sudoku", desc: "Mini 4×4 logic grid" },
   { id: "memory", name: "Memory Match", desc: "Find matching pairs" },
   { id: "slide", name: "Sliding Puzzle", desc: "Order the tiles" },
   { id: "words", name: "Word Search", desc: "Find hidden words" },
+  { id: "pattern", name: "Patterns", desc: "Next number in series" },
+  { id: "crossword", name: "Crossword", desc: "Mini clue challenge" },
 ] as const;
 
 type GameId = (typeof GAMES)[number]["id"];
@@ -35,6 +39,10 @@ export function MindSpaceHub() {
         return <SlidingPuzzle />;
       case "words":
         return <WordSearch />;
+      case "pattern":
+        return <PatternGame />;
+      case "crossword":
+        return <MiniCrossword />;
       default:
         return <MemoryMatch />;
     }
@@ -51,8 +59,8 @@ export function MindSpaceHub() {
           Take a Break. Refresh Your Mind.
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg mx-auto">
-          Short, focused puzzles designed for a mental reset between opportunities —
-          no accounts required to play.
+          Short, focused puzzles designed for a mental reset between
+          opportunities — no accounts required to play.
         </p>
       </div>
 

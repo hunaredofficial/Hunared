@@ -9,6 +9,8 @@ const DAILY = [
   { id: "memory", name: "Memory Match", blurb: "Focus · 3 min" },
   { id: "slide", name: "Sliding Puzzle", blurb: "Spatial · 4 min" },
   { id: "words", name: "Word Search", blurb: "Vocabulary · 5 min" },
+  { id: "pattern", name: "Patterns", blurb: "Reasoning · 3 min" },
+  { id: "crossword", name: "Crossword", blurb: "Clues · 4 min" },
 ];
 
 function dayIndex() {

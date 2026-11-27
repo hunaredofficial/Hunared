@@ -1,4 +1,8 @@
 import { createAdminClient } from "@/lib/supabase";
+import {
+  scoreJob,
+  type PersonalizationProfile,
+} from "@/lib/personalization";
 
 export type FeedItemType =
   | "job"
@@ -20,48 +24,53 @@ export type FeedItem = {
   authorName: string | null;
   authorImage: string | null;
   meta?: Record<string, string | number | null | undefined>;
+  /** Personalization score (jobs only); higher = better match */
+  score?: number;
 };
 
 function loc(country?: string | null, city?: string | null) {
   return [city, country].filter(Boolean).join(", ") || null;
 }
 
-/** Mixed discovery feed from existing tables (jobs, listings, articles). */
-export async function getDiscoveryFeed(limit = 24): Promise<FeedItem[]> {
-  const supabase = createAdminClient();
-  const per = Math.max(6, Math.ceil(limit / 3));
+type PageOpts = {
+  type?: "all" | "job" | "listing" | "article";
+  cursor?: string | null;
+  limit?: number;
+  profile?: PersonalizationProfile | null;
+};
 
-  const [jobsRes, listingsRes, articlesRes] = await Promise.all([
-    supabase
-      .from("jobs")
-      .select(
-        "id, job_title, job_description, country, city, category, employment_type, created_at, company_name, status"
-      )
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(per),
-    supabase
-      .from("marketplace_listings")
-      .select(
-        "id, title, description, country, city, category, price, currency, created_at, image_url, image_urls, status"
-      )
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(per),
-    supabase
-      .from("articles")
-      .select("id, title, content, category, created_at, status")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(per),
-  ]);
-
-  const items: FeedItem[] = [];
-
-  for (const j of jobsRes.data ?? []) {
-    items.push({
+function mapJobs(
+  rows: {
+    id: string;
+    job_title: string;
+    job_description: string | null;
+    country: string | null;
+    city: string | null;
+    category: string | null;
+    employment_type: string | null;
+    created_at: string;
+    company_name: string | null;
+  }[],
+  profile?: PersonalizationProfile | null
+): FeedItem[] {
+  return rows.map((j) => {
+    const score = profile
+      ? scoreJob(
+          {
+            id: j.id,
+            job_title: j.job_title,
+            category: j.category,
+            country: j.country,
+            city: j.city,
+            employment_type: j.employment_type,
+            company_name: j.company_name,
+          },
+          profile
+        )
+      : 0;
+    return {
       id: `job-${j.id}`,
-      type: "job",
+      type: "job" as const,
       title: j.job_title,
       description: j.job_description?.slice(0, 220) ?? null,
       href: `/jobs/${j.id}`,
@@ -72,14 +81,31 @@ export async function getDiscoveryFeed(limit = 24): Promise<FeedItem[]> {
       authorName: j.company_name ?? "Employer",
       authorImage: null,
       meta: { employment: j.employment_type },
-    });
-  }
+      score,
+    };
+  });
+}
 
-  for (const l of listingsRes.data ?? []) {
-    const photos = (l.image_urls as string[] | null) ?? [];
-    items.push({
+function mapListings(
+  rows: {
+    id: string;
+    title: string;
+    description: string | null;
+    country: string | null;
+    city: string | null;
+    category: string | null;
+    price: string | null;
+    currency: string | null;
+    created_at: string;
+    image_url: string | null;
+    image_urls: string[] | null;
+  }[]
+): FeedItem[] {
+  return rows.map((l) => {
+    const photos = l.image_urls ?? [];
+    return {
       id: `listing-${l.id}`,
-      type: "listing",
+      type: "listing" as const,
       title: l.title,
       description: l.description?.slice(0, 220) ?? null,
       href: `/business/${l.id}`,
@@ -89,35 +115,115 @@ export async function getDiscoveryFeed(limit = 24): Promise<FeedItem[]> {
       createdAt: l.created_at,
       authorName: "Business listing",
       authorImage: null,
-      meta: {
-        price: l.price,
-        currency: l.currency,
-      },
-    });
-  }
+      meta: { price: l.price, currency: l.currency },
+    };
+  });
+}
 
-  for (const a of articlesRes.data ?? []) {
-    items.push({
-      id: `article-${a.id}`,
-      type: "article",
-      title: a.title,
-      description: a.content?.slice(0, 220) ?? null,
-      href: `/education/${a.id}`,
-      image: null,
-      category: a.category ?? "Learning",
-      location: null,
-      createdAt: a.created_at,
-      authorName: "Hunared",
-      authorImage: null,
-    });
-  }
+function mapArticles(
+  rows: {
+    id: string;
+    title: string;
+    content: string | null;
+    category: string | null;
+    created_at: string;
+  }[]
+): FeedItem[] {
+  return rows.map((a) => ({
+    id: `article-${a.id}`,
+    type: "article" as const,
+    title: a.title,
+    description: a.content?.slice(0, 220) ?? null,
+    href: `/education/${a.id}`,
+    image: null,
+    category: a.category ?? "Learning",
+    location: null,
+    createdAt: a.created_at,
+    authorName: "Hunared",
+    authorImage: null,
+  }));
+}
 
-  items.sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+/** Paginated mixed feed with optional type filter + soft personalization. */
+export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
+  items: FeedItem[];
+  nextCursor: string | null;
+}> {
+  const type = opts.type ?? "all";
+  const limit = opts.limit ?? 12;
+  const cursor = opts.cursor ?? null;
+  const supabase = createAdminClient();
+  const per =
+    type === "all" ? Math.max(8, Math.ceil(limit * 1.2)) : limit + 2;
 
-  return items.slice(0, limit);
+  const jobsQ = supabase
+    .from("jobs")
+    .select(
+      "id, job_title, job_description, country, city, category, employment_type, created_at, company_name, status"
+    )
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(per);
+  if (cursor) jobsQ.lt("created_at", cursor);
+
+  const listQ = supabase
+    .from("marketplace_listings")
+    .select(
+      "id, title, description, country, city, category, price, currency, created_at, image_url, image_urls, status"
+    )
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(per);
+  if (cursor) listQ.lt("created_at", cursor);
+
+  const artQ = supabase
+    .from("articles")
+    .select("id, title, content, category, created_at, status")
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(per);
+  if (cursor) artQ.lt("created_at", cursor);
+
+  const needJobs = type === "all" || type === "job";
+  const needList = type === "all" || type === "listing";
+  const needArt = type === "all" || type === "article";
+
+  const [jobsRes, listingsRes, articlesRes] = await Promise.all([
+    needJobs ? jobsQ : Promise.resolve({ data: [] as never[] }),
+    needList ? listQ : Promise.resolve({ data: [] as never[] }),
+    needArt ? artQ : Promise.resolve({ data: [] as never[] }),
+  ]);
+
+  let items: FeedItem[] = [
+    ...(needJobs ? mapJobs(jobsRes.data ?? [], opts.profile) : []),
+    ...(needList ? mapListings(listingsRes.data ?? []) : []),
+    ...(needArt ? mapArticles(articlesRes.data ?? []) : []),
+  ];
+
+  // Sort: personalized jobs float slightly; then by date
+  items.sort((a, b) => {
+    const sa = a.score ?? 0;
+    const sb = b.score ?? 0;
+    if (sa !== sb && (sa > 0 || sb > 0)) return sb - sa;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const page = items.slice(0, limit);
+  const nextCursor =
+    page.length === limit
+      ? page[page.length - 1]?.createdAt ?? null
+      : null;
+
+  return { items: page, nextCursor };
+}
+
+/** Convenience: first page only (SSR homepage). */
+export async function getDiscoveryFeed(
+  limit = 24,
+  profile?: PersonalizationProfile | null
+): Promise<FeedItem[]> {
+  const { items } = await getDiscoveryFeedPage({ limit, profile, type: "all" });
+  return items;
 }
 
 export async function getFeedSidebarData() {
@@ -158,7 +264,7 @@ export async function getFeedSidebarData() {
     companies: (companies.data ?? []).map((c) => ({
       id: c.id,
       name: c.name,
-      industry: Array.isArray(c.industry) ? c.industry[0] : c.industry,
+      industry: Array.isArray(c.industry) ? c.industry[0] : (c.industry as string | null),
       country: c.headquarters_country,
     })),
     listings: listings.data ?? [],

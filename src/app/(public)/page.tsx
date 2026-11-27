@@ -1,13 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CreatePostBar } from "@/components/home/discovery/CreatePostBar";
-import { FeedCard } from "@/components/home/discovery/FeedCard";
+import { DiscoveryFeedClient } from "@/components/home/discovery/DiscoveryFeedClient";
 import { LeftSidebar } from "@/components/home/discovery/LeftSidebar";
 import { RightSidebar } from "@/components/home/discovery/RightSidebar";
-import { getDiscoveryFeed, getFeedSidebarData } from "@/lib/home/feed";
+import {
+  getDiscoveryFeedPage,
+  getFeedSidebarData,
+} from "@/lib/home/feed";
 import { PremiumAdSlot } from "@/components/ads/PremiumAdSlot";
 import { Button } from "@/components/ui/button";
 import { Compass, Search } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
+import { createAdminClient } from "@/lib/supabase";
+import type { PersonalizationProfile } from "@/lib/personalization";
 
 export const dynamic = "force-dynamic";
 
@@ -22,18 +28,32 @@ export const metadata: Metadata = {
   },
 };
 
-const FILTERS = [
-  { label: "All", href: "/" },
-  { label: "Jobs", href: "/jobs" },
-  { label: "Business", href: "/business" },
-  { label: "Talent", href: "/candidates" },
-  { label: "Companies", href: "/companies" },
-  { label: "Learning", href: "/education" },
-  { label: "MindSpace", href: "/mindspace" },
-];
+async function loadProfile(): Promise<PersonalizationProfile | null> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return null;
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("job_interests, profession, country, city, skill_level")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!data) return null;
+    return {
+      job_interests: data.job_interests,
+      profession: data.profession,
+      country: data.country,
+      city: data.city,
+      skill_level: data.skill_level,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default async function HomePage() {
-  let feed: Awaited<ReturnType<typeof getDiscoveryFeed>> = [];
+  let items: Awaited<ReturnType<typeof getDiscoveryFeedPage>>["items"] = [];
+  let nextCursor: string | null = null;
   let sidebar: Awaited<ReturnType<typeof getFeedSidebarData>> = {
     jobs: [],
     companies: [],
@@ -42,12 +62,16 @@ export default async function HomePage() {
   };
 
   try {
-    [feed, sidebar] = await Promise.all([
-      getDiscoveryFeed(30),
+    const profile = await loadProfile();
+    const [page, side] = await Promise.all([
+      getDiscoveryFeedPage({ limit: 12, type: "all", profile }),
       getFeedSidebarData(),
     ]);
+    items = page.items;
+    nextCursor = page.nextCursor;
+    sidebar = side;
   } catch {
-    // Keep empty states if DB env is unavailable
+    // empty states
   }
 
   return (
@@ -84,76 +108,14 @@ export default async function HomePage() {
           <main className="min-w-0 space-y-4">
             <CreatePostBar />
 
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {FILTERS.map((f) => (
-                <Link
-                  key={f.label}
-                  href={f.href}
-                  className="shrink-0 rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition"
-                >
-                  {f.label}
-                </Link>
-              ))}
-            </div>
-
             <div className="rounded-xl overflow-hidden">
               <PremiumAdSlot slotId="home_hero" legacySlotName="homepage_hero" />
             </div>
 
-            {feed.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-card/40 p-10 text-center">
-                <p className="text-sm font-medium text-foreground">
-                  Your feed is warming up
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-                  When jobs, listings, and articles are published, they appear
-                  here in one discovery stream.
-                </p>
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  <Button size="sm" asChild>
-                    <Link href="/jobs">Browse jobs</Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href="/business">Explore business</Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href="/mindspace">MindSpace</Link>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {feed.map((item, i) => (
-                  <div key={item.id}>
-                    <FeedCard item={item} />
-                    {i === 4 ? (
-                      <div className="my-3">
-                        <PremiumAdSlot slotId="homepage_mid" />
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-                <div className="rounded-2xl border border-border/50 bg-card/50 p-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Explore more on Hunared
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href="/jobs">Jobs</Link>
-                    </Button>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href="/business">Business</Link>
-                    </Button>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href="/education">Learning</Link>
-                    </Button>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href="/mindspace">MindSpace</Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
+            <DiscoveryFeedClient
+              initialItems={items}
+              initialCursor={nextCursor}
+            />
           </main>
 
           <div className="hidden lg:block">
