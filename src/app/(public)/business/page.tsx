@@ -29,9 +29,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Marketplace",
+  title: "Business",
   description:
-    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
+    "Buy, sell, and rent on Hunared Business. Browse property, vehicles, electronics, services, and more worldwide.",
 };
 
 interface SearchParams {
@@ -321,7 +321,7 @@ export default async function MarketPage({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Marketplace
+                Business
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0

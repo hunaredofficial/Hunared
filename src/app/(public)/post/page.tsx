@@ -163,7 +163,7 @@ const AD_TYPES: AdType[] = [
 
 const GROUPS: { key: AdType["group"]; label: string; blurb: string }[] = [
   { key: "work", label: "Work & Talent", blurb: "Create job posts to hire talent" },
-  { key: "marketplace", label: "Marketplace", blurb: "Create posts to sell, rent, offer services or list property" },
+  { key: "marketplace", label: "Business", blurb: "Create posts to sell, rent, offer services or list property" },
   { key: "knowledge", label: "Learning & Content", blurb: "Create learning and article posts" },
   { key: "community", label: "Community", blurb: "Create wanted, free, lost & found, event and local posts" },
 ];

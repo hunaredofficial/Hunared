@@ -29,14 +29,14 @@ export const metadata: Metadata = {
     template: "%s | Hunared",
   },
   description:
-    "Hunared connects you with jobs, employers, property, marketplace deals, and learning opportunities worldwide. Your complete global workforce and lifestyle platform.",
+    "Hunared connects you with jobs, employers, property, Business deals, and learning opportunities worldwide. Your complete global workforce and lifestyle platform.",
   keywords: [
     "jobs",
     "global jobs",
     "jobs abroad",
     "temp work",
     "property for rent",
-    "marketplace",
+    "business",
     "courses",
     "certifications",
     "scholarships",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hunared",
     description:
-      "Find jobs, property, marketplace deals, and learning opportunities worldwide on Hunared.",
+      "Find jobs, property, Business deals, and learning opportunities worldwide on Hunared.",
     url: "https://hunared.com",
     siteName: "Hunared",
     type: "website",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Hunared",
     description:
-      "Find jobs, property, marketplace deals, and learning opportunities worldwide on Hunared.",
+      "Find jobs, property, Business deals, and learning opportunities worldwide on Hunared.",
     site: "@hunared",
   },
 };

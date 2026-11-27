@@ -73,7 +73,7 @@ export default function SavedPage() {
           [
             ["all", "All"],
             ["job", "Jobs"],
-            ["listing", "Marketplace"],
+            ["listing", "Business"],
             ["article", "Articles"],
             ["resource", "Resources"],
           ] as const

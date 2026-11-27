@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 const CAPS = [
   { icon: Briefcase, title: "Jobs", desc: "Search roles by city, country, employment type" },
   { icon: FileText, title: "CV & career", desc: "CV Builder, cover letters, career tips" },
-  { icon: ShoppingBag, title: "Marketplace", desc: "Sale, rent, services, vehicles, property" },
+  { icon: ShoppingBag, title: "Business", desc: "Sale, rent, services, vehicles, property" },
   { icon: Building2, title: "Companies", desc: "Employer directory and company pages" },
   { icon: Users, title: "Talent", desc: "Professionals available for hire" },
   { icon: GraduationCap, title: "Learning", desc: "Articles, programs, skill growth" },

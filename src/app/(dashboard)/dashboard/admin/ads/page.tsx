@@ -106,7 +106,7 @@ export default async function AdminAdsPage() {
             <strong>Jobs:</strong> jobs_list_top, jobs_sidebar, jobs_inline, job_below_description
           </li>
           <li>
-            <strong>Marketplace:</strong> market_list_top, market_sidebar
+            <strong>Business:</strong> market_list_top, market_sidebar
           </li>
           <li>
             <strong>Directories:</strong> candidates_top (Talent), companies_top, learning_top

@@ -156,7 +156,7 @@ async function searchAll(query: string, country?: string, city?: string) {
   if (country) companiesQuery = companiesQuery.eq("country", country);
   if (city) companiesQuery = companiesQuery.ilike("city", `%${city}%`);
 
-  // Marketplace
+  // Business
   let listingsQuery = supabase
     .from("marketplace_listings")
     .select(

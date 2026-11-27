@@ -44,7 +44,7 @@ export async function generateMetadata({
       const loc = data.location ? ` · ${data.location}` : "";
       return {
         title: data.title,
-        description: `View ${data.title}${loc} on Hunared Marketplace.`,
+        description: `View ${data.title}${loc} on Hunared Business.`,
       };
     }
   } catch {
@@ -147,7 +147,7 @@ export default async function ListingDetailPage({
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/market" className="hover:text-primary transition-colors">Marketplace</Link>
+            <Link href="/market" className="hover:text-primary transition-colors">Business</Link>
             {catMeta && (
               <>
                 <span>/</span>
@@ -170,7 +170,7 @@ export default async function ListingDetailPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 h-8 text-muted-foreground" asChild>
           <Link href="/market">
-            <ArrowLeft className="h-4 w-4" /> Marketplace
+            <ArrowLeft className="h-4 w-4" /> Business
           </Link>
         </Button>
       </div>

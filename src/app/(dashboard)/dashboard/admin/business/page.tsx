@@ -104,7 +104,7 @@ export default async function AdminMarketPage({
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Marketplace</h1>
+        <h1 className="text-2xl font-bold">Business</h1>
         <p className="text-sm text-muted-foreground">Review and moderate listings</p>
       </div>
 

@@ -257,7 +257,7 @@ export default function MagicPostClient() {
           className="gap-1.5"
           onClick={() => setMode("listings")}
         >
-          <Store className="h-4 w-4" /> Marketplace
+          <Store className="h-4 w-4" /> Business
         </Button>
       </div>
 

@@ -59,7 +59,7 @@ const features = [
   },
   {
     icon: ShoppingBag,
-    title: "Marketplace",
+    title: "Business",
     description:
       "Sell, rent, offer services, list property, accommodation, vehicles, and more — with contact-ready, moderated posts.",
     href: "/market",

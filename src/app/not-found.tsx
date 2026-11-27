@@ -40,7 +40,7 @@ export default function NotFound() {
             <Briefcase className="h-3.5 w-3.5" /> Jobs
           </Link>
           <Link href="/market" className="text-muted-foreground hover:text-primary inline-flex items-center gap-1">
-            <ShoppingBag className="h-3.5 w-3.5" /> Marketplace
+            <ShoppingBag className="h-3.5 w-3.5" /> Business
           </Link>
           <Link href="/candidates" className="text-muted-foreground hover:text-primary">
             Talent

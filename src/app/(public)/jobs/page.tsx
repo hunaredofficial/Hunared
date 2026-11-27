@@ -441,7 +441,7 @@ export default async function JobsPage({
         <PremiumAdSlot slotId="jobs_inline" className="mb-2" />
       </div>
 
-      {/* Marketplace layout: sidebar filters + results */}
+      {/* Business layout: sidebar filters + results */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop sidebar */}
