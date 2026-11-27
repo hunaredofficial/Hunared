@@ -29,9 +29,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Business",
+  title: "Marketplace",
   description:
-    "Buy, sell, and rent on Hunared Business. Browse property, vehicles, electronics, services, and more worldwide.",
+    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
 };
 
 interface SearchParams {
@@ -321,7 +321,7 @@ export default async function MarketPage({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Business
+                Marketplace
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0
@@ -331,7 +331,7 @@ export default async function MarketPage({
               </p>
             </div>
             <Button size="sm" className="shrink-0 font-semibold" asChild>
-              <Link href="/dashboard/market/new">Post a Listing</Link>
+              <Link href="/dashboard/business/new">Post a Listing</Link>
             </Button>
           </div>
         </div>
@@ -401,7 +401,7 @@ export default async function MarketPage({
                 <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-muted-foreground text-lg">No listings found.</p>
                 <Button variant="outline" className="mt-4" asChild>
-                  <Link href="/dashboard/market/new">Post the first listing</Link>
+                  <Link href="/dashboard/business/new">Post the first listing</Link>
                 </Button>
               </div>
             ) : (
@@ -473,7 +473,7 @@ export default async function MarketPage({
             Sign in to post a listing. All listings are reviewed before publishing.
           </p>
           <Button asChild>
-            <Link href="/dashboard/market/new">Post a Listing</Link>
+            <Link href="/dashboard/business/new">Post a Listing</Link>
           </Button>
         </div>
       </section>

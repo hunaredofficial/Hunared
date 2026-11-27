@@ -56,7 +56,7 @@ export default async function MyListingsPage() {
           </p>
         </div>
         <Button asChild className="gap-1.5">
-          <Link href="/dashboard/market/new">
+          <Link href="/dashboard/business/new">
             <Plus className="h-4 w-4" /> Post Listing
           </Link>
         </Button>
@@ -68,7 +68,7 @@ export default async function MyListingsPage() {
             <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mb-3" />
             <p className="text-muted-foreground">You haven&apos;t posted any listings yet.</p>
             <Button className="mt-5 gap-1.5" asChild>
-              <Link href="/dashboard/market/new">
+              <Link href="/dashboard/business/new">
                 <Plus className="h-4 w-4" /> Post your first listing
               </Link>
             </Button>
@@ -115,7 +115,7 @@ export default async function MyListingsPage() {
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Button size="sm" variant="outline" className="h-7 text-xs gap-1" asChild>
-                          <Link href={`/dashboard/market/${listing.id}/edit`}>
+                          <Link href={`/dashboard/business/${listing.id}/edit`}>
                             <Pencil className="h-3 w-3" /> Edit
                           </Link>
                         </Button>

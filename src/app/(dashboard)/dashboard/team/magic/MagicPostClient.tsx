@@ -204,7 +204,7 @@ export default function MagicPostClient() {
           setListings([]);
           setRaw("");
           router.refresh();
-          window.setTimeout(() => router.push("/dashboard/market"), 700);
+          window.setTimeout(() => router.push("/dashboard/business"), 700);
         }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Publish failed");
@@ -257,7 +257,7 @@ export default function MagicPostClient() {
           className="gap-1.5"
           onClick={() => setMode("listings")}
         >
-          <Store className="h-4 w-4" /> Business
+          <Store className="h-4 w-4" /> Marketplace
         </Button>
       </div>
 

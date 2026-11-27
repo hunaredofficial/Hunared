@@ -230,7 +230,7 @@ function SeekerDashboard({
               iconBg="bg-orange-100 dark:bg-orange-900/30"
               label="My Listings"
               value="Manage"
-              link={{ href: "/dashboard/market", label: "View" }}
+              link={{ href: "/dashboard/business", label: "View" }}
             />
             <StatCard
               icon={<Users className="h-5 w-5 text-violet-600" />}

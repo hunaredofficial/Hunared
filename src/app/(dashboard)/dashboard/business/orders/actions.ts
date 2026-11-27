@@ -35,5 +35,5 @@ export async function updateOrderStatus(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath("/dashboard/market/orders");
+  revalidatePath("/dashboard/business/orders");
 }

@@ -576,7 +576,7 @@ function NewListingForm() {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" as ScrollBehavior : "auto" });
       }
-      router.push("/dashboard/market");
+      router.push("/dashboard/business");
       // Ensure top after navigation
       setTimeout(() => {
         if (typeof window !== "undefined") window.scrollTo(0, 0);
@@ -594,7 +594,7 @@ function NewListingForm() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Post a Listing</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Listings are reviewed before appearing on the Business.
+          Listings are reviewed before appearing on the Marketplace.
         </p>
       </div>
 
@@ -1093,7 +1093,7 @@ function NewListingForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/dashboard/market")}
+                onClick={() => router.push("/dashboard/business")}
                 disabled={loading}
               >
                 Cancel

@@ -229,7 +229,7 @@ export async function POST(req: Request) {
     try {
       revalidatePath("/market");
       revalidatePath("/");
-      revalidatePath("/dashboard/market");
+      revalidatePath("/dashboard/business");
       revalidatePath("/search");
       revalidatePath("/dashboard");
     } catch {
