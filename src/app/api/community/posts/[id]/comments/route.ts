@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { notifyUser } from "@/lib/social/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -83,11 +84,11 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // best-effort bump comments_count
+  // best-effort bump comments_count + notify author
   try {
     const { data: post } = await supabase
       .from("community_posts")
-      .select("comments_count")
+      .select("comments_count, author_id")
       .eq("id", id)
       .maybeSingle();
     if (post) {
@@ -95,6 +96,14 @@ export async function POST(req: NextRequest, ctx: Ctx) {
         .from("community_posts")
         .update({ comments_count: (post.comments_count ?? 0) + 1 })
         .eq("id", id);
+      if (post.author_id && post.author_id !== userId) {
+        await notifyUser({
+          userId: post.author_id,
+          title: "New comment on your post",
+          body: text.slice(0, 140),
+          entityId: id,
+        });
+      }
     }
   } catch {
     /* ignore */

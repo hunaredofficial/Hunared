@@ -189,6 +189,21 @@ export function CompanyProfile({ slug }: { slug: string }) {
   const { isSignedIn, isLoaded: authLoaded, userId } = useAuth();
   const [tab, setTab] = useState<Tab>("overview");
   const [following, setFollowing] = useState(false);
+  useEffect(() => {
+    const cid = liveCompany?.id;
+    if (!cid) return;
+    let alive = true;
+    fetch(`/api/follow?targetType=company&targetId=${encodeURIComponent(cid)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive && typeof d.following === "boolean") setFollowing(d.following);
+      })
+      .catch(() => null);
+    return () => {
+      alive = false;
+    };
+  }, [liveCompany?.id]);
+
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewHover, setReviewHover] = useState(0);
   const [reviewTitle, setReviewTitle] = useState("");
@@ -600,7 +615,25 @@ export function CompanyProfile({ slug }: { slug: string }) {
               <Button
                 variant={following ? "outline" : "default"}
                 className="gap-2"
-                onClick={() => setFollowing(!following)}
+                onClick={async () => {
+                  const cid = company?.id;
+                  if (!cid || cid === "1") {
+                    setFollowing(!following);
+                    return;
+                  }
+                  try {
+                    const res = await fetch("/api/follow", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ targetType: "company", targetId: String(cid) }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (res.ok) setFollowing(!!data.following);
+                    else setFollowing(!following);
+                  } catch {
+                    setFollowing(!following);
+                  }
+                }}
               >
                 {following ? (
                   <>

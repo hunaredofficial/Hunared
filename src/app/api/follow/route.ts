@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase";
+import { notifyUser } from "@/lib/social/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,15 @@ export async function POST(req: Request) {
       );
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Notify user targets (not companies — no profile inbox)
+  if (targetType === "user") {
+    await notifyUser({
+      userId: targetId,
+      title: "New follower",
+      body: "Someone started following you on Hunared.",
+    });
   }
 
   return NextResponse.json({ following: true });

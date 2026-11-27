@@ -34,10 +34,12 @@ function loc(country?: string | null, city?: string | null) {
 }
 
 type PageOpts = {
-  type?: "all" | "job" | "listing" | "article";
+  type?: "all" | "job" | "listing" | "article" | "following";
   cursor?: string | null;
   limit?: number;
   profile?: PersonalizationProfile | null;
+  /** Clerk user id — required for type=following */
+  userId?: string | null;
 };
 
 function mapJobs(
@@ -51,6 +53,7 @@ function mapJobs(
     employment_type: string | null;
     created_at: string;
     company_name: string | null;
+    employer_id?: string | null;
   }[],
   profile?: PersonalizationProfile | null
 ): FeedItem[] {
@@ -81,7 +84,7 @@ function mapJobs(
       createdAt: j.created_at,
       authorName: j.company_name ?? "Employer",
       authorImage: null,
-      meta: { employment: j.employment_type },
+      meta: { employment: j.employment_type, employerId: j.employer_id },
       score,
     };
   });
@@ -155,12 +158,39 @@ export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
   const cursor = opts.cursor ?? null;
   const supabase = createAdminClient();
   const per =
-    type === "all" ? Math.max(8, Math.ceil(limit * 1.2)) : limit + 2;
+    type === "all" || type === "following"
+      ? Math.max(8, Math.ceil(limit * 1.2))
+      : limit + 2;
+
+  // Following graph (users + companies)
+  let followedUserIds: string[] = [];
+  let followedCompanyIds: string[] = [];
+  let followedOwnerIds: string[] = [];
+  if (type === "following" && opts.userId) {
+    const { data: fol } = await supabase
+      .from("follows")
+      .select("target_type, target_id")
+      .eq("follower_id", opts.userId)
+      .limit(200);
+    for (const f of fol ?? []) {
+      if (f.target_type === "user") followedUserIds.push(f.target_id);
+      if (f.target_type === "company") followedCompanyIds.push(f.target_id);
+    }
+    if (followedCompanyIds.length) {
+      const { data: cos } = await supabase
+        .from("companies")
+        .select("id, owner_id")
+        .in("id", followedCompanyIds);
+      followedOwnerIds = (cos ?? [])
+        .map((c) => c.owner_id)
+        .filter(Boolean) as string[];
+    }
+  }
 
   const jobsQ = supabase
     .from("jobs")
     .select(
-      "id, job_title, job_description, country, city, category, employment_type, created_at, company_name, status"
+      "id, job_title, job_description, country, city, category, employment_type, created_at, company_name, employer_id, status"
     )
     .eq("status", "approved")
     .order("created_at", { ascending: false })
@@ -185,10 +215,10 @@ export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
     .limit(per);
   if (cursor) artQ.lt("created_at", cursor);
 
-  const needJobs = type === "all" || type === "job";
+  const needJobs = type === "all" || type === "job" || type === "following";
   const needList = type === "all" || type === "listing";
   const needArt = type === "all" || type === "article";
-  const needPosts = type === "all";
+  const needPosts = type === "all" || type === "following";
 
   let postsQ = supabase
     .from("community_posts")
@@ -243,6 +273,23 @@ export async function getDiscoveryFeedPage(opts: PageOpts = {}): Promise<{
     ...(needArt ? mapArticles(articlesRes.data ?? []) : []),
     ...postItems,
   ];
+
+  if (type === "following") {
+    if (!followedUserIds.length && !followedCompanyIds.length) {
+      return { items: [], nextCursor: null };
+    }
+    items = items.filter((it) => {
+      if (it.type === "post") {
+        const aid = it.meta?.authorId;
+        return typeof aid === "string" && followedUserIds.includes(aid);
+      }
+      if (it.type === "job") {
+        const eid = it.meta?.employerId;
+        return typeof eid === "string" && followedOwnerIds.includes(eid);
+      }
+      return false;
+    });
+  }
 
   // Sort: personalized jobs float slightly; then by date
   items.sort((a, b) => {

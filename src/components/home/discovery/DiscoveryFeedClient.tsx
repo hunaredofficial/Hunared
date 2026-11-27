@@ -8,8 +8,12 @@ import { cn } from "@/lib/utils";
 import type { FeedItem } from "@/lib/home/feed";
 import Link from "next/link";
 
-const FILTERS: { id: "all" | "job" | "listing" | "article"; label: string }[] = [
+const FILTERS: {
+  id: "all" | "job" | "listing" | "article" | "following";
+  label: string;
+}[] = [
   { id: "all", label: "All" },
+  { id: "following", label: "Following" },
   { id: "job", label: "Jobs" },
   { id: "listing", label: "Business" },
   { id: "article", label: "Learning" },
@@ -22,7 +26,7 @@ export function DiscoveryFeedClient({
   initialItems: FeedItem[];
   initialCursor: string | null;
 }) {
-  const [type, setType] = useState<"all" | "job" | "listing" | "article">("all");
+  const [type, setType] = useState<"all" | "job" | "listing" | "article" | "following">("all");
   const [items, setItems] = useState<FeedItem[]>(initialItems);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loading, setLoading] = useState(false);
@@ -117,9 +121,13 @@ export function DiscoveryFeedClient({
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/70 bg-card/40 p-10 text-center">
-          <p className="text-sm font-medium">Nothing in this filter yet</p>
+          <p className="text-sm font-medium">
+            {type === "following" ? "No posts from people you follow" : "Nothing in this filter yet"}
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Try All, or explore Jobs and Business pages.
+            {type === "following"
+              ? "Follow members from community posts to build this feed."
+              : "Try All, or explore Jobs and Business pages."}
           </p>
         </div>
       ) : (

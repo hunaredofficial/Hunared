@@ -23,6 +23,7 @@ const LINKS = [
   { href: "/dashboard/jobs", label: "My Jobs", icon: Briefcase },
   { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/candidates", label: "Talent", icon: Users },
+  { href: "/following", label: "Following", icon: Users },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
   { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
   { href: "/mindspace", label: "MindSpace", icon: Brain },
