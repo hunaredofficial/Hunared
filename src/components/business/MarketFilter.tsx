@@ -216,7 +216,7 @@ export function MarketFilter({
 
   function applyQuick(overrides: Record<string, string> = {}) {
     const q = buildParams(overrides);
-    router.push(q ? `/market?${q}` : "/market");
+    router.push(q ? `/business?${q}` : "/market");
   }
 
   function applyAll() {

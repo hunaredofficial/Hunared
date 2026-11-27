@@ -29,9 +29,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Marketplace",
+  title: "Business",
   description:
-    "Buy, sell, and rent on Hunared Marketplace. Browse property, vehicles, electronics, services, and more worldwide.",
+    "Buy, sell, and rent on Hunared Business. Browse property, vehicles, electronics, services, and more worldwide.",
 };
 
 interface SearchParams {
@@ -321,7 +321,7 @@ export default async function MarketPage({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Marketplace
+                Business
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {total > 0
@@ -417,7 +417,7 @@ export default async function MarketPage({
                     {page > 1 && (
                       <Button variant="outline" size="sm" asChild>
                         <Link
-                          href={`/market?${buildParams({
+                          href={`/business?${buildParams({
                             category,
                             subcategory,
                             country,
@@ -440,7 +440,7 @@ export default async function MarketPage({
                     {page < totalPages && (
                       <Button variant="outline" size="sm" asChild>
                         <Link
-                          href={`/market?${buildParams({
+                          href={`/business?${buildParams({
                             category,
                             subcategory,
                             country,
@@ -530,7 +530,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
         </div>
 
         <h3 className="font-semibold text-sm leading-snug mb-1 group-hover:text-primary transition-colors line-clamp-2">
-          <Link href={`/market/${listing.id}`}>{listing.title}</Link>
+          <Link href={`/business/${listing.id}`}>{listing.title}</Link>
         </h3>
 
         {formatMoney(listing.price, listing.currency) ? (
@@ -562,7 +562,7 @@ function ListingCard({ listing, isPromoted = false, showRecommended = false }: {
             className="flex-1 h-7 text-xs gap-1 group-hover:border-primary/50"
             asChild
           >
-            <Link href={`/market/${listing.id}`}>
+            <Link href={`/business/${listing.id}`}>
               View <ArrowRight className="h-3 w-3" />
             </Link>
           </Button>
